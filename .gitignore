@@ -8,3 +8,4 @@ locales*.pl
 /.htaccess
 /build.xml
 /.DS_Store
+/.settings
