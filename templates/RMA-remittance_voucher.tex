@@ -1,10 +1,11 @@
 %%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
 % Art des Templates: Einzahlungsschein
-% Mandant: runmyaccounts
-% Erstellungsdatum: 10.01.2012
-% Version: 2.0
-% Ersteller: Thomas Brändle
+% Mandant: 
+% Erstellungsdatum: 
+% Version: 
+% Ersteller: 
 % © by Run my Accounts AG
+
 
 %statische Elemente
 \documentclass{scrartcl}
@@ -22,7 +23,7 @@
 
 %dynamische Elemente
 %Abstände Rand
-\usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry} 
+\usepackage[a4paper,top=4.2cm,bottom=1cm,left=2.05cm,right=1.8cm]{geometry} 
 
 %Schrift
 \usepackage[scaled=.90]{helvet} 
@@ -57,47 +58,59 @@
 %Schriftwahl
 \normalfont
 
-%%%%%%%%%%%%%  INHALT  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
 
-\begin{center} 
-
-\Huge 
-
-\vspace*{4cm}
-
-\underline{EINZAHLUNGSSCHEIN}
-
-\vspace{1cm}
-
-Dieses Template wurde nicht aktiviert. 
-
-\vspace{1cm}
-
-Falls Sie dieses Template wünschen, wenden Sie sich bitte für eine Offerte an Ihren Run my Accounts Account Manager. 
-
-\vspace{1cm}
+\vspace*{0.0cm}
+\parbox[t]{.53\textwidth}{\hspace{20mm}
+}
+\parbox[t]{.47\textwidth}{
 
 \normalsize
 
-\underline{Kontakt:}\\
+\vspace{0.2cm}
 
-service@runmyaccounts.com\\
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
 
-Tel: 044 500 46 70
+%Firmenanschrift
 
-\Huge 
+<%name%>
 
-\vspace{1cm}
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
 
-\underline{Beispieltext}
+}{
 
-\vspace{1cm}
+%Privatanschrift
 
-\end{center}
+<%salutation%>
 
-\normalsize
+<%firstname%> <%lastname%>
 
+} 
 
+\ifthenelse{\equal{address1}{}}{}{<%address1%>}
+
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+
+}
+
+%%%%%%%%%%%%%  EZ KOPF  %%%%%%%%%%%%%
+
+\vspace{2cm}
+
+\textbf{\large{Rechnung Nr. <%invnumber%>}}
+
+\vspace{0.5cm}
+
+\begin{tabular}{@{}lll}
+\textbf{Rechnungsdatum:} & & <%invdate%>\\
+\textbf{Rechnungsbetrag:} & & <%currency%> <%invtotal%>\\
+\textbf{Zahlbar bis:} & & <%duedate%>\\
+
+\end{tabular}
 
 %%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
 
