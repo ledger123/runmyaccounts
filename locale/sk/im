@@ -1,0 +1,55 @@
+$self{charset} = 'ISO-8859-2';
+
+$self{texts} = {
+  'Account'                     => 'Úèet',
+  'CSV'                         => 'CSV',
+  'City'                        => 'Mesto',
+  'Company'                     => 'Firma',
+  'Company Number'              => 'Èíslo firmy',
+  'Continue'                    => 'Pokraèovanie',
+  'Curr'                        => 'Mena',
+  'Currency'                    => 'Typ meny',
+  'Customer'                    => 'Kupujúci',
+  'Customer Number'             => 'Èíslo odberateµa',
+  'Date Paid'                   => 'Dátum platby',
+  'Delimiter'                   => 'Oddelovaè',
+  'Description'                 => 'Popis',
+  'Due Date'                    => 'Dátum splatnosti',
+  'Exch'                        => 'Kurz',
+  'File to Import'              => 'Súbor pre import',
+  'Import File missing!'        => 'Chýba import súbor !',
+  'Import Sales Invoices'       => 'Import odberatelských faktúr',
+  'Invoice'                     => 'Faktúra',
+  'Invoice Date'                => 'Dátum faktúry',
+  'Invoice Number'              => 'Èíslo faktúry',
+  'Mapfile'                     => 'Mapsúbor',
+  'No'                          => 'Nie',
+  'Paid'                        => 'Zaplatené',
+  'Posting Invoice ...'         => 'Ulo¾enie faktúr ...',
+  'Posting failed!'             => 'Ulo¾enie neúspe¹né!',
+  'Qty'                         => 'Mno¾stvo',
+  'Salesperson'                 => 'Predávajúca osoba',
+  'Tab delimited file'          => 'Súbor s oddelovaèom Tab',
+  'The following parts could not be found:' => 'Nasledujúce polo¾ky neboli nájdené:',
+  'Total'                       => 'Celkom',
+  'Total:'                      => 'Celkom:',
+  'Type of File'                => 'Typ súboru',
+  'Unit'                        => 'Jednotka',
+  'Yes'                         => 'Ano',
+  'ok'                          => 'ok',
+};
+
+$self{subs} = {
+  'continue'                    => 'continue',
+  'display_payment'             => 'display_payment',
+  'display_sales_invoice'       => 'display_sales_invoice',
+  'import'                      => 'import',
+  'import_payments'             => 'import_payments',
+  'import_sales_invoices'       => 'import_sales_invoices',
+  'xrefhdr'                     => 'xrefhdr',
+  'pokraèovanie'                => 'continue',
+  'import_odberatelských_faktúr' => 'import_sales_invoices',
+};
+
+1;
+

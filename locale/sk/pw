@@ -1,0 +1,15 @@
+$self{charset} = 'ISO-8859-2';
+
+$self{texts} = {
+  'Continue'                    => 'Pokraèovanie',
+  'Password'                    => 'Heslo',
+  'Session expired!'            => 'Koniec èasu prístupu!',
+};
+
+$self{subs} = {
+  'getpassword'                 => 'getpassword',
+  'pokraèovanie'                => 'continue',
+};
+
+1;
+

@@ -1,0 +1,6 @@
+# .htaccess-Datei für Web-Verzeichnis /sql-ledger
+AuthType Basic
+AuthName "Kunden-Bereich"
+AuthUserFile /usr/local/security/.htusers
+AuthGroupFile /usr/local/security/.htgroups
+Require user tomi

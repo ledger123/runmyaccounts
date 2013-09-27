@@ -1,0 +1,128 @@
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+% Art des Templates: 3. Mahnung
+% Mandant: runmyaccounts
+% Erstellungsdatum: 10.01.2012
+% Version: 2.0
+% Ersteller: Thomas Brändle
+% © by Run my Accounts AG
+
+%statische Elemente
+\documentclass{scrartcl}
+\usepackage[latin1]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{tabularx}
+\setlength{\parindent}{0pt}
+\usepackage{graphicx}
+\usepackage{ifthen}
+\usepackage{mathptmx}
+\font\ocr=ocrb10
+\usepackage[absolute]{textpos}
+\usepackage{colortbl}
+
+%dynamische Elemente
+%Abstände Rand
+\usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry} 
+
+%Schrift
+\usepackage[scaled=.90]{helvet} 
+\renewcommand{\familydefault}{\sfdefault}
+
+%Hintergrund für erste Standard-Seite
+\usepackage{eso-pic}
+\newcommand\BackgroundPic{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrund.pdf} 
+}}}
+
+%Hintergrund für Einzahlungsschein (ohne Footer)
+\usepackage{eso-pic}
+\newcommand\BackgroundPicEZ{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrundez.pdf} 
+}}}
+
+\begin{document}
+%\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\shorthandoff{"}
+\pagestyle{empty}
+
+% Platzierung des Einzahlungsscheins (falls EZ im gleichen Template)
+\textblockorigin{-0.20cm}{0.15cm} % + nach links / + nach unten
+
+%Schriftwahl
+\normalfont
+
+%%%%%%%%%%%%%  INHALT  %%%%%%%%%%%%%
+
+\begin{center} 
+
+\Huge 
+
+\vspace*{4cm}
+
+\underline{MAHNSTUFE 3}
+
+\vspace{1cm}
+
+Dieses Template wurde nicht aktiviert. 
+
+\vspace{1cm}
+
+Falls Sie dieses Template wünschen, wenden Sie sich bitte für eine Offerte an Ihren Run my Accounts Account Manager. 
+
+\vspace{1cm}
+
+\normalsize
+
+\underline{Kontakt:}\\
+
+service@runmyaccounts.com\\
+
+Tel: 044 500 46 70
+
+\Huge 
+
+\vspace{1cm}
+
+\underline{Beispieltext}
+
+\vspace{1cm}
+
+\end{center}
+
+\normalsize
+
+
+%%%%%%%%%%%%%  3. MAHNUNG  %%%%%%%%%%%%%
+
+\parbox{\textwidth}{
+\textbf{\large{Letzte Mahnung}\hfill \today}
+}
+
+\vspace{0.5cm}
+\parbox{\textwidth}{
+\normalfont
+Wir beziehen uns auf die Rechnung Nr. <%invnumber%>
+<%if invdescription%>
+mit dem Titel \glqq <%invdescription%>\grqq 
+<%end invdescription%>
+\ vom <%invdate%> über <%currency%> <%due%>. Leider konnten wir noch immer keinen Zahlungseingang feststellen.\\
+
+Sollte der Betrag nicht innerhalb von 3 Tagen auf unserem Bankkonto eingegangen sein, sehen wir uns zur Veranlassung weiterer Schritte gezwungen.\\
+
+\vspace{0.5cm}
+
+Freundliche Grüsse
+
+\vspace{0.5cm}
+
+<%company%>
+}
+
+
+\end{document}

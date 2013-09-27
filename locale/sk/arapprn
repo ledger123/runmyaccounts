@@ -1,0 +1,35 @@
+$self{charset} = 'ISO-8859-2';
+
+$self{texts} = {
+  'Account'                     => 'Úèet',
+  'Amount'                      => 'Èiastka',
+  'Continue'                    => 'Pokraèovanie',
+  'Date'                        => 'Dátum',
+  'Memo'                        => 'Memo',
+  'Nothing to print!'           => 'Neni èo tlaèi»!',
+  'PDF'                         => 'PDF',
+  'Postscript'                  => 'Postscript',
+  'Screen'                      => 'Obrazovka',
+  'Select a Printer!'           => 'Vyberte tlaèiareò',
+  'Select payment'              => 'Vyberte spôsob platby',
+  'Select postscript or PDF!'   => 'Vyberte postscript alebo PDF!',
+  'Source'                      => 'Doklad',
+};
+
+$self{subs} = {
+  'payment_selected'            => 'payment_selected',
+  'print'                       => 'print',
+  'print_and_post'              => 'print_and_post',
+  'print_check'                 => 'print_check',
+  'print_credit_note'           => 'print_credit_note',
+  'print_debit_note'            => 'print_debit_note',
+  'print_options'               => 'print_options',
+  'print_receipt'               => 'print_receipt',
+  'print_remittance_voucher'    => 'print_remittance_voucher',
+  'print_transaction'           => 'print_transaction',
+  'select_payment'              => 'select_payment',
+  'pokraèovanie'                => 'continue',
+};
+
+1;
+

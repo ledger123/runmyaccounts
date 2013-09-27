@@ -1,0 +1,272 @@
+\documentclass{scrartcl}
+\usepackage[latin1]{inputenc}
+\usepackage{tabularx}
+\usepackage[a4paper,top=1.0cm,bottom=1.0cm,left=1.0cm,right=1.5cm]{geometry}
+\usepackage{graphicx}
+
+\begin{document}
+
+\pagestyle{myheadings}
+\thispagestyle{empty}
+
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+
+\newsavebox{\ftr}
+\sbox{\ftr}{
+\parbox{\textwidth}{
+ \small
+ \rule[1.5em]{\textwidth}{0.5pt}
+\centerline{}
+
+\\
+
+
+  }
+}
+
+<%include letterhead.tex%>
+
+
+<%pagebreak 50 27 48%>
+\end{tabularx}
+
+  \rule{\textwidth}{2pt}
+  
+  \hfill
+  \begin{tabularx}{7cm}{Xr@{\hspace{1cm}}r@{}}
+  & \textbf{Zwischensumme} & \textbf{<%sumcarriedforward%>} \\
+  \end{tabularx}
+
+\newpage
+
+\markboth{<%company%>\hfill <%invnumber%>}{<%company%>\hfill <%invnumber%>}
+
+\begin{tabularx}{\textwidth}{@{}lXrlrrr@{}}
+  \textbf{Antal tim.} & \textbf{Specifikation} & \textbf{à pris} &
+    \textbf{Pris} \\
+  & Summa föregående sida <%lastpage%> & & & & & <%sumcarriedforward%> \\
+<%end pagebreak%>
+
+
+\vspace*{0.3cm}
+\rule[1.5em]{\textwidth}{0.5pt}
+
+\parbox[t]{.5\textwidth}{
+\textbf{}
+\vspace{0.3cm}
+
+%<%name%>
+
+%<%address1%>
+
+%<%address2%>
+
+%<%city%>
+%<%if state%>
+%\hspace{-0.1cm}, <%state%>
+%<%end state%>
+%<%zipcode%>
+
+%<%country%>
+
+\vspace{0.3cm}
+
+%<%if contact%>
+%<%contact%>
+\vspace{0.2cm}
+%<%end contact%>
+
+%<%if customerphone%>
+%Tel: <%customerphone%>
+%<%end customerphone%>
+
+%<%if customerfax%>
+%Fax: <%customerfax%>
+%<%end customerfax%>
+
+%<%email%>
+}
+\parbox[t]{.5\textwidth}{
+%\textbf{Ship To}
+%\vspace{0.3cm}
+
+\textbf{Ship To:}\\
+<%company%>\\
+<%address%>
+
+
+<%shiptozipcode%> <%shiptocity%>
+<%if shiptostate%>
+\hspace{-0.1cm}, <%shiptostate%>
+<%end shiptostate%>
+
+<%shiptocountry%>
+
+\vspace{0.3cm}
+
+
+
+}
+\hfill
+
+\vspace{1cm}
+
+\textbf{T R A N S F E R} 
+\hfill
+
+\vspace{1cm}
+
+
+ 
+
+\begin{tabularx}{\textwidth}{*{5}{X}} \hspace{-0.3cm}
+  \textbf{Transfer Nr.} & \textbf{Date} & \textbf{From Warehouse}  & \textbf{To Warehouse} &  \textbf{Note}  \\ 
+
+\hspace{-0.3cm}
+<%trfnumber%> & <%trfdate%> & <%from_warehouse%> & <%to_warehouse%> & <%notes%> \\
+  
+\end{tabularx}
+  
+\vspace{0.5cm}  
+
+\begin{tabularx}{\textwidth}{@{}lXrrr@{}}\hline \\ [-0.1em] 
+  \textbf{Art. Nr.} & \textbf{Description} & \textbf{} & \textbf{Qty} &
+    \textbf{}  \\ [0.5em]  \hline \\ [0.5em] 
+<%foreach number%>
+  <%number%> & <%descrip%> & <%deliverydate%> &
+  <%qty%> & <%unit%> \\
+<%end number%>
+\end{tabularx}
+
+
+\parbox{\textwidth}{
+\rule[0.5em]{\textwidth}{0.5pt}
+
+
+\vspace{0.2cm}
+
+\hfill
+\begin{tabularx}{6.5cm}{Xr@{\hspace{1cm}}r@{}}
+ \end{tabularx}
+
+\vspace{0.3cm}
+
+\hfill
+
+\vspace{12pt}
+
+<%if notes%>
+\textbf{Notes:}\\
+<%notes%>
+<%end notes%>
+
+
+}
+
+\vfill
+
+%\rule{\textwidth}{0.5pt}
+
+\usebox{\ftr}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

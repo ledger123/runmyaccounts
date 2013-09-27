@@ -1,0 +1,31 @@
+$self{charset} = 'ISO-8859-13';
+
+$self{texts} = {
+  'Account'                     => 'Sàskaita',
+  'Amount'                      => 'Suma',
+  'Continue'                    => 'Tæsti',
+  'Date'                        => 'Data',
+  'PDF'                         => 'PDF',
+  'Postscript'                  => 'Postscript(TM)',
+  'Screen'                      => 'Ekranas',
+  'Select postscript or PDF!'   => 'Iðrinkite postscript arba PDF!',
+  'Source'                      => 'Dokumentas',
+};
+
+$self{subs} = {
+  'payment_selected'            => 'payment_selected',
+  'print'                       => 'print',
+  'print_and_post'              => 'print_and_post',
+  'print_check'                 => 'print_check',
+  'print_credit_note'           => 'print_credit_note',
+  'print_debit_note'            => 'print_debit_note',
+  'print_options'               => 'print_options',
+  'print_receipt'               => 'print_receipt',
+  'print_remittance_voucher'    => 'print_remittance_voucher',
+  'print_transaction'           => 'print_transaction',
+  'select_payment'              => 'select_payment',
+  'tæsti'                       => 'continue',
+};
+
+1;
+

@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>Run my Accounts Dokumenten Management System</title>
+<LINK REL="stylesheet" HREF="https://app.runmyaccounts.com/css/sql-ledger.css" TYPE="text/css" TITLE="Run my Accounts stylesheet">
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/plain; charset=ISO-8859-1">
+  
+  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
+  <script src="js/rma.js" type="text/javascript"></script>
+
+</head>
+<body>
+
+<table width=100%>
+  <tr class=listtop>
+    <th class=listtop>Run my Accounts Dokumenten Management System</th>
+  </tr>
+<td>
+
+<table width=100%>
+<tr class=listheading>
+<th class=listheading>Volltext Suche</th>
+</tr>
+
+<table width=100%>
+<tr valign=top>
+<form action="https://doc.runmyaccounts.com/alfresco/wcservice/api/search/keyword?" method="get">
+  <p>Suchbegriff:<br> <input name="q" type="text" size="40" maxlength="300"></p>
+  <p>Anz. angezeigte Resultate: <br><input type="radio" name="c" value="10" checked> 10<input type="radio" name="c" value="50"> 50 <input type="radio" name="c" value="100"> 100</p>
+  </tr>
+</table>
+<table width=100%>
+<tr valign=top>
+<input type="submit" class=submit value="Suchen"> 
+<input type="reset" class=submit value="Abbrechen">
+</form>
+</tr>
+</table>
+<br>
+<br>
+<br>
+<table width=100%>
+<tr class=listheading>
+<th class=listheading>File Explorer</th>
+</tr>
+</table>
+<iframe src="https://doc.runmyaccounts.com/alfresco/service/ui/myspaces?" width="730" height="509" frameborder="0" allowTransparency="true"></iframe>
+</table>
+
+</body>
+</html>

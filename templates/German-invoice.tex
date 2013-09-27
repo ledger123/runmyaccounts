@@ -1,0 +1,207 @@
+\documentclass{scrartcl}
+\usepackage[latin1]{inputenc}
+\usepackage{tabularx}
+\usepackage[letterpaper,top=2cm,bottom=-3cm,left=1.1cm,right=1.5cm]{geometry}
+\usepackage{graphicx}
+
+\begin{document}
+
+\pagestyle{myheadings}
+\thispagestyle{empty}
+
+\fontfamily{cmss}\fontsize{10pt}{12pt}\selectfont
+
+\newsavebox{\ftr}
+\sbox{\ftr}{
+  \parbox{\textwidth}{
+  \tiny
+  \rule[1.5em]{\textwidth}{0.5pt}
+Rechnung ist bezahlbar innerhalb von <%terms%> Tagen. 
+Nach dem <%duedate%> werden Zinsen zu einem monatlichen Satz von 1.5\% verrechnet. 
+Waren bleiben im Besitz von <%company%> bis die Rechnung voll bezahlt ist. 
+Rückgaben werden mit 10 Prozent Lagergebühren belastet. 
+Beschädigte Waren und Waren ohne eine Rückgabenummer werden nicht entgegengenommen.
+  }
+}
+
+<%include letterhead.tex%>
+
+<%pagebreak 65 27 37%>
+\end{tabularx}
+
+  \rule{\textwidth}{2pt}
+  
+  \vspace{0.2cm}
+
+  \hfill
+  \begin{tabularx}{\textwidth}{Xr@{\hspace{1cm}}r@{}}
+  & Subtotal & <%sumcarriedforward%> \\
+  \end{tabularx}
+
+\newpage
+
+\markboth{<%company%>\hfill <%invnumber%>}{<%company%>\hfill <%invnumber%>}
+
+\begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
+  \textbf{Pos.} & \textbf{Artikel Nr.} & \textbf{Beschreibung} & & \textbf{Anz.} &
+    \textbf{Einh.} & \textbf{Preis} & \textbf{Rabatt} & \textbf{Total} \\ [0.5em]
+  & Übertrag von Seite <%lastpage%> & & & & & & & <%sumcarriedforward%> \\ [0.5em]
+<%end pagebreak%>
+
+
+\vspace*{0.5cm}
+
+\parbox[t]{.5\textwidth}{
+\textbf{Empfänger}
+\vspace{0.3cm}
+
+<%name%>
+
+<%address1%>
+
+<%address2%>
+
+<%zipcode%>
+<%city%>
+
+<%if country%>
+<%country%>
+<%end country%>
+
+\vspace{0.3cm}
+
+<%if contact%>
+<%contact%>
+\vspace{0.2cm}
+<%end contact%>
+
+<%if customerphone%>
+Tel: <%customerphone%>
+<%end customerphone%>
+
+<%if customerfax%>
+Fax: <%customerfax%>
+<%end customerfax%>
+
+<%email%>
+}
+\parbox[t]{.5\textwidth}{
+\textbf{Lieferadresse}
+\vspace{0.3cm}
+
+<%shiptoname%>
+
+<%shiptoaddress1%>
+
+<%shiptoaddress2%>
+
+<%shiptozipcode%>
+<%shiptocity%>
+
+<%if shiptocountry%>
+<%shiptocountry%>
+<%end shiptocountry%>
+
+\vspace{0.3cm}
+
+<%if shiptocontact%>
+<%shiptocontact%>
+\vspace{0.2cm}
+<%end shiptocontact%>
+
+<%if shiptophone%>
+Tel: <%shiptophone%>
+<%end shiptophone%>
+
+<%if shiptofax%>
+Fax: <%shiptofax%>
+<%end shiptofax%>
+
+<%shiptoemail%>
+}
+\hfill
+
+\vspace{1cm}
+
+\textbf{R E C H N U N G}
+\hfill
+
+\vspace{1cm}
+
+\begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
+  \textbf{Rechnung Nr.} & \textbf{Datum} & \textbf{fällig bis} & \textbf{Bestell Nr.}
+  & \textbf{Verkäufer} & \textbf{Lieferort} & \textbf{Lieferung per} \\ [0.5em]
+  \hline
+  <%invnumber%> & <%invdate%> & <%duedate%> & <%ordnumber%> & <%employee%>
+  & <%shippingpoint%> & <%shipvia%> \\
+  \hline
+\end{tabularx}
+
+\vspace{1cm}
+
+\begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
+  \textbf{Pos.} & \textbf{Artikel Nr.} & \textbf{Beschreibung} & & \textbf{Anz.} &
+    \textbf{Einh.} & \textbf{Preis} & \textbf{Rabatt} & \textbf{Betrag} \\ [0.5em]
+<%foreach number%>
+  <%runningnumber%> & <%number%> & <%description%> & <%deliverydate%> &
+  <%qty%> & <%unit%> & <%sellprice%> & <%discountrate%> & <%linetotal%> \\
+<%end number%>
+\end{tabularx}
+
+
+\parbox{\textwidth}{
+\rule{\textwidth}{2pt}
+
+\vspace{0.2cm}
+
+\hfill
+\begin{tabularx}{7cm}{Xr@{\hspace{1cm}}r@{}}
+  & Total & <%subtotal%> \\
+<%foreach tax%>
+  & <%taxdescription%> on <%taxbase%> & <%tax%> \\
+<%end tax%>
+<%if paid%>
+  & Bezahlt & - <%paid%> \\
+<%end paid%>
+  \hline
+<%if total%>
+  & geforderter Betrag & <%total%>
+<%end total%>
+\end{tabularx}
+
+\vspace{0.3cm}
+
+<%text_amount%> ***** <%decimal%>/100
+\hfill
+Alle Preise in \textbf{<%currency%>}.
+
+\vspace{12pt}
+
+<%notes%>
+}
+
+\vfill
+
+<%if paid_1%>
+\begin{tabularx}{10cm}{@{}lXlr@{}}
+  \textbf{Payments} & & & \\
+  \hline
+  \textbf{Datum} & & \textbf{Quelle} & \textbf{Betrag} \\
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\end{tabularx}
+<%end paid_1%>
+
+\vspace{1cm}
+
+\centerline{\textbf{Vielen Dank für Ihren Auftrag}}
+
+\rule{\textwidth}{0.5pt}
+
+\usebox{\ftr}
+
+\end{document}
+

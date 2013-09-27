@@ -1,0 +1,41 @@
+@import "sql-ledger.css";
+
+/* IE hacks */
+th, td {
+	empty-cells: show;
+}
+body.menu div span.visible {
+	padding: 0 4px;
+	position: relative;
+	top: -24px;
+	right: 4px; 
+	display: none;
+}
+body.main .listrow1 td, body.main .listrow0 td {
+	border-bottom: none;
+}
+body.main .listrow1 td, body.main .listrow0 td {
+	border-left: none;
+	border-bottom: 1px solid #ccc;
+	padding: 5px 2px;
+}
+body.main .listrow1 th, body.main .listrow0 th {
+	border-left: none;
+	border-bottom: 2px solid #000;
+	padding: 5px 2px;
+}
+.checkbox, .radio {
+	border: none;
+}
+.ul div {
+	height: 30px;
+}
+.ul>.menuOut.hover {
+	color: #fff !important;
+}
+.start center h1, .start center p {
+	padding: 0;
+}
+.main .listheading .listtop {
+	padding: 20px 5px 5px 0;
+}

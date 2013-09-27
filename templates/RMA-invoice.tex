@@ -1,0 +1,212 @@
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+% Art des Templates: Rechnung
+% Mandant: runmyaccounts
+% Erstellungsdatum: 10.01.2012
+% Version: 2.0
+% Ersteller: Thomas Brändle
+% © by Run my Accounts AG
+
+%statische Elemente
+\documentclass{scrartcl}
+\usepackage[latin1]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{tabularx}
+\setlength{\parindent}{0pt}
+\usepackage{graphicx}
+\usepackage{ifthen}
+\usepackage{mathptmx}
+\font\ocr=ocrb10
+\usepackage[absolute]{textpos}
+\usepackage{colortbl}
+
+%dynamische Elemente
+%Abstände Rand
+\usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry} 
+
+%Schrift
+\usepackage[scaled=.90]{helvet} 
+\renewcommand{\familydefault}{\sfdefault}
+
+%Hintergrund für erste Standard-Seite
+\usepackage{eso-pic}
+\newcommand\BackgroundPic{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrund.pdf} 
+}}}
+
+%Hintergrund für Einzahlungsschein (ohne Footer)
+\usepackage{eso-pic}
+\newcommand\BackgroundPicEZ{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrundez.pdf} 
+}}}
+
+\begin{document}
+%\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\shorthandoff{"}
+\pagestyle{empty}
+
+% Platzierung des Einzahlungsscheins (falls EZ im gleichen Template)
+\textblockorigin{-0.20cm}{0.15cm} % + nach links / + nach unten
+
+%Schriftwahl
+\normalfont
+
+%%%%%%%%%%%%%  INHALT  %%%%%%%%%%%%%
+
+\begin{center} 
+
+\Huge 
+
+\vspace*{4cm}
+
+\underline{RECHNUNG}
+
+\vspace{1cm}
+
+Dieses Template wurde nicht aktiviert. 
+
+\vspace{1cm}
+
+Falls Sie dieses Template wünschen, wenden Sie sich bitte für eine Offerte an Ihren Run my Accounts Account Manager. 
+
+\vspace{1cm}
+
+\normalsize
+
+\underline{Kontakt:}\\
+
+service@runmyaccounts.com\\
+
+Tel: 044 500 46 70
+
+\Huge 
+
+\vspace{1cm}
+
+\underline{Beispieltext}
+
+\vspace{1cm}
+
+\end{center}
+
+\normalsize
+
+
+
+%%%%%%%%%%%%%  ARTIKELTABELLE  %%%%%%%%%%%%%
+
+\renewcommand{\arraystretch}{1.3} %Abstand zwischen den Zeilen
+
+\begin{tabularx}{\textwidth}{@{}Xrrrr@{}}
+
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Price <%currency%>} & \textbf{Amount <%currency%>} \\
+
+\hline
+
+<%foreach number%>
+<%description%> <%if itemnotes%>\newline <%itemnotes%> <%end itemnotes%> & <%qty%> & <%unit%> & <%sellprice%> & <%linetotal%>\\
+<%end number%>
+\end{tabularx}
+
+%%%%%%%%%%%%%  SUMMEN TEMPLATE  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%tax%>}{}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if total%>
+\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+<%end total%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lrrr@{}}
+\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
+\hline
+0 \%& <%invtotal%>  & 0.00 & <%invtotal%>\\
+
+\end{tabular}
+\end{flushright}
+
+}
+
+}{
+
+\ifthenelse{\equal{<%taxincluded%>}{1}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if total%>
+\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+<%end total%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lrrr@{}}
+\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
+\hline
+<%foreach tax%>
+<%taxrate%> \%&<%taxbase%>  &<%tax%> & <%taxbaseinclusive%>\\
+<%end tax%>
+\end{tabular}
+
+\end{flushright}
+}
+
+}{
+
+\parbox{\textwidth}{
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+Subtotal <%currency%>& <%subtotal%> \\
+
+<%foreach tax%>
+VAT <%taxrate%> \% on <%taxbase%> & <%tax%> \\
+<%end tax%>
+
+\hline
+
+<%if total%>
+\textbf{Total Amount <%currency%>}& \textbf{<%invtotal%>}
+<%end total%>
+
+\end{tabularx}
+
+\hline
+}
+}
+}
+
+
+
+\end{document}
