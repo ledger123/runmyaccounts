@@ -1457,6 +1457,10 @@ sub post_invoice {
 
   $form->{dcn} = ($form->{dcn} == '<%external%>') ? '' : $form->format_dcn($form->{dcn});
 
+  # Fix rounding error
+  $invamount = $form->round_amount($invamount, 6);
+  $invnetamount = $form->round_amount($invnetamount, 6);
+
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
