@@ -68,7 +68,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2030','Anzahlungen von Kunden','A','200','L','AR_amount:IC_income');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('210','KURZFR. FINANZVERBINDLICHKEITEN','H','210','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2160','Kontokorrent Gesellschafter','A','210','L','AR_paid:AP_paid');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2185','Kreditkarte','A','210','L','AP_paid');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2185','Kreditkarte','A','210','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('220','ANDERE KURZFRISTIGE VERBINDLICHKEITEN','H','220','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2200','Geschuldete MWST','A','220','L','AP_amount');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2201','MWST 8,0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
