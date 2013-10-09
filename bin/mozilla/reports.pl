@@ -1,6 +1,8 @@
 use IO::File;
 use POSIX qw(tmpnam);
 
+use SL::RP;
+
 require "$form->{path}/lib.pl";
 require "$form->{path}/mylib.pl";
 
@@ -3866,6 +3868,316 @@ sub projects_list {
    print qq|</table>|;
    $sth->finish;
    $dbh->disconnect;
+}
+
+
+#-------------------------------
+sub search_reminders {
+
+  # This report shows when reminder levels were changed.
+
+  $form->{title} = $locale->text('Reminders');
+  $form->{vc} = 'customer';
+  $form->{nextsub} = 'list_reminders';
+
+  RP->create_links(\%myconfig, \%$form, 'customer');
+
+  if (@{ $form->{all_years} }) {
+    # accounting years
+    $selectaccountingyear = "<option>\n";
+    for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|<option>$_\n| }
+    $selectaccountingmonth = "<option>\n";
+    for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|<option value=$_>|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+    $selectfrom = qq|
+        <tr>
+	  <th align=right>|.$locale->text('Period').qq|</th>
+	  <td colspan=3>
+	  <select name=month>$selectaccountingmonth</select>
+	  <select name=year>$selectaccountingyear</select>
+	  <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+	  <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+	  <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+	  <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+	  </td>
+	</tr>
+|;
+    }
+
+    # setup vc selection
+    $form->all_vc(\%myconfig, $form->{vc}, ($form->{vc} eq 'customer') ? "AR" : "AP", undef, undef, undef, 1);
+    $vclabel = $locale->text('Customer');
+    $vcnumber = $locale->text('Customer Number');
+
+    if (@{ $form->{"all_$form->{vc}"} }) {
+      $vc = qq|
+           <tr>
+	     <th align=right nowrap>$vclabel</th>
+	     <td colspan=2><select name=$form->{vc}><option>\n|;
+	     
+      for (@{ $form->{"all_$form->{vc}"} }) { $vc .= qq|<option value="|.$form->quote($_->{name}).qq|--$_->{id}">$_->{name}\n| }
+
+      $vc .= qq|</select>
+             </td>
+	   </tr>
+|;
+    } else {
+      $vc = qq|
+                <tr>
+		  <th align=right nowrap>$vclabel</th>
+		  <td colspan=2><input name=$form->{vc} size=35>
+		  </td>
+		</tr>
+		<tr>
+		  <th align=right nowrap>$vcnumber</th>
+		  <td colspan=3><input name="$form->{vc}number" size=35>
+		  </td>
+		</tr>
+|;
+   }
+
+   # departments
+   if (@{ $form->{all_department} }) {
+     if ($myconfig{department_id} and $myconfig{role} eq 'user'){
+	$form->{selectdepartment} = qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{department}\n|;
+     } else {
+	$form->{selectdepartment} = "<option>\n";
+	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|<option value="|.$form->quote($_->{description}).qq|--$_->{id}">$_->{description}\n| }
+     }
+   }
+ 
+   $department = qq|
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Department').qq|</th>
+	  <td colspan=3><select name=department>$form->{selectdepartment}</select></td>
+	</tr>
+| if $form->{selectdepartment};
+
+
+  $form->header;
+  print qq|
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+    <table>
+    $department
+    $vc
+    <tr>
+      <th align=right>|.$locale->text('From').qq|</th>
+      <td><input name=fromdate size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value="$form->{fromdate}"> <b>|.$locale->text('To').qq|</b> <input name=todate size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value="$form->{todate}"></td>
+    </tr>
+    $selectfrom
+    <tr>
+	<th align=right nowrap>|.$locale->text('Include in Report').qq|</th>
+	<td>
+	<table width=100%>
+|;
+
+    @a = ();
+    
+    push @a, qq|<input name="l_transdate" class=checkbox type=checkbox value=Y checked> |.$locale->text('Date');
+    push @a, qq|<input name="l_reference" class=checkbox type=checkbox value=Y checked> |.$locale->text('Level');
+    push @a, qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> |.$locale->text($vclabel);
+    push @a, qq|<input name="l_$form->{vc}number" class=checkbox type=checkbox value=Y> |.$locale->text($vcnumber);
+    push @a, qq|<input name="l_invnumber" class=checkbox type=checkbox value=Y checked> |.$locale->text('Invoice Number');
+    push @a, qq|<input name="l_ordnumber" class=checkbox type=checkbox value=Y checked> |.$locale->text('Order Number');
+    push @a, qq|<input name="l_duedate" class=checkbox type=checkbox value=Y checked> |.$locale->text('Due Date');
+    push @a, qq|<input name="l_due" class=checkbox type=checkbox value=Y checked> |.$locale->text('Due');
+    
+    while (@a) {
+      print qq|<tr>\n|;
+      for (1 .. 5) {
+	print qq|<td nowrap>|. shift @a;
+	print qq|</td>\n|;
+      }
+      print qq|</tr>\n|;
+    }
+    print qq|
+      </table>
+     </td>
+    </tr>
+    </table>
+   </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+</table>
+
+<br>
+<input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">
+|;
+
+  $form->hide_form(qw(title nextsub path login));
+
+  print qq|
+
+</form>
+|;
+
+  if ($form->{menubar}) {
+    require "$form->{path}/menu.pl";
+    &menubar;
+  }
+
+  print qq|
+
+</body>
+</html>
+|;
+
+}
+
+sub list_reminders {
+
+  $form->{vc} = 'customer';
+  my $where;
+  if ($form->{department}) {
+    ($department, $form->{department_id}) = split /--/, $form->{department};
+    $form->{department_id} *= 1;
+    $options = $locale->text('Department')." : $department<br/>";
+    $where = " AND ar.department_id = $form->{department_id}";
+  }
+
+  ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+  if ($form->{fromdate}) {
+    $where .= " AND ar.transdate >= '$form->{fromdate}'";
+    $options = $locale->text('From')." : $form->{fromdate}<br/>";
+  }
+  if ($form->{todate}) {
+    $where .= " AND ar.transdate <= '$form->{todate}'";
+    $options .= $locale->text('To')." : $form->{todate}<br/>";
+  }
+  if ($form->{"$form->{vc}number"} ne "") {
+    $var = $form->like(lc $form->{"$form->{vc}number"});
+    $where .= " AND lower(vc.$form->{vc}number) LIKE '$var'";
+    $options .= $locale->text('Customer Number').qq| : $form->{"$form->{vc}number"}<br/>|;
+  }
+  if ($form->{$form->{vc}} ne "") {
+    ($vc, $null) = split / - /, $form->{$form->{vc}};
+    ($vc, $null) = split /--/, $vc;
+    $var = $form->like(lc $vc);
+    $where .= " AND lower(vc.name) LIKE '$var'";
+    $options .= $locale->text('Customer')." : $vc<br/>";
+  }
+
+  my $dbh = $form->dbconnect(\%myconfig);
+
+  $query = qq|
+	SELECT cast(a.transdate as date) transdate, a.reference, vc.name,
+		vc.customernumber, ar.invnumber, ar.ordnumber,
+		ar.duedate, ar.amount - ar.paid due
+	FROM audittrail a
+	JOIN ar ON (ar.id = a.trans_id)
+	JOIN customer vc ON (vc.id = ar.customer_id)
+	WHERE a.formname = 'reminder'
+	AND a.action = 'level-change'
+	$where
+	ORDER BY a.transdate
+  |;
+  @columns = (qw(transdate reference name customernumber invnumber ordnumber duedate due));
+  $form->sort_order();
+
+  @column_index = ();
+  foreach $item (@columns) {
+    if ($form->{"l_$item"} eq "Y") {
+      push @column_index, $item;
+    }
+  }
+
+  $form->{title} = $locale->text('List Reminders');
+
+  my %column_data;
+  
+  $column_data{transdate} = qq|<th width=90%><a class=listheading>|.$locale->text('Date').qq|</a></th>|;
+  $column_data{reference} = qq|<th class=listheading nowrap>|.$locale->text('Level').qq|</th>|;
+  $column_data{name} = qq|<th class=listheading nowrap>|.$locale->text('Customer').qq|</th>|;
+  $column_data{customernumber} = qq|<th class=listheading nowrap>|.$locale->text('Customer Number').qq|</th>|;
+  $column_data{invnumber} = qq|<th class=listheading nowrap>|.$locale->text('Invoice Number').qq|</th>|;
+  $column_data{ordnumber} = qq|<th class=listheading nowrap>|.$locale->text('Order Number').qq|</th>|;
+  $column_data{duedate} = qq|<th class=listheading nowrap>|.$locale->text('Due Date').qq|</th>|;
+  $column_data{due} = qq|<th class=listheading nowrap>|.$locale->text('Due').qq|</th>|;
+
+  $form->header;
+
+  print qq|
+<body>
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>$options</td>
+  </tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+  for (@column_index) { print "$column_data{$_}\n" }
+
+  print qq|
+        </tr>
+|;
+
+
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+
+  my $i;
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    
+    $i++; $i %= 2;
+    
+    print qq|
+        <tr valign=top class=listrow$i>
+|;
+
+   for (qw(transdate reference name customernumber invnumber ordnumber duedate due)){
+      $column_data{$_} = qq|<td nowrap>$ref->{$_}</td>|;
+   }
+   $column_data{due} = qq|<td align="right">|.$form->format_amount(\%myconfig, $ref->{due}, $form->{precision}).qq|</td>|;
+
+   for (@column_index) { print "$column_data{$_}\n" }
+
+   print qq|
+	</tr>
+|;
+  }
+
+  print qq|
+      </table>
+    </td>
+  </tr>
+  <tr>
+  <td><hr size=3 noshade></td>
+  </tr>
+</table>
+
+<br>
+|;
+
+  if ($form->{menubar}) {
+    require "$form->{path}/menu.pl";
+    &menubar;
+  }
+
+  print qq|
+  </form>
+  
+  </body>
+  </html> 
+|;
+  
 }
 
 #######
