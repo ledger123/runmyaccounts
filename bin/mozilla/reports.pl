@@ -4047,11 +4047,11 @@ sub list_reminders {
 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   if ($form->{fromdate}) {
-    $where .= " AND ar.transdate >= '$form->{fromdate}'";
+    $where .= " AND cast(a.transdate as date) >= '$form->{fromdate}'";
     $options = $locale->text('From')." : $form->{fromdate}<br/>";
   }
   if ($form->{todate}) {
-    $where .= " AND ar.transdate <= '$form->{todate}'";
+    $where .= " AND cast(a.transdate as date) <= '$form->{todate}'";
     $options .= $locale->text('To')." : $form->{todate}<br/>";
   }
   if ($form->{"$form->{vc}number"} ne "") {
