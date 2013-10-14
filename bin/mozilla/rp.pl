@@ -2955,33 +2955,6 @@ if ($form->{alltaxes} and !$header){
    |;
 
    print qq|
-     <table width=100% class="vat_summary_table">
-	<tr class=listheading>
-	  <th>&nbsp;</th>
-	  <th>|.$locale->text('Account').qq|</th>
-	  <th>|.$locale->text('Description').qq|</th>
-	  <th>|.$locale->text('Amount').qq|</th>
-	  <th>|.$locale->text('Tax').qq|</th>
-	</tr>|;
-   my $dbh = $form->dbconnect(\%myconfig);
-   my $sth = $dbh->prepare($query);
-   $sth->execute || $form->error($query);
-
-   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-      $i++; $i %= 2;
-      print qq|<tr class="listrow$i">|;
-      print qq|<td>AR</td>| if $ref->{seq} <= 2;
-      print qq|<td>AP</td>| if $ref->{seq} > 2;
-      print qq|<td>$ref->{accno}</td>|;
-      print qq|<td>$ref->{description}</td>|;
-      print qq|<td align=right>| . $form->format_amount(\%myconfig, $ref->{netamount}, $form->{precision}) . qq|</td>|;
-      print qq|<td align=right>| . $form->format_amount(\%myconfig, $ref->{tax}, $form->{precision}) . qq|</td>|;
-      print qq|</tr>|;
-   }
-   $sth->finish;
-   $dbh->disconnect;
-   print qq|
-     </table>
      <table width=100% class="vat_details_table">|;
 } # ($form->{alltaxes} and !$header)
 
