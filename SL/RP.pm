@@ -1765,7 +1765,19 @@ sub save_level {
   $query = qq|INSERT INTO status (trans_id, formname)
               VALUES (?,?)|;
   my $ath = $dbh->prepare($query) || $form->dberror($query);
-  
+
+  ($null, $form->{employee_id}) = $form->get_employee($dbh);
+
+  # Record change of reminder level in audittrail table
+  $query = qq|INSERT INTO audittrail
+		(trans_id, tablename, reference,
+		formname, action, employee_id)
+	      VALUES (
+		?, 'ar', ?, 
+		'reminder', 'level-change', $form->{employee_id}
+	      )|;
+  my $tth = $dbh->prepare($query) || $form->dberror($query);
+
   for (split / /, $form->{ids}) {
     if ($form->{"ndx_$_"}) {
 
@@ -1775,6 +1787,8 @@ sub save_level {
       if ($form->{"level_$_"} *= 1) {
 	$ath->execute($_, qq|reminder$form->{"level_$_"}|) || $form->dberror;
 	$ath->finish;
+        $tth->execute($_, $form->{"level_$_"});
+	$tth->finish;
       }
     }
   }

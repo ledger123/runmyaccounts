@@ -136,6 +136,7 @@ $self{texts} = {
   'Reconciliation'              => 'Kontenabgleich',
   'Recurring Transactions'      => 'Wiederkehrende Buchungen',
   'Reminder'                    => 'Mahnungen',
+  'Reminders Level'             => 'Verlauf Mahnungen',
   'Remittance Voucher'          => 'Einzahlungsschein',
   'Remittance Vouchers'         => 'Einzahlungsscheine',
   'Remove Locks'                => 'Sperren aufheben',
