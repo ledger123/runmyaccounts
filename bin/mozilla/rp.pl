@@ -2871,7 +2871,7 @@ sub generate_tax_report {
 
 |;
   print qq|
-<table width=100%>
+<table width=100% class="vat_summary_title_table">
   <tr>
     <th class=listtop colspan=$colspan>$form->{title}</th>
   </tr>
@@ -2963,7 +2963,7 @@ if ($form->{alltaxes} and !$header){
    |;
 
    print qq|
-     <table width=100%>
+     <table width=100% class="vat_summary_table">
 	<tr class=listheading>
 	  <th>&nbsp;</th>
 	  <th>|.$locale->text('Account').qq|</th>
@@ -2990,7 +2990,7 @@ if ($form->{alltaxes} and !$header){
    $dbh->disconnect;
    print qq|
      </table>
-     <table width=100%>|;
+     <table width=100% class="vat_details_table">|;
 } # ($form->{alltaxes} and !$header)
 
   print qq|<table width=100%>| if !$form->{alltaxes};
@@ -3080,6 +3080,25 @@ if ($form->{alltaxes} and !$header){
   $totalnetamount = $form->format_amount(\%myconfig, $totalnetamount, $form->{precision}, "&nbsp;");
   $totaltax = $form->format_amount(\%myconfig, $totaltax, $form->{precision}, "&nbsp;");
   
+  # set default values
+  if ($totalnetamount eq "&nbsp;") {
+    $totalnetamount = 0;
+  }
+  if ($totaltax eq "&nbsp;") {
+    $totaltax = 0;
+  }
+  if ($form->{accno} eq '' ) {
+    $form->{accno} = "N";
+  }
+  if ($form->{"$form->{accno}_description"} eq '' ) {
+    $form->{"$form->{accno}_description"} = "Non-taxable";
+  }
+  
+  $ar_ap = $locale->text(uc $form->{db});
+  $column_data{transdate} = qq|<th></th>|;
+  $column_data{invnumber} = qq|<th></th>|;
+  $column_data{description} = qq|<th align=right></th>|;
+  $column_data{name} = qq|<th align=right>$ar_ap $form->{accno}--$form->{"$form->{accno}_description"}</th>|;
   $column_data{netamount} = qq|<th class=listtotal align=right>$totalnetamount</th>|;
   $column_data{tax} = qq|<th class=listtotal align=right>$totaltax</th>|;
  
