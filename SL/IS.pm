@@ -571,6 +571,7 @@ sub invoice_details {
   my $whole;
   my $decimal;
   
+  $form->{total} = $form->round_amount($form->{total}, 6);
   ($whole, $decimal) = split /\./, $form->round_amount($form->{invtotal},6);
 
   $form->{decimal} = substr("${decimal}00", 0, 2);
