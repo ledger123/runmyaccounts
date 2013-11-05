@@ -3090,7 +3090,7 @@ if ($form->{alltaxes} and !$header){
   $column_data{transdate} = qq|<th></th>|;
   $column_data{invnumber} = qq|<th></th>|;
   $column_data{description} = qq|<th align=right></th>|;
-  $column_data{name} = qq|<th align=right>$ar_ap $form->{accno}--$form->{"$form->{accno}_description"}</th>|;
+  $column_data{name} = qq|<th align=right>$ar_ap $form->{accno}</th>|;
   $column_data{netamount} = qq|<th class=listtotal align=right>$totalnetamount</th>|;
   $column_data{tax} = qq|<th class=listtotal align=right>$totaltax</th>|;
  
