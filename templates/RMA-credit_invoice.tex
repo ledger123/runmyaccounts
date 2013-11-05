@@ -1,10 +1,11 @@
 %%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
-% Art des Templates: Gutschrift
-% Mandant: runmyaccounts
-% Erstellungsdatum: 10.01.2012
-% Version: 2.0
-% Ersteller: Thomas Brändle
+% Art des Templates: Gutschriftsrechnung / credit_invoice.tex
+% Mandant: 
+% Erstellungsdatum: 
+% Version: 
+% Ersteller: 
 % © by Run my Accounts AG
+
 
 %statische Elemente
 \documentclass{scrartcl}
@@ -19,14 +20,22 @@
 \font\ocr=ocrb10
 \usepackage[absolute]{textpos}
 \usepackage{colortbl}
+\usepackage{color}
+\usepackage{substr}
+
 
 %dynamische Elemente
-%Abstände Rand
-\usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry} 
+%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
+\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
 
 %Schrift
 \usepackage[scaled=.90]{helvet} 
 \renewcommand{\familydefault}{\sfdefault}
+
+%Tabellendefinitionen
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
 
 %Hintergrund für erste Standard-Seite
 \usepackage{eso-pic}
@@ -47,70 +56,144 @@
 }}}
 
 \begin{document}
-%\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
 \shorthandoff{"}
 \pagestyle{empty}
 
-% Platzierung des Einzahlungsscheins (falls EZ im gleichen Template)
-\textblockorigin{-0.20cm}{0.15cm} % + nach links / + nach unten
+% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
+\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
 
 %Schriftwahl
 \normalfont
 
-%%%%%%%%%%%%%  INHALT  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  PAGEBREAK SECTION  %%%%%%%%%%%%%
 
-\begin{center} 
+<%pagebreak 54 15 24%>
 
-\Huge 
+%Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
+\end{tabularx} 
 
-\vspace*{4cm}
+%Eine Zwischensummentabelle wird eingefügt
+\begin{tabularx}{\textwidth}{@{}Xr@{}} 
+\hline
+Zwischensumme &<%sumcarriedforward%> \\
+\end{tabularx}
 
-\underline{GUTSCHRIFT}
+%Eine neue Seite wird initialisiert.
+\newpage
 
-\vspace{1cm}
+%Die Artikeltabelle auf der neuen Seite wird initialisiert.
+\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
 
-Dieses Template wurde nicht aktiviert. 
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
+\hline
 
-\vspace{1cm}
+%Der Übertrag der letzten Seite wird geschrieben.
+\"{U}bertrag von Seite <%lastpage%> & & & & <%sumcarriedforward%> \\
+<%end pagebreak%>
 
-Falls Sie dieses Template wünschen, wenden Sie sich bitte für eine Offerte an Ihren Run my Accounts Account Manager. 
+%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
 
-\vspace{1cm}
+% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
+%\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
 
-\normalsize
+% Bei rechter Positionierung des Adresskopfs:
+\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
 
-\underline{Kontakt:}\\
+\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
+\small
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
 
-service@runmyaccounts.com\\
+%Firmenanschrift
 
-Tel: 044 500 46 70
+<%name%>
 
-\Huge 
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
 
-\vspace{1cm}
+}{
 
-\underline{Beispieltext}
+%Privatanschrift
 
-\vspace{1cm}
+<%salutation%>
 
-\end{center}
+<%firstname%> <%lastname%>
 
-\normalsize
+} 
 
+\ifthenelse{\equal{address1}{}}{}{<%address1%>}
 
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+
+\end{textblock*}
+
+\vspace{3.2cm}
+
+%%%%%%%%%%%%%  RECHNUNGSKOPF  %%%%%%%%%%%%%
+
+\parbox{\textwidth}{
+\textbf{\large{Gutschrifts Nr. <%invnumber%>}\hfill {Datum:} <%invdate%>}
+}
+
+\vspace{0.5cm}
+
+%Rechnungstitel
+\ifthenelse{\equal{<%invdescription%>}{}}{}{
+\textbf{<%invdescription%>}
+\vspace{0.2cm}
+}
+
+%Bestellnummer
+\ifthenelse{\equal{<%ordnumber%>}{}}{}{Bestellnummer: <%ordnumber%>
+\vspace{0.2cm}
+}
+
+%Ihre Bestellnummer
+\ifthenelse{\equal{<%ponumber%>}{}}{}{Ihre Bestellnummer: <%ponumber%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 1
+\ifthenelse{\equal{<%shippingpoint%>}{}}{}{<%shippingpoint%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 2
+\ifthenelse{\equal{<%shipvia%>}{}}{}{<%shipvia%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 3
+\ifthenelse{\equal{<%waybill%>}{}}{}{<%waybill%>
+\vspace{0.2cm}
+}
+
+\vspace{0.3cm}
 
 %%%%%%%%%%%%%  ARTIKELTABELLE  %%%%%%%%%%%%%
 
-\renewcommand{\arraystretch}{1.3} %Abstand zwischen den Zeilen
+\renewcommand{\arraystretch}{1.4} %Abstand zwischen den Zeilen
 
-\begin{tabularx}{\textwidth}{@{}Xrrrr@{}}
+\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
 
-\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Price <%currency%>} & \textbf{Amount <%currency%>} \\
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
 
 \hline
 
 <%foreach number%>
-<%description%> <%if itemnotes%>\newline <%itemnotes%> <%end itemnotes%> & <%qty%> & <%unit%> & <%sellprice%> & <%linetotal%>\\
+ <%description%> \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline <%itemnotes%>} 
+\ifthenelse{\equal{<%deliverydate%>}{}}{}{\newline Lieferdatum: <%deliverydate%>} 
+\ifthenelse{\equal{<%serialnumber%>}{}}{}{\newline Seriennummer: <%serialnumber%>}
+\ifthenelse{\equal{<%projectnumber%>}{}}{}{\newline Projekt: <%projectnumber%>}
+\ifthenelse{\equal{<%ordernumber%>}{}}{}{\newline Bestellnummer: <%ordernumber%>}
+\ifthenelse{\equal{<%customerponumber%>}{}}{}{\newline Ihre Bestellnummer: <%customerponumber%>}
+\ifthenelse{\equal{<%package%>}{}}{}{\newline Verpackung: <%package%>}
+\ifthenelse{\equal{<%netweight%>}{}}{}{\newline Netto Gewicht: <%netweight%>}
+\ifthenelse{\equal{<%grossweight%>}{}}{}{\newline Brutto Gewicht: <%grossweight%>}
+& <%qty%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%discountrate%> \%} & <%unit%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline Rabatt}& <%sellprice%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%netprice%>}  & <%linetotal%>\\
 <%end number%>
 \end{tabularx}
 
@@ -125,7 +208,7 @@ Tel: 044 500 46 70
 \hline
 
 <%if total%>
-\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+\textbf{Gutschriftsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
 <%end total%>
 
 \hline
@@ -158,7 +241,7 @@ Tel: 044 500 46 70
 \hline
 
 <%if total%>
-\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+\textbf{Gutschriftsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
 <%end total%>
 
 \hline
@@ -188,16 +271,16 @@ Tel: 044 500 46 70
 
 \hline
 
-Subtotal <%currency%>& <%subtotal%> \\
+Zwischentotal <%currency%>& <%subtotal%> \\
 
 <%foreach tax%>
-VAT <%taxrate%> \% on <%taxbase%> & <%tax%> \\
+MWST <%taxrate%> \% auf <%taxbase%> & <%tax%> \\
 <%end tax%>
 
 \hline
 
 <%if total%>
-\textbf{Total Amount <%currency%>}& \textbf{<%invtotal%>}
+\textbf{Gutschriftsbetrag <%currency%>}& \textbf{<%invtotal%>}
 <%end total%>
 
 \end{tabularx}
@@ -207,6 +290,56 @@ VAT <%taxrate%> \% on <%taxbase%> & <%tax%> \\
 }
 }
 
+%%%%%%%%%%%%%  RECHNUNGSFUSS  %%%%%%%%%%%%%
+
+%Anpassung der Zeilenabstände
+\renewcommand{\arraystretch}{1}
+
+\vspace{0.5cm}
 
 
+\ifthenelse{\equal{<%notes%>}{}}{}{
+<%notes%>
+\vspace{0.5cm}
+}
+
+Freundliche Grüsse
+
+\vspace{0.5cm}
+
+<%company%>
+
+%%%%%%%%%%%%%  BEZAHLT TABELLE  %%%%%%%%%%%%%
+
+%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
+
+%Die Seite wird aufgefüllt - der Footer ist ganz unten.
+\vspace*{\fill}
+
+\begin{footnotesize}
+\hline
+
+\vspace{0.4cm}
+
+\parbox[t]{.34\textwidth}{
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+\ifthenelse{\equal{<%2201_taxnumber%>}{}}{}{MWSt Nr.: <%2201_taxnumber%>}
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
+\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
+\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
+\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%bankname%>}{}}{}{Bank: <%bankname%>\\}
+\ifthenelse{\equal{<%iban%>}{}}{}{IBAN: <%iban%>\\}
+\ifthenelse{\equal{<%bic%>}{}}{}{BIC: <%bic%>\\}
+}
+
+\end{footnotesize}
+
+%Abschluss des Dokuments, NUR falls kein Einzahlungsschein folgt.
 \end{document}
