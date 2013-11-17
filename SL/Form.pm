@@ -339,7 +339,7 @@ sub header {
 $(document).ready(function(){
     setTimeout(function(){
         $("div.redirectmsg").fadeOut("slow", function () {
-            $("div.mydiv").remove();
+            $("div.redirectmsg").remove();
         });
     }, 2000);
 });
