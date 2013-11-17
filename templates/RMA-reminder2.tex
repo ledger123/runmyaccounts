@@ -1,10 +1,11 @@
 %%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
-% Art des Templates: 2. Mahnung
-% Mandant: runmyaccounts
-% Erstellungsdatum: 10.01.2012
-% Version: 2.0
-% Ersteller: Thomas Brändle
+% Art des Templates: Mahnung 2 / reminder2.tex
+% Mandant: 
+% Erstellungsdatum: 
+% Version: 
+% Ersteller: 
 % © by Run my Accounts AG
+
 
 %statische Elemente
 \documentclass{scrartcl}
@@ -19,14 +20,22 @@
 \font\ocr=ocrb10
 \usepackage[absolute]{textpos}
 \usepackage{colortbl}
+\usepackage{color}
+\usepackage{substr}
+
 
 %dynamische Elemente
-%Abstände Rand
-\usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry} 
+%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
+\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
 
 %Schrift
 \usepackage[scaled=.90]{helvet} 
 \renewcommand{\familydefault}{\sfdefault}
+
+%Tabellendefinitionen
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
 
 %Hintergrund für erste Standard-Seite
 \usepackage{eso-pic}
@@ -47,58 +56,60 @@
 }}}
 
 \begin{document}
-%\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
 \shorthandoff{"}
 \pagestyle{empty}
 
-% Platzierung des Einzahlungsscheins (falls EZ im gleichen Template)
-\textblockorigin{-0.20cm}{0.15cm} % + nach links / + nach unten
+% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
+\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
 
 %Schriftwahl
 \normalfont
 
-%%%%%%%%%%%%%  INHALT  %%%%%%%%%%%%%
 
-\begin{center} 
+%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
 
-\Huge 
+% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
+%\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
 
-\vspace*{4cm}
+% Bei rechter Positionierung des Adresskopfs:
+\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
 
-\underline{MAHNSTUFE 2}
+\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
+\small
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
 
-\vspace{1cm}
+%Firmenanschrift
 
-Dieses Template wurde nicht aktiviert. 
+<%name%>
 
-\vspace{1cm}
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
 
-Falls Sie dieses Template wünschen, wenden Sie sich bitte für eine Offerte an Ihren Run my Accounts Account Manager. 
+}{
 
-\vspace{1cm}
+%Privatanschrift
 
-\normalsize
+<%salutation%>
 
-\underline{Kontakt:}\\
+<%firstname%> <%lastname%>
 
-service@runmyaccounts.com\\
+} 
 
-Tel: 044 500 46 70
+\ifthenelse{\equal{address1}{}}{}{<%address1%>}
 
-\Huge 
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
 
-\vspace{1cm}
+<%zipcode%> <%city%>
 
-\underline{Beispieltext}
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
 
-\vspace{1cm}
+\end{textblock*}
 
-\end{center}
-
-\normalsize
-
+\vspace{3.2cm}
 
 %%%%%%%%%%%%%  2. MAHNUNG  %%%%%%%%%%%%%
+
+\vspace{3.2cm}
 
 \parbox{\textwidth}{
 \textbf{\large{2. Mahnung}\hfill \today}
@@ -107,11 +118,7 @@ Tel: 044 500 46 70
 \vspace{0.5cm}
 \parbox{\textwidth}{
 
-Trotz unserer früheren Mahnungen ist die Rechnung Nr. <%invnumber%>
-<%if invdescription%>
-mit dem Titel \glqq <%invdescription%>\grqq 
-<%end invdescription%>
-\ vom <%invdate%> über <%currency%> <%due%> noch nicht beglichen. Zahlungen bis zum {\today} wurden berücksichtigt.\\
+Trotz unserer früheren Mahnungen ist die \textbf{Rechnung Nr. <%invnumber%>}\ifthenelse{\equal{<%invdescription%>}{}}{}{ mit dem Titel \glqq <%invdescription%>\grqq} vom <%invdate%> über <%currency%> <%due%>  noch nicht beglichen. Zahlungen bis zum {\today} wurden berücksichtigt.\\
 
 Ohne Ihren sofortigen gegenteiligen Bericht gehen wir davon aus, dass Sie mit diesem Saldo einverstanden sind. Wir fordern Sie nochmals auf, unser Guthaben innert 5 Tagen auf unser Bankkonto zu überweisen.\\
 
@@ -124,5 +131,34 @@ Freundliche Grüsse
 <%company%>
 }
 
+%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
+
+%Die Seite wird aufgefüllt - der Footer ist ganz unten.
+\vspace*{\fill}
+
+\begin{footnotesize}
+\hline
+
+\vspace{0.4cm}
+
+\parbox[t]{.34\textwidth}{
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+\ifthenelse{\equal{<%2201_taxnumber%>}{}}{}{MWSt Nr.: <%2201_taxnumber%>}
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
+\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
+\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
+\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%bankname%>}{}}{}{Bank: <%bankname%>\\}
+\ifthenelse{\equal{<%iban%>}{}}{}{IBAN: <%iban%>\\}
+\ifthenelse{\equal{<%bic%>}{}}{}{BIC: <%bic%>\\}
+}
+
+\end{footnotesize}
 
 \end{document}
