@@ -529,6 +529,8 @@ javascript:window.history.forward(1);
  
 <body>
 
+<div align="center" style="background-color:yellow;" class="redirectmsg">$form->{redirectmsg}</div>
+
 <form method=post action=$form->{script}>
 |;
 
@@ -1407,6 +1409,8 @@ javascript:window.history.forward(1);
 </script>
   
 <body>
+
+<div align="center" style="background-color:yellow;" class="redirectmsg">$form->{redirectmsg}</div>
 
 <form method=post action=$form->{script}>
 |;

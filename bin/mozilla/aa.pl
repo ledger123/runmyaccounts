@@ -625,6 +625,8 @@ sub form_header {
   print qq|
 <body onload="document.forms[0].${focus}.focus()" />
 
+<div align="center" style="background-color:yellow;" class="redirectmsg">$form->{redirectmsg}</div>
+
 <form method=post action=$form->{script}>
 
 <input type=hidden name=title value="|.$form->quote($form->{title}).qq|">
@@ -2028,6 +2030,8 @@ sub transactions {
 
   print qq|
 <body>
+
+<div align="center" style="background-color:yellow;" class="redirectmsg">$form->{redirectmsg}</div>
 
 <table width=100%>
   <tr>
