@@ -3079,7 +3079,7 @@ sub recurring_transactions {
   
   $form->sort_order();
   
-  my @column_index = qw(ndx reference description name vcnumber);
+  my @column_index = qw(ndx reference department description name vcnumber);
   
   push @column_index, qw(nextdate enddate id amount curr repeat howmany recurringemail recurringprint);
 
@@ -3091,6 +3091,7 @@ sub recurring_transactions {
   
   $column_data{reference} = "<th><a class=listheading href=$href&sort=reference>".$locale->text('Reference').qq"</a></th>";
   $column_data{id} = "<th class=listheading>".$locale->text('ID')."</th>";
+  $column_data{department} = "<th><a class=listheading href=$href&sort=department>".$locale->text('Department')."</th>";
   $column_data{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</th>";
   $column_data{name} = "<th nowrap><a class=listheading href=$href&sort=name>".$locale->text('Company Name')."</th>";
   $column_data{vcnumber} = "<th nowrap><a class=listheading href=$href&sort=vcnumber>".$locale->text('Company Number')."</th>";
