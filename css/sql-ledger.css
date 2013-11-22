@@ -398,6 +398,6 @@ h2.error {
 	display: none;
 }
 
-.redirectmsg { color: white; background: #009ED9; }
+.redirectmsg { color: white; background: #009ED9; padding: 2px 0px; }
 
 ---------------------------------------------------------------------------

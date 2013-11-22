@@ -337,11 +337,18 @@ sub header {
   print q|
 <script>
 $(document).ready(function(){
-    setTimeout(function(){
-        $("div.redirectmsg").fadeOut("slow", function () {
-            $("div.redirectmsg").remove();
-        });
-    }, 2000);
+    var str = $("div.redirectmsg").text();
+    if ( str.length > 0 ) {
+    	setTimeout(function(){
+    	
+	    	$("div.redirectmsg").show();
+	        $("div.redirectmsg").fadeOut("slow", function () {
+	            $("div.redirectmsg").remove();
+	        });
+		}, 2000);
+	} else {
+	   	$("div.redirectmsg").hide();
+	}
 });
 </script>
 </head>
