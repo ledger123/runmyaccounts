@@ -31,6 +31,7 @@ sub get_vc {
 	       sales_quotation => { oe => customer },
 	       request_quotation => { oe => vendor },
 	       timecard => { jcitems => employee },
+	       reminder => { ar => customer },
 	     );
   
   my $query;
@@ -180,7 +181,8 @@ sub get_spoolfiles {
 	       purchase_order => { oe => vendor },
 	       bin_list => { oe => customer, ar => customer, ap => vendor },
 	       sales_quotation => { oe => customer },
-	       request_quotation => { oe => vendor }
+	       request_quotation => { oe => vendor },
+	       reminder => { ar => customer },
 	     );
  
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};

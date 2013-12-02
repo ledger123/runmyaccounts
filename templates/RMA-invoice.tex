@@ -1,9 +1,9 @@
 %%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
 % Art des Templates: Rechnungstemplate / invoice.tex
-% Mandant: 
-% Erstellungsdatum: 
-% Version: 
-% Ersteller: 
+% Mandant:
+% Erstellungsdatum:
+% Version:
+% Ersteller:
 % © by Run my Accounts AG
 
 
@@ -26,16 +26,19 @@
 
 %dynamische Elemente
 %Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
-\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry}
 
 %Schrift
-\usepackage[scaled=.90]{helvet} 
+\usepackage[scaled=.90]{helvet}
 \renewcommand{\familydefault}{\sfdefault}
 
 %Tabellendefinitionen
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}}
+% linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}}
+% zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1}
+}% rechtsbündig mit Breitenangabe
 
 %Hintergrund für erste Standard-Seite
 \usepackage{eso-pic}
@@ -43,7 +46,7 @@
 \put(0,0){
 \parbox[b][\paperheight]{\paperwidth}{%
 \vfill
-\includegraphics{../<%templates%>/hintergrund.pdf} 
+\includegraphics{../<%templates%>/hintergrund.pdf}
 }}}
 
 %Hintergrund für Einzahlungsschein (ohne Footer)
@@ -52,16 +55,18 @@
 \put(0,0){
 \parbox[b][\paperheight]{\paperwidth}{%
 \vfill
-\includegraphics{../<%templates%>/hintergrundez.pdf} 
+\includegraphics{../<%templates%>/hintergrundez.pdf}
 }}}
 
 \begin{document}
-\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN
+HINTERGRUND
 \shorthandoff{"}
 \pagestyle{empty}
 
-% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
-\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
+% Setzt die generelle Position der Seite. Der bedruckbare bereich kann
+horizontal / vertikal verschoben werden.
+\textblockorigin{0.00cm}{0.00cm} % - nach links / + nach unten
 
 %Schriftwahl
 \normalfont
@@ -71,10 +76,10 @@
 <%pagebreak 54 15 24%>
 
 %Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
-\end{tabularx} 
+\end{tabularx}
 
 %Eine Zwischensummentabelle wird eingefügt
-\begin{tabularx}{\textwidth}{@{}Xr@{}} 
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
 \hline
 Zwischensumme &<%sumcarriedforward%> \\
 \end{tabularx}
@@ -85,7 +90,8 @@ Zwischensumme &<%sumcarriedforward%> \\
 %Die Artikeltabelle auf der neuen Seite wird initialisiert.
 \begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
 
-\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} &
+\textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
 \hline
 
 %Der Übertrag der letzten Seite wird geschrieben.
@@ -94,13 +100,16 @@ Zwischensumme &<%sumcarriedforward%> \\
 
 %%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
 
-% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
+% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei
+Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ...
+angepasst werden.
 %\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
 
 % Bei rechter Positionierung des Adresskopfs:
 \begin{textblock*}{6.5cm}(11.15cm,5.75cm)
 
-\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
+\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>},
+\BehindSubString{-- }{<%address%>}}}
 \small
 \ifthenelse{\equal{<%typeofcontact%>}{company}}{
 
@@ -108,7 +117,8 @@ Zwischensumme &<%sumcarriedforward%> \\
 
 <%name%>
 
-\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%>
+<%lastname%>}
 
 }{
 
@@ -118,7 +128,7 @@ Zwischensumme &<%sumcarriedforward%> \\
 
 <%firstname%> <%lastname%>
 
-} 
+}
 
 \ifthenelse{\equal{address1}{}}{}{<%address1%>}
 
@@ -179,21 +189,34 @@ Zwischensumme &<%sumcarriedforward%> \\
 
 \begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
 
-\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} &
+\textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
 
 \hline
 
 <%foreach number%>
- <%description%> \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline <%itemnotes%>} 
-\ifthenelse{\equal{<%deliverydate%>}{}}{}{\newline Lieferdatum: <%deliverydate%>} 
-\ifthenelse{\equal{<%serialnumber%>}{}}{}{\newline Seriennummer: <%serialnumber%>}
-\ifthenelse{\equal{<%projectnumber%>}{}}{}{\newline Projekt: <%projectnumber%>}
-\ifthenelse{\equal{<%ordernumber%>}{}}{}{\newline Bestellnummer: <%ordernumber%>}
-\ifthenelse{\equal{<%customerponumber%>}{}}{}{\newline Ihre Bestellnummer: <%customerponumber%>}
+<%description%> \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline
+<%itemnotes%>}
+\ifthenelse{\equal{<%deliverydate%>}{}}{}{\newline Lieferdatum:
+<%deliverydate%>}
+\ifthenelse{\equal{<%serialnumber%>}{}}{}{\newline Seriennummer:
+<%serialnumber%>}
+\ifthenelse{\equal{<%projectnumber%>}{}}{}{\newline Projekt:
+<%projectnumber%>}
+\ifthenelse{\equal{<%ordernumber%>}{}}{}{\newline Bestellnummer:
+<%ordernumber%>}
+\ifthenelse{\equal{<%customerponumber%>}{}}{}{\newline Ihre
+Bestellnummer: <%customerponumber%>}
 \ifthenelse{\equal{<%package%>}{}}{}{\newline Verpackung: <%package%>}
-\ifthenelse{\equal{<%netweight%>}{}}{}{\newline Netto Gewicht: <%netweight%>}
-\ifthenelse{\equal{<%grossweight%>}{}}{}{\newline Brutto Gewicht: <%grossweight%>}
-& <%qty%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%discountrate%> \%} & <%unit%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline Rabatt}& <%sellprice%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%netprice%>}  & <%linetotal%>\\
+\ifthenelse{\equal{<%netweight%>}{}}{}{\newline Netto Gewicht:
+<%netweight%>}
+\ifthenelse{\equal{<%grossweight%>}{}}{}{\newline Brutto Gewicht:
+<%grossweight%>}
+& <%qty%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline
+<%discountrate%> \%} & <%unit%>
+\ifthenelse{\equal{<%discountrate%>}{}}{}{\newline Rabatt}&
+<%sellprice%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline
+<%netprice%>}  & <%linetotal%>\\
 <%end number%>
 \end{tabularx}
 
@@ -208,7 +231,8 @@ Zwischensumme &<%sumcarriedforward%> \\
 \hline
 
 <%if total%>
-\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{
+(ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
 <%end total%>
 
 \hline
@@ -217,7 +241,7 @@ Zwischensumme &<%sumcarriedforward%> \\
 
 \vspace{0.2cm}
 
-\footnotesize 
+\footnotesize
 
 \begin{flushright}
 \begin{tabular}{@{}lrrr@{}}
@@ -241,7 +265,8 @@ Zwischensumme &<%sumcarriedforward%> \\
 \hline
 
 <%if total%>
-\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} {
+inkl. MWST}}& \textbf{<%invtotal%>}\\
 <%end total%>
 
 \hline
@@ -250,7 +275,7 @@ Zwischensumme &<%sumcarriedforward%> \\
 
 \vspace{0.2cm}
 
-\footnotesize 
+\footnotesize
 
 \begin{flushright}
 \begin{tabular}{@{}lrrr@{}}
@@ -298,8 +323,11 @@ MWST <%taxrate%> \% auf <%taxbase%> & <%tax%> \\
 \vspace{0.5cm}
 
 \parbox{\textwidth}{
-Wir bedanken uns für Ihre \textbf{Überweisung innerhalb von <%terms%> Tagen} bis zum <%duedate%>.
+\ifthenelse{\equal{<%terms%>}{0}}{Wir bedanken uns für die
+\textbf{sofortige Überweisung.}}{Wir bedanken uns für Ihre
+\textbf{Überweisung innerhalb von <%terms%> Tagen} bis zum <%duedate%>.}
 }
+
 \vspace{0.5cm}
 
 \ifthenelse{\equal{<%notes%>}{}}{}{
@@ -365,7 +393,8 @@ Freundliche Grüsse
 
 \pagebreak
 
-%\AddToShipoutPicture{\BackgroundPicEZ} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+%\AddToShipoutPicture{\BackgroundPicEZ} % MUSS EINKOMMENTIERT WERDEN
+WENN HINTERGRUND
 
 \pagestyle{empty}
 
@@ -409,7 +438,7 @@ Freundliche Grüsse
 <%bankzipcode%> <%bankcity%>
 \end{flushleft}
 \end{textblock*}
- 
+
 %Zugunsten von
 \begin{textblock*}{5.8cm}(0.6cm,21.1cm)
 \begin{flushleft}
@@ -452,7 +481,7 @@ Freundliche Grüsse
 \begin{textblock*}{5.5cm}(0.6cm,24.8cm)
 \begin{flushleft}
 \ocr{<%dcn group=5right%>}
-\normalfont 
+\normalfont
 
 <%name%>
 
@@ -478,7 +507,7 @@ Freundliche Grüsse
 }{
 
 %MITTE BANK
-%Einzahlung für 
+%Einzahlung für
 \begin{textblock*}{6cm}(6.3cm,19.6cm)
 \begin{flushleft}
 <%bankname%>
@@ -486,7 +515,7 @@ Freundliche Grüsse
 <%bankzipcode%> <%bankcity%>
 \end{flushleft}
 \end{textblock*}
- 
+
 %Zugunsten von
 \begin{textblock*}{6cm}(6.3cm,21.1cm)
 \begin{flushleft}
@@ -552,7 +581,8 @@ Freundliche Grüsse
 \end{flushleft}
 \end{textblock*}
 
-%DIESE BEIDEN KLAMMERN WERDEN GEBRAUCHT, WENN DIE EINFÜGUNG DES EZ AUTOMATISCH ERFOLGT
+%DIESE BEIDEN KLAMMERN WERDEN GEBRAUCHT, WENN DIE EINFÜGUNG DES EZ
+AUTOMATISCH ERFOLGT
 }
 }
 }

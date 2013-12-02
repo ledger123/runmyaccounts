@@ -333,8 +333,27 @@ sub header {
   <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
   <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
   <script src="js/rma.js" type="text/javascript"></script>
+|;
+  print q|
+<script>
+$(document).ready(function(){
+    var str = $("div.redirectmsg").text();
+    if ( str.length > 0 ) {
+    	setTimeout(function(){
+    	
+	    	$("div.redirectmsg").show();
+	        $("div.redirectmsg").fadeOut("slow", function () {
+	            $("div.redirectmsg").remove();
+	        });
+		}, 2000);
+	} else {
+	   	$("div.redirectmsg").hide();
+	}
+});
+</script>
 </head>
-
+|;
+   print qq|
 $self->{pre}
 |;
   }
@@ -374,6 +393,7 @@ sub redirect {
 
   if ($self->{callback}) {
 
+    $self->{callback} .= "&redirectmsg=$msg";
     my ($script, $argv) = split(/\?/, $self->{callback});
     exec ("perl", $script, $argv);
    

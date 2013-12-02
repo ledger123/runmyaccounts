@@ -2087,6 +2087,8 @@ sub print_options {
   } else {
     $media = qq|<select name=media>
 	    <option value=screen>|.$locale->text('Screen');
+    $media .= qq|
+            <option value="queue">|.$locale->text('Queue');
 
     if (%printer && $latex) {
       for (sort keys %printer) { $media .= qq|
@@ -2453,6 +2455,7 @@ sub print_reminder {
   for (@ids) {
     if ($form->{"ndx_$_"}) {
       $selected = "ndx_$_";
+      $form->{id} = $_;
       last;
     }
   }
@@ -2475,6 +2478,36 @@ sub print_reminder {
   
   if ($form->{media} !~ /(screen|email)/) {
     $form->{OUT} = qq~| $printer{$form->{media}}~;
+  }
+
+  if ($form->{media} eq 'queue') {
+    $form->{formname} = 'reminder';
+
+    %queued = split / /, $form->{queued};
+
+    if ($filename = $queued{$form->{formname}}) {
+      $form->{queued} =~ s/$form->{formname} $filename//;
+      unlink "$spool/$filename";
+      $filename =~ s/\..*$//g;
+    } else {
+      $filename = time;
+      $filename .= int rand 10000;
+    }
+
+    $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
+    $form->{OUT} = ">$spool/$filename";
+
+    $form->{queued} .= " $form->{formname} $filename";
+    $form->{queued} =~ s/^ //;
+
+    # save status
+    $form->update_status(\%myconfig);
+
+    %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
+		    reference   => $form->{"${inv}number"},
+		    formname    => $form->{formname},
+		    action      => 'queued',
+		    id          => $form->{id} );
   }
 
   &do_print_reminder;

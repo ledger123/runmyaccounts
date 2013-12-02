@@ -22,6 +22,8 @@ sub add {
 
   $form->{title} = "Add";
 
+  $form->{remittancevoucher} = 'checked';
+
   $form->{callback} = "$form->{script}?action=add&db=$form->{db}&typeofcontact=$form->{typeofcontact}&path=$form->{path}&login=$form->{login}" unless $form->{callback};
 
   if ($form->{previousform}) {
@@ -932,6 +934,8 @@ sub list_names {
   print qq|
 <body>
 
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
+
 <table width=100%>
   <tr>
     <th class=listtop>$title</th>
@@ -1782,6 +1786,8 @@ sub form_header {
 
   print qq|
 <body>
+
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <form method=post action=$form->{script}>
 

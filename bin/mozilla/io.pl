@@ -1809,6 +1809,8 @@ sub print_form {
  
     $form->{rowcount}--;
 
+    $form->{redirectmsg} = $locale->text('Printed');
+
     &{ "$display_form" };
 
   }

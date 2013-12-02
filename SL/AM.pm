@@ -960,6 +960,7 @@ sub recurring_transactions {
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   my %ordinal = ( reference => 10,
+                  department => 26,
                   description => 4,
 		  name => 5,
 		  vcnumber => 6,
@@ -981,9 +982,10 @@ sub recurring_transactions {
                  sp.formname AS recurringprint,
 		 s.nextdate - current_date AS overdue, 'customer' AS vc,
 		 ex.buy AS exchangerate, a.curr,
-		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired
+		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired, d.description AS department
                  FROM recurring s
 		 JOIN ar a ON (a.id = s.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
 		 JOIN customer n ON (n.id = a.customer_id)
                  LEFT JOIN recurringemail se ON (se.id = s.id)
                  LEFT JOIN recurringprint sp ON (sp.id = s.id)
@@ -998,9 +1000,10 @@ sub recurring_transactions {
                  sp.formname AS recurringprint,
 		 s.nextdate - current_date AS overdue, 'vendor' AS vc,
 		 ex.sell AS exchangerate, a.curr,
-		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired
+		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired, d.description AS department
                  FROM recurring s
 		 JOIN ap a ON (a.id = s.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
 		 JOIN vendor n ON (n.id = a.vendor_id)
                  LEFT JOIN recurringemail se ON (se.id = s.id)
                  LEFT JOIN recurringprint sp ON (sp.id = s.id)
@@ -1016,9 +1019,10 @@ sub recurring_transactions {
                  sp.formname AS recurringprint,
 		 s.nextdate - current_date AS overdue, '' AS vc,
 		 '1' AS exchangerate, '$defaultcurrency' AS curr,
-		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired
+		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired, d.description AS department
                  FROM recurring s
 		 JOIN gl a ON (a.id = s.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
                  LEFT JOIN recurringemail se ON (se.id = s.id)
                  LEFT JOIN recurringprint sp ON (sp.id = s.id)
 	
@@ -1030,9 +1034,10 @@ sub recurring_transactions {
                  sp.formname AS recurringprint,
 		 s.nextdate - current_date AS overdue, 'customer' AS vc,
 		 ex.buy AS exchangerate, a.curr,
-		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired
+		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired, d.description AS department
                  FROM recurring s
 		 JOIN oe a ON (a.id = s.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
 		 JOIN customer n ON (n.id = a.customer_id)
                  LEFT JOIN recurringemail se ON (se.id = s.id)
                  LEFT JOIN recurringprint sp ON (sp.id = s.id)
@@ -1048,9 +1053,10 @@ sub recurring_transactions {
                  sp.formname AS recurringprint,
 		 s.nextdate - current_date AS overdue, 'vendor' AS vc,
 		 ex.sell AS exchangerate, a.curr,
-		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired
+		 (s.nextdate IS NULL OR s.nextdate > s.enddate) AS expired, d.description AS department
                  FROM recurring s
 		 JOIN oe a ON (a.id = s.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
 		 JOIN vendor n ON (n.id = a.vendor_id)
                  LEFT JOIN recurringemail se ON (se.id = s.id)
                  LEFT JOIN recurringprint sp ON (sp.id = s.id)
