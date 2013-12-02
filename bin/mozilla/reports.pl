@@ -4070,9 +4070,9 @@ sub list_reminders {
   my $dbh = $form->dbconnect(\%myconfig);
 
   $query = qq|
-	SELECT cast(a.transdate as date) transdate, a.reference, vc.name,
+	SELECT cast(a.transdate as date) as transdate, a.reference, vc.name,
 		vc.customernumber, ar.invnumber, ar.ordnumber,
-		ar.duedate, ar.amount - ar.paid due
+		ar.duedate, ar.amount - ar.paid as due
 	FROM audittrail a
 	JOIN ar ON (ar.id = a.trans_id)
 	JOIN customer vc ON (vc.id = ar.customer_id)

@@ -934,7 +934,7 @@ sub list_names {
   print qq|
 <body>
 
-<div align="center" style="background-color:yellow;" class="redirectmsg">$form->{redirectmsg}</div>
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <table width=100%>
   <tr>
@@ -1787,7 +1787,7 @@ sub form_header {
   print qq|
 <body>
 
-<div align="center" style="background-color:yellow;" class="redirectmsg">$form->{redirectmsg}</div>
+<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
 <form method=post action=$form->{script}>
 
