@@ -933,10 +933,18 @@ sub continue { &{$form->{nextsub}} };
 
 sub generate_income_statement {
 
-  $form->{padding} = "&nbsp;&nbsp;";
-  $form->{bold} = "<strong>";
-  $form->{endbold} = "</strong>";
-  $form->{br} = "<br>";
+  if ($form->{format} eq 'html') {
+    $form->{padding} = "&nbsp;&nbsp;";
+    $form->{bold} = "<strong>";
+    $form->{endbold} = "</strong>";
+    $form->{br} = "<br>\n";
+  }
+  else {
+    $form->{padding} = "";
+    $form->{bold} = "";
+    $form->{endbold} = "";
+    $form->{br} = '\newline';
+  }
   
   RP->income_statement(\%myconfig, \%$form);
 
@@ -959,8 +967,8 @@ sub generate_income_statement {
     $longfromdate = $locale->date(\%myconfig, $form->{fromdate}, 1);
     $shortfromdate = $locale->date(\%myconfig, $form->{fromdate}, 0);
     
-    $form->{this_period} = "$shortfromdate<br>\n$shorttodate";
-    $form->{period} = $locale->text('for Period').qq|<br>\n$longfromdate |.$locale->text('To').qq| $longtodate|;
+    $form->{this_period} = "$shortfromdate $form->{br} $shorttodate";
+    $form->{period} = $locale->text('for Period').qq| $form->{br} $longfromdate |.$locale->text('To').qq| $longtodate|;
   }
 
   if ($form->{comparefromdate} || $form->{comparetodate}) {
@@ -970,13 +978,13 @@ sub generate_income_statement {
     $longcomparetodate = $locale->date(\%myconfig, $form->{comparetodate}, 1);
     $shortcomparetodate = $locale->date(\%myconfig, $form->{comparetodate}, 0);
     
-    $form->{last_period} = "$shortcomparefromdate<br>\n$shortcomparetodate";
-    $form->{period} .= "<br>\n$longcomparefromdate ".$locale->text('To').qq| $longcomparetodate|;
+    $form->{last_period} = "$shortcomparefromdate $form->{br} $shortcomparetodate";
+    $form->{period} .= "$form->{br} $longcomparefromdate ".$locale->text('To').qq| $longcomparetodate|;
   }
 
   # setup variables for the form
   $form->format_string(qw(companyemail companywebsite company address businessnumber));
-  $form->{address} =~ s/\n/<br>/g;
+  $form->{address} =~ s/\n/$form->{br}/g;
 
   $form->{templates} = $myconfig{templates};
 
@@ -991,11 +999,19 @@ sub generate_income_statement {
 
 sub generate_balance_sheet {
 
-  $form->{padding} = "&nbsp;&nbsp;";
-  $form->{bold} = "<b>";
-  $form->{endbold} = "</b>";
-  $form->{br} = "<br>";
-  
+  if ($form->{format} eq 'html') {
+    $form->{padding} = "&nbsp;&nbsp;";
+    $form->{bold} = "<strong>";
+    $form->{endbold} = "</strong>";
+    $form->{br} = "<br>\n";
+  }
+  else {
+    $form->{padding} = "";
+    $form->{bold} = "";
+    $form->{endbold} = "";
+    $form->{br} = '\newline';
+  }
+ 
   RP->balance_sheet(\%myconfig, \%$form);
 
   $form->{asofdate} = $form->current_date(\%myconfig) unless $form->{asofdate};
@@ -1014,7 +1030,7 @@ sub generate_balance_sheet {
 
   # setup company variables for the form
   $form->format_string(qw(companyemail companywebsite company address businessnumber));
-  $form->{address} =~ s/\n/<br>/g;
+  $form->{address} =~ s/\n/$form->{br}/g;
 
   $form->{templates} = $myconfig{templates};
 	  
