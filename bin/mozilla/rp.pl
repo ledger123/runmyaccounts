@@ -883,7 +883,6 @@ sub report {
 
   }
 
-
   print qq|
 
       $gifi
@@ -891,6 +890,14 @@ sub report {
       </table>
     </td>
   </tr>
+|;
+
+  if ($form->{report} =~ /(income_statement|balance_sheet)/){
+     $form->{type} = $form->{report};
+  }
+  &print_options;
+
+  print qq|
   <tr>
     <td><hr size=3 noshade></td>
   </tr>
@@ -981,10 +988,12 @@ sub generate_income_statement {
 
   $form->{templates} = $myconfig{templates};
 
-  $form->{IN} = "income_statement.html";
-  
-  $form->parse_template;
-
+  if ($form->{format} eq 'html'){
+    $form->{IN} = "income_statement.html";
+  } else {
+    $form->{IN} = "income_statement.tex";
+  }
+  $form->parse_template(\%myconfig, $userspath);
 }
 
 
@@ -2117,6 +2126,8 @@ sub print_options {
 
   $formname{statement} = $locale->text('Statement');
   $formname{reminder} = $locale->text('Reminder');
+  $formname{income_statement} = $locale->text('Income Statement');
+  $formname{balance_sheet} = $locale->text('Balance Sheet');
   
   $type = qq|<select name=type>
 	    <option value="$form->{type}" $form->{PD}{$form->{type}}>$formname{$form->{type}}
