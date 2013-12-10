@@ -3377,7 +3377,6 @@ sub edit_recurring {
   $form->{selectformat} = qq|html--html\n|;
   if ($latex) {
     $form->{selectformat} .= qq|
-postscript--|.$locale->text('Postscript').qq|
 pdf--|.$locale->text('PDF');
   }
 
