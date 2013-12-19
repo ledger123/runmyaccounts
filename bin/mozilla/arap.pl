@@ -632,7 +632,6 @@ sub schedule {
   for (qw(check receipt)) { delete $formname{$_} }
 
   $selectformat = qq|html--html
-postscript--|.$locale->text('Postscript').qq|
 pdf--|.$locale->text('PDF');
 
   if ($form->{type} !~ /transaction/ && %formname) {

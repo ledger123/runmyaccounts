@@ -1077,7 +1077,13 @@ sub format_line {
       }
     } else {
       if (defined $i) {
-	$str = $self->{$var}[$i];
+        if ($var =~ /(currency)/) {
+	        $str = $self->{$var};
+        }
+        else {
+	        $str = $self->{$var}[$i];
+        }
+
       } else {
 	$str = $self->{$var};
       }

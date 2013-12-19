@@ -2138,7 +2138,6 @@ sub print_options {
 
   if ($latex) {
     $format .= qq|
-            <option value="postscript">|.$locale->text('Postscript').qq|
 	    <option value="pdf">|.$locale->text('PDF');
   }
 
@@ -3538,8 +3537,7 @@ sub print_report_options {
 
   if ($latex) {
     $format .= qq|
-	    <option value=pdf $form->{DF}{pdf}>|.$locale->text('PDF').qq|
-            <option value=postscript $form->{DF}{postscript}>|.$locale->text('Postscript');
+	    <option value=pdf $form->{DF}{pdf}>|.$locale->text('PDF');
   }
   $format .= qq|</select>|;
   
