@@ -13,6 +13,7 @@
 
 use SL::CT;
 
+require "$form->{path}/mylib.pl";
 1;
 # end of main
 
@@ -409,6 +410,9 @@ sub include_in_report {
   }
 
   $include .= qq|
+        <tr>
+	        <td><input name="l_csv" type=checkbox class=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
+        </tr>
 	    </table>
 	  </td>
 	</tr>
@@ -928,9 +932,13 @@ sub list_names {
   }
 
   $title = "$form->{title} / $form->{company}";
-  
-  $form->header;
 
+  if ($form->{l_csv}){
+      &ref_to_csv('CT', 'names', \@column_index);
+      exit;
+  }
+
+  $form->header;
   print qq|
 <body>
 
