@@ -15,6 +15,7 @@
 use SL::IC;
 
 require "$form->{path}/io.pl";
+require "$form->{path}/mylib.pl";
 
 1;
 # end of main
@@ -1137,6 +1138,7 @@ sub search {
               </tr>
 	      <tr>
                 <td><input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|</td>
+                <td><input name=l_csv class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
 	      </tr>
             </table>
           </td>
@@ -1537,7 +1539,12 @@ sub generate_report {
   $column_data{income} = qq|<th nowrap class=listheading>|.$locale->text('Income').qq|</th>|;
   $column_data{expense} = qq|<th nowrap class=listheading>|.$locale->text('Expense').qq|</th>|;
   $column_data{tax} = qq|<th nowrap class=listheading>|.$locale->text('Tax').qq|</th>|;
-  
+
+  if ($form->{l_csv}){
+      &ref_to_csv('parts', 'parts', \@column_index);
+      exit;
+  }
+
   $form->header;
 
   $i = 1;
