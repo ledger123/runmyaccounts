@@ -892,9 +892,7 @@ sub report {
   </tr>
 |;
 
-  if ($form->{report} =~ /(income_statement|balance_sheet)/){
-     $form->{type} = $form->{report};
-  }
+  $form->{type} = 'income_statement';
   &print_options;
 
   print qq|
@@ -2127,7 +2125,6 @@ sub print_options {
   $formname{statement} = $locale->text('Statement');
   $formname{reminder} = $locale->text('Reminder');
   $formname{income_statement} = $locale->text('Income Statement');
-  $formname{balance_sheet} = $locale->text('Balance Sheet');
   
   $type = qq|<select name=type>
 	    <option value="$form->{type}" $form->{PD}{$form->{type}}>$formname{$form->{type}}
