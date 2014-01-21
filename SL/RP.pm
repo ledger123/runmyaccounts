@@ -187,7 +187,7 @@ sub income_statement {
       if ($form->{$category}{$key}{charttype} eq "A") {
 	$form->{tmpstr} = ($form->{l_accno}) ? "$form->{$category}{$key}{accno} - $form->{$category}{$key}{description}" : "$form->{$category}{$key}{description}";
     $form->format_string(tmpstr);
-	$form->{tmpstr} = qq|<a href=$translink&accno=$form->{$category}{$key}{accno} target=_blank>| . $form->{tmpstr} . qq|</a>| if $form->{format} eq 'html';
+	$form->{tmpstr} = qq|<a href=$translink&accno=$form->{$category}{$key}{accno} target=_blank>| . $form->{tmpstr} . qq|</a>| if $form->{format} eq 'html' and $form->{accounttype} eq 'standard';
 	$str .= $form->{tmpstr};
       }
       if ($form->{$category}{$key}{charttype} eq "H") {
