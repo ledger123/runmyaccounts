@@ -20,6 +20,11 @@ $(document).ready(function() {
 	      this.href = this.href.replace(/^https:\/\/doc.runmyaccounts.com\/alfresco\/webdav\/Mandanten\/([a-zA-Z0-9]*)\/(.*)/, 
 	         "https://service.runmyaccounts.com/api/latest/clients/$1/dms/content?t=iframe&path=/$2");
 	   });
+	
+	$(document).mousemove( function(e) {
+		window.parent.parent.postMessage('mousemoved' ,'*');
+	});
+	
 	/*
 	//Navigation Frame
 	//group list
