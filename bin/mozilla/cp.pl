@@ -742,7 +742,6 @@ sub payments_footer {
   
     $media .= qq|</select>|;
     $format = qq|<select name=format>
-            <option value=postscript $form->{DF}{postscript}>|.$locale->text('Postscript').qq|
 	    <option value=pdf $form->{DF}{pdf}>|.$locale->text('PDF').qq|</select>|;
   }
 
@@ -1646,7 +1645,6 @@ sub payment_footer {
     
       $media .= qq|</select>|;
       $format = qq|<select name=format>
-	      <option value=postscript $form->{DF}{postscript}>|.$locale->text('Postscript').qq|
 	      <option value=pdf $form->{DF}{pdf}>|.$locale->text('PDF').qq|</select>|;
     }
 

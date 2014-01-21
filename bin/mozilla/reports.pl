@@ -713,7 +713,7 @@ sub gl_list {
 	   $sth = $dbh->prepare($query);
 	   $sth->execute || $form->dberror($query);
 
-	   $form->{title} = $locale->text('General Ledger');
+	   $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
 	   &print_title;
 	   &print_criteria('fromdate', $locale->text('From'));
 	   &print_criteria('todate', $locale->text('To'));

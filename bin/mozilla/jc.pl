@@ -1704,7 +1704,6 @@ sub print_options {
           <option value="queue">|.$locale->text('Queue');
 	  
     $form->{selectformat} .= qq|
-            <option value="postscript">|.$locale->text('Postscript').qq|
 	    <option value="pdf">|.$locale->text('PDF');
   }
 

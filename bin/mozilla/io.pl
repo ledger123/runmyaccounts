@@ -1298,7 +1298,6 @@ sub print_options {
 
   if ($latex) {
     $selectformat .= qq|
-<option value="postscript">|.$locale->text('Postscript').qq|
 <option value="pdf">|.$locale->text('PDF');
   }
 
