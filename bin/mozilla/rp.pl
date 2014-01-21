@@ -883,6 +883,7 @@ sub report {
 
   }
 
+
   print qq|
 
       $gifi
@@ -890,12 +891,6 @@ sub report {
       </table>
     </td>
   </tr>
-|;
-
-  $form->{type} = 'income_statement';
-  &print_options;
-
-  print qq|
   <tr>
     <td><hr size=3 noshade></td>
   </tr>
@@ -986,12 +981,10 @@ sub generate_income_statement {
 
   $form->{templates} = $myconfig{templates};
 
-  if ($form->{format} eq 'html'){
-    $form->{IN} = "income_statement.html";
-  } else {
-    $form->{IN} = "income_statement.tex";
-  }
-  $form->parse_template(\%myconfig, $userspath);
+  $form->{IN} = "income_statement.html";
+  
+  $form->parse_template;
+
 }
 
 
@@ -2124,7 +2117,6 @@ sub print_options {
 
   $formname{statement} = $locale->text('Statement');
   $formname{reminder} = $locale->text('Reminder');
-  $formname{income_statement} = $locale->text('Income Statement');
   
   $type = qq|<select name=type>
 	    <option value="$form->{type}" $form->{PD}{$form->{type}}>$formname{$form->{type}}
