@@ -1662,7 +1662,7 @@ sub print_form {
 
   $form->{pre} = "<body bgcolor=#ffffff>\n<pre>" if $form->{format} eq 'txt';
 
-  if ($form->{media} !~ /(screen|queue|email)/) {
+  if ($form->{media} !~ /(screen|email)/) {
     $form->{OUT} = "| $printer{$form->{media}}";
     
     $form->{OUT} =~ s/<%(fax)%>/<%$form->{vc}$1%>/;
