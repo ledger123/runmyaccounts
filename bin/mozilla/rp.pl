@@ -926,18 +926,10 @@ sub continue { &{$form->{nextsub}} };
 
 sub generate_income_statement {
 
-  if ($form->{format} eq 'html') {
     $form->{padding} = "&nbsp;&nbsp;";
     $form->{bold} = "<strong>";
     $form->{endbold} = "</strong>";
     $form->{br} = "<br>\n";
-  }
-  else {
-    $form->{padding} = "";
-    $form->{bold} = "";
-    $form->{endbold} = "";
-    $form->{br} = '\newline';
-  }
   
   RP->income_statement(\%myconfig, \%$form);
 
@@ -990,18 +982,10 @@ sub generate_income_statement {
 
 sub generate_balance_sheet {
 
-  if ($form->{format} eq 'html') {
     $form->{padding} = "&nbsp;&nbsp;";
     $form->{bold} = "<strong>";
     $form->{endbold} = "</strong>";
     $form->{br} = "<br>\n";
-  }
-  else {
-    $form->{padding} = "";
-    $form->{bold} = "";
-    $form->{endbold} = "";
-    $form->{br} = '\newline';
-  }
  
   RP->balance_sheet(\%myconfig, \%$form);
 
