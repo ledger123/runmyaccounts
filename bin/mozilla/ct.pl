@@ -1822,11 +1822,11 @@ sub form_header {
 	      
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Address').qq|</th>
-		<td><input name=address1 size=32 maxlength=32 value="|.$form->quote($form->{address1}).qq|"></td>
+		<td><input name=address1 size=32 maxlength=64 value="|.$form->quote($form->{address1}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th></th>
-		<td><input name=address2 size=32 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+		<td><input name=address2 size=32 maxlength=64 value="|.$form->quote($form->{address2}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
@@ -1838,11 +1838,11 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-		<td><input name=zipcode size=11 maxlength=10 value="|.$form->quote($form->{zipcode}).qq|"></td>
+		<td><input name=zipcode size=11 maxlength=32 value="|.$form->quote($form->{zipcode}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
-		<td><input name=country size=32 maxlength=32 value="|.$form->quote($form->{country}).qq|"></td>
+		<td><input name=country size=32 maxlength=64 value="|.$form->quote($form->{country}).qq|"></td>
 	      </tr>
 	    </table>
 	  </td>
