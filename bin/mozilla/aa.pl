@@ -219,8 +219,8 @@ sub create_links {
   if (@{ $form->{"all_$form->{vc}"} }) {
     # ISNA: 00021 tekki
     for (@{ $form->{"all_$form->{vc}"} }) {
-      $form->{"select$form->{vc}"} .= qq|$_->{name}--$_->{id}\n|;
-      $form->{$form->{vc}} = $form->{"old$form->{vc}"} = qq|$_->{name}--$_->{id}|
+      $form->{"select$form->{vc}"} .= qq|$_->{name} ($_->{"$form->{vc}number"})--$_->{id}\n|;
+      $form->{$form->{vc}} = $form->{"old$form->{vc}"} = qq|$_->{name} ($_->{"$form->{vc}number"})--$_->{id}|
 	if $form->{"$form->{vc}_id"} == $_->{id};
     }
     # ISNA_end
@@ -421,7 +421,6 @@ sub create_links {
 
 
 sub form_header {
-
   $form->{taxincluded} = ($form->{taxincluded}) ? "checked" : "";
 
   # format amounts
@@ -1121,6 +1120,7 @@ sub update {
     $form->{cashdiscount} = $form->parse_amount(\%myconfig, $form->{cashdiscount});
     $form->{discount_paid} = $form->parse_amount(\%myconfig, $form->{discount_paid});
     
+#$form->info($form->unescape($form->{selectcustomer}));
     if ($newname = &check_name($form->{vc})) {
       &rebuild_vc($form->{vc}, $form->{ARAP}, $form->{transdate});
     }
@@ -1438,10 +1438,9 @@ sub search {
     $l_name = qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> $vclabel|;
     $l_vendornumber = qq|<input name="l_vendornumber" class=checkbox type=checkbox value=Y> $vcnumber|;
   }
-
   if (@{ $form->{"all_$form->{vc}"} }) {
     $form->{"select$form->{vc}"} = "";
-    for (@{ $form->{"all_$form->{vc}"} }) { $form->{"select$form->{vc}"} .= qq|<option value="|.$form->quote($_->{name}).qq|--$_->{id}">$_->{name}\n| }
+    for (@{ $form->{"all_$form->{vc}"} }) { $form->{"select$form->{vc}"} .= qq|<option value="|.$form->quote($_->{name}).qq|--$_->{id}">$_->{name} ($_->{"$form->{vc}number"})\n| }
     $vc = qq|
               <tr>
 	        <th align=right nowrap>$vclabel</th>

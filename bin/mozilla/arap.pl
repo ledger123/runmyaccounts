@@ -342,7 +342,7 @@ sub rebuild_vc {
   ($null, $form->{employee_id}) = split /--/, $form->{employee};
   $form->all_vc(\%myconfig, $vc, $ARAP, undef, $transdate, $job);
   $form->{"select$vc"} = "";
-  for (@{ $form->{"all_$vc"} }) { $form->{"select$vc"} .= qq|$_->{name}--$_->{id}\n| }
+  for (@{ $form->{"all_$vc"} }) { $form->{"select$vc"} .= qq|$_->{name} ($_->{"$form->{vc}number"})--$_->{id}\n| }
   $form->{"select$vc"} = $form->escape($form->{"select$vc"},1);
   
   $form->{selectprojectnumber} = "";

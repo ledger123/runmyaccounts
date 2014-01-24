@@ -151,8 +151,8 @@ sub order_links {
   if (@{ $form->{"all_$form->{vc}"} }) {
     # ISNA: 00021 tekki
     for (@{ $form->{"all_$form->{vc}"} }) {
-      $form->{"select$form->{vc}"} .= qq|$_->{name}--$_->{id}\n|;
-      $form->{$form->{vc}} = $form->{"old$form->{vc}"} = qq|$_->{name}--$_->{id}|
+      $form->{"select$form->{vc}"} .= qq|$_->{name} ($_->{"$form->{vc}number"})--$_->{id}\n|;
+      $form->{$form->{vc}} = $form->{"old$form->{vc}"} = qq|$_->{name} ($_->{"$form->{vc}number"})--$_->{id}|
 	if $form->{"$form->{vc}_id"} == $_->{id};
     }
     # ISNA_end
@@ -1203,7 +1203,7 @@ sub search {
 	   <th align=right nowrap>$vcname</th>
 	   <td colspan=3><select name=$form->{vc}><option>\n|;
     
-    for (@{ $form->{"all_$form->{vc}"} }) { $vc .= qq|<option value="|.$form->quote($_->{name}).qq|--$_->{id}">$_->{name}\n| }
+    for (@{ $form->{"all_$form->{vc}"} }) { $vc .= qq|<option value="|.$form->quote($_->{name}).qq|--$_->{id}">$_->{name} ($_->{"$form->{vc}number"})\n| }
 
     $vc .= qq|</select>
            </td>

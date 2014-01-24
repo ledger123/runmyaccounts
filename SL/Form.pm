@@ -2048,7 +2048,7 @@ sub all_vc {
     $self->{"${vc}_id"} *= 1;
     # ISNA: 00021 tekki
     $query = qq|SELECT vc.id, vc.name, c.firstname, c.lastname, c.typeofcontact,
-		  ad.city, ad.address1
+		  ad.city, ad.address1, ${vc}number
 		FROM $vc vc
 		LEFT JOIN contact c
 		  ON vc.id=c.trans_id AND c.typeofcontact='company'
@@ -2057,7 +2057,7 @@ sub all_vc {
 		$joinarap
 		WHERE $where
 		UNION SELECT vc.id, vc.name, c.firstname, c.lastname, c.typeofcontact,
-		  ad.city, ad.address1
+		  ad.city, ad.address1, ${vc}number
 		FROM $vc vc
 		LEFT JOIN contact c
 		  ON vc.id=c.trans_id AND c.typeofcontact='company' 
