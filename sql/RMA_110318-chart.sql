@@ -75,6 +75,10 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2202','MWST 3,8%','A','220','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2203','MWST 2,5%','A','220','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2204','Bezugsteuer 8,0%','A','220','L','AP_tax');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2205','Export MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2206','Leistungen im Ausland MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2207','Nicht steuerbare Leistungen MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2208','Nichtentgelt MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('230','PASSIVE RECHNUNGSABGRENZUNG UND KURZFRISTIGE RÜCKSTELLUNGEN','H','230','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2300','Transitorische Passiven','A','230','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('24','FREMDKAPITAL LANGFRISTIG','H','240','L','');
@@ -110,6 +114,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('3900','Skonti','A','390','I','AR_paid');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('3901','Rabatte und Preisnachlässe','A','390','I','AR_paid');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('3905','Debitorenverluste','A','390','I','AR_amount:IC_income');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('3999','Nicht kontiert','A','390','I','AR_amount:IC_income');
 
 ----------------------------------------------------------
 --- 4 AUFWAND FÜR MATERIAL, WAREN UND DRITTLEISTUNGEN ---
@@ -166,7 +171,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6220','Versicherungen Fahrzeuge','A','620','E','AP_amount');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6230','Verkehrsabgaben, Beiträge, Gebühren','A','620','E','AP_amount');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6260','Fahrzeugleasing','A','620','E','AP_amount');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6270','Privatanteil am Fahrzeugaufwand','A','620','E','AR_amount');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6270','Privatanteil am Fahrzeugaufwand','A','620','E','AR_amount:IC_income');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('630','SACHVERSICHERUNGEN','H','630','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6300','Sachversicherungen','A','630','E','AP_amount');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('636','ABGABEN, GEBÜHREN, BEWILLIGUNGEN','H','636','E','');
@@ -216,6 +221,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6892','Kursgewinne','A','685','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('69','ABSCHREIBUNGEN','H','690','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6900','Abschreibungen','A','690','E','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6999','Nicht kontiert','A','660','E','AP_amount');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('7','BETRIEBLICHE NEBENERFOLGE','H','700','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('79','GEWINNE AUS VERÄUSSERUNG VON BETRIEBLICHEM ANLAGEVERMÖGEN','H','790','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('7910','Gewinne aus mobilen Sachanlagen','A','790','E','AR_amount');
