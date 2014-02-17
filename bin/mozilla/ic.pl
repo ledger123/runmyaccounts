@@ -143,7 +143,7 @@ sub link_part {
 	      $form->{"IC_tax_$ref->{accno}"} = "checked";
 	    }
 	  } else {
-	    $form->{"IC_tax_$ref->{accno}"} = "checked";
+	    $form->{"IC_tax_$ref->{accno}"} = "";
 	  }
 	  
 	}
