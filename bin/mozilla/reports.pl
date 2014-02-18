@@ -373,21 +373,57 @@ sub onhandvalue_detail {
 #-------------------------------
 sub gl_search {
    $form->{title} = $locale->text('General Ledger');
-   &print_title;
-
-   &start_form;
-   &start_table;
 
    &bld_department;
    &bld_warehouse;
    &bld_partsgroup;
+   &bld_chart('ALL', 'selectfromaccount');
+   &bld_chart('ALL', 'selecttoaccount');
 
-   &print_date('fromdate', $locale->text('From'));
-   &print_date('todate', $locale->text('To'));
-   &print_text('fromaccount', $locale->text('Account') . ' >=', 15);
-   &print_text('toaccount', $locale->text('Account') . ' <=', 15);
+   $form->all_years(\%myconfig);
+   if (@{ $form->{all_years} }) {
+        # accounting years
+        $selectaccountingyear = "<option>\n";
+        for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|<option>$_\n| }
+        $selectaccountingmonth = "<option>\n";
+        for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|<option value=$_>|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+        $selectfrom = qq|
+        <tr>
+            <th align=right>|.$locale->text('Period').qq|</th>
+            <td>
+            <select name=month>$selectaccountingmonth</select>
+            <select name=year>$selectaccountingyear</select>
+            <br>
+            <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+            <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+            <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+            <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+            </td>
+        </tr>
+|;
+   }
+
+   $form->header;
+   print qq|
+<body>
+<table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
+<form method=post action='$form->{script}'>
+
+<table>
+<tr>
+  <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
+  |.$locale->text('To').qq| <input name=dateto size=11 title='$myconfig{dateformat}'></td>
+</tr>
+$selectfrom
+|;
+
+   &print_select('fromaccount', $locale->text('From Account'));
+   &print_select('toaccount', $locale->text('To Account'));
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
+
+   @a = ();
 
    #&print_radio;
    &print_checkbox('l_no', $locale->text('No.'), '', '');
@@ -416,16 +452,20 @@ sub gl_list {
    my $callback = qq|$form->{script}?action=gl_list|;
    for (qw(path login)) { $callback .= "&$_=$form->{$_}" }
 
+   ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+   ($fromaccount, $null) = split(/--/, $form->{fromaccount});
+   ($toaccount, $null) = split(/--/, $form->{toaccount});
+
    my $glwhere = qq| (1 = 1)|;
-   $glwhere .= qq| AND c.accno >= '$form->{fromaccount}'| if $form->{fromaccount};
-   $glwhere .= qq| AND c.accno <= '$form->{toaccount}'| if $form->{toaccount};
-   $glwhere .= qq| AND ac.transdate >= '$form->{fromdate}'| if $form->{fromdate};
-   $glwhere .= qq| AND ac.transdate <= '$form->{todate}'| if $form->{todate};
+   $glwhere .= qq| AND c.accno >= '$fromaccount'| if $form->{fromaccount};
+   $glwhere .= qq| AND c.accno <= '$toaccount'| if $form->{toaccount};
+   $glwhere .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
+   $glwhere .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};
    $glwhere .= qq| AND ac.amount <> 0|;
    my $arwhere = $glwhere;
    my $apwhere = $glwhere;
 
-   for (qw(fromaccount toaccount fromdate todate)){ $callback .= "&$_=".$form->escape($form->{$_},1) }
+   for (qw(fromaccount toaccount datefrom dateto)){ $callback .= "&$_=".$form->escape($form->{$_},1) }
 
    @columns = qw(id transdate reference description name source debit credit balance);
    # if this is first time we are running this report.
@@ -620,12 +660,12 @@ sub gl_list {
 		      print CSVFILE "\n";
 	
 		   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-		   if ($form->{fromdate}){
+		   if ($form->{datefrom}){
 	   	      my $openingquery = qq|
 			SELECT SUM(amount) 
 			FROM acc_trans
 			WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
-			AND transdate < '$form->{fromdate}'
+			AND transdate < '$form->{datefrom}'
 		     |;
 		     ($balance) = $dbh->selectrow_array($openingquery);
 		     if ($balance != 0){
@@ -715,11 +755,10 @@ sub gl_list {
 
 	   $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
 	   &print_title;
-	   &print_criteria('fromdate', $locale->text('From'));
-	   &print_criteria('todate', $locale->text('To'));
-	   &print_criteria('fromaccount', $locale->text('Account').' >=');
-	   &print_criteria('toaccount', $locale->text('Account').' <=');
-	
+       print $locale->text('From') . ' : ' . $form->format_date($myconfig{dateformat}, $form->{datefrom}) . '<br/>' if $form->{datefrom};
+       print $locale->text('To') . ' : ' . $form->format_date($myconfig{dateformat}, $form->{dateto})  . '<br/>' if $form->{todate};
+	   print $locale->text('From Account') . " : $fromaccount<br/>" if $form->{fromaccount};
+	   print $locale->text('To Account') . " : $toaccount<br/>" if $form->{toaccount};
 	
 	   # Subtotal and total variables
 	   my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
@@ -750,12 +789,12 @@ sub gl_list {
 	   	   print qq|</tr>|; 
 	
 		   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-		   if ($form->{fromdate}){
+		   if ($form->{datefrom}){
 	   	      my $openingquery = qq|
 			SELECT SUM(amount) 
 			FROM acc_trans
 			WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
-			AND transdate < '$form->{fromdate}'
+			AND transdate < '$form->{dateto}'
 		     |;
 		     ($balance) = $dbh->selectrow_array($openingquery);
 		     if ($balance != 0){
