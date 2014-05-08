@@ -599,6 +599,10 @@ sub invoice_details {
   for (qw(cd_subtotal cd_invtotal invtotal subtotal total totalparts totalservices)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}, "0") }
   for (qw(totalqty totalship totalnetweight totalgrossweight)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}) }
 
+  # <% customeremail %>
+  $form->{customer_id} *= 1;
+  ($form->{customeremail}) = $dbh->selectrow_array("SELECT email FROM customer WHERE id = $form->{customer_id}");
+
   # dcn
   $query = qq|SELECT bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc
 	      FROM bank bk
