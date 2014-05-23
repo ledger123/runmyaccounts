@@ -968,13 +968,21 @@ sub project_header {
   }
   
   $label = ucfirst $form->{vc};
+
   if ($form->{"select$form->{vc}"}) {
+    $addvc = "ct.pl?action=add&db=customer&path=$form->{path}&login=$form->{login}&addvc=1";
+    $addvc .= "&callback=" . $form->escape($form->{callback},2);
+    $addvc = qq|<a href=$addvc>| . $locale->text('Add Customer') . qq|</a>|;
+
+    # Do not display add link if acs does not allow
+    $addvc = '' if $myconfig{acs} =~ /Customers--Add Customer/;
+
     $name = qq|
 	<tr>
 	  <th align=right nowrap>|.$locale->text($label).qq|</th>
 	  <td colspan=3><select name="$form->{vc}">|
 	  .$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1)
-	  .qq|</select>
+	  .qq|</select> $addvc
 	  </td>
 	</tr>
 |;
@@ -982,7 +990,7 @@ sub project_header {
     $name = qq|
 	<tr>
 	  <th align=right nowrap>|.$locale->text($label).qq|</th>
-	  <td colspan=3><input name="$form->{vc}" value="|.$form->quote($form->{"$form->{vc}"}).qq|" size=35></td>
+	  <td colspan=3><input name="$form->{vc}" value="|.$form->quote($form->{"$form->{vc}"}).qq|" size=35> $addvc</td>
 	</tr>
 |;
   }
@@ -1988,7 +1996,43 @@ sub update {
 	  $form->{"old$form->{vc}"} = qq|$form->{"$form->{vc}"}--$form->{"$form->{vc}_id"}|;
 	} else {
 	  $msg = ucfirst $form->{vc} ." not on file!";
-	  $form->error($locale->text($msg));
+	  $form->info($locale->text($msg));
+
+      # change callback
+      $form->{old_callback} = $form->escape( $form->{callback}, 1 );
+      $form->{callback} = $form->escape( "$form->{script}?action=display_form", 1 );
+
+      # delete action
+      delete $form->{action};
+
+      # save all other form variables in a previousform variable
+      if ( !$form->{previousform} ) {
+            foreach $key ( keys %$form ) {
+
+                # escape ampersands
+                $form->{$key} =~ s/&/%26/g;
+                $form->{previousform} .= qq|$key=$form->{$key}&|;
+            }
+            chop $form->{previousform};
+            $form->{previousform} = $form->escape( $form->{previousform}, 1 );
+      }
+
+      $i = $form->{rowcount};
+      for (qw(partnumber description)) { $form->{"${_}_$i"} = $form->quote( $form->{"${_}_$i"} ) }
+
+      print qq|
+    <form method=post action=ct.pl>
+    <input type=hidden name=name value="$form->{customer}"><br/>
+    <input type=submit name=action class=submit value='Add'>
+    <input type=hidden name=db value="customer">
+    |;
+      $form->hide_form(qw(previousform rowcount path login));
+
+      print qq|
+    </form>
+    |;
+      exit;
+
 	}
       }
     }
