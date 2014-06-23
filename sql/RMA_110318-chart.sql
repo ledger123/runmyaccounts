@@ -127,7 +127,6 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('44','AUFWAND FÜR DRITTLEISTUNGEN','H','440','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('4400','Aufwand für Drittleistungen','A','440','E','AP_amount');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('49','SKONTO','H','490','E','');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('4900','Skonto','A','490','E','AP_paid');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('4999','Systemkonto','A','470','E','AP_amount:IC_expense:IC_cogs');
 -------------------------
 --- 5 PERSONALAUFWAND ---
@@ -254,6 +253,9 @@ INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '220
 INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '2202'),0.038);
 INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '2203'),0.025);
 INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '2204'),0.08);
+INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '2205'),0.00);
+INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '2206'),0.00);
+INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '2207'),0.00);
 INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '6730'),0.08);
 --
 DELETE FROM DEFAULTS WHERE fldname='inventory_accno_id';
