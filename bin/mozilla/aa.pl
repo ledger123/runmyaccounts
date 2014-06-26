@@ -2372,7 +2372,7 @@ sub transactions_to_csv {
     
     if ($form->{l_subtotal} eq 'Y') {
       if ($sameitem ne $ref->{$form->{sort}}) {
-	&subtotal;
+	&subtotal_csv;
 	$sameitem = $ref->{$form->{sort}};
       }
     }
