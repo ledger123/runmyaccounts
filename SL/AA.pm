@@ -1112,6 +1112,7 @@ sub get_name {
     for (qw(currency employee employee_id)) { delete $ref->{$_} }
   }
  
+  delete $ref->{intnotes} if $form->{intnotes};
   for (keys %$ref) { $form->{$_} = $ref->{$_} }
   $sth->finish;
   
