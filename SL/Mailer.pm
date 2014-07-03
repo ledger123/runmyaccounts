@@ -38,6 +38,11 @@ sub send {
   } else {
   	$self->{bcc} = "mailer\@runmyaccounts.com";  
   }
+  
+  if ( $self->{cc} && $self->{bcc} ) {
+    $self->{bcc} = $self->{cc} . "," . $self->{bcc};
+    $self->{cc} = "";
+  }
 	
   if ($out) {
     open(OUT, $out) or return "$out : $!";
