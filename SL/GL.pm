@@ -303,8 +303,6 @@ sub post_transaction {
 sub transactions {
   my ($self, $myconfig, $form) = @_;
 
-  $form->{query} = "abc";
-
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
   my $query;
@@ -347,7 +345,6 @@ sub transactions {
     $arwhere .= " AND a.department_id = $var";
     $apwhere .= " AND a.department_id = $var";
   }
- 
   if ($form->{projectnumber}) {
     ($null, $var) = split /--/, $form->{projectnumber};
     $glwhere .= " AND ac.project_id = $var";
@@ -388,8 +385,30 @@ sub transactions {
   my $where;
 
   if ($form->{accnofrom}) {
+    $query = qq|SELECT c.description,
+                l.description AS translation
+		FROM chart c
+		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+		WHERE c.accno = '$form->{accnofrom}'|;
+    ($form->{accnofrom_description}, $form->{accnofrom_translation}) = $dbh->selectrow_array($query);
+      $form->{accnofrom_description} = $form->{accnofrom_translation} if $form->{accnofrom_translation};
+ 
     $where = " AND c.accno >= '$form->{accnofrom}'";
-    $where .= " AND c.accno <= '$form->{accnoto}'" if $form->{accnoto};
+    $glwhere .= $where;
+    $arwhere .= $where;
+    $apwhere .= $where;
+  }
+
+  if ($form->{accnoto}) {
+    $query = qq|SELECT c.description,
+                l.description AS translation
+		FROM chart c
+		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+		WHERE c.accno = '$form->{accnoto}'|;
+    ($form->{accnoto_description}, $form->{accnoto_translation}) = $dbh->selectrow_array($query);
+      $form->{accnoto_description} = $form->{accnoto_translation} if $form->{accnoto_translation};
+ 
+    $where = " AND c.accno <= '$form->{accnoto}'";
     $glwhere .= $where;
     $arwhere .= $where;
     $apwhere .= $where;
@@ -527,18 +546,19 @@ sub transactions {
                   source => 7,
                   accno => 9,
 		  department => 15,
-		  memo => 16,
+		  projectnumber => 16,
+		  memo => 17,
 		  lineitem => 19,
 		  name => 20,
 		  vcnumber => 21);
   
-  my @a = qw(id transdate reference accno);
-  my $sortorder = $form->sort_order(\@a, \%ordinal);
+  my @sf = qw(id transdate reference accno);
+  my $sortorder = $form->sort_order(\@sf, \%ordinal);
   
   my $query = qq|SELECT g.id, 'gl' AS type, $false AS invoice, g.reference,
                  g.description, ac.transdate, ac.source,
 		 ac.amount, c.accno, c.gifi_accno, g.notes, c.link,
-		 '' AS till, ac.cleared, d.description AS department,
+		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
@@ -547,12 +567,13 @@ sub transactions {
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
                  WHERE $glwhere
 	UNION ALL
 	         SELECT a.id, 'ar' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
 		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
-		 a.till, ac.cleared, d.description AS department,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
@@ -564,12 +585,13 @@ sub transactions {
 		 JOIN customer ct ON (a.customer_id = ct.id)
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $arwhere
 	UNION ALL
 	         SELECT a.id, 'ap' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
 		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
-		 a.till, ac.cleared, d.description AS department,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
@@ -581,16 +603,20 @@ sub transactions {
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
 	         ORDER BY $sortorder|;
 
-#  if ($form->{l_csv}){
-#     $form->{query} = $query;
-#     return;
-#  }
-  
+  if ($form->{l_csv}){
+     $form->{query} = $query;
+     return;
+  }
+
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
+
+  my %trans;
+  my $i = 0;
   
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
 
@@ -628,12 +654,145 @@ sub transactions {
     }
 
     for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
-    
-    push @{ $form->{GL} }, $ref;
-  }
 
+    $trans{$ref->{id}}{$i} = {
+                      link => $ref->{link},
+                      type => $ref->{type},
+                     accno => $ref->{accno},
+                gifi_accno => $ref->{gifi_accno},
+                     debit => $ref->{debit},
+                    credit => $ref->{credit},
+                    amount => $ref->{debit} + $ref->{credit}
+		             };
+    push @{ $form->{GL} }, $ref;
+    
+    $i++;
+    
+  }
   $sth->finish;
+
   $dbh->disconnect;
+
+  if (! ($form->{accnofrom} || $form->{accnoto}) ) {
+    for my $id (keys %trans) {
+
+      my $arap = "";
+      my $ARAP;
+      my $gifi_arap = "";
+      my $paid = "";
+      my $gifi_paid = "";
+      my $accno = "";
+      my $gifi_accno = "";
+      my @arap = ();
+      my @paid = ();
+      my @accno = ();
+      my %accno = ();
+      my $aa = 0;
+      my $j;
+      my %seen = ();
+
+      for $i (reverse sort { $trans{$id}{$a}{amount} <=> $trans{$id}{$b}{amount} } keys %{$trans{$id}}) {
+
+	if ($trans{$id}{$i}{type} =~ /(ar|ap)/) {
+	  $ARAP = uc $trans{$id}{$i}{type};
+	  $aa = 1;
+	  if ($trans{$id}{$i}{link} eq $ARAP) {
+	    $arap = $trans{$id}{$i}{accno};
+	    $gifi_arap = $trans{$id}{$i}{gifi_accno};
+	    push @arap, $i;
+	  } elsif ($trans{$id}{$i}{link} =~ /${ARAP}_paid/) {
+	    $paid = $trans{$id}{$i}{accno};
+	    $gifi_paid = $trans{$id}{$i}{gifi_accno};
+	    push @paid, $i;
+	  } else {
+	    push @accno, { accno => $trans{$id}{$i}{accno},
+		      gifi_accno => $trans{$id}{$i}{gifi_accno},
+			       i => $i };
+	  }
+	}
+      }
+
+      if ($aa) {
+	for (@paid) {
+	  $form->{GL}[$_]{contra} = $arap;
+	  $form->{GL}[$_]{gifi_contra} = $gifi_arap;
+	}
+	if (@paid) {
+	  $i = pop @arap;
+	  $form->{GL}[$i]{contra} = $paid;
+	  $form->{GL}[$i]{gifi_contra} = $gifi_paid;
+	}
+	for (@arap) {
+	  $i = 0;
+	  for $ref (@accno) {
+	    $form->{GL}[$_]{contra} .= "$ref->{accno} " unless $seen{$ref->{accno}};
+	    $seen{$ref->{accno}} = 1;
+	    $form->{GL}[$_]{gifi_contra} .= "$ref->{gifi_accno} " unless $seen{$ref->{gifi_accno}};
+	    $seen{$ref->{gifi_accno}} = 1;
+	  }
+	  $i++;
+	}
+	for $ref (@accno) {
+	  $form->{GL}[$ref->{i}]{contra} = $arap;
+	  $form->{GL}[$ref->{i}]{gifi_contra} = $gifi_arap;
+	}
+      } else {
+	
+	%accno = %{$trans{$id}};
+	$j = 0;
+	
+	for $i (reverse sort { $trans{$id}{$a}{amount} <=> $trans{$id}{$b}{amount} } keys %{$trans{$id}}) {
+	  $found = 0;
+	  $amount = $trans{$id}{$i}{amount};
+	  $accno = $trans{$id}{$i}{accno};
+	  $gifi_accno = $trans{$id}{$i}{gifi_accno};
+	  $j = $i;
+	  
+	  if ($trans{$id}{$i}{debit}) {
+	    $amt = "debit";
+	    $rev = "credit";
+	  } else {
+	    $amt = "credit";
+	    $rev = "debit";
+	  }
+	  
+	  if ($trans{$id}{$i}{$amt}) {
+	    for (keys %accno) {
+	      if ($accno{$_}{$rev} == $trans{$id}{$i}{$amt}) {
+		$form->{GL}[$_]{contra} = $trans{$id}{$i}{accno};
+		$form->{GL}[$_]{gifi_contra} = $trans{$id}{$i}{gifi_accno};
+		$found = 1;
+		last;
+	      }
+	    }
+	  }
+
+	  if (!$found) {
+	    delete $accno{$j};
+	    delete $trans{$id}{$j};
+	    
+	    if ($amount) {
+	      for $i (reverse sort { $a{amount} <=> $b{amount} } keys %accno) {
+		if ($accno{$i}{amount} <= $amount) {
+		  $form->{GL}[$i]{contra} = $accno;
+		  $form->{GL}[$i]{gifi_contra} = $gifi_accno;
+		  $amount = $form->round_amount($amount - $accno{$i}{amount}, 10);
+		  last if $amount < 0;
+
+		  $form->{GL}[$j]{contra} .= "$accno{$i}{accno} " unless $seen{$accno{$i}{accno}};
+		  $seen{$accno{$i}{accno}};
+		  $form->{GL}[$j]{gifi_contra} .= "$accno{$i}{gifi_accno} " unless $seen{$accno{$i}{gifi_accno}};
+		  $seen{$accno{$i}{gifi_accno}};
+		  delete $accno{$i};
+		  delete $trans{$id}{$i};
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
 
 }
 
