@@ -1468,7 +1468,6 @@ sub post_invoice {
   $invnetamount = $form->round_amount($invnetamount, 6);
 
   # save AR record
-  $form->{paid} = $invamount if abs($form->{paid} - $invamount) < 0.05; # Rounding error fix (Bug #32302)
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
               description = |.$dbh->quote($form->{description}).qq|,
