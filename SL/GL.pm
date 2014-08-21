@@ -607,11 +607,6 @@ sub transactions {
 		 WHERE $apwhere
 	         ORDER BY $sortorder|;
 
-  if ($form->{l_csv}){
-     $form->{query} = $query;
-     return;
-  }
-
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
