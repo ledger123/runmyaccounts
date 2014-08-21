@@ -486,8 +486,7 @@ sub transactions {
   GL->transactions(\%myconfig, \%$form);
 
   if ($form->{l_csv} eq 'Y'){
-     my $dbh = $form->dbconnect(\%myconfig);
-     &export_to_csv($dbh, $form->{query}, 'gl');
+     &transactions_to_csv;
      exit;
   }
 
@@ -1035,22 +1034,28 @@ sub gl_subtotal {
 }
 
 sub transactions_to_csv {
-  
+
   $filename = 'gl';
   my $name;
   do { $name = tmpnam() }
   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
   open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
 
-  $form->{sort} = "transdate" unless $form->{sort};
+  ($form->{reportdescription}, $form->{reportid}) = split /--/, $form->{report};
+  $form->{sort} ||= "transdate";
+  $form->{reportcode} = 'gl';
 
   GL->transactions(\%myconfig, \%$form);
 
-  $href = "$form->{script}?action=transactions&direction=$form->{direction}&oldsort=$form->{oldsort}&path=$form->{path}&login=$form->{login}";
-  
+  $href = "$form->{script}?action=transactions";
+  for (qw(direction oldsort path login month year interval reportlogin)) { $href .= "&$_=$form->{$_}" }
+  for (qw(report flds)) { $href .= "&$_=".$form->escape($form->{$_}) }
+
   $form->sort_order();
 
-  $callback = "$form->{script}?action=transactions&direction=$form->{direction}&oldsort=$form->{oldsort}&path=$form->{path}&login=$form->{login}";
+  $callback = "$form->{script}?action=transactions";
+  for (qw(direction oldsort path login month year interval reportlogin)) { $callback .= "&$_=$form->{$_}" }
+  for (qw(report flds)) { $callback .= "&$_=".$form->escape($form->{$_}) }
   
   %acctype = ( 'A' => $locale->text('Asset'),
                'L' => $locale->text('Liability'),
@@ -1159,7 +1164,8 @@ sub transactions_to_csv {
     $href .= "&accnofrom=$form->{accnofrom}";
     $callback .= "&accnofrom=$form->{accnofrom}";
     $option .= "\n<br>" if $option;
-    $option .= $locale->text('Account')." >= $form->{accnofrom}";
+    $option .= $locale->text('Account')." >= $form->{accnofrom} $form->{accnofrom_description}";
+    $form->{l_contra} = "";
   }
   if ($form->{accnoto}) {
     $href .= "&accnoto=$form->{accnoto}";
@@ -1170,7 +1176,8 @@ sub transactions_to_csv {
       $option .= "\n<br>" if $option;
       $option .= $locale->text('Account')." <= ";
     }
-    $option .= "$form->{accnoto}";
+    $option .= "$form->{accnoto} $form->{accnoto_description}";
+    $form->{l_contra} = "";
   }
   if ($form->{amountfrom}) {
     $href .= "&amountfrom=$form->{amountfrom}";
@@ -1190,65 +1197,122 @@ sub transactions_to_csv {
     $option .= $form->format_amount(\%myconfig, $form->{amountto}, $form->{precision});
   }
 
-  @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo debit credit accno accdescription gifi_accno department));
-  pop @columns if $form->{department};
+  @columns = ();
+  for (split /,/, $form->{flds}) {
+    ($column, $label, $sort) = split /=/, $_;
+    push @columns, $column;
+    $column_data{$column} = $label;
+    $column_sort{$column} = $sort;
+  }
 
+  push @columns, "gifi_contra";
+  $column_data{gifi_contra} = $column_data{contra};
+  
+  $columns{debit} = 1;
+  $columns{credit} = 1;
+  
+  
   if ($form->{link} =~ /_paid/) {
-    @columns = $form->sort_columns(qw(transdate id reference description name vcnumber address notes lineitem source memo cleared debit credit accno accdescription gifi_accno));
+    push @columns, "cleared";
+    $column_data{cleared} = $locale->text('R');
     $form->{l_cleared} = "Y";
   }
+  @columns = grep !/department/, @columns if $form->{department};
 
-  if ($form->{accno} || $form->{gifi_accno}) {
-    @columns = grep !/(accno|gifi_accno)/, @columns;
-    push @columns, "balance";
-    $form->{l_balance} = "Y";
+  $i = 0;
+  if ($form->{column_index}) {
+    for (split /,/, $form->{column_index}) {
+      s/=.*//;
+      push @column_index, $_;
+      $column_index{$_} = ++$i;
+      $form->{"l_$_"} = "Y";
+    }
+  } else {
+    for (@columns) {
+      if ($form->{"l_$_"} eq "Y") {
+	push @column_index, $_;
+	$column_index{$_} = ++$i;
+	$form->{column_index} .= "$_=$columns{$_},";
+      }
+    }
+    chop $form->{column_index};
   }
   
-  
-  foreach $item (@columns) {
-    if ($form->{"l_$item"} eq "Y") {
-      push @column_index, $item;
+  if ($form->{accno} || $form->{gifi_accno}) {
+    @column_index = grep !/(accno|gifi_accno|contra|gifi_contra)/, @column_index;
+    push @column_index, "balance";
+    $column_data{balance} = $locale->text('Balance');
+    for (qw(l_contra l_gifi_contra)) { delete $form->{$_} }
+  }
 
-      # add column to href and callback
-      $callback .= "&l_$item=Y";
-      $href .= "&l_$item=Y";
+  if ($form->{l_contra}) {
+    $form->{l_gifi_contra} = "Y" if $form->{l_gifi_accno};
+    $form->{l_contra} = "" if ! $form->{l_accno};
+  }
+
+  if ($form->{initreport}) {
+    if ($form->{movecolumn}) {
+      @column_index = $form->sort_column_index;
+    } else {
+      @column_index = ();
+      $form->{column_index} = "";
+      $i = 0;
+      $j = 0;
+      for (split /,/, $form->{report_column_index}) {
+	s/=.*//;
+	$j++;
+
+	if ($form->{"l_$_"}) {
+	  push @column_index, $_;
+	  $form->{column_index} .= "$_=$columns{$_},";
+	  delete $column_index{$_};
+	  $i++;
+	}
+      }
+
+      for (sort { $column_index{$a} <=> $column_index{$b} } keys %column_index) {
+	push @column_index, $_;
+      }
+
+      $form->{column_index} = "";
+      for (@column_index) { $form->{column_index} .= "$_=$columns{$_}," }
+      chop $form->{column_index};
+
+    }
+  } else {
+    if ($form->{movecolumn}) {
+      @column_index = $form->sort_column_index;
     }
   }
   
+  for (@columns) {
+    if ($form->{"l_$_"} eq "Y") {
+      # add column to href and callback
+      $callback .= "&l_$_=Y";
+      $href .= "&l_$_=Y";
+    }
+  }
+  
+
   if ($form->{l_subtotal} eq 'Y') {
     $callback .= "&l_subtotal=Y";
     $href .= "&l_subtotal=Y";
   }
+  $href .= "&column_index=".$form->escape($form->{column_index});
+  $callback .= "&column_index=".$form->escape($form->{column_index});
 
-  $callback .= "&category=$form->{category}";
   $href .= "&category=$form->{category}";
+  $callback .= "&category=$form->{category}";
 
-  $column_header{id} = $locale->text('ID');
-  $column_header{transdate} = $locale->text('Date');
-  $column_header{reference} = $locale->text('Reference')."/".$locale->text('Invoice Number');
-  $column_header{description} = $locale->text('Description');
-  $column_header{name} = $locale->text('Company Name');
-  $column_header{vcnumber} = $locale->text('Company Number');
-  $column_header{address} = $locale->text('Address');
-  $column_header{lineitem} = $locale->text('Line Item');
-  $column_header{source} = $locale->text('Source');
-  $column_header{memo} = $locale->text('Memo');
-  $column_header{department} = $locale->text('Department');
-  
-  $column_header{notes} = $locale->text('Notes');
-  $column_header{debit} = $locale->text('Debit');
-  $column_header{credit} = $locale->text('Credit');
-  $column_header{accno} = $locale->text('Account');
-  $column_header{accdescription} = $locale->text('Account Description');
-  $column_header{gifi_accno} = $locale->text('GIFI');
-  $column_header{balance} = $locale->text('Balance');
-  $column_header{cleared} = $locale->text('R');
- 
-#  $form->header;
+  $form->helpref("list_gl_transactions", $myconfig{countrycode});
 
-  for (@column_index) { print CSVFILE "$column_header{$_}," }
-  print CSVFILE "\n";
-  
+  $l = $#column_index;
+
+  for (0 .. $l) {
+      print CSVFILE qq|$column_data{$column_index[$_]},|;
+  }
+  print CSVFILE qq|\n|;
+
   # add sort to callback
   $form->{callback} = "$callback&sort=$form->{sort}";
   $callback = $form->escape($form->{callback});
@@ -1262,15 +1326,15 @@ sub transactions_to_csv {
   
   if (($form->{accno} || $form->{gifi_accno}) && $form->{balance}) {
 
-    for (@column_index) { $column_data{$_} = " " }
-    $column_data{balance} = $form->format_amount(\%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0);
+    for (@column_index) { $column_data{$_} = "" }
+    $column_data{balance} = '"'.$form->format_amount(\%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0).'"';
     
     if ($ref->{id} != $sameid) {
       $i++; $i %= 2;
     }
    
-    for (@column_index) { print CSVFILE '"' . $column_data{$_} . '"' . ',' }
-    print CSVFILE "\n";
+    for (@column_index) { print CSVFILE "$column_data{$_}," }
+    
   }
 
   # reverse href
@@ -1284,7 +1348,7 @@ sub transactions_to_csv {
     # if item ne sort print subtotal
     if ($form->{l_subtotal} eq 'Y') {
       if ($sameitem ne $ref->{$form->{sort}}) {
-	&gl_subtotal_csv;
+	&gl_subtotal_to_csv;
       }
     }
     
@@ -1296,57 +1360,104 @@ sub transactions_to_csv {
     $totaldebit += $ref->{debit};
     $totalcredit += $ref->{credit};
 
-    $ref->{debit} = $form->format_amount(\%myconfig, $ref->{debit}, $form->{precision}, " ");
-    $ref->{credit} = $form->format_amount(\%myconfig, $ref->{credit}, $form->{precision}, " ");
+    $ref->{debit} = $ref->{debit};
+    $ref->{credit} = $ref->{credit};
     
-    $column_data{id} = $ref->{id};
-    $column_data{transdate} = $ref->{transdate};
-    $column_data{reference} = &escape_csv($ref->{reference});
+    $column_data{id} = "$ref->{id}";
+    $column_data{transdate} = "$ref->{transdate}";
 
-    for (qw(department name vcnumber address)) { $column_data{$_} = &escape_csv($ref->{$_}) . " " }
+    $ref->{reference} ||= "";
+    $column_data{reference} = "$ref->{reference}";
+
+    for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "$ref->{$_}" }
     
     for (qw(lineitem description source memo notes)) {
-      $ref->{$_} =~ s/\r?\n/<br>/g;
-      $column_data{$_} = &escape_csv($ref->{$_}) . " ";
+      $column_data{$_} = &escape_csv($ref->{$_});
     }
     
     if ($ref->{vc_id}) {
-      $column_data{name} = &escape_csv($ref->{name});
+      $column_data{name} = "$ref->{name}";
     }
     
     $column_data{debit} = $ref->{debit};
     $column_data{credit} = $ref->{credit};
     
-    $column_data{accno} = $ref->{accno};
-    $column_data{accdescription} = &escape_csv($ref->{accdescription});
-    $column_data{gifi_accno} = $ref->{gifi_accno};
-    $column_data{balance} = $form->format_amount(\%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0);
-    $column_data{cleared} = ($ref->{cleared}) ? "*" : " ";
+    $column_data{accno} = "$ref->{accno}";
+    $column_data{accdescription} = "$ref->{accdescription}";
+    $column_data{contra} = "";
+    for (split / /, $ref->{contra}) {
+      $column_data{contra} .= qq|$_ |;
+    }
+    $column_data{contra} .= "";
+    $column_data{gifi_accno} = "$ref->{gifi_accno}";
+    $column_data{gifi_contra} = "";
+    for (split / /, $ref->{gifi_contra}) {
+      $column_data{gifi_contra} .= qq|$_ |;
+    }
+    $column_data{gifi_contra} .= "";
+
+    $column_data{balance} = '"'.$form->format_amount(\%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0).'"';
+    $column_data{cleared} = ($ref->{cleared}) ? "*" : "";
 
     if ($ref->{id} != $sameid) {
       $i++; $i %= 2;
     }
-
-    for (@column_index) { print CSVFILE '"' . $column_data{$_} . '"' . ',' }
+    for (@column_index) { print CSVFILE "$column_data{$_}," }
     print CSVFILE "\n";
     
     $sameid = $ref->{id};
   }
 
 
-  &gl_subtotal_csv if ($form->{l_subtotal} eq 'Y');
+  &gl_subtotal_to_csv if ($form->{l_subtotal} eq 'Y');
 
-  for (@column_index) { $column_data{$_} = " " }
+
+  for (@column_index) { $column_data{$_} = "" }
   
-  $column_data{debit} = $form->format_amount(\%myconfig, $totaldebit, $form->{precision}, " ");
-  $column_data{credit} = $form->format_amount(\%myconfig, $totalcredit, $form->{precision}, " ");
-  $column_data{balance} = $form->format_amount(\%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0);
+  $column_data{debit} = $totaldebit;
+  $column_data{credit} = $totalcredit;
+  $column_data{balance} = $form->{balance} * $ml * $cml;
+  
+  for (@column_index) { print CSVFILE "$column_data{$_}," }
+  print CSVFILE qq|\n|;
+  
+  %button = ('General Ledger--Add Transaction' => { ndx => 1, key => 'G', value => $locale->text('GL Transaction') },
+  'AR--Add Transaction' => { ndx => 2, key => 'R', value => $locale->text('AR Transaction') },
+  'AR--Sales Invoice' => { ndx => 3, key => 'I', value => $locale->text('Sales Invoice ') },
+  'AR--Credit Invoice' => { ndx => 4, key => 'C', value => $locale->text('Credit Invoice ') },
+  'AP--Add Transaction' => { ndx => 5, key => 'P', value => $locale->text('AP Transaction') },
+  'AP--Vendor Invoice' => { ndx => 6, key => 'V', value => $locale->text('Vendor Invoice ') },
+  'AP--Vendor Invoice' => { ndx => 7, key => 'D', value => $locale->text('Debit Invoice ') },
+  'Save Report' => { ndx => 8, key => 'S', value => $locale->text('Save Report') }
+            );
 
-  for (@column_index) { print CSVFILE '"' . $column_data{$_} . '"' . ',' }
+  if (!$form->{admin}) {
+    delete $button{'Save Report'} unless $form->{savereport};
+  }
+    
+  if ($myconfig{acs} =~ /General Ledger--General Ledger/) {
+    delete $button{'General Ledger--Add Transaction'};
+  }
+  if ($myconfig{acs} =~ /AR--AR/) {
+    delete $button{'AR--Add Transaction'};
+    delete $button{'AR--Sales Invoice'};
+    delete $button{'AR--Credit Invoice'};
+  }
+  if ($myconfig{acs} =~ /AP--AP/) {
+    delete $button{'AP--AP Transaction'};
+    delete $button{'AP--Vendor Invoice'};
+    delete $button{'AP--Debit Invoice'};
+  }
 
-  $form->hide_form(qw(callback path login));  
+  foreach $item (split /;/, $myconfig{acs}) {
+    delete $button{$item};
+  }
 
-  close (CSVFILE) || $form->error('Cannot close csv file');
+  if ($form->{accno} || $form->{gifi_accno}) {
+    delete $button{'Save Report'};
+  }
+
+   close (CSVFILE) || $form->error('Cannot close csv file');
 
    my @fileholder;
    open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
@@ -1357,27 +1468,23 @@ sub transactions_to_csv {
    print "Content-Disposition:attachment; filename=$dlfile\n\n";
    print @fileholder;
    unlink($name) or die "Couldn't unlink $name : $!" 
-
 }
 
-sub gl_subtotal_csv {
+sub gl_subtotal_to_csv {
       
-  $subtotaldebit = $form->format_amount(\%myconfig, $subtotaldebit, $form->{precision}, " ");
-  $subtotalcredit = $form->format_amount(\%myconfig, $subtotalcredit, $form->{precision}, " ");
-  
-  for (@column_index) { $column_data{$_} = " " }
+  for (@column_index) { $column_data{$_} = "" }
 
   $column_data{debit} = $subtotaldebit;
   $column_data{credit} = $subtotalcredit;
 
-  
   for (@column_index) { print CSVFILE "$column_data{$_}," }
-  print CSVFILE "\n";
+  print CSVFILE qq|\n|;
 
   $subtotaldebit = 0;
   $subtotalcredit = 0;
 
   $sameitem = $ref->{$form->{sort}};
+
 }
 
 sub update {
