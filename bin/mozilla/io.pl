@@ -1689,7 +1689,10 @@ sub print_form {
     
   }
 
+  $emailed = 0;
   if ($form->{media} eq 'email') {
+    $emailed = 1;
+    
     $mergerv = 1;
     $form->{subject} = qq|$form->{label} $form->{"${inv}number"}| unless $form->{subject};
 
@@ -1808,8 +1811,12 @@ sub print_form {
  
     $form->{rowcount}--;
 
-    $form->{redirectmsg} = $locale->text('Printed');
-
+    print STDERR "Printed".$old_form->{media}."\n";
+    if ( $emailed == 1 ) {
+	    $form->{redirectmsg} = $locale->text('Invoice')." $form->{invnumber} ".$locale->text('E-mailed');
+    } else {
+	    $form->{redirectmsg} = $locale->text('Printed');
+	}
     &{ "$display_form" };
 
   }
