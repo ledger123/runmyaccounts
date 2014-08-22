@@ -297,6 +297,7 @@ $self{subs} = {
   'name_selected'               => 'name_selected',
   'new_item'                    => 'new_item',
   'new_number'                  => 'new_number',
+  'neue_nummer'					=> 'new_number',
   'parts_subtotal'              => 'parts_subtotal',
   'print'                       => 'print',
   'print_form'                  => 'print_form',

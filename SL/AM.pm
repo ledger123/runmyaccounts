@@ -16,6 +16,7 @@
 
 package AM;
 
+use Time::Local;
 
 sub get_account {
   my ($self, $myconfig, $form) = @_;
@@ -1840,6 +1841,15 @@ sub closebooks {
   my $sth = $dbh->prepare($query) || $form->dberror($query);
 
   $form->{closedto} = $form->datetonum($myconfig, $form->{closedto});
+
+  my $date = $form->{closedto};
+  $date =~ s/\s+$//;
+  $date =~ s/^\s*//;
+  my ($year, $month, $day) = unpack "A4 A2 A2", $date;
+  eval{ 
+    timelocal(0,0,0,$day, $month-1, $year); # dies in case of bad date
+  };
+  
   for (qw(revtrans closedto audittrail)) {
     $dth->execute($_) || $form->dberror;
     $dth->finish;
