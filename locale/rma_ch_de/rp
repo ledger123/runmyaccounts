@@ -103,6 +103,7 @@ $self{texts} = {
   'October'                     => 'Oktober',
   'Order'                       => 'Bestellung',
   'Overdue'                     => 'Fälligkeit',
+  'Overpaid'                    => 'Überzahlte',
   'PDF'                         => 'PDF',
   'Payments'                    => 'Zahlungen',
   'Period'                      => 'Zeitraum',

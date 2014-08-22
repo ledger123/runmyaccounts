@@ -736,15 +736,21 @@ sub report {
 		  </td>
                 </tr>
 		<tr>
-		  <th align=right nowrap>$vcnumber</th>
+		  <th align=right nowrap>$locale->text('Customer')</th>
 		  <td colspan=3><input name="$form->{vc}number" size=35>
 		  </td>
                 </tr>
 |;
     }
 
+	$overpaidlabel = $locale->text('Overpaid');
+
     print qq|
         $vc
+    	<tr>
+		  <th align=right nowrap>$overpaidlabel</th>
+		  <td nowrap width=70><input name=overpaid type=checkbox class=checkbox value=on></td>
+		</tr>
 	<input type=hidden name=action value="$form->{nextsub}">
 |;
 
