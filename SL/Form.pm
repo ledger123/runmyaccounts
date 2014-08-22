@@ -153,6 +153,12 @@ sub unquote {
 
 }
 
+sub helpref {
+  my ($self, $file, $countrycode) = @_;
+
+  return;
+
+}
 
 sub select_option {
   my ($self, $list, $selected, $removeid, $rev) = @_;
@@ -3281,6 +3287,118 @@ sub update_defaults {
   }
 
   $var;
+
+}
+
+sub sort_column_index {
+  my ($self) = @_;
+
+  my @c = split /,/, $self->{column_index};
+  my $i = 1;
+  my %c;
+  my $v;
+  my $j;
+  my $k;
+  my %d;
+  my $ndx;
+  my $lastndx;
+  my %temp;
+  
+  my (@m) = split /,/, $self->{movecolumn};
+
+  for (@c) {
+    ($v, $j) = split /=/, $_;
+    $c{$v} = $i;
+    $d{$v} = $j;
+    $ndx = $i if $v eq $m[0];
+    $lastndx = $i;
+    $i++;
+  }
+
+  if ($m[1] eq 'right') {
+    $c{$m[0]} += 1.5;
+    $i = $ndx + 1;
+    
+    if (exists $self->{"a_1"}) {
+      if ($i == $lastndx + 1) {
+	for (qw(a w f l)) {
+	  $temp{$_} = $self->{"${_}_$lastndx"};
+	  $temp{"t_$_"} = $self->{"t_${_}_$lastndx"};
+	  $temp{"h_$_"} = $self->{"h_${_}_$lastndx"};
+	}
+	for $i (1 .. $lastndx - 1) {
+	  for (qw(a w f l)) {
+	    $k = $lastndx - $i + 1;
+	    $j = $lastndx - $i;
+	    $self->{"${_}_$k"} = $self->{"${_}_$j"};
+	    $self->{"t_${_}_$k"} = $self->{"t_${_}_$j"};
+	    $self->{"h_${_}_$k"} = $self->{"h_${_}_$j"};
+	  }
+	}
+	for (qw(a w f l)) {
+	  $self->{"${_}_1"} = $temp{$_};
+	  $self->{"t_${_}_1"} = $temp{"t_$_"};
+	  $self->{"h_${_}_1"} = $temp{"h_$_"};
+	}
+	  
+	$i = 1;
+	$ndx = 1;
+	$c{$m[0]} = 0;
+      }
+    }   
+  } else {
+    $c{$m[0]} -= 1.5;
+    $i = $ndx - 1;
+
+    if (exists $self->{"a_1"}) {
+      if ($i == 0) {
+	for (qw(a w f l)) {
+	  $temp{$_} = $self->{"${_}_1"};
+	  $temp{"t_$_"} = $self->{"t_${_}_1"};
+	  $temp{"h_$_"} = $self->{"h_${_}_1"};
+	}
+	for $i (1 .. $lastndx - 1) {
+	  for (qw(a w f l)) {
+	    $j = $i + 1;
+	    $self->{"${_}_$i"} = $self->{"${_}_$j"};
+	    $self->{"t_${_}_$i"} = $self->{"t_${_}_$j"};
+	    $self->{"h_${_}_$i"} = $self->{"h_${_}_$j"};
+	  }
+	}
+	for (qw(a w f l)) {
+	  $self->{"${_}_$lastndx"} = $temp{$_};
+	  $self->{"t_${_}_$lastndx"} = $temp{"t_$_"};
+	  $self->{"h_${_}_$lastndx"} = $temp{"h_$_"};
+	}
+	  
+	$i = 1;
+	$ndx = 1;
+	$c{$m[0]} = $lastndx + 1;
+      }
+    }
+  }
+
+  for (qw(a w f l)) {
+    $temp{$_} = $self->{"${_}_$ndx"};
+    $temp{"t_$_"} = $self->{"t_${_}_$ndx"};
+    $temp{"h_$_"} = $self->{"h_${_}_$ndx"};
+    $self->{"${_}_$ndx"} = $self->{"${_}_$i"};
+    $self->{"t_${_}_$ndx"} = $self->{"t_${_}_$i"};
+    $self->{"h_${_}_$ndx"} = $self->{"h_${_}_$i"};
+    $self->{"${_}_$i"} = $temp{$_};
+    $self->{"t_${_}_$i"} = $temp{"t_$_"};
+    $self->{"h_${_}_$i"} = $temp{"h_$_"};
+  }
+
+  $self->{column_index} = "";
+  @c = ();
+  for (sort { $c{$a} <=> $c{$b} } keys %c) {
+    push @c, $_;
+    $self->{column_index} .= "$_=$d{$_},";
+  }
+  chop $self->{column_index};
+
+  @c;
 
 }
 

@@ -488,10 +488,15 @@ sub search_name {
 
   $form->header;
   
+  $accept_charset = "";
+  if ( $dbencoding ne "" ) {
+  	$accept_charset = "accept-charset=" . $dbencoding;
+  }
+  
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
 
-<form method=post action=$form->{script}>
+<form method=post action=$form->{script} $accept_charset>
 
 <table width=100%>
   <tr>

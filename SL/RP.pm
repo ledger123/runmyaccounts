@@ -1061,7 +1061,7 @@ sub get_accounts {
       $form->{$category}{$accno}{last} = $form->round_amount($form->{$category}{$accno}{last}, $form->{decimalplaces});
       $form->{$category}{$accno}{this} = $form->round_amount($form->{$category}{$accno}{this}, $form->{decimalplaces});
 
-      delete $form->{$category}{$accno} if ($form->{$category}{$accno}{this} == 0 && $form->{$category}{$accno}{last} == 0);
+      delete $form->{$category}{$accno} if ($form->{$category}{$accno}{this} == 0 && $form->{$category}{$accno}{last} == 0 && $form->{$category}{$accno}{charttype} eq 'A');
     }
   }
 
@@ -1634,7 +1634,7 @@ sub reminder {
       $where .= qq| AND lower(vc.$form->{vc}number) LIKE '$name'|;
     }
   }
-
+  
   if ($form->{department}) {
     ($null, $department_id) = split /--/, $form->{department};
     $where .= qq| AND a.department_id = $department_id|;
@@ -1681,6 +1681,10 @@ sub reminder {
 	
   if ($department_id) {
     $where .= qq| AND a.department_id = $department_id|;
+  }
+  
+  if ($form->{overpaid} ne "on") {
+	  $where .= qq| AND ((a.amount > 0 AND a.paid < a.amount) OR (a.amount < 0 AND a.paid > a.amount))|;
   }
 
   $query = qq|SELECT c.id AS vc_id, c.$form->{vc}number, c.name, c.terms,
