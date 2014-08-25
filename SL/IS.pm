@@ -892,6 +892,7 @@ sub post_invoice {
   my $taxrate;
   my $tax;
   my $fxtax;
+  my $fxtax_total = 0;
   my @taxaccounts;
   my $amount;
   my $fxamount;
@@ -987,6 +988,7 @@ sub post_invoice {
 	
 	$ml = -1;
       }
+      $fxtax_total += $fxtax;
 
       $grossamount = $form->round_amount($linetotal, $form->{precision});
       
@@ -1322,6 +1324,8 @@ sub post_invoice {
   my $paymentid = 1;
   my $paymentaccno;
   my $paymentmethod_id;
+  
+  my $fxtotalamount_paid = 0;
 
   # record payments and offsetting AR
   for $i (1 .. $form->{paidaccounts}) {
@@ -1371,16 +1375,18 @@ sub post_invoice {
       
       if ($form->{receivables}) {
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-	            transdate, approved, vr_id)
+	            transdate, approved, vr_id, memo)
 		    VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$araccno'),
 		    $amount, '$form->{"datepaid_$i"}',
-		    '$approved', $voucherid)|;
+		    '$approved', $voucherid, 'x-ar_paid_$i')|;
+    
 	$dbh->do($query) || $form->dberror($query);
       }
 
       # record payment
       $amount = $form->{"paid_$i"} * -1;
+      $fxtotalamount_paid += $amount * -1;
 
       if ($keepcleared) {
 	$cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
@@ -1424,13 +1430,37 @@ sub post_invoice {
       if ($amount) {
 	my $accno_id = ($amount > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-	            transdate, fx_transaction, cleared, approved, vr_id)
+	            transdate, fx_transaction, cleared, approved, vr_id,memo)
 	            VALUES ($form->{id}, $accno_id,
 		    $amount, '$form->{"datepaid_$i"}', '1', $cleared,
-		    '$approved', $voucherid)|;
+		    '$approved', $voucherid, 'x-fx_gain_or_loss_$i')|;
+    
 	$dbh->do($query) || $form->dberror($query);
       }
     }
+  }
+  
+  my $fxtotalamount = 0;
+  $fxtotalamount = $form->round_amount($fxtax_total, $form->{precision}) + $fxamount;
+	
+  # fx rounding correction	
+  if ( $fxtotalamount == $fxtotalamount_paid && $form->{paid} != $invamount) {	
+  	# rounding correction needed
+  	$correction =  $form->round_amount($invamount - $form->{paid}, $form->{precision});
+    print STDERR "fxcorrection: $correction on transaction $form->{id}\n";
+  	
+  	# receivables correction
+  	my $setsql = ($correction>0) ? 'amount + '.$correction : 'amount'.$correction;
+  	$query = qq|UPDATE acc_trans SET amount = $setsql WHERE trans_id = $form->{id} AND memo = 'x-ar_paid_1'|;
+	$dbh->do($query) || $form->dberror($query);
+	
+	# fx gain/loss correction
+	$correction = $correction * -1;
+  	my $setsql = ($correction>0) ? 'amount + '.$correction : 'amount'.$correction;
+	$query = qq|UPDATE acc_trans SET amount = $setsql WHERE trans_id = $form->{id} AND memo = 'x-fx_gain_or_loss_1'|;
+	$dbh->do($query) || $form->dberror($query);
+	
+	$form->{paid} = $invamount;
   }
 
   ($paymentaccno) = split /--/, $form->{"AR_paid_$form->{paidaccounts}"};
