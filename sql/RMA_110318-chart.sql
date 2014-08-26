@@ -75,10 +75,12 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2202','MWST 3,8%','A','220','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2203','MWST 2,5%','A','220','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2204','Bezugsteuer 8,0%','A','220','L','AP_tax');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2205','Export MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2206','Leistungen im Ausland MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2207','Nicht steuerbare Leistungen MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2208','Nichtentgelt MWST 0%','A','220','L','AR_tax:IC_taxpart:IC_taxservice');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('22050','Befreite Leistungen, Exporte MWST 0% (Ziff. 220)','A','220','L','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('22051','Leistungen im Ausland MWST 0% (Ziff. 221)','A','220','L','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('22052','Nicht steuerbare Leistungen MWST 0% (Ziff. 230)','A','220','L','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('22053','Subventionen MWST 0% (Ziff. 900)','A','220','L','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('22054','Spenden, Dividenden, Schadenersatz MWST 0% (Ziff. 910)','A','220','L','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('22055','Nichtentgelt MWST 0%','A','220','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('230','PASSIVE RECHNUNGSABGRENZUNG UND KURZFRISTIGE RÜCKSTELLUNGEN','H','230','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('2300','Transitorische Passiven','A','230','L','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('24','FREMDKAPITAL LANGFRISTIG','H','240','L','');
