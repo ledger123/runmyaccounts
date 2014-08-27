@@ -482,10 +482,6 @@ sub transactions {
   ($form->{reportdescription}, $form->{reportid}) = split /--/, $form->{report};
   $form->{sort} ||= "transdate";
   $form->{reportcode} = 'gl';
-  
-  if ($form->{flds} eq "") {
-  	$form->{flds} = "id=ID=id,transdate=Datum=transdate,reference=Referenz=reference,description=Beschreibung=description,name=Firmenname=name,vcnumber=Firmennummer=vcnumber,address=Adresse=,projectnumber=Projektnummer=projectnumber,notes=Bemerkungen=,debit=Soll=,credit=Haben=,source=Beleg=source,memo=Notiz=memo,lineitem=Zeileneinheit=lineitem,accno=Konto=accno,accdescription=Kontenbeschreibung=accdescription,gifi_accno=GIFI=gifi_accno,contra=Gegenkonto=";
-  }
 
   GL->transactions(\%myconfig, \%$form);
 
