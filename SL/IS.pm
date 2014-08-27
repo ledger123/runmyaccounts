@@ -1476,6 +1476,10 @@ sub post_invoice {
           where trans_id = $form->{id} 
           and chart_id = (select id from chart where accno = '$araccno')
           and amount > 0 
+          and entry_id = (
+                select entry_id from acc_trans where trans_id = $form->{id}
+                and chart_id in (select id from chart where accno = '$araccno') and amount > 0 limit 1
+                )
       |;
       $dbh->do($query) or $form->error($query);
       $query = qq|
