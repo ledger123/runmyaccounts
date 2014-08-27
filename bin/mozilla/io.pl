@@ -1811,7 +1811,6 @@ sub print_form {
  
     $form->{rowcount}--;
 
-    print STDERR "Printed".$old_form->{media}."\n";
     if ( $emailed == 1 ) {
 	    $form->{redirectmsg} = $locale->text('Invoice')." $form->{invnumber} ".$locale->text('E-mailed');
     } else {
