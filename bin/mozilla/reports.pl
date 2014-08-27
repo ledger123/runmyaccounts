@@ -755,8 +755,8 @@ sub gl_list {
 
 	   $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
 	   &print_title;
-       print $locale->text('From') . ' : ' . $form->format_date($myconfig{dateformat}, $form->{datefrom}) . '<br/>' if $form->{datefrom};
-       print $locale->text('To') . ' : ' . $form->format_date($myconfig{dateformat}, $form->{dateto})  . '<br/>' if $form->{todate};
+       print $locale->text('From') . ' : ' . $form->{datefrom} . '<br/>' if $form->{datefrom};
+       print $locale->text('To') . ' : ' . $form->{dateto}  . '<br/>' if $form->{dateto};
 	   print $locale->text('From Account') . " : $fromaccount<br/>" if $form->{fromaccount};
 	   print $locale->text('To Account') . " : $toaccount<br/>" if $form->{toaccount};
 	
@@ -794,7 +794,7 @@ sub gl_list {
 			SELECT SUM(amount) 
 			FROM acc_trans
 			WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
-			AND transdate < '$form->{dateto}'
+			AND transdate < '$form->{datefrom}'
 		     |;
 		     ($balance) = $dbh->selectrow_array($openingquery);
 		     if ($balance != 0){
