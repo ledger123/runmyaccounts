@@ -1475,7 +1475,7 @@ sub post_invoice {
           set amount = amount + $correction 
           where trans_id = $form->{id} 
           and chart_id = (select id from chart where accno = '$araccno')
-          and amount > 0
+          and amount > 0 
       |;
       $dbh->do($query) or $form->error($query);
       $query = qq|
@@ -1483,6 +1483,10 @@ sub post_invoice {
           set amount = amount - $correction 
           where trans_id = $form->{id} 
           and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+          and entry_id = (
+                select entry_id from acc_trans where trans_id = $form->{id}
+                and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1
+          )
       |;
       $dbh->do($query) or $form->dberror($query);
   }
