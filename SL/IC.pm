@@ -1163,7 +1163,7 @@ sub all_parts {
 		    (SELECT sell FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.$transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'vendor' as vc
+		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber
 		    FROM invoice i
 		    JOIN parts p ON (p.id = i.parts_id)
 		    JOIN ap a ON (a.id = i.trans_id)
@@ -1182,7 +1182,7 @@ sub all_parts {
 		    (SELECT buy FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.$transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'customer' as vc
+		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber
 		     FROM invoice i
 		     JOIN parts p ON (p.id = i.parts_id)
 		     JOIN ar a ON (a.id = i.trans_id)
@@ -1247,7 +1247,7 @@ sub all_parts {
 		    (SELECT buy FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'customer' as vc
+		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber
 		     FROM orderitems i
 		     JOIN parts p ON (i.parts_id = p.id)
 		     JOIN oe a ON (i.trans_id = a.id)
@@ -1279,7 +1279,7 @@ sub all_parts {
 		    (SELECT sell FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'vendor' as vc
+		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber
 		    FROM orderitems i
 		    JOIN parts p ON (i.parts_id = p.id)
 		    JOIN oe a ON (i.trans_id = a.id)
@@ -1331,7 +1331,7 @@ sub all_parts {
 		    (SELECT buy FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'customer' as vc
+		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber
 		     FROM orderitems i
 		     JOIN parts p ON (i.parts_id = p.id)
 		     JOIN oe a ON (i.trans_id = a.id)
@@ -1363,7 +1363,7 @@ sub all_parts {
 		    (SELECT sell FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'vendor' as vc
+		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber
 		    FROM orderitems i
 		    JOIN parts p ON (i.parts_id = p.id)
 		    JOIN oe a ON (i.trans_id = a.id)

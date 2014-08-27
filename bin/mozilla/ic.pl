@@ -862,6 +862,7 @@ sub search {
 |;
 
   $l_name = qq|<input name=l_name class=checkbox type=checkbox value=Y> |.$locale->text('Name');
+  $l_vcnumber = qq|<input name=l_vcnumber class=checkbox type=checkbox value=Y> |.$locale->text('Customer Number');
   $l_curr = qq|<input name=l_curr class=checkbox type=checkbox value=Y> |.$locale->text('Currency');
   $l_employee = qq|<input name=l_employee class=checkbox type=checkbox value=Y> |.$locale->text('Employee');
   $l_serialnumber = qq|<input name=l_serialnumber class=checkbox type=checkbox value=Y> |.$locale->text('Serial Number');
@@ -963,6 +964,7 @@ sub search {
       $sold = "";
       $fromto = "";
       $l_name = "";
+      $l_vcnumber = "";
    
     }
 
@@ -974,6 +976,7 @@ sub search {
     $sold = "";
     $fromto = "";
     $l_name = "";
+    $l_vcnumber = "";
     $l_curr = "";
     $l_employee = "";
     $l_serialnumber = "";
@@ -1023,6 +1026,7 @@ sub search {
   push @a, $l_warehouse if $l_warehouse;
   push @a, $l_account if $l_account;
   push @a, $l_name if $l_name;
+  push @a, $l_vcnumber if $l_vcnumber;
   push @a, $l_curr if $l_curr;
   push @a, $l_employee if $l_employee;
   push @a, $l_serialnumber if $l_serialnumber;
@@ -1241,10 +1245,10 @@ sub generate_report {
   }
   
   if ($form->{l_account}) {
-    for (qw(l_name l_curr l_employee)) { delete $form->{$_} }
+    for (qw(l_name l_vcnumber l_curr l_employee)) { delete $form->{$_} }
   } else {
     $ok = 0;
-    foreach $l (qw(l_name l_curr l_employee)) {
+    foreach $l (qw(l_name l_vcnumber l_curr l_employee)) {
       if ($form->{$l}) {
 	foreach $v (qw(onorder ordered rfq quoted bought sold)) {
 	  if ($form->{$v}) {
@@ -1392,7 +1396,7 @@ sub generate_report {
     $form->{l_avgcostmarkup} = "Y" if $form->{l_avgcost};
   }
   # armaghan - added transdate
-  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name employee serialnumber warehouse countryorigin tariff_hscode));
+  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name vcnumber employee serialnumber warehouse countryorigin tariff_hscode));
   unshift @columns, "runningnumber";
 
   if ($form->{l_linetotal}) {
@@ -1509,6 +1513,7 @@ sub generate_report {
   $column_data{quonumber} = qq|<th nowrap><a class=listheading href=$href&sort=quonumber>|.$locale->text('Quotation').qq|</a></th>|;
   $column_data{transdate} = qq|<th nowrap><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</a></th>|;
   $column_data{name} = qq|<th nowrap><a class=listheading href=$href&sort=name>|.$locale->text('Name').qq|</a></th>|;
+  $column_data{vcnumber} = qq|<th nowrap><a class=listheading href=$href&sort=vcnumber>|.$locale->text('Customer Number').qq|</a></th>|;
   
   $column_data{employee} = qq|<th nowrap><a class=listheading href=$href&sort=employee>|.$locale->text('Employee').qq|</a></th>|;
   
@@ -1767,6 +1772,7 @@ sub generate_report {
     $column_data{quonumber} = ($ref->{module} eq 'oe' && !$ref->{ordnumber}) ? "<td><a href=$ref->{module}.pl?action=edit&type=$ref->{type}&id=$ref->{trans_id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{quonumber}&nbsp;</a></td>" : "<td>$ref->{quonumber}&nbsp;</td>";
 
     $column_data{name} = "<td>$ref->{name}&nbsp;</td>";
+    $column_data{vcnumber} = "<td>$ref->{vcnumber}&nbsp;</td>";
     $column_data{transdate} = "<td align=right>$ref->{transdate}&nbsp;</td>";
     if ($ref->{vc_id}) {
       $column_data{name} = qq|<td><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{vc_id}&db=$ref->{vc}&callback=$callback>$ref->{name}</a></td>|;
