@@ -484,7 +484,11 @@ sub transactions {
   $form->{reportcode} = 'gl';
   
   if ($form->{flds} eq "") {
-  	$form->{flds} = "id=ID=id,transdate=Datum=transdate,reference=Referenz=reference,description=Beschreibung=description,name=Firmenname=name,vcnumber=Firmennummer=vcnumber,address=Adresse=,projectnumber=Projektnummer=projectnumber,notes=Bemerkungen=,debit=Soll=,credit=Haben=,source=Beleg=source,memo=Notiz=memo,lineitem=Zeileneinheit=lineitem,accno=Konto=accno,accdescription=Kontenbeschreibung=accdescription,gifi_accno=GIFI=gifi_accno,contra=Gegenkonto=";
+  	$form->{flds} = "id=".$locale->text('ID')."=id,transdate=".$locale->text('Date')."=transdate,reference=".$locale->text('Reference')."=reference,description=".$locale->text('Description')."=description,name=".$locale->text('Company Name')."=name,vcnumber=".$locale->text('Company Number')
+  		."=vcnumber,address=".$locale->text('Address')."=,projectnumber=".$locale->text('Project Number')."=projectnumber,notes=".$locale->text('Notes')
+  		."=,debit=".$locale->text('Debit')."=,credit=".$locale->text('Credit')."=,source=".$locale->text('Source')."=source,memo=".$locale->text('Memo')
+  		."=memo,lineitem=".$locale->text('Line Item')."=lineitem,accno=".$locale->text('Account')."=accno,accdescription=".$locale->text('Account Description')
+  		."=accdescription,gifi_accno=".$locale->text('GIFI')."=gifi_accno,contra=".$locale->text('Contra')."=";
   }
 
   GL->transactions(\%myconfig, \%$form);
