@@ -482,6 +482,14 @@ sub transactions {
   ($form->{reportdescription}, $form->{reportid}) = split /--/, $form->{report};
   $form->{sort} ||= "transdate";
   $form->{reportcode} = 'gl';
+  
+  if ($form->{flds} eq "") {
+  	$form->{flds} = "id=".$locale->text('ID')."=id,transdate=".$locale->text('Date')."=transdate,reference=".$locale->text('Reference')."=reference,description=".$locale->text('Description')."=description,name=".$locale->text('Company Name')."=name,vcnumber=".$locale->text('Company Number')
+  		."=vcnumber,address=".$locale->text('Address')."=,projectnumber=".$locale->text('Project Number')."=projectnumber,notes=".$locale->text('Notes')
+  		."=,debit=".$locale->text('Debit')."=,credit=".$locale->text('Credit')."=,source=".$locale->text('Source')."=source,memo=".$locale->text('Memo')
+  		."=memo,lineitem=".$locale->text('Line Item')."=lineitem,accno=".$locale->text('Account')."=accno,accdescription=".$locale->text('Account Description')
+  		."=accdescription,gifi_accno=".$locale->text('GIFI')."=gifi_accno,contra=".$locale->text('Contra')."=";
+  }
 
   GL->transactions(\%myconfig, \%$form);
 
