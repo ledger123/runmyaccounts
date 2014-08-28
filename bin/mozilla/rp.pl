@@ -15,6 +15,10 @@ require "$form->{path}/arap.pl";
 
 use SL::PE;
 use SL::RP;
+use SL::CSV;
+use IO::File;
+use POSIX qw(tmpnam);
+
 
 1;
 # end of main
@@ -1807,6 +1811,93 @@ sub generate_reminder {
 
 }
 
+sub export_as_csv {
+  if ( $form->{type} eq "reminder" ) {
+  	# Export reminders as csv file
+  	
+  	# split customer
+    my @values = split(/--/, $form->{customer});
+    $form->{customer_id} = $values[1]; 
+    ($form->{customer}) = split(/--/, $form->{customer});
+    $form->{vc} = "customer";
+    $form->{arap} = "ar";
+
+    $form->{initcallback} = qq|$form->{script}?action=generate_reminder|;
+
+    RP->reminder(\%myconfig, \%$form);
+  	
+  	$filename = 'rp';
+    my $aaname;
+    do { $aaname = tmpnam() }
+    until $fh = IO::File->new($aaname, O_RDWR|O_CREAT|O_EXCL);
+    open (CSVFILE, ">$aaname") || $form->error('Cannot create csv file');
+  
+    $vcnumber = $locale->text('Customer Number');
+    $column_header{vc} = $locale->text(ucfirst $form->{vc});
+    $column_header{number} = $vcnumber;
+    $column_header{level} = $locale->text('Level');
+    $column_header{language} = $locale->text('Language');
+    $column_header{invnumber} = $locale->text('Invoice');
+    $column_header{invdescription} = $locale->text('Description');
+    $column_header{ordnumber} = $locale->text('Order');
+    $column_header{transdate} = $locale->text('Date');
+    $column_header{duedate} = $locale->text('Due Date');
+    $column_header{due} = $locale->text('Due');
+    $column_header{curr} = $locale->text('Currency');
+    
+    push @column_index, qw(vc number level language invnumber invdescription ordnumber transdate duedate due curr);
+    
+    # Write header line
+	for (@column_index) { print CSVFILE "\"$column_header{$_}\"," }
+    print CSVFILE "\n";
+
+    # Write data TODO
+    for $ref (@{ $form->{AG} }) {
+      if ( $form->{"ndx_$ref->{id}"} ) {      
+	      # Data line
+	      $column_data{vc} = CSV->escape_csv($ref->{name});
+	      $column_data{number} = CSV->escape_csv($ref->{"$form->{vc}number"});
+	
+	      if (exists $form->{"level_$ref->{id}"}) {
+	        $ref->{level} = $form->{"level_$ref->{id}"};
+	      }
+	      $column_data{level} = $ref->{level};
+	
+	      if ($form->{selectlanguage}) {
+	        if (exists $form->{"language_code_$ref->{id}"}) {
+		      $ref->{language_code} = $form->{"language_code_$ref->{id}"};
+	        }
+	        $column_data{language} = $ref->{language_code};
+	      }
+	    
+	      $column_data{invnumber} = CSV->escape_csv($ref->{invnumber});
+	      $column_data{ordnumber} = CSV->escape_csv($ref->{ordnumber});
+	      $column_data{invdescription} = CSV->escape_csv($ref->{invdescription});
+	    
+	      for (qw(transdate duedate)) { $column_data{$_} = CSV->escape_csv($ref->{$_}); }
+	    
+	      $column_data{due} = $form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision});
+	      $column_data{curr} = $ref->{curr};
+	
+	      for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
+	      print CSVFILE "\n";
+	  }
+    }
+        
+    # write csv end
+    close (CSVFILE) || $form->error('Cannot close csv file');
+
+    my @fileholder;
+    open (DLFILE, qq|<$aaname|) || $form->error('Cannot open file for download');
+    @fileholder = <DLFILE>;
+    close (DLFILE) || $form->error('Cannot close file opened for download');
+    my $dlfile = $filename . ".csv";
+    print "Content-Type: application/csv\n";
+    print "Content-Disposition:attachment; filename=$dlfile\n\n";
+    print @fileholder;
+    unlink($aaname) or die "Couldn't unlink $name : $!"
+  }
+}
 
 sub reminder {
 
@@ -2032,6 +2123,7 @@ function CheckAll() {
 	     'Print' => { ndx => 4, key => 'P', value => $locale->text('Print') },
 	     'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
 	     'Save Level' => { ndx => 6, key => 'L', value => $locale->text('Save Level') },
+	     'Export as CSV' => { ndx => 7, key => 'X', value => $locale->text('Export as CSV') },
 	    );
   
   if ($form->{deselect}) {
