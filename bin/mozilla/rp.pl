@@ -2549,6 +2549,8 @@ sub print_statement {
 
 
 sub print_reminder {
+
+  $form->{customer} = "";
   
   @ids = split / /, $form->{ids};
   for (@ids) {
