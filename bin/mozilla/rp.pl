@@ -2476,6 +2476,8 @@ sub print { &{ "print_$form->{type}" } }
 
 sub print_statement {
 
+  $form->{customer} = "";
+
   @vc_ids = split / /, $form->{vc_ids};
   for $curr (split / /, $form->{curr}) {
     last if $selected;
