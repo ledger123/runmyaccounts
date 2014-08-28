@@ -434,7 +434,8 @@ $selectfrom
    &print_checkbox('l_source', $locale->text('Source'), '', '<br>');
    &print_checkbox('l_debit', $locale->text('Debit'), 'checked', '');
    &print_checkbox('l_credit', $locale->text('Credit'), 'checked', '');
-   &print_checkbox('l_balance', $locale->text('Balance'), 'checked', '<br>');
+   &print_checkbox('l_balance', $locale->text('Balance'), 'checked', '');
+   &print_checkbox('l_notransactions', $locale->text('No Transactions'), '', '<br>');
    &print_checkbox('l_group', $locale->text('Group'), '', '');
    &print_checkbox('l_csv', $locale->text('CSV'), '');
    print qq|</td></tr>|;
@@ -592,8 +593,30 @@ sub gl_list {
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 WHERE $apwhere
-
-         	 ORDER BY 8, 5, 3|;
+		|;
+	 	if ($form->{"l_notransactions"} eq "Y") {
+	 		$query .= qq|
+	 			UNION ALL
+	 			
+	 			SELECT 0, 'empty' AS type, '' as invnumber,
+		 		'' as description, null as transdate, '' as source,
+		 		0 as amount, c.accno, '' as notes, '' as name,
+		 		null as cleared, '' AS department,
+		 		'' as memo, 0 AS name_id, 'empty' AS db,
+		 		c.description AS accdescription,
+		 		'empty' AS module, false as invoice
+		 		FROM chart c
+					 WHERE NOT EXISTS (
+   							select chart_id from acc_trans ac where c.id = ac.chart_id
+   						|;
+   			$query .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
+   			$query .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};  						
+   			$query .= qq|)|;
+   			$query .= qq| AND c.accno >= '$fromaccount'| if $form->{fromaccount};
+   			$query .= qq| AND c.accno <= '$toaccount'| if $form->{toaccount};
+   			$query .= qq| AND c.charttype = 'A'|;
+	 	}
+	 	$query .= qq| ORDER BY 8, 5, 3|;
    }
 
    # store oldsort/direction information
@@ -660,7 +683,7 @@ sub gl_list {
 		      print CSVFILE "\n";
 	
 		   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-		   if ($form->{datefrom}){
+		   if ($form->{datefrom} || $ref->{type} eq "empty"){
 	   	      my $openingquery = qq|
 			SELECT SUM(amount) 
 			FROM acc_trans
@@ -680,6 +703,7 @@ sub gl_list {
 		     }
 		   }
 	        }
+	        if ( $ref->{type} ne "empty") {
 		my $script;
 	        if ($ref->{module} eq 'ar'){
 		   $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
@@ -714,6 +738,7 @@ sub gl_list {
 		$credit_subtotal += $ref->{amount} if $ref->{amount} > 0;
 		$debit_total += $ref->{amount} if $ref->{amount} < 0;
 		$credit_total += $ref->{amount} if $ref->{amount} > 0;
+	        }
 	   }
 	
 	   # prepare data for footer
@@ -768,84 +793,85 @@ sub gl_list {
 	   my $groupbreak = 'none';
 	   print qq|<table width=100%>|;
 	   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-		if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
-		   if ($groupbreak ne 'none'){
-		      for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
-		      $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
-		      $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
-		      $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
-		      print "<tr valign=top class=listsubtotal>";
-		      for (@column_index) { print "\n$column_data{$_}" }
-		      print "</tr>";
-		   }
-		   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
-		   print qq|<tr valign=top>|;
-		   print qq|<th align=left colspan=7><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
-		   print qq|</tr>|;
-	
-	   	   # print header
-	   	   print qq|<tr class=listheading>|;
-	   	   for (@column_index) { print "\n$column_header{$_}" }
-	   	   print qq|</tr>|; 
-	
-		   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-		   if ($form->{datefrom}){
-	   	      my $openingquery = qq|
-			SELECT SUM(amount) 
-			FROM acc_trans
-			WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
-			AND transdate < '$form->{datefrom}'
-		     |;
-		     ($balance) = $dbh->selectrow_array($openingquery);
-		     if ($balance != 0){
-		        for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
-	   		$column_data{debit} 	= rpt_dec(0, $form->{precision}, '0');
-	   		$column_data{credit} 	= rpt_dec(0, $form->{precision}, '0');
-	   		$column_data{balance} 	= rpt_dec(0 - $balance, $form->{precision}, '0');
-	
-			# print footer
-			print "<tr valign=top class=listrow0>";
+			if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
+			   if ($groupbreak ne 'none'){
+			      for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
+			      $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
+			      $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
+			      $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
+			      print "<tr valign=top class=listsubtotal>";
+			      for (@column_index) { print "\n$column_data{$_}" }
+			      print "</tr>";
+			   }
+			   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
+			   print qq|<tr valign=top>|;
+			   print qq|<th align=left colspan=7><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
+			   print qq|</tr>|;
+		
+		   	   # print header
+		   	   print qq|<tr class=listheading>|;
+		   	   for (@column_index) { print "\n$column_header{$_}" }
+		   	   print qq|</tr>|; 
+		
+			   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
+			   if ($form->{datefrom} || $ref->{type} eq "empty"){
+		   	      my $openingquery = qq|
+				SELECT SUM(amount) 
+				FROM acc_trans
+				WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')|;
+			    $openingquery .= qq| AND transdate < '$form->{datefrom}'| if $form->{datefrom};
+			     ($balance) = $dbh->selectrow_array($openingquery);
+			     if ($balance != 0){
+			        for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
+		   		$column_data{debit} 	= rpt_dec(0, $form->{precision}, '0');
+		   		$column_data{credit} 	= rpt_dec(0, $form->{precision}, '0');
+		   		$column_data{balance} 	= rpt_dec(0 - $balance, $form->{precision}, '0');
+		
+				# print footer
+				print "<tr valign=top class=listrow0>";
+				for (@column_index) { print "\n$column_data{$_}" }
+				print "</tr>";
+			     }
+			   }
+		        }
+		        if ( $ref->{type} ne "empty" ) {
+			my $script;
+		        if ($ref->{module} eq 'ar'){
+			   $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
+			} elsif ($ref->{module} eq 'ap') {
+			   $script = ($ref->{invoice}) ? 'ir.pl' : 'ap.pl';
+			} else {
+		           $script = 'gl.pl';
+		        }
+			  
+		   	$link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
+			$column_data{no}   		= rpt_txt($no);
+		   	$column_data{transdate}		= rpt_txt($ref->{transdate});
+		   	$column_data{reference} 	= rpt_txt($ref->{reference}, $link);
+		   	$column_data{description} 	= rpt_txt($ref->{description});
+		   	$column_data{name} 		= rpt_txt($ref->{name});
+		   	$column_data{source}    	= rpt_txt($ref->{source});
+			if ($ref->{amount} > 0){
+		  	  $column_data{debit}    	= rpt_dec(0, $form->{precision}, '0');
+		   	  $column_data{credit}    	= rpt_dec($ref->{amount}, $form->{precision}, '0');
+			} else {
+		  	  $column_data{debit}    	= rpt_dec(0 - $ref->{amount}, $form->{precision}, '0');
+		   	  $column_data{credit}    	= rpt_dec(0, $form->{precision}, '0');
+			}
+			$balance += $ref->{amount};
+			$column_data{balance} 		= rpt_dec($balance * -1, $form->{precision}, '0');
+		
+			print "<tr valign=top class=listrow$i>";
 			for (@column_index) { print "\n$column_data{$_}" }
 			print "</tr>";
-		     }
-		   }
-	        }
-		my $script;
-	        if ($ref->{module} eq 'ar'){
-		   $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
-		} elsif ($ref->{module} eq 'ap') {
-		   $script = ($ref->{invoice}) ? 'ir.pl' : 'ap.pl';
-		} else {
-	           $script = 'gl.pl';
-	        }
-		  
-	   	$link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
-		$column_data{no}   		= rpt_txt($no);
-	   	$column_data{transdate}		= rpt_txt($ref->{transdate});
-	   	$column_data{reference} 	= rpt_txt($ref->{reference}, $link);
-	   	$column_data{description} 	= rpt_txt($ref->{description});
-	   	$column_data{name} 		= rpt_txt($ref->{name});
-	   	$column_data{source}    	= rpt_txt($ref->{source});
-		if ($ref->{amount} > 0){
-	  	  $column_data{debit}    	= rpt_dec(0, $form->{precision}, '0');
-	   	  $column_data{credit}    	= rpt_dec($ref->{amount}, $form->{precision}, '0');
-		} else {
-	  	  $column_data{debit}    	= rpt_dec(0 - $ref->{amount}, $form->{precision}, '0');
-	   	  $column_data{credit}    	= rpt_dec(0, $form->{precision}, '0');
-		}
-		$balance += $ref->{amount};
-		$column_data{balance} 		= rpt_dec($balance * -1, $form->{precision}, '0');
-	
-		print "<tr valign=top class=listrow$i>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
-		$i++; $i %= 2; $no++;
-	
-		$debit_subtotal += $ref->{amount} if $ref->{amount} < 0;
-		$credit_subtotal += $ref->{amount} if $ref->{amount} > 0;
-		$debit_total += $ref->{amount} if $ref->{amount} < 0;
-		$credit_total += $ref->{amount} if $ref->{amount} > 0;
-	   }
+			$i++; $i %= 2; $no++;
+		
+			$debit_subtotal += $ref->{amount} if $ref->{amount} < 0;
+			$credit_subtotal += $ref->{amount} if $ref->{amount} > 0;
+			$debit_total += $ref->{amount} if $ref->{amount} < 0;
+			$credit_total += $ref->{amount} if $ref->{amount} > 0;
+		        }
+	   } # while ($ref)
 	
 	   # prepare data for footer
 	   for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') }
@@ -869,7 +895,7 @@ sub gl_list {
 	   print "</tr>";
 	
 	   print qq|</table>|;
-   }
+   } # else not csv
    $sth->finish;
    $dbh->disconnect;
 }
