@@ -70,6 +70,7 @@ $self{texts} = {
   'No History!'                 => 'Kein Verlauf!',
   'No.'                         => 'Pos.',
   'Notes'                       => 'Bemerkungen',
+  'No Transactions'				=> 'Ohne Buchungen',
   'Number'                      => 'Artikelnummer',
   'Onhand'                      => 'am Lager',
   'Onhand Amount'               => 'Onhand Betrag',

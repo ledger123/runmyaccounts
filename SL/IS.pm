@@ -1467,6 +1467,35 @@ sub post_invoice {
   $invamount = $form->round_amount($invamount, 6);
   $invnetamount = $form->round_amount($invnetamount, 6);
 
+  if (($form->{oldinvtotal} == $form->{oldtotalpaid}) and ($invamount != $form->{paid})){
+      $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
+      $form->{paid} = $invamount;
+      $query = qq|
+          update acc_trans 
+          set amount = amount + $correction 
+          where trans_id = $form->{id} 
+          and chart_id = (select id from chart where accno = '$araccno')
+          and amount > 0 
+          and entry_id = (
+                select entry_id from acc_trans where trans_id = $form->{id}
+                and chart_id in (select id from chart where accno = '$araccno') and amount > 0 limit 1
+                )
+      |;
+      $dbh->do($query) or $form->error($query);
+      $query = qq|
+          update acc_trans 
+          set amount = amount - $correction 
+          where trans_id = $form->{id} 
+          and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+          and entry_id = (
+                select entry_id from acc_trans where trans_id = $form->{id}
+                and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1
+          )
+      |;
+      $dbh->do($query) or $form->dberror($query);
+  }
+
+
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,

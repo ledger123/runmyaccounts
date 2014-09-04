@@ -1635,7 +1635,7 @@ sub print_form {
   shift @a;
  
   # some of the stuff could have umlauts so we translate them
-  push @a, qw(contact shippingpoint shipvia notes intnotes employee warehouse paymentmethod);
+  push @a, qw(contact shippingpoint shipvia waybill notes intnotes employee warehouse paymentmethod);
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact email phone fax);
   push @a, qw(firstname lastname salutation contacttitle occupation mobile);
 
@@ -1648,7 +1648,7 @@ sub print_form {
   for (qw(notes intnotes)) { $form->{$_} =~ s/^\s+//g }
 
   # before we format replace <%var%>
-  for ("${inv}description", "notes", "intnotes", "message") { $form->{$_} =~ s/<%(.*?)%>/$fld = lc $1; $form->{$fld}/ge }
+  for ("${inv}description", "notes", "intnotes", "message", "shippingpoint", "shipvia", "waybill") { $form->{$_} =~ s/<%(.*?)%>/$fld = lc $1; $form->{$fld}/ge }
 
   $form->format_string(@a);
 
@@ -1811,7 +1811,6 @@ sub print_form {
  
     $form->{rowcount}--;
 
-    print STDERR "Printed".$old_form->{media}."\n";
     if ( $emailed == 1 ) {
 	    $form->{redirectmsg} = $locale->text('Invoice')." $form->{invnumber} ".$locale->text('E-mailed');
     } else {
