@@ -1495,6 +1495,7 @@ sub post_invoice {
       $dbh->do($query) or $form->dberror($query);
   }
 
+  for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
   # save AR record
   $query = qq|UPDATE ar set
@@ -1507,6 +1508,8 @@ sub post_invoice {
               amount = $invamount,
               netamount = $invnetamount,
               paid = $form->{paid},
+              fxamount = $form->{oldinvtotal},
+              fxpaid = $form->{oldtotalpaid},
 	      datepaid = |.$form->dbquote($form->{datepaid}, SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->{duedate}, SQL_DATE).qq|,
 	      invoice = '1',
