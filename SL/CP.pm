@@ -830,7 +830,6 @@ sub post_payment {
 		    $voucherid)|;
 	$dbh->do($query) || $form->dberror($query);
       }
-      
       # deduct tax for cash discount
       if ($form->{"discount_$i"}) {
 
@@ -923,6 +922,7 @@ sub post_payment {
       }
 
 
+      $fxpaid = $form->{"paid_$i"};
       $form->{"paid_$i"} = $form->round_amount($form->{"paid_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
       $form->{"discount_$i"} = $form->round_amount($form->{"discount_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
 
@@ -940,11 +940,38 @@ sub post_payment {
       $query = qq|UPDATE $form->{arap} set
                   amount = $trans{$form->{"id_$i"}}{amount},
 		  paid = $amount,
+          fxpaid = $fxpaid,
 		  datepaid = '$form->{datepaid}',
 		  bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
 		  paymentmethod_id = $paymentmethod_id
 		  WHERE id = $form->{"id_$i"}|;
       $dbh->do($query) || $form->dberror($query);
+
+      my ($amount,$paid,$fxamount,$fxpaid) = $dbh->selectrow_array(qq|SELECT amount, paid, fxamount, fxpaid FROM ar WHERE id = $form->{"id_$i"}|);
+
+      if (($fxamount == $fxpaid) and ($amount != $paid)){
+        $correction = $form->round_amount($amount - $paid, $form->{precision});
+
+        $dbh->do(qq|UPDATE ar SET paid = amount WHERE id = $form->{"id_$i"}|);
+
+        $query = qq|
+              update acc_trans 
+              set amount = amount + $correction 
+              where trans_id = $form->{id} 
+              and chart_id = (select id from chart where accno = '$araccno')
+              and amount > 0 
+        |;
+        $dbh->do($query) or $form->error($query);
+
+        $query = qq|
+              update acc_trans 
+              set amount = amount - $correction 
+              where trans_id = $form->{id} 
+              and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+        |;
+        $dbh->do($query) or $form->dberror($query);
+
+      }
       
       %audittrail = ( tablename  => $form->{arap},
                       reference  => $form->{source},
@@ -953,7 +980,6 @@ sub post_payment {
 		      id         => $form->{"id_$i"} );
  
       $form->audittrail($dbh, "", \%audittrail);
-
 
       if ($form->{batch}) {
 	  # add voucher
