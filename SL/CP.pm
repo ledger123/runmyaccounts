@@ -425,7 +425,7 @@ sub get_openinvoices {
   $form->remove_locks($myconfig, $dbh, $form->{arap});
   
   my $where = qq|WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
-	         AND a.amount != a.paid
+	         AND a.fxamount != a.fxpaid
 		 AND a.approved = '1'
 		 AND a.onhold = '0'
 		 AND NOT a.id IN (SELECT id
@@ -480,7 +480,7 @@ sub get_openinvoices {
   
   my $query = qq|SELECT DISTINCT a.id, a.invnumber, a.transdate, a.duedate,
                  a.description AS invdescription,
-		 a.amount, a.paid, a.curr, vc.$form->{vc}number, vc.name,
+		 a.amount, a.paid, a.fxamount, a.fxpaid, a.curr, vc.$form->{vc}number, vc.name,
 		 vc.language_code, vc.threshold, vc.curr AS currency,
 		 vc.payment_accno_id,
 		 a.$form->{vc}_id,
