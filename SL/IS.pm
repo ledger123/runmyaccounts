@@ -892,6 +892,7 @@ sub post_invoice {
   my $taxrate;
   my $tax;
   my $fxtax;
+  my $fxtax_total = 0;
   my @taxaccounts;
   my $amount;
   my $fxamount;
@@ -987,6 +988,7 @@ sub post_invoice {
 	
 	$ml = -1;
       }
+      $fxtax_total += $fxtax;
 
       $grossamount = $form->round_amount($linetotal, $form->{precision});
       
@@ -1322,6 +1324,7 @@ sub post_invoice {
   my $paymentid = 1;
   my $paymentaccno;
   my $paymentmethod_id;
+  my $fxtotalamount_paid = 0;
 
   # record payments and offsetting AR
   for $i (1 .. $form->{paidaccounts}) {
@@ -1381,6 +1384,7 @@ sub post_invoice {
 
       # record payment
       $amount = $form->{"paid_$i"} * -1;
+      $fxtotalamount_paid += $amount * -1;
 
       if ($keepcleared) {
 	$cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
@@ -1467,7 +1471,10 @@ sub post_invoice {
   $invamount = $form->round_amount($invamount, 6);
   $invnetamount = $form->round_amount($invnetamount, 6);
 
-  if (($form->{oldinvtotal} == $form->{oldtotalpaid}) and ($invamount != $form->{paid})){
+  my $fxtotalamount = 0;
+  $fxtotalamount = $form->round_amount($fxtax_total, $form->{precision}) + $fxamount;
+
+  if (($fxtotalamount == $fxtotalamount_paid) and ($invamount != $form->{paid})){
       $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
       $form->{paid} = $invamount;
       $query = qq|
@@ -1495,6 +1502,7 @@ sub post_invoice {
       $dbh->do($query) or $form->dberror($query);
   }
 
+  for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
   # save AR record
   $query = qq|UPDATE ar set
@@ -1507,6 +1515,8 @@ sub post_invoice {
               amount = $invamount,
               netamount = $invnetamount,
               paid = $form->{paid},
+              fxamount = $form->{oldinvtotal},
+              fxpaid = $form->{oldtotalpaid},
 	      datepaid = |.$form->dbquote($form->{datepaid}, SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->{duedate}, SQL_DATE).qq|,
 	      invoice = '1',

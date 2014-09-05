@@ -1143,11 +1143,14 @@ sub update_payment {
 
       for (qw(id invnumber invdescription transdate duedate calcdiscount discountterms cashdiscount netamount)) { $form->{"${_}_$i"} = $ref->{$_} }
       $ref->{exchangerate} ||= 1;
-      $due = ($form->{edit}) ? $ref->{amount} : $ref->{amount} - $ref->{paid};
+      $due = ($form->{edit}) ? $ref->{fxamount} : $ref->{fxamount} - $ref->{fxpaid};
 
-      $form->{"due_$i"} = $form->format_amount(\%myconfig, $due / $ref->{exchangerate}, $form->{precision});
-      $form->{"amount_$i"} = $form->format_amount(\%myconfig, $ref->{amount} / $ref->{exchangerate}, $form->{precision});
+      $form->{"due_$i"} = $form->format_amount(\%myconfig, $due, $form->{precision});
       $form->{"netamount_$i"} = $form->format_amount(\%myconfig, $ref->{netamount} / $ref->{exchangerate}, $form->{precision});
+
+      $form->{"amount_$i"} = $form->format_amount(\%myconfig, $ref->{fxamount}, $form->{precision});
+      $form->{"paid_$i"} = $form->format_amount(\%myconfig, $ref->{fxpaid}, $form->{precision});
+
       for (qw(checked paid discount total)) { $form->{"${_}_$i"} = "" }
     }
     $form->{rowcount} = $i;
