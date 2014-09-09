@@ -952,22 +952,30 @@ sub post_payment {
       if (($fxamount == $fxpaid) and ($amount != $paid)){
         $correction = $form->round_amount($amount - $paid, $form->{precision});
 
-        $dbh->do(qq|UPDATE ar SET paid = amount WHERE id = $form->{"id_$i"}|);
+        $dbh->do(qq|UPDATE $form->{arap} SET paid = amount WHERE id = $form->{"id_$i"}|);
 
         $query = qq|
               update acc_trans 
               set amount = amount + $correction 
-              where trans_id = $form->{id} 
-              and chart_id = (select id from chart where accno = '$araccno')
+              where trans_id = $form->{"id_$i"}
+              and chart_id = (select id from chart where link = '$form->{ARAP}')
               and amount > 0 
+              and entry_id = (
+                select entry_id from acc_trans where trans_id = $form->{"id_$i"}
+                and chart_id in (select id from chart where link = '$form->{ARAP}') and amount > 0 limit 1
+                )
         |;
         $dbh->do($query) or $form->error($query);
 
         $query = qq|
               update acc_trans 
               set amount = amount - $correction 
-              where trans_id = $form->{id} 
+              where trans_id = $form->{"id_$i"}
               and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+              and entry_id = (
+                select entry_id from acc_trans where trans_id = $form->{"id_$i"}
+                and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1
+          		)
         |;
         $dbh->do($query) or $form->dberror($query);
 

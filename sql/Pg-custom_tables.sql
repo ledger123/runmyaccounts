@@ -136,3 +136,6 @@ ALTER TABLE ar ADD fxpaid float default 0;
 ALTER TABLE ap ADD fxamount float default 0;
 ALTER TABLE ap ADD fxpaid float default 0;
 
+-- Same as above for ap to avoid any UNION clause issues
+ALTER TABLE chart ADD symbol_link varchar(128) null;
+
