@@ -1474,32 +1474,44 @@ sub post_invoice {
   my $fxtotalamount = 0;
   $fxtotalamount = $form->round_amount($fxtax_total, $form->{precision}) + $fxamount;
 
-  if (($fxtotalamount == $fxtotalamount_paid) and ($invamount != $form->{paid})){
-      $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
-      $form->{paid} = $invamount;
-      $query = qq|
-          update acc_trans 
-          set amount = amount + $correction 
-          where trans_id = $form->{id} 
-          and chart_id = (select id from chart where accno = '$araccno')
-          and amount > 0 
-          and entry_id = (
-                select entry_id from acc_trans where trans_id = $form->{id}
-                and chart_id in (select id from chart where accno = '$araccno') and amount > 0 limit 1
-                )
-      |;
-      $dbh->do($query) or $form->error($query);
-      $query = qq|
-          update acc_trans 
-          set amount = amount - $correction 
-          where trans_id = $form->{id} 
-          and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
-          and entry_id = (
-                select entry_id from acc_trans where trans_id = $form->{id}
-                and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1
-          )
-      |;
-      $dbh->do($query) or $form->dberror($query);
+  if (($fxtotalamount eq $fxtotalamount_paid) and ($invamount ne $form->{paid})){
+     $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
+     $form->{paid} = $invamount;
+     $query = qq|
+         update acc_trans 
+         set amount = amount + $correction 
+         where trans_id = $form->{id} 
+         and chart_id = (select id from chart where accno = '$araccno')
+         and amount > 0 
+         and entry_id = (
+               select entry_id from acc_trans where trans_id = $form->{id}
+               and chart_id in (select id from chart where accno = '$araccno') and amount > 0 limit 1
+               )
+     |;
+     $dbh->do($query) or $form->error($query);
+     
+     my ($has_gain_or_loss) = $dbh->selectrow_array(qq|select count(*) from acc_trans where trans_id = $form->{id} and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1|);
+     if ( $has_gain_or_loss ) {
+       $query = qq|
+           update acc_trans 
+           set amount = amount - $correction 
+           where trans_id = $form->{id} 
+           and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+           and entry_id = (
+                 select entry_id from acc_trans where trans_id = $form->{id}
+                 and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1
+           )
+       |;
+       $dbh->do($query) or $form->dberror($query);
+     } else {
+	    $correction = (-1)*$correction;
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+		            transdate, fx_transaction, cleared, approved, vr_id)
+		            VALUES ($form->{id}, $defaults{fxloss_accno_id},
+			    $correction, '$form->{"datepaid_1"}', '1', $cleared,
+			    '$approved', $voucherid)|;
+		$dbh->do($query) || $form->dberror($query);
+     }
   }
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }

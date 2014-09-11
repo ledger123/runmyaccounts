@@ -949,7 +949,7 @@ sub post_payment {
 
       my ($amount,$paid,$fxamount,$fxpaid) = $dbh->selectrow_array(qq|SELECT amount, paid, fxamount, fxpaid FROM ar WHERE id = $form->{"id_$i"}|);
 
-      if (($fxamount == $fxpaid) and ($amount != $paid)){
+      if (($fxamount eq $fxpaid) and ($amount ne $paid)){
         $correction = $form->round_amount($amount - $paid, $form->{precision});
 
         $dbh->do(qq|UPDATE $form->{arap} SET paid = amount WHERE id = $form->{"id_$i"}|);
@@ -967,18 +967,27 @@ sub post_payment {
         |;
         $dbh->do($query) or $form->error($query);
 
-        $query = qq|
-              update acc_trans 
-              set amount = amount - $correction 
-              where trans_id = $form->{"id_$i"}
-              and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
-              and entry_id = (
-                select entry_id from acc_trans where trans_id = $form->{"id_$i"}
-                and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1
-          		)
-        |;
-        $dbh->do($query) or $form->dberror($query);
-
+        my ($has_gain_or_loss) = $dbh->selectrow_array(qq|select count(*) from acc_trans where trans_id = $form->{"id_$i"} and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})|);
+		if ( $has_gain_or_loss ) {
+          $query = qq|
+                update acc_trans 
+                set amount = amount - $correction 
+                where trans_id = $form->{"id_$i"}
+                and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+                and entry_id = (
+                  select entry_id from acc_trans where trans_id = $form->{"id_$i"}
+                  and chart_id in ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id}) limit 1
+          		  )
+          |;
+          $dbh->do($query) or $form->dberror($query);
+        } else {
+          $correction = (-1)*$correction;
+          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+		            transdate, fx_transaction, approved, vr_id)
+		            VALUES ($form->{"id_$i"}, $defaults{fxloss_accno_id},
+			    $correction, '$form->{datepaid}', '1', '$approved', $voucherid)|;
+		  $dbh->do($query) || $form->dberror($query);
+        }
       }
       
       %audittrail = ( tablename  => $form->{arap},
