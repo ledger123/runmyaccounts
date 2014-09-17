@@ -383,6 +383,8 @@ sub transactions {
   }
   
   my $where;
+  
+  my $accountwhere; # to build contra account information;
 
   if ($form->{accnofrom}) {
     $query = qq|SELECT c.description,
@@ -397,6 +399,7 @@ sub transactions {
     $glwhere .= $where;
     $arwhere .= $where;
     $apwhere .= $where;
+    $accountwhere .= $where;
   }
 
   if ($form->{accnoto}) {
@@ -412,6 +415,7 @@ sub transactions {
     $glwhere .= $where;
     $arwhere .= $where;
     $apwhere .= $where;
+    $accountwhere .= $where;
   }
 
   if ($form->{memo}) {
@@ -610,9 +614,6 @@ sub transactions {
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
-  my %trans;
-  my $i = 0;
-  
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
 
     # gl
@@ -650,6 +651,20 @@ sub transactions {
 
     for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
 
+    push @{ $form->{GL} }, $ref;
+    
+  }
+  $sth->finish;
+
+  $query =~ s/$accountwhere//g;
+  my $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+
+  my %trans;
+  my $i = 0;
+  
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
+
     $trans{$ref->{id}}{$i} = {
                       link => $ref->{link},
                       type => $ref->{type},
@@ -659,8 +674,6 @@ sub transactions {
                     credit => $ref->{credit},
                     amount => $ref->{debit} + $ref->{credit}
 		             };
-    push @{ $form->{GL} }, $ref;
-    
     $i++;
     
   }
@@ -668,7 +681,6 @@ sub transactions {
 
   $dbh->disconnect;
 
-  if (! ($form->{accnofrom} || $form->{accnoto}) ) {
     for my $id (keys %trans) {
 
       my $arap = "";
@@ -787,7 +799,13 @@ sub transactions {
 	}
       }
     }
+
+  # get rid of rows which were used to generated contra info
+  my @gl;
+  foreach $ref (@{ $form->{GL} }) {
+     push @gl, $ref if $ref->{id};
   }
+  @{ $form->{GL} } = @gl;
 
 }
 

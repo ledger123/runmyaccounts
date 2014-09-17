@@ -616,7 +616,6 @@ sub transactions {
     $callback .= "&accnofrom=$form->{accnofrom}";
     $option .= "\n<br>" if $option;
     $option .= $locale->text('Account')." >= $form->{accnofrom} $form->{accnofrom_description}";
-    $form->{l_contra} = "";
   }
   if ($form->{accnoto}) {
     $href .= "&accnoto=$form->{accnoto}";
@@ -628,7 +627,6 @@ sub transactions {
       $option .= $locale->text('Account')." <= ";
     }
     $option .= "$form->{accnoto} $form->{accnoto_description}";
-    $form->{l_contra} = "";
   }
   if ($form->{amountfrom}) {
     $href .= "&amountfrom=$form->{amountfrom}";
@@ -693,7 +691,6 @@ sub transactions {
     @column_index = grep !/(accno|gifi_accno|contra|gifi_contra)/, @column_index;
     push @column_index, "balance";
     $column_data{balance} = $locale->text('Balance');
-    for (qw(l_contra l_gifi_contra)) { delete $form->{$_} }
   }
 
   if ($form->{l_contra}) {
@@ -1173,7 +1170,6 @@ sub transactions_to_csv {
     $callback .= "&accnofrom=$form->{accnofrom}";
     $option .= "\n<br>" if $option;
     $option .= $locale->text('Account')." >= $form->{accnofrom} $form->{accnofrom_description}";
-    $form->{l_contra} = "";
   }
   if ($form->{accnoto}) {
     $href .= "&accnoto=$form->{accnoto}";
@@ -1185,7 +1181,6 @@ sub transactions_to_csv {
       $option .= $locale->text('Account')." <= ";
     }
     $option .= "$form->{accnoto} $form->{accnoto_description}";
-    $form->{l_contra} = "";
   }
   if ($form->{amountfrom}) {
     $href .= "&amountfrom=$form->{amountfrom}";
@@ -1250,7 +1245,6 @@ sub transactions_to_csv {
     @column_index = grep !/(accno|gifi_accno|contra|gifi_contra)/, @column_index;
     push @column_index, "balance";
     $column_data{balance} = $locale->text('Balance');
-    for (qw(l_contra l_gifi_contra)) { delete $form->{$_} }
   }
 
   if ($form->{l_contra}) {
