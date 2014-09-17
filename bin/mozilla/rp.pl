@@ -1901,25 +1901,34 @@ sub export_as_csv {
 
 sub reminder {
 
+  $form->{direction} = 'ASC' if !$form->{direction};
+  if ($form->{direction} eq 'ASC') {
+     @{ $form->{AGsorted} } = sort { $a->{$form->{sort}} cmp $b->{$form->{sort}} } @{ $form->{AG} };
+  } else {
+     @{ $form->{AGsorted} } = sort { $b->{$form->{sort}} cmp $a->{$form->{sort}} } @{ $form->{AG} };
+  }
+  $form->sort_order;
+
   $form->{callback} = $form->{initcallback};
-  for (qw(path login type format)) { $form->{callback} .= "&$_=$form->{$_}" }
+  for (qw(path login type format direction oldsort)) { $form->{callback} .= "&$_=$form->{$_}" }
   for (qw(title media report)) { $form->{callback} .= qq|&$_=|.$form->escape($form->{$_},1) }
   $form->{callback} .= qq|&$form->{vc}=|.$form->escape($form->{"$form->{vc}"},1);
+  $href = $form->{callback};
 
   $vcnumber = $locale->text('Customer Number');
   
   $form->{allbox} = ($form->{allbox}) ? "checked" : "";
   $action = ($form->{deselect}) ? "deselect_all" : "select_all";
   $column_header{ndx} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;
-  $column_header{vc} = qq|<th class=listheading width=60%>|.$locale->text(ucfirst $form->{vc}).qq|</th>|;
-  $column_header{"$form->{vc}number"} = qq|<th class=listheading>$vcnumber</th>|;
-  $column_header{level} = qq|<th class=listheading>|.$locale->text('Level').qq|</th>|;
-  $column_header{language} = qq|<th class=listheading>|.$locale->text('Language').qq|</th>|;
-  $column_header{invnumber} = qq|<th class=listheading>|.$locale->text('Invoice').qq|</th>|;
-  $column_header{invdescription} = qq|<th class=listheading>|.$locale->text('Description').qq|</th>|;
-  $column_header{ordnumber} = qq|<th class=listheading>|.$locale->text('Order').qq|</th>|;
-  $column_header{transdate} = qq|<th class=listheading nowrap>|.$locale->text('Date').qq|</th>|;
-  $column_header{duedate} = qq|<th class=listheading nowrap>|.$locale->text('Due Date').qq|</th>|;
+  $column_header{vc} = qq|<th class=listheading width=60%><a href=$href&sort=name>|.$locale->text(ucfirst $form->{vc}).qq|</a></th>|;
+  $column_header{"$form->{vc}number"} = qq|<th class=listheading><a href=$href&sort=$form->{vc}number>$vcnumber</a></th>|;
+  $column_header{level} = qq|<th class=listheading><a href=$href&sort=name>|.$locale->text('Level').qq|</a></th>|;
+  $column_header{language} = qq|<th class=listheading><a href=$href&sort=language>|.$locale->text('Language').qq|</a></th>|;
+  $column_header{invnumber} = qq|<th class=listheading><a href=$href&sort=invnumber>|.$locale->text('Invoice').qq|</a></th>|;
+  $column_header{invdescription} = qq|<th class=listheading><a href=$href&sort=invdescription>|.$locale->text('Description').qq|</a></th>|;
+  $column_header{ordnumber} = qq|<th class=listheading><a href=$href&sort=ordnumber>|.$locale->text('Order').qq|</a></th>|;
+  $column_header{transdate} = qq|<th class=listheading nowrap><a href=$href&sort=transdate2>|.$locale->text('Date').qq|</a></th>|;
+  $column_header{duedate} = qq|<th class=listheading nowrap><a href=$href&sort=duedate2>|.$locale->text('Due Date').qq|</a></th>|;
   $column_header{due} = qq|<th class=listheading nowrap>|.$locale->text('Due').qq|</th>|;
   
   @column_index = qw(ndx vc);
@@ -1997,7 +2006,8 @@ function CheckAll() {
   
   $callback = $form->escape($form->{callback},1);
 
-  for $ref (@{ $form->{AG} }) {
+
+  for $ref (@{ $form->{AGsorted} }) {
 
     if ($curr ne $ref->{curr}) {
       
