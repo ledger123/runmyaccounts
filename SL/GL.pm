@@ -665,6 +665,39 @@ sub transactions {
   
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
 
+    # gl
+    if ($ref->{type} eq "gl") {
+      $ref->{module} = "gl";
+    }
+
+    # ap
+    if ($ref->{type} eq "ap") {
+      $ref->{memo} ||= $ref->{lineitem};
+      if ($ref->{invoice}) {
+        $ref->{module} = "ir";
+      } else {
+        $ref->{module} = "ap";
+      }
+    }
+
+    # ar
+    if ($ref->{type} eq "ar") {
+      $ref->{memo} ||= $ref->{lineitem};
+      if ($ref->{invoice}) {
+        $ref->{module} = ($ref->{till}) ? "ps" : "is";
+      } else {
+        $ref->{module} = "ar";
+      }
+    }
+
+    if ($ref->{amount} < 0) {
+      $ref->{debit} = $ref->{amount} * -1;
+      $ref->{credit} = 0;
+    } else {
+      $ref->{credit} = $ref->{amount};
+      $ref->{debit} = 0;
+    }
+
     $trans{$ref->{id}}{$i} = {
                       link => $ref->{link},
                       type => $ref->{type},
