@@ -1190,7 +1190,7 @@ sub post_invoice {
   }
 
 
-  if ($form->round_amount($form->{paid} - $fxamount + $fxtax, $form->{precision}) == 0) {
+  if ($form->round_amount($form->{paid} - $fxamount + $fxtax_total, $form->{precision}) == 0) {
     $form->{paid} = $invamount;
   } else {
     $form->{paid} = $form->round_amount($form->{paid} * $form->{exchangerate}, $form->{precision});

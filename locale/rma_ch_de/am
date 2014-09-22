@@ -29,6 +29,7 @@ $self{texts} = {
   'Add Warehouse'               => 'Warenlager erfassen',
   'Address'                     => 'Adresse',
   'All transactions outside this date range will be reported as having invalid dates.' => 'Alle Transaktionen ausserhalb dieses Datumbereichs werden angezeigt, wie sie ungültige Daten hütten',
+  'Allow GL Transaction'		=> 'Hauptbuchbuchungen erlauben',
   'Amount'                      => 'Betrag',
   'Are you sure you want to remove all the locks' => 'Sollen alle Sperren aufgehoben werden?',
   'Asset'                       => 'Aktiva/Mittelverwendung',
