@@ -748,14 +748,14 @@ sub transactions {
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
  
   if ($form->{outstanding}) {
-    $paid = qq|SELECT SUM(ac.amount) * -1 * $ml
+    $paid = qq|CASE WHEN a.fxamount = a.fxpaid AND a.fxpaid != 0 THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
                FROM acc_trans ac
 	       JOIN chart c ON (c.id = ac.chart_id)
 	       WHERE ac.trans_id = a.id
 	       AND ac.approved = '1'
 	       AND (c.link LIKE '%${ARAP}_paid%'
 	            OR c.link LIKE '%${ARAP}_discount%'
-		    OR c.link = '')|;
+		    OR c.link = '')) END|;
     $paid .= qq|
                AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
     $form->{summary} = 1;
@@ -956,7 +956,7 @@ sub transactions {
              ORDER by $sortorder";
 
   $form->{query} = $query;  
-    
+        
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
