@@ -755,9 +755,10 @@ sub transactions {
 	       AND ac.approved = '1'
 	       AND (c.link LIKE '%${ARAP}_paid%'
 	            OR c.link LIKE '%${ARAP}_discount%'
-		    OR c.link = '')) END|;
+		    OR c.link = ''|;
     $paid .= qq|
-               AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
+            AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
+	$paid .= qq|)) END|;
     $form->{summary} = 1;
     $form->{l_memo} = "";
   }
