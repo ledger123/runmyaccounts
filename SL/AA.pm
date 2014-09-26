@@ -748,16 +748,20 @@ sub transactions {
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
  
   if ($form->{outstanding}) {
-    $paid = qq|CASE WHEN a.fxamount = a.fxpaid AND a.fxpaid != 0 THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
+    $paid = qq|CASE WHEN a.fxamount = a.fxpaid AND a.fxpaid != 0 |;
+    $paid .= qq|
+            AND a.datepaid <= '$form->{transdateto}'| if $form->{transdateto};
+    $paid .= qq|THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
                FROM acc_trans ac
 	       JOIN chart c ON (c.id = ac.chart_id)
 	       WHERE ac.trans_id = a.id
-	       AND ac.approved = '1'
-	       AND (c.link LIKE '%${ARAP}_paid%'
-	            OR c.link LIKE '%${ARAP}_discount%'
-		    OR c.link = ''|;
+	       AND ac.approved = '1'|;
     $paid .= qq|
             AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
+	$paid .= qq|       
+			AND (c.link LIKE '%${ARAP}_paid%'
+	            OR c.link LIKE '%${ARAP}_discount%'
+		    OR c.link = ''|;
 	$paid .= qq|)) END|;
     $form->{summary} = 1;
     $form->{l_memo} = "";
