@@ -51,7 +51,8 @@ CREATE TABLE chart (
   link text,
   gifi_accno text,
   contra bool DEFAULT 'f',
-  allow_gl BOOLEAN DEFAULT true
+  allow_gl BOOLEAN DEFAULT true,
+  symbol_link varchar(128) null
 );
 
 --
@@ -217,7 +218,9 @@ CREATE TABLE ar (
   exchangerate float,
   dcn text,
   bank_id int,
-  paymentmethod_id int
+  paymentmethod_id int,
+  fxamount float default 0,
+  fxpaid float default 0
 );
 --
 CREATE TABLE ap (
@@ -255,7 +258,9 @@ CREATE TABLE ap (
   exchangerate float,
   dcn text,
   bank_id int,
-  paymentmethod_id int
+  paymentmethod_id int,
+  fxamount float default 0,
+  fxpaid float default 0
 );
 --
 CREATE TABLE partstax (
