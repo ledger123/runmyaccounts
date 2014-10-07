@@ -70,6 +70,7 @@ $self{texts} = {
   'Include Payment'             => 'Bezahlung reinnehmen',
   'Include in Report'           => 'In Bericht aufnehmen',
   'Income'                      => 'Ertrag',
+  'Internal Notes'              => 'Interne Notizen',
   'Invoice Number'              => 'Rechnungsnummer',
   'Jan'                         => 'Jan',
   'January'                     => 'Januar',
