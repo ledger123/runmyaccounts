@@ -223,7 +223,9 @@ sub link_part {
   # setup customers and groups
   if (@{ $form->{all_customer} }) {
     $form->{selectcustomer} = "\n";
-    for (@{ $form->{all_customer} }) { $form->{selectcustomer} .= qq|$_->{name}--$_->{id}\n| }
+    for (@{ $form->{all_customer} }) { 
+	   $form->{selectcustomer} .= qq|$_->{name} ($_->{customernumber})--$_->{id}\n| 
+    }
     delete $form->{all_customer};
   }
 
@@ -2776,12 +2778,13 @@ sub customer_row {
       $customer = qq|
           <td><input name="customer_$i" size=35 value="|.$form->quote($form->{"customer_$i"}).qq|"></td>
 	  |;
-  
+
       if ($form->{selectcustomer}) {
 	$customer = qq|
 	  <td><select name="customer_$i">|.$form->select_option($form->{selectcustomer}, undef, 1).qq|</select></td>
 |;
       }
+      
 
       if ($form->{selectpricegroup}) {
 	$pricegroup = qq|
