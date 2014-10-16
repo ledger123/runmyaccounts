@@ -116,8 +116,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link,symbol_link) VALUES ('3900','Skonti','A','390','I','AR_paid','debitorskonto');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link,symbol_link) VALUES ('3901','Rabatte und Preisnachlässe','A','390','I','AR_paid','debitordifferenz');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('3905','Debitorenverluste','A','390','I','AR_amount:IC_income');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('3999','Nicht kontiert','A','390','I','AR_amount:IC_income');
-
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link,symbol_link) VALUES ('3999','Nicht kontiert','A','390','I','AR_amount:IC_income','nichtkontierterertrag');
 ----------------------------------------------------------
 --- 4 AUFWAND FÜR MATERIAL, WAREN UND DRITTLEISTUNGEN ---
 ----------------------------------------------------------
@@ -222,7 +221,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link,symbol_l
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6892','Kursgewinne','A','685','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('69','ABSCHREIBUNGEN','H','690','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6900','Abschreibungen','A','690','E','');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6999','Nicht kontiert','A','660','E','AP_amount');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link, symbol_link) VALUES ('6999','Nicht kontiert','A','660','E','AP_amount','nichtkontierteraufwand');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('7','BETRIEBLICHE NEBENERFOLGE','H','700','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('79','GEWINNE AUS VERÄUSSERUNG VON BETRIEBLICHEM ANLAGEVERMÖGEN','H','790','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('7910','Gewinne aus mobilen Sachanlagen','A','790','E','AR_amount');
