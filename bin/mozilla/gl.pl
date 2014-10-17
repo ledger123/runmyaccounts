@@ -497,12 +497,12 @@ sub transactions {
   		."=accdescription,gifi_accno=".$locale->text('GIFI')."=gifi_accno,contra=".$locale->text('Contra')."=";
   }
 
-  GL->transactions(\%myconfig, \%$form);
-
   if ($form->{l_csv} eq 'Y'){
      &transactions_to_csv;
      exit;
   }
+  
+  GL->transactions(\%myconfig, \%$form);
 
   $href = "$form->{script}?action=transactions";
   for (qw(direction oldsort path login month year interval reportlogin)) { $href .= "&$_=$form->{$_}" }
