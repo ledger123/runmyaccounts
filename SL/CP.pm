@@ -958,7 +958,7 @@ sub post_payment {
               update acc_trans 
               set amount = amount + $correction 
               where trans_id = $form->{"id_$i"}
-              and chart_id = (select id from chart where link = '$form->{ARAP}')
+              and chart_id = $arap
               and amount > 0 
               and entry_id = (
                 select entry_id from acc_trans where trans_id = $form->{"id_$i"}
