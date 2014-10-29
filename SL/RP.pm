@@ -518,7 +518,7 @@ sub get_accounts {
 
   if ($form->{accounttype} eq 'gifi')
   {
-    $query = qq|SELECT g.accno, g.description, c.category
+    $query = qq|SELECT g.accno, g.description, 'A'
 		FROM gifi g
 		JOIN chart c ON (c.gifi_accno = g.accno)
 		WHERE c.charttype = 'H'
