@@ -1061,7 +1061,7 @@ sub get_accounts {
       $form->{$category}{$accno}{last} = $form->round_amount($form->{$category}{$accno}{last}, $form->{decimalplaces});
       $form->{$category}{$accno}{this} = $form->round_amount($form->{$category}{$accno}{this}, $form->{decimalplaces});
 
-      delete $form->{$category}{$accno} if ($form->{$category}{$accno}{this} == 0 && $form->{$category}{$accno}{last} == 0 && $form->{$category}{$accno}{charttype} eq 'A');
+      delete $form->{$category}{$accno} if ($form->{$category}{$accno}{this} == 0 && $form->{$category}{$accno}{last} == 0);
     }
   }
 
@@ -1642,7 +1642,6 @@ sub reminder {
   
   $form->{sort} =~ s/;//g;
   my $sortorder = ($form->{sort}) ? "vc.$form->{sort}" : "vc.name";
-  $sortorder = 'vc.name';
   
   # select outstanding customers
   $query = qq|SELECT DISTINCT vc.id, vc.name, vc.$form->{vc}number,
@@ -1697,8 +1696,6 @@ sub reminder {
 	      a.invnumber, a.transdate, a.till, a.ordnumber, a.ponumber, a.notes,
 	      a.amount - a.paid AS due,
 	      a.duedate, a.invoice, a.id, a.curr,
-          to_char(a.transdate, 'yy-mm-dd') transdate2, 
-          to_char(a.duedate, 'yy-mm-dd') duedate2, 
 		(SELECT exchangerate FROM exchangerate e
 		 WHERE a.curr = e.curr
 		 AND e.transdate = a.transdate) AS exchangerate,

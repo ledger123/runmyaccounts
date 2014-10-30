@@ -1759,7 +1759,7 @@ sub create_links {
   ($count) = $dbh->selectrow_array($query);
 
   if ($count < $myconfig->{vclimit}) {
-    $query = qq|SELECT id, name
+    $query = qq|SELECT id, name, customernumber
 		FROM customer
 		ORDER BY name|;
     $sth = $dbh->prepare($query);

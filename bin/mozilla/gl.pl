@@ -276,7 +276,7 @@ sub search {
   for (qw(transdate reference description debit credit accno)) { $form->{"l_$_"} = "checked" }
 
   @checked = qw(l_subtotal);
-  @input = qw(reference description name vcnumber lineitem notes source memo datefrom dateto month year accnofrom accnoto amountfrom amountto sort direction reportlogin projectnumber);
+  @input = qw(reference description name vcnumber lineitem notes source memo datefrom dateto month year accnofrom accnoto amountfrom amountto sort direction reportlogin projectnumber intnotes);
   for (qw(department)) {
     push @input, $_ if exists $form->{$_};
   }
@@ -304,6 +304,7 @@ sub search {
   $includeinreport{accdescription} = { ndx => $i++, sort => accdescription, checkbox => 1, html => qq|<input name="l_accdescription" class=checkbox type=checkbox value=Y $form->{l_accdescription}>|, label => $locale->text('Account Description') };
   $includeinreport{gifi_accno} = { ndx => $i++, sort => gifi_accno, checkbox => 1, html => qq|<input name="l_gifi_accno" class=checkbox type=checkbox value=Y $form->{l_gifi_accno}>|, label => $locale->text('GIFI') };
   $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
+  $includeinreport{intnotes} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}>|, label => $locale->text('Internal Notes') };
 
   @f = ();
   $form->{flds} = "";
@@ -371,6 +372,11 @@ sub search {
 	<tr>
 	  <th align=right>|.$locale->text('Notes').qq|</th>
 	  <td><input name=notes size=40></td>
+	</tr>
+
+	<tr>
+	  <th align=right>|.$locale->text('Internal Notes').qq|</th>
+	  <td><input name=intnotes size=40></td>
 	</tr>
 
 	<tr>
@@ -491,12 +497,12 @@ sub transactions {
   		."=accdescription,gifi_accno=".$locale->text('GIFI')."=gifi_accno,contra=".$locale->text('Contra')."=";
   }
 
-  GL->transactions(\%myconfig, \%$form);
-
   if ($form->{l_csv} eq 'Y'){
      &transactions_to_csv;
      exit;
   }
+  
+  GL->transactions(\%myconfig, \%$form);
 
   $href = "$form->{script}?action=transactions";
   for (qw(direction oldsort path login month year interval reportlogin)) { $href .= "&$_=$form->{$_}" }
@@ -576,6 +582,12 @@ sub transactions {
     $callback .= "&notes=".$form->escape($form->{notes},1);
     $option .= "\n<br>" if $option;
     $option .= $locale->text('Notes')." : $form->{notes}";
+  }
+  if ($form->{intnotes}) {
+    $href .= "&intnotes=".$form->escape($form->{intnotes});
+    $callback .= "&intnotes=".$form->escape($form->{intnotes},1);
+    $option .= "\n<br>" if $option;
+    $option .= $locale->text('Internal Notes')." : $form->{intnotes}";
   }
   if ($form->{lineitem}) {
     $href .= "&lineitem=".$form->escape($form->{lineitem});
@@ -883,7 +895,7 @@ sub transactions {
 
     for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
     
-    for (qw(lineitem description source memo notes)) {
+    for (qw(lineitem description source memo notes intnotes)) {
       $ref->{$_} =~ s/\r?\n/<br>/g;
       $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>";
     }
@@ -994,7 +1006,7 @@ sub transactions {
   if ($form->{year} && $form->{month}) {
     for (qw(datefrom dateto)) { delete $form->{$_} }
   }
-  $form->hide_form(qw(department reference description name vcnumber lineitem notes source memo datefrom dateto month year accnofrom accnoto amountfrom amountto interval category l_subtotal));
+  $form->hide_form(qw(department reference description name vcnumber lineitem notes source memo datefrom dateto month year accnofrom accnoto amountfrom amountto interval category l_subtotal intnotes));
   
   $form->hide_form(qw(callback path login report reportcode reportlogin column_index flds sort direction));
   
@@ -1130,6 +1142,12 @@ sub transactions_to_csv {
     $callback .= "&notes=".$form->escape($form->{notes},1);
     $option .= "\n<br>" if $option;
     $option .= $locale->text('Notes')." : $form->{notes}";
+  }
+  if ($form->{intnotes}) {
+    $href .= "&intnotes=".$form->escape($form->{intnotes});
+    $callback .= "&intnotes=".$form->escape($form->{intnotes},1);
+    $option .= "\n<br>" if $option;
+    $option .= $locale->text('Internal Notes')." : $form->{intnotes}";
   }
   if ($form->{lineitem}) {
     $href .= "&lineitem=".$form->escape($form->{lineitem});
@@ -1373,8 +1391,8 @@ sub transactions_to_csv {
 
     for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "$ref->{$_}" }
     
-    for (qw(lineitem description source memo notes)) {
-      $column_data{$_} = &escape_csv($ref->{$_});
+    for (qw(lineitem description source memo notes intnotes)) {
+      $column_data{$_} = '"' . &escape_csv($ref->{$_}) . '"';
     }
     
     if ($ref->{vc_id}) {
