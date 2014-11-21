@@ -65,6 +65,7 @@ INSERT INTO gifi (accno,description) VALUES ('740', 'Erfolg aus Finanzanlagen');
 INSERT INTO gifi (accno,description) VALUES ('750', 'Erfolg betriebliche Liegenschaften');
 INSERT INTO gifi (accno,description) VALUES ('790', 'Gewinne aus Veräusserung von betrieblichem Anlagevermögen');
 INSERT INTO gifi (accno,description) VALUES ('800', 'Ausserordentlicher Ertrag');
+INSERT INTO gifi (accno,description) VALUES ('801', 'Ausserordentlicher Aufwand');
 INSERT INTO gifi (accno,description) VALUES ('820', 'Betriebsfremder Erfolg');
 INSERT INTO gifi (accno,description) VALUES ('840', 'Ertrag betriebsfremde Finanzanlagen');
 INSERT INTO gifi (accno,description) VALUES ('850', 'Erfolg betriebsfremde Liegenschaft');

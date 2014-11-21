@@ -18,7 +18,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link,symbol_l
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('1020','Bank','A','100','A','AR_paid:AP_paid');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('1050','kurzfristige Geldanlagen','A','100','A','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('110','FORDERUNGEN','H','110','A','');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('1100','Debitoren','A','110','A','AR');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link,symbol_link) VALUES ('1100','Debitoren','A','110','A','AR','forderungenschweiz');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('1101','Debitoren alt','A','110','A','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('1109','Delkredere','A','110','A','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('1170','Vorsteuer 8.0% auf Mat. + DL','A','110','A','AP_tax');
@@ -128,7 +128,7 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('44','AUFWAND FÜR DRITTLEISTUNGEN','H','440','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('4400','Aufwand für Drittleistungen','A','440','E','AP_amount');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('49','SKONTO','H','490','E','');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('4999','Systemkonto','A','470','E','AP_amount:IC_expense:IC_cogs');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('4999','Systemkonto','A','490','E','AP_amount:IC_expense:IC_cogs');
 -------------------------
 --- 5 PERSONALAUFWAND ---
 -------------------------
@@ -232,8 +232,8 @@ INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES 
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('8','AUSSERORDENTLICHER UND BETRIEBSFREMDER ERFOLG, STEUERN','H','800','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('800','AUSSERORDENTLICHER ERTRAG','H','800','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('8000','Ausserordentlicher Ertrag','A','800','E','');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('801','AUSSERORDENTLICHER AUFWAND','H','800','E','');
-INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('8010','Ausserordentlicher Aufwand','A','800','E','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('801','AUSSERORDENTLICHER AUFWAND','H','801','E','');
+INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('8010','Ausserordentlicher Aufwand','A','801','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('89','STEUERN','H','890','E','');
 INSERT INTO chart (accno,description,charttype,gifi_accno,category,link) VALUES ('8900','Steuern','A','890','E','AP_amount');
 -------------------
