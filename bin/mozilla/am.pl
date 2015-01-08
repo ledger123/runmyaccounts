@@ -3507,6 +3507,7 @@ sub process_transactions {
 	  for (qw(invnumber reference description)) { $form->{$_} = $form->unquote($form->{$_}) }
 
           if ($pt->{invoice}) {
+	        $form->{oldtotalpaid} = 0;
 	    if ($pt->{arid}) {
 	      $form->info("\n".$locale->text('Posting')." ".$locale->text('Sales Invoice')." $form->{invnumber} ... ");
 	      $ok = IS->post_invoice(\%myconfig, \%$form);
