@@ -3492,12 +3492,11 @@ sub process_transactions {
 	      }
 	    }
 	  } else {
-	    delete $form->{"paid_1"};
+	    for (qw(datepaid datepaid_1 olddatepaid_1 paid_1)) { delete $form->{$_} };
 	    $form->{"$form->{ARAP}_paid_1"} = $form->{payment_accno};
 	    $form->{"paymentmethod_1"} = $form->{payment_method};
 	    $form->{paidaccounts} = 1;
 	  }
-
 	  for (qw(id recurring printed emailed queued)) { delete $form->{$_} }
 
 	  ($form->{$form->{ARAP}}) = split /--/, $form->{$form->{ARAP}};
