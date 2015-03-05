@@ -1425,6 +1425,7 @@ sub post_invoice {
       # gain/loss
       $amount = $form->round_amount(($form->round_amount($form->{"paid_$i"} * $form->{exchangerate}, $form->{precision}) - $form->round_amount($form->{"paid_$i"} * $form->{"exchangerate_$i"}, $form->{precision})) * -1, $form->{precision});
 
+
       if ($amount) {
 	my $accno_id = ($amount > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
@@ -1474,8 +1475,8 @@ sub post_invoice {
   my $fxtotalamount = 0;
   $fxtotalamount = $form->round_amount($fxtax_total, $form->{precision}) + $fxamount;
 
-  if (($fxtotalamount eq $fxtotalamount_paid) and ($invamount ne $form->{paid})){
-     $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
+  if (($form->{currency} ne $form->{defaultcurrency}) and ($fxtotalamount eq $fxtotalamount_paid) and ($invamount ne $form->{paid})){
+      $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
      $form->{paid} = $invamount;
      $query = qq|
          update acc_trans 
@@ -1504,13 +1505,15 @@ sub post_invoice {
        |;
        $dbh->do($query) or $form->dberror($query);
      } else {
-	    $correction = (-1)*$correction;
-        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-		            transdate, fx_transaction, cleared, approved, vr_id)
+       if ( $correction != 0 ) {
+  	      $correction = (-1)*$correction;
+          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+		            transdate, fx_transaction, cleared)
 		            VALUES ($form->{id}, $defaults{fxloss_accno_id},
-			    $correction, '$form->{"datepaid_1"}', '1', $cleared,
-			    '$approved', $voucherid)|;
-		$dbh->do($query) || $form->dberror($query);
+			    $correction, '$form->{"datepaid_1"}', '1', $cleared)|;
+	      print STDERR "$query\n";
+		  $dbh->do($query) || $form->dberror($query);
+	   }
      }
   }
 
