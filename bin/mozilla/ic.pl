@@ -1641,6 +1641,7 @@ sub generate_report {
     $ref->{exchangerate} ||= 1;
     $ref->{discount} *= 1;
 
+    $ref->{sellprice} = $form->round_amount($ref->{sellprice} - ($ref->{sellprice} * $ref->{discount}), $form->{precision});
     if ($form->{summary}) {
       
       $summary{$ref->{id}}{total} += $ref->{sellprice} * $ref->{onhand};
