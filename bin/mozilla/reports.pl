@@ -1323,7 +1323,11 @@ sub income_statement_by_department {
   print qq|<h2 align=center>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h2>| if $form->{datefrom};
   print qq|<h2 align=center>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h2>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
-  my $query = qq|SELECT id, description FROM department UNION SELECT 0, '(blank)' ORDER BY description|;
+  my $query = qq|
+      SELECT row_number() over (order by description) as no, id, description FROM department 
+      UNION 
+      SELECT 0, 0, '(blank)' ORDER BY description
+  |;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute || $form->dberror($query);
 
@@ -1331,8 +1335,8 @@ sub income_statement_by_department {
   my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
      if ($form->{"p_$ref->{id}"}){
-	$departments{"p_$ref->{id}"} = $ref->{description};
-        $is_query .= qq|SUM(CASE WHEN d.department_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{id},\n|
+	    $departments{"p_$ref->{no}"} = $ref->{description};
+        $is_query .= qq|SUM(CASE WHEN d.department_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{no},\n|
      }
   }
   $sth->finish;
@@ -1378,7 +1382,7 @@ sub income_statement_by_department {
 <th colspan=2>|.$locale->text('Income').qq|</th>
 |;
 
-  for (keys %departments){ print qq|<th>$departments{$_}</th>| }
+  for (sort keys %departments){ print qq|<th>$departments{$_}</th>| }
   print qq|<th>|.$locale->text('Total').qq|</th>|;
   print qq|
 </tr>
@@ -1392,7 +1396,7 @@ sub income_statement_by_department {
      print qq|<td>$form->{I}{$accno}{accno}</td>|;
      print qq|<td>$form->{I}{$accno}{description}</td>|;
      $line_total = 0;
-     for (keys %departments){ 
+     for (sort keys %departments){ 
 	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
 	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
 	$line_total += $form->{I}{$accno}{$_};
@@ -1403,7 +1407,7 @@ sub income_statement_by_department {
 
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('Income').qq|</th>|;
   $line_total = 0;
-  for (keys %departments){ 
+  for (sort keys %departments){ 
 	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</th>|; 
 	$line_total += $form->{I}{$_}{totalincome}; 
   }
@@ -1418,7 +1422,7 @@ sub income_statement_by_department {
      print qq|<td>$form->{E}{$accno}{accno}</td>|;
      print qq|<td>$form->{E}{$accno}{description}</td>|;
      $line_total = 0;
-     for (keys %departments){
+     for (sort keys %departments){
 	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
 	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
 	$line_total += $form->{E}{$accno}{$_} * -1;
@@ -1429,7 +1433,7 @@ sub income_statement_by_department {
 
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('COGS').qq|</th>|;
   $line_total = 0;
-  for (keys %departments){ 
+  for (sort keys %departments){ 
 	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</th>|; 
 	$line_total += $form->{E}{$_}{totalexpenses};
   }
@@ -1438,7 +1442,7 @@ sub income_statement_by_department {
 
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Income/(Loss)').qq|</th>|;
   $line_total = 0;
-  for (keys %departments){
+  for (sort keys %departments){
 	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</th>|; 
 	$line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
   }
