@@ -1324,21 +1324,29 @@ sub income_statement_by_department {
   print qq|<h2 align=center>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h2>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
   my $query = qq|
-      SELECT row_number() over (order by description) as no, id, description FROM department 
+      SELECT 1 as no, id, description FROM department 
       UNION 
       SELECT 0, 0, '(blank)' ORDER BY description
   |;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute || $form->dberror($query);
 
+  my @sorted;
+  my $no = 1;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+      $ref->{no} = sprintf("%03d",$no++);
+      push @sorted, $ref;
+  }
+
   my %departments;
   my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
-  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+  for my $ref (@sorted){
      if ($form->{"p_$ref->{id}"}){
 	    $departments{"p_$ref->{no}"} = $ref->{description};
         $is_query .= qq|SUM(CASE WHEN d.department_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{no},\n|
      }
   }
+
   $sth->finish;
   chop $is_query;
   chop $is_query;
