@@ -920,15 +920,15 @@ sub post_payment {
 	  }
 	}
       }
+      
+      $fxpaid = $form->round_amount($form->{"paid_$i"}+$trans{$form->{"id_$i"}}{paid}/$trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
 
-
-      $fxpaid = $form->{"paid_$i"};
       $form->{"paid_$i"} = $form->round_amount($form->{"paid_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
       $form->{"discount_$i"} = $form->round_amount($form->{"discount_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
 
       # unlock arap
       $pth->finish;
-
+      
       $amount = $form->round_amount($trans{$form->{"id_$i"}}{paid} + $form->{"paid_$i"} + $form->{"discount_$i"}, $form->{precision});
 
       # if discount taxable adjust ar/ap amount
@@ -949,7 +949,7 @@ sub post_payment {
 
       my ($amount,$paid,$fxamount,$fxpaid) = $dbh->selectrow_array(qq|SELECT amount, paid, fxamount, fxpaid FROM ar WHERE id = $form->{"id_$i"}|);
 
-      if (($fxamount eq $fxpaid) and ($amount ne $paid)){
+      if (($fxamount eq $fxpaid) and ($amount ne $paid) and ($form->{exchangerate} ne 1) ){
         $correction = $form->round_amount($amount - $paid, $form->{precision});
 
         $dbh->do(qq|UPDATE $form->{arap} SET paid = amount WHERE id = $form->{"id_$i"}|);
