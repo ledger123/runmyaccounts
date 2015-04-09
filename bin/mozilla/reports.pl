@@ -476,12 +476,12 @@ sub gl_list {
    @columns = $form->sort_columns(@columns);
 
    my %ordinal = (	id => 1,
-			accno => 2,
-			transdate => 3,
-			reference => 4,
-			description => 5,
-			name => 6,
-			source => 7,
+			accno => 8,
+			transdate => 5,
+			reference => 3,
+			description => 4,
+			name => 10,
+			source => 6,
 			debit => 8,
 			credit => 9,
 			balance => 10
@@ -616,7 +616,7 @@ sub gl_list {
    			$query .= qq| AND c.accno <= '$toaccount'| if $form->{toaccount};
    			$query .= qq| AND c.charttype = 'A'|;
 	 	}
-	 	$query .= qq| ORDER BY 8, 5, 3|;
+	 	$query .= qq| ORDER BY 8, | . $sort_order;
    }
 
    # store oldsort/direction information
