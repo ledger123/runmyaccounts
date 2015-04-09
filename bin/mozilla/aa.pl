@@ -625,23 +625,8 @@ sub form_header {
 <body onload="document.forms[0].${focus}.focus()" />
 
 <div align="center" class="redirectmsg">$form->{redirectmsg}</div>
-|;
 
-  print q|
-<script>
-$(document).on("click", ":submit", function(e){
-    var val = $(this).val();
-    $("#actionhidden").val(val);
-    $(this).attr('disabled', 'disabled');
-    $(this).parents('form').submit();
-});
-</script>
-|;
-
-  print qq|
 <form method=post action=$form->{script}>
-
-<input id=actionhidden name=actionhidden type=hidden value=''>
 
 <input type=hidden name=title value="|.$form->quote($form->{title}).qq|">
 |;
