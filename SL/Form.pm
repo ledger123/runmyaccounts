@@ -71,8 +71,6 @@ sub new {
     for (keys %$self) { $self->{$_} = unescape("", $self->{$_}) }
   }
  
-  $self->{action} = $self->{actionhidden} if $self->{actionhidden};
-
   if (substr($self->{action}, 0, 1) !~ /( |\.)/) {
     $self->{action} = lc $self->{action};
     $self->{action} =~ s/( |-|,|\#|\/|\.$)/_/g;
@@ -338,8 +336,8 @@ sub header {
   $favicon
   $stylesheet
   $charset
-  <script src="js/jquery-1.7.2.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.8.23.custom.min.js" type="text/javascript"></script>
+  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
   <script src="js/rma.js" type="text/javascript"></script>
 |;
   print q|
