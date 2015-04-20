@@ -1446,13 +1446,6 @@ sub create_dataset {
     <td><select name=encoding>$selectencoding{$form->{dbdriver}}</select></td>
 
   </tr>
-  
-  <tr>
-
-    <th align=right nowrap>LC_CTYPE/LC_COLLATE</th>
-    <td><select name=ctype><option value="de_CH.ISO-8859-1" selected="selected">de_CH.ISO-8859-1</option></select></td>
-
-  </tr>
 |;
   }
 
