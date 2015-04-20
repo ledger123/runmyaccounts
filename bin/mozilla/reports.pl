@@ -470,7 +470,7 @@ sub gl_list {
 
    @columns = qw(id transdate reference description name source debit credit balance);
    # if this is first time we are running this report.
-   $form->{sort} = '1' if !$form->{sort};
+   $form->{sort} = '5' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
@@ -486,7 +486,7 @@ sub gl_list {
 			credit => 9,
 			balance => 10
    );
-   my $sort_order = $form->sort_order(\@columns, \%ordinal);
+   my $sort_order = $form->sort_order(\@columns, \%ordinal);	# 5, 3
 
    # No. columns should always come first
    splice @columns, 0, 0, 'no';
