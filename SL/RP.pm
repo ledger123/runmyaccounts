@@ -1706,7 +1706,7 @@ sub reminder {
 	      JOIN address ad ON (ad.trans_id = c.id)
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
-	      WHERE a.duedate <= current_date
+	      WHERE a.duedate < current_date
 	      AND $where
 	      ORDER BY vc_id, transdate, invnumber|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
