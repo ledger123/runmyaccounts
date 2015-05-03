@@ -273,13 +273,15 @@ sub create_links {
   $ml = ($form->{ARAP} eq 'AR') ? 1 : -1;
   $ml *= -1 if $form->{type} =~ /_note/;
 
+  $form->{selecttax} = "\n";
   foreach $key (keys %{ $form->{"$form->{ARAP}_links"} }) {
     
     $form->{"select$key"} = "";
     foreach $ref (@{ $form->{"$form->{ARAP}_links"}{$key} }) {
       if ($key eq "$form->{ARAP}_tax") {
 	$form->{"select$form->{ARAP}_tax_$ref->{accno}"} = $form->escape("$ref->{accno}--$ref->{description}",1);
-	next;
+    $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n";
+    next;
       }
       $form->{"select$key"} .= "$ref->{accno}--$ref->{description}\n";
     }
@@ -346,6 +348,7 @@ sub create_links {
     }
   }
   
+  $form->{"selecttax"} = $form->escape($form->{selecttax},1);
   if ($form->{paidaccounts}) {
     $i = $form->{paidaccounts} + 1;
   } else {
@@ -749,6 +752,7 @@ $(document).on("click", ":submit", function(e){
 	  <th>|.$locale->text('Amount').qq|</th>
 	  <th></th>
 	  <th>|.$locale->text('Account').qq|</th>
+      <th>|.$locale->text('Tax').qq|</th>
 	  <th>|.$locale->text('Line Item').qq|</th>
 	  $project
 	</tr>
@@ -771,6 +775,8 @@ $(document).on("click", ":submit", function(e){
     } else {
       $description = qq|<td><input name="description_$i" size=40 value="|.$form->quote($form->{"description_$i"}).qq|"></td>|;
     }
+
+    $linetax = qq|<td><select name="tax_$i">|.$form->select_option($form->{selecttax}, $form->{"tax_$i"}).qq|</select></td>|;
     
     $form->{subtotal} += $form->{"amount_$i"};
     
@@ -783,6 +789,7 @@ $(document).on("click", ":submit", function(e){
 	  <td><select name="$form->{ARAP}_amount_$i">|
 	  .$form->select_option($form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"})
 	  .qq|</select></td>
+      $linetax
 	  $description
 	  $project
 	</tr>
