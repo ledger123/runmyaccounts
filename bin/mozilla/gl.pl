@@ -116,11 +116,13 @@ sub edit {
   $form->check_exchangerate(\%myconfig, $form->{currency}, $form->{transdate});
 
   $i = 1;
+
+  my $dbh = $form->dbconnect(\%myconfig);
   foreach $ref (@{ $form->{GL} }) {
     $form->{"accno_$i"} = "$ref->{accno}--$ref->{description}";
 
     $form->{"projectnumber_$i"} = "$ref->{projectnumber}--$ref->{project_id}" if $ref->{project_id};
-    for (qw(fx_transaction source memo cleared)) { $form->{"${_}_$i"} = $ref->{$_} }
+    for (qw(fx_transaction source memo cleared tax)) { $form->{"${_}_$i"} = $ref->{$_} }
     
     if ($ref->{amount} < 0) {
       $form->{totaldebit} -= $ref->{amount};
@@ -130,8 +132,21 @@ sub edit {
       $form->{"credit_$i"} = $ref->{amount};
     }
 
+    if ($ref->{tax} and !$ref->{taxamount}){
+        my ($tax_accno, $null) = split(/--/, $ref->{tax});
+        ($tax_rate) = $dbh->selectrow_array(qq|
+                SELECT rate 
+                FROM tax 
+                WHERE chart_id = (SELECT id FROM chart WHERE accno = '$tax_accno')
+                AND (validto IS NULL OR validto <= '$form->{transdate}')|
+        );
+        $taxamount = $form->round_amount(($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate), $form->{precision});
+        $form->{"taxamount_$i"} = $taxamount;
+    }
+
     $i++;
   }
+  $dbh->disconnect;
 
   $form->{rowcount} = $i;
   $form->{focus} = "debit_$i";
@@ -174,6 +189,22 @@ sub create_links {
     for (@{ $form->{all_project} }) { $form->{selectprojectnumber} .= qq|$_->{projectnumber}--$_->{id}\n| }
   }
 
+  # tax accounts
+  my $dbh = $form->dbconnect(\%myconfig);
+  my $sth = $dbh->prepare(qq|
+         SELECT accno, description FROM chart WHERE id IN 
+           (SELECT chart_id FROM tax WHERE validto >= '$form->{transdate}' OR validto IS NULL)
+         ORDER BY accno
+         |
+  );
+  $sth->execute;
+  $form->{selecttax} = "\n";
+  while (my $row = $sth->fetchrow_hashref(NAME_lc)){
+     $form->{selecttax} .= "$row->{accno}--$row->{description}\n";
+  }
+  $sth->finish;
+  $dbh->disconnect;
+
   # departments
   if (@{ $form->{all_department} }) {
     if ($myconfig{department_id} and $myconfig{role} eq 'user'){
@@ -185,7 +216,7 @@ sub create_links {
     }
   }
 
-  for (qw(department projectnumber accno currency)) { $form->{"select$_"} = $form->escape($form->{"select$_"},1) }
+  for (qw(department projectnumber accno currency tax)) { $form->{"select$_"} = $form->escape($form->{"select$_"},1) }
   
 }
 
@@ -1534,10 +1565,11 @@ sub update {
 
   @a = ();
   $count = 0;
-  @flds = qw(accno debit credit projectnumber source memo cleared);
+  @flds = qw(accno debit credit taxamount projectnumber tax source memo cleared);
 
+  # per line tax
   for $i (1 .. $form->{rowcount}) {
-    unless (($form->{"debit_$i"} eq "") && ($form->{"credit_$i"} eq "")) {
+    unless (($form->{"debit_$i"} eq "") && ($form->{"credit_$i"} eq "") || $form->{"tax_$i"} eq 'auto') {
       for (qw(debit credit)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
       
       push @a, {};
@@ -1556,6 +1588,27 @@ sub update {
 
   for $i ($count + 1 .. $form->{rowcount}) {
     for (@flds) { delete $form->{"${_}_$i"} }
+  }
+
+  my $dbh = $form->dbconnect(\%myconfig);
+  for $i ( 1 .. $count ) {
+     if ($form->{"tax_$i"} and $form->{"tax_$i"} ne 'auto' and !$form->{"taxamount_$i"}){
+        my ($tax_accno, $null) = split(/--/, $form->{"tax_$i"});
+           ($tax_rate) = $dbh->selectrow_array(qq|
+                SELECT rate 
+                FROM tax 
+                WHERE chart_id = (SELECT id FROM chart WHERE accno = '$tax_accno')
+                AND (validto IS NULL OR validto <= '$form->{transdate}')|
+            );
+            $j = ++$count;
+            for (@flds) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
+            $form->{"accno_$j"} = $form->{"tax_$i"};
+            $form->{"debit_$j"} *= $tax_rate;
+            $form->{"credit_$j"} *= $tax_rate;
+            $form->{"tax_$j"} = 'auto';
+            $taxamount = $form->round_amount(($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate), $form->{precision});
+            $form->{"taxamount_$i"} = $taxamount;
+     }
   }
 
   $form->{rowcount} = $count + 1;
@@ -1580,6 +1633,7 @@ sub display_rows {
 
   $form->{totaldebit} = 0;
   $form->{totalcredit} = 0;
+  $form->{totaltaxamount} = 0;
 
   for $i (1 .. $form->{rowcount}) {
 
@@ -1597,6 +1651,11 @@ sub display_rows {
     <td><select name="projectnumber_$i">|.$form->select_option($form->{selectprojectnumber}, undef, 1).qq|</select></td>|;
       }
 
+
+     if ( $form->{selecttax} ) {
+        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 1 ) . qq|</select></td>|;
+     }
+
       if ($form->{fxadj}) {
 	$fx_transaction = qq|
 	<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>
@@ -1607,6 +1666,7 @@ sub display_rows {
    
       $form->{totaldebit} += $form->{"debit_$i"};
       $form->{totalcredit} += $form->{"credit_$i"};
+      $form->{totaltaxamount} += $form->{"taxamount_$i"};
 
       for (qw(debit credit)) { $form->{"${_}_$i"} = ($form->{"${_}_$i"}) ? $form->format_amount(\%myconfig, $form->{"${_}_$i"}, $form->{precision}) : "" }
 
@@ -1620,6 +1680,11 @@ sub display_rows {
 	  $project = qq|<td>$project</td>|;
 	}
 
+    if ( $form->{selecttax} ) {
+        $tax = $form->{"tax_$i"};
+        $tax = qq|<td>$tax</td>|;
+    }
+
 	if ($form->{fxadj}) {
 	  $checked = ($form->{"fx_transaction_$i"}) ? "1" : "";
 	  $x = ($checked) ? "x" : "";
@@ -1628,7 +1693,7 @@ sub display_rows {
 |;
 	}
       
-	$form->hide_form(map { "${_}_$i"} qw(accno projectnumber));
+	$form->hide_form(map { "${_}_$i"} qw(accno projectnumber tax));
 	
       } else {
 	
@@ -1639,6 +1704,10 @@ sub display_rows {
 	  $project = qq|
       <td><select name="projectnumber_$i">|.$form->select_option($form->{selectprojectnumber}, undef, 1).qq|</select></td>|;
 	}
+
+    if ( $form->{selecttax} ) {
+        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 0 ) . qq|</select></td>|;
+    }
 
 	if ($form->{fxadj}) {
 	  $fx_transaction = qq|
@@ -1655,6 +1724,8 @@ sub display_rows {
     <td><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
     $source
     $memo
+    $tax
+    <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>
     $project
   </tr>
 |;
@@ -1721,6 +1792,11 @@ sub form_header {
 	  <th class=listheading>|.$locale->text('Project').qq|</th>
 | if $form->{selectprojectnumber};
 
+   $tax = qq| 
+	  <th class=listheading>| . $locale->text('Tax Included') . qq|</th>
+	  <th class=listheading>| . $locale->text('Tax Amount') . qq|</th>
+| if $form->{selecttax};
+
   if ($form->{fxadj}) {
     $fx_transaction = qq|
           <th class=listheading>|.$locale->text('FX').qq|</th>
@@ -1750,7 +1826,7 @@ sub form_header {
 |;
 
   $form->hide_form(qw(id fxadj closedto locked oldtransdate oldcurrency recurring batch batchid batchnumber batchdescription defaultcurrency fxbuy fxsell precision));
-  $form->hide_form(map { "select$_" } qw(accno department currency));
+  $form->hide_form(map { "select$_" } qw(accno department currency tax));
   
   print qq|
 <input type=hidden name=title value="|.$form->quote($form->{title}).qq|">
@@ -1794,6 +1870,7 @@ sub form_header {
 	  <th class=listheading>|.$locale->text('Credit').qq|</th>
 	  <th class=listheading>|.$locale->text('Source').qq|</th>
 	  <th class=listheading>|.$locale->text('Memo').qq|</th>
+      $tax
 	  $project
 	</tr>
 |;
@@ -1810,6 +1887,11 @@ sub form_footer {
 	  <th>&nbsp;</th>
 | if $form->{selectprojectnumber};
 
+    $tax = qq|<th>&nbsp;</th>| if $form->{selecttax};
+    $taxamount = qq|
+	  <th class=listtotal align="right">|.$form->format_amount(\%myconfig, $form->{totaltaxamount}, 2).qq|</th>
+| if $form->{selecttax};
+
   if ($form->{fxadj}) {
     $fx_transaction = qq|
           <th>&nbsp;</th>
@@ -1824,6 +1906,8 @@ sub form_footer {
 	  <th class=listtotal align=right>$form->{totalcredit}</th>
 	  <th>&nbsp;</th>
 	  <th>&nbsp;</th>
+      $tax
+      $taxamount
 	  $project
         </tr>
       </table>
@@ -1963,6 +2047,33 @@ sub post {
       exit;
     }
   }
+
+
+  # Process per line tax information
+  $count = $form->{rowcount};
+  for my $i (1 .. $form->{rowcount}){
+        if ($form->{"taxamount_$i"}){
+           $j = $count++;
+           $form->{"accno_$j"} = $form->{"tax_$i"};
+           $form->{"tax_$j"} = 'auto';
+
+           $form->{"source_$j"} = $form->{"source_$i"};
+           $form->{"memo_$j"} = $form->{"memo_$i"};
+           $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+
+           for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
+
+           if ($form->{"debit_$i"}){
+               $form->{"debit_$i"} -= $form->{"taxamount_$i"};
+               $form->{"debit_$j"} = $form->{"taxamount_$i"};
+           } else {
+               $form->{"credit_$i"} -= $form->{"taxamount_$i"};
+               $form->{"credit_$j"} = $form->{"taxamount_$i"};
+           }
+        }
+  }
+  $form->{rowcount} = $count;
+
 
   if ($form->{batch}) {
     $rc = VR->post_transaction(\%myconfig, \%$form);

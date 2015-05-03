@@ -285,13 +285,21 @@ sub create_links {
     $ml *= -1 if $form->{type} =~ /_note/;
 
     $form->{selecttax} = "\n";
+
+    my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%$form->{ARAP}_tax%' ORDER BY accno|;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+        $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n" if index($form->{taxaccounts}, $ref->{accno}) != -1;
+    }
+
     foreach $key ( keys %{ $form->{"$form->{ARAP}_links"} } ) {
 
         $form->{"select$key"} = "";
         foreach $ref ( @{ $form->{"$form->{ARAP}_links"}{$key} } ) {
             if ( $key eq "$form->{ARAP}_tax" ) {
                 $form->{"select$form->{ARAP}_tax_$ref->{accno}"} = $form->escape( "$ref->{accno}--$ref->{description}", 1 );
-                $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n";
                 next;
             }
             $form->{"select$key"} .= "$ref->{accno}--$ref->{description}\n";
@@ -351,6 +359,7 @@ sub create_links {
 
                     if ( $akey eq 'amount' ) {
                         $form->{"description_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{memo};
+                        $form->{"tax_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{tax};
                         $form->{rowcount}++;
                         $netamount += $form->{"${akey}_$i"};
 
@@ -673,7 +682,7 @@ $(document).on("click", ":submit", function(e){
         qw(id type printed emailed sort closedto locked oldtransdate oldduedate oldcurrency audittrail recurring checktax creditlimit creditremaining defaultcurrency rowcount oldterms batch batchid batchnumber batchdescription cdt precision remittancevoucher)
     );
     $form->hide_form("select$form->{vc}");
-    $form->hide_form( map { "select$_" } qw(formname currency department employee projectnumber language paymentmethod) );
+    $form->hide_form( map { "select$_" } qw(formname currency department employee projectnumber language paymentmethod tax) );
     $form->hide_form( "old$form->{vc}", "$form->{vc}_id", "old$form->{vc}number" );
     $form->hide_form( map { "select$_" } ( "$form->{ARAP}_amount", "$form->{ARAP}", "$form->{ARAP}_paid", "$form->{ARAP}_discount" ) );
 
@@ -774,8 +783,9 @@ $(document).on("click", ":submit", function(e){
 	  <th>| . $locale->text('Amount') . qq|</th>
 	  <th></th>
 	  <th>| . $locale->text('Account') . qq|</th>
-      <th>| . $locale->text('Tax') . qq|</th>
 	  <th>| . $locale->text('Line Item') . qq|</th>
+      <th>| . $locale->text('Tax') . qq|</th>
+      <th>| . $locale->text('Tax Amount') . qq|</th>
 	  $project
 	</tr>
 |;
@@ -799,6 +809,7 @@ $(document).on("click", ":submit", function(e){
         }
 
         $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select></td>|;
+        $linetaxamount = qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
 
         $form->{subtotal} += $form->{"amount_$i"};
 
@@ -809,8 +820,9 @@ $(document).on("click", ":submit", function(e){
 	  <td></td>
 	  <td><select name="$form->{ARAP}_amount_$i">|
           . $form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select></td>
-      $linetax
 	  $description
+      $linetax
+      $linetaxamount
 	  $project
 	</tr>
 |;
@@ -1144,7 +1156,7 @@ sub update {
 
         $form->{exchangerate} = $form->parse_amount( \%myconfig, $form->{exchangerate} );
 
-        @flds  = ( "amount", "$form->{ARAP}_amount", "projectnumber", "description" );
+        @flds  = ( "amount", "$form->{ARAP}_amount", "projectnumber", "description", "tax" );
         $count = 0;
         @a     = ();
         for $i ( 1 .. $form->{rowcount} ) {
@@ -1161,7 +1173,26 @@ sub update {
         $form->redo_rows( \@flds, \@a, $count, $form->{rowcount} );
         $form->{rowcount} = $count + 1;
 
-        for ( 1 .. $form->{rowcount} ) { $form->{invtotal} += $form->{"amount_$_"} }
+        for $i (1 .. $form->{rowcount} ){
+            for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
+        }
+        for ( 1 .. $form->{rowcount} ) { 
+            if ($form->{"tax_$_"}){
+                ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
+                if (!$form->{"linetaxamount_$_"}){
+                    if ($form->{taxincluded}){
+                        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
+                    } else {
+                        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+                    }
+               }
+
+                $form->{"tax_$taxaccno"} += $form->{"linetaxamount_$_"};
+            } else {
+                $form->{"linetaxamount_$_"} = 0;
+            }
+            $form->{invtotal} += $form->{"amount_$_"} 
+        }
 
         if ( $form->{transdate} ne $form->{oldtransdate} || $form->{currency} ne $form->{oldcurrency} ) {
             $form->{exchangerate} = $form->check_exchangerate( \%myconfig, $form->{currency}, $form->{transdate}, ( $form->{ARAP} eq 'AR' ) ? 'buy' : 'sell' );
@@ -1331,6 +1362,12 @@ sub update {
     $form->{creditremaining} -= ( $form->{invtotal} - $totalpaid + $form->{oldtotalpaid} - $form->{oldinvtotal} ) * $ml;
     $form->{oldinvtotal}  = $form->{invtotal};
     $form->{oldtotalpaid} = $totalpaid;
+
+    if ($form->{taxincluded}){
+        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
+    } else {
+        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+    }
 
     &display_form;
 
