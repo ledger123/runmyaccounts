@@ -74,7 +74,7 @@ sub delete_transaction {
 
 sub post_transaction {
   my ($self, $myconfig, $form, $dbh) = @_;
-  
+
   my $null;
   my $project_id;
   my $department_id;
@@ -198,7 +198,7 @@ sub post_transaction {
     
     $debit = $form->parse_amount($myconfig, $form->{"debit_$i"});
     $credit = $form->parse_amount($myconfig, $form->{"credit_$i"});
-    $credit = $form->parse_amount($myconfig, $form->{"taxamount_$i"});
+    $taxamount = $form->parse_amount($myconfig, $form->{"taxamount_$i"});
     $taxamount *= 1;
 
     # extract accno
@@ -245,7 +245,7 @@ sub post_transaction {
 	
 	if ($amount) {
 	  $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
-		      source, project_id, fx_transaction, memo, cleared, approved, tax)
+		      source, project_id, fx_transaction, memo, cleared, approved, tax, taxamount)
 		      VALUES
 		      ($form->{id}, (SELECT id
 				     FROM chart
@@ -253,7 +253,7 @@ sub post_transaction {
 		       $amount, '$form->{transdate}', |.
 		       $dbh->quote($form->{"source_$i"}) .qq|,
 		      $project_id, '1', |.$dbh->quote($form->{"memo_$i"}).qq|,
-		      $cleared, '$approved', '$form->{"tax_$i"}')|;
+		      $cleared, '$approved', '$form->{"tax_$i"}', $taxamount)|;
 	  $dbh->do($query) || $form->dberror($query);
 	}
       }
@@ -905,6 +905,7 @@ sub transaction {
     
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
       $ref->{amount} += $ref->{taxamount};
+      $ref->{taxamount} = abs($ref->{taxamount});
       $ref->{description} = $ref->{translation} if $ref->{translation};
       push @a, $ref;
       if ($ref->{fx_transaction}) {

@@ -122,26 +122,14 @@ sub edit {
     $form->{"accno_$i"} = "$ref->{accno}--$ref->{description}";
 
     $form->{"projectnumber_$i"} = "$ref->{projectnumber}--$ref->{project_id}" if $ref->{project_id};
-    for (qw(fx_transaction source memo cleared tax)) { $form->{"${_}_$i"} = $ref->{$_} }
-    
+    for (qw(fx_transaction source memo cleared tax taxamount)) { $form->{"${_}_$i"} = $ref->{$_} }
+
     if ($ref->{amount} < 0) {
       $form->{totaldebit} -= $ref->{amount};
       $form->{"debit_$i"} = $ref->{amount} * -1;
     } else {
       $form->{totalcredit} += $ref->{amount};
       $form->{"credit_$i"} = $ref->{amount};
-    }
-
-    if ($ref->{tax} and !$ref->{taxamount}){
-        my ($tax_accno, $null) = split(/--/, $ref->{tax});
-        ($tax_rate) = $dbh->selectrow_array(qq|
-                SELECT rate 
-                FROM tax 
-                WHERE chart_id = (SELECT id FROM chart WHERE accno = '$tax_accno')
-                AND (validto IS NULL OR validto <= '$form->{transdate}')|
-        );
-        $taxamount = $form->round_amount(($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate), $form->{precision});
-        $form->{"taxamount_$i"} = $taxamount;
     }
 
     $i++;
@@ -1648,7 +1636,7 @@ sub display_rows {
 
 
      if ( $form->{selecttax} ) {
-        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 1 ) . qq|</select></td>|;
+        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>|;
      }
 
       if ($form->{fxadj}) {
@@ -1701,7 +1689,7 @@ sub display_rows {
 	}
 
     if ( $form->{selecttax} ) {
-        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, undef, 0 ) . qq|</select></td>|;
+        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>|;
     }
 
 	if ($form->{fxadj}) {
@@ -2019,7 +2007,7 @@ sub post {
   $transdate = $form->datetonum(\%myconfig, $form->{transdate});
 
   $form->error($locale->text('Cannot post transaction for a closed period!')) if ($transdate <= $form->{closedto});
-  
+
   # add up debits and credits
   for $i (1 .. $form->{rowcount}) {
     $dr = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
@@ -2067,8 +2055,7 @@ sub post {
            }
         }
   }
-  $form->{rowcount} = $count;
-
+  $form->{rowcount} = $j;
 
   if ($form->{batch}) {
     $rc = VR->post_transaction(\%myconfig, \%$form);
