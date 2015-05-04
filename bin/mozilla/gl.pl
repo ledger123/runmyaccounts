@@ -1569,7 +1569,7 @@ sub update {
 
   # per line tax
   for $i (1 .. $form->{rowcount}) {
-    unless (($form->{"debit_$i"} eq "") && ($form->{"credit_$i"} eq "") || $form->{"tax_$i"} eq 'auto') {
+    unless (($form->{"debit_$i"} eq "") && ($form->{"credit_$i"} eq "")) {
       for (qw(debit credit)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
       
       push @a, {};
@@ -1592,7 +1592,7 @@ sub update {
 
   my $dbh = $form->dbconnect(\%myconfig);
   for $i ( 1 .. $count ) {
-     if ($form->{"tax_$i"} and $form->{"tax_$i"} ne 'auto' and !$form->{"taxamount_$i"}){
+     if ($form->{"tax_$i"} and !$form->{"taxamount_$i"}){
         my ($tax_accno, $null) = split(/--/, $form->{"tax_$i"});
            ($tax_rate) = $dbh->selectrow_array(qq|
                 SELECT rate 
@@ -1600,16 +1600,11 @@ sub update {
                 WHERE chart_id = (SELECT id FROM chart WHERE accno = '$tax_accno')
                 AND (validto IS NULL OR validto <= '$form->{transdate}')|
             );
-            $j = ++$count;
-            for (@flds) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
-            $form->{"accno_$j"} = $form->{"tax_$i"};
-            $form->{"debit_$j"} *= $tax_rate;
-            $form->{"credit_$j"} *= $tax_rate;
-            $form->{"tax_$j"} = 'auto';
             $taxamount = $form->round_amount(($form->{"debit_$i"} + $form->{"credit_$i"}) - ($form->{"debit_$i"} + $form->{"credit_$i"}) / (1 + $tax_rate), $form->{precision});
             $form->{"taxamount_$i"} = $taxamount;
      }
   }
+  $dbh->disconnect;
 
   $form->{rowcount} = $count + 1;
 
