@@ -128,3 +128,6 @@ CREATE TABLE partsattr (
     hotnew VARCHAR(3)
 );
 
+ALTER TABLE acc_trans ADD tax TEXT;
+ALTER TABLE acc_trans ADD taxamount float;
+

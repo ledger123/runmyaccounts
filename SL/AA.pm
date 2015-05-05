@@ -140,7 +140,10 @@ sub post_transaction {
 	project_id => $project_id,
 	description => $form->{"description_$i"},
 	cleared => $cleared,
-	fx_transaction => 0 };
+	fx_transaction => 0,
+    tax => $form->{"tax_$i"},
+    taxamount => $form->{"linetaxamount_$i"},
+    };
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
 	$amount = $amount{amount}{$i} - $amount{fxamount}{$i};
@@ -150,7 +153,10 @@ sub post_transaction {
 	  project_id => $project_id,
 	  description => $form->{"description_$i"},
 	  cleared => $cleared,
-	  fx_transaction => 1 };
+	  fx_transaction => 1, 
+      tax => $form->{"tax_$i"},
+      taxamount => $form->{"linetaxamount_$i"},
+        };
       }
 
       $invnetamount += $amount{amount}{$i};
@@ -339,13 +345,14 @@ sub post_transaction {
     # insert detail records in acc_trans
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
     if ($ref->{amount}) {
+      $ref->{taxamount} *= 1;
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
-		  project_id, memo, fx_transaction, cleared, approved)
+		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount)
 		  VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$ref->{accno}'),
 		  $ref->{amount} * $ml * $arapml, '$form->{transdate}',
 		  $ref->{project_id}, |.$dbh->quote($ref->{description}).qq|,
-		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved')|;
+		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $ref->{taxamount})|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
