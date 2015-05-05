@@ -179,19 +179,24 @@ sub create_links {
 
   # tax accounts
   my $dbh = $form->dbconnect(\%myconfig);
-  my $sth = $dbh->prepare(qq|
-         SELECT accno, description FROM chart WHERE id IN 
-           (SELECT chart_id FROM tax WHERE validto >= '$form->{transdate}' OR validto IS NULL)
-         ORDER BY accno
-         |
-  );
-  $sth->execute;
-  $form->{selecttax} = "\n";
-  while (my $row = $sth->fetchrow_hashref(NAME_lc)){
-     $form->{selecttax} .= "$row->{accno}--$row->{description}\n";
+  my ($linetax) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='linetax'");
+
+  if ($linetax){
+      my $sth = $dbh->prepare(qq|
+             SELECT accno, description FROM chart WHERE id IN 
+               (SELECT chart_id FROM tax WHERE validto >= '$form->{transdate}' OR validto IS NULL)
+             ORDER BY accno
+             |
+      );
+      $sth->execute;
+      $form->{selecttax} = "\n";
+      while (my $row = $sth->fetchrow_hashref(NAME_lc)){
+         $form->{selecttax} .= "$row->{accno}--$row->{description}\n";
+      }
+      $sth->finish;
   }
-  $sth->finish;
   $dbh->disconnect;
+
 
   # departments
   if (@{ $form->{all_department} }) {
@@ -1636,7 +1641,9 @@ sub display_rows {
 
 
      if ( $form->{selecttax} ) {
-        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>|;
+        $tax = qq|
+            <td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
+            <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
      }
 
       if ($form->{fxadj}) {
@@ -1708,7 +1715,6 @@ sub display_rows {
     $source
     $memo
     $tax
-    <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>
     $project
   </tr>
 |;

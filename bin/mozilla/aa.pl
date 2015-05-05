@@ -284,14 +284,16 @@ sub create_links {
     $ml        = ( $form->{ARAP} eq 'AR' ) ? 1 : -1;
     $ml *= -1 if $form->{type} =~ /_note/;
 
-    $form->{selecttax} = "\n";
-
-    my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%$form->{ARAP}_tax%' ORDER BY accno|;
     my $dbh = $form->dbconnect(\%myconfig);
-    my $sth = $dbh->prepare($query);
-    $sth->execute || $form->dberror($query);
-    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-        $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n" if index($form->{taxaccounts}, $ref->{accno}) != -1;
+    my ($linetax) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='linetax'");
+    if ($linetax){
+        $form->{selecttax} = "\n";
+        my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%$form->{ARAP}_tax%' ORDER BY accno|;
+        my $sth = $dbh->prepare($query);
+        $sth->execute || $form->dberror($query);
+        while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+            $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n" if index($form->{taxaccounts}, $ref->{accno}) != -1;
+        }
     }
 
     foreach $key ( keys %{ $form->{"$form->{ARAP}_links"} } ) {
@@ -779,14 +781,18 @@ $(document).on("click", ":submit", function(e){
 |;
     }
 
+    $linetax = qq|
+      <th>| . $locale->text('Tax') . qq|</th>
+      <th>| . $locale->text('Tax Amount') . qq|</th>
+| if $form->{selecttax};
+
     print qq|
 	<tr>
 	  <th>| . $locale->text('Amount') . qq|</th>
 	  <th></th>
 	  <th>| . $locale->text('Account') . qq|</th>
 	  <th>| . $locale->text('Line Item') . qq|</th>
-      <th>| . $locale->text('Tax') . qq|</th>
-      <th>| . $locale->text('Tax Amount') . qq|</th>
+      $linetax
 	  $project
 	</tr>
 |;
@@ -809,8 +815,10 @@ $(document).on("click", ":submit", function(e){
             $description = qq|<td><input name="description_$i" size=40 value="| . $form->quote( $form->{"description_$i"} ) . qq|"></td>|;
         }
 
-        $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select></td>|;
-        $linetaxamount = qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
+        if ($form->{selecttax}){
+            $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select></td>|;
+            $linetaxamount = qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
+        }
 
         $form->{subtotal} += $form->{"amount_$i"};
 
