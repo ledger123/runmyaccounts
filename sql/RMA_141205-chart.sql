@@ -377,5 +377,18 @@ INSERT INTO curr (rn, curr, precision) VALUES (1,'CHF',2);
 INSERT INTO curr (rn, curr, precision) VALUES (2,'EUR',2);
 INSERT INTO curr (rn, curr, precision) VALUES (3,'USD',2);
 INSERT INTO curr (rn, curr, precision) VALUES (4,'GBP',2);
+INSERT INTO curr (rn, curr, precision) VALUES (5,'JPY',0);
+INSERT INTO curr (rn, curr, precision) VALUES (6,'CAD',2);
+INSERT INTO curr (rn, curr, precision) VALUES (7,'AUD',2);
+INSERT INTO curr (rn, curr, precision) VALUES (8,'CNY',2);
+INSERT INTO curr (rn, curr, precision) VALUES (9,'SGD',2);
+INSERT INTO curr (rn, curr, precision) VALUES (10,'HKD',2);
+INSERT INTO curr (rn, curr, precision) VALUES (11,'SEK',2);
+INSERT INTO curr (rn, curr, precision) VALUES (12,'DKK',2);
+INSERT INTO curr (rn, curr, precision) VALUES (13,'NOK',2);
+INSERT INTO curr (rn, curr, precision) VALUES (14,'PLN',2);
+INSERT INTO curr (rn, curr, precision) VALUES (15,'RUB',2);
+INSERT INTO curr (rn, curr, precision) VALUES (16,'RSD',2);
+INSERT INTO curr (rn, curr, precision) VALUES (17,'TRY',2);
 
 UPDATE chart SET allow_gl = false WHERE accno IN ('1100','1101','1102','2000');
