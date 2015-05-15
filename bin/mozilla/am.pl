@@ -2053,6 +2053,7 @@ sub defaults {
   
   $checked{cash} = "checked" if $form->{method} eq 'cash';
   $checked{cdt} = "checked" if $form->{cdt};
+  $checked{linetax} = "checked" if $form->{linetax};
   $checked{name} = "checked";
   if ($form->{namesbynumber}) {
     $checked{name} = "";
@@ -2110,6 +2111,10 @@ sub defaults {
 	<tr>
 	  <th align=right>|.$locale->text('Cash Discount').qq|</th>
 	  <td><input name=cdt class=checkbox type=checkbox value="1" $checked{cdt}>&nbsp;|.$locale->text('Taxable').qq|</td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('Line Tax').qq|</th>
+	  <td><input name=linetax class=checkbox type=checkbox value="1" $checked{linetax}>&nbsp;|.$locale->text('Yes').qq|</td>
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Sort Names by').qq|</th>
@@ -2229,7 +2234,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact";
   
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 

@@ -555,6 +555,28 @@ sub post_transaction {
     }
   }
 
+  # armaghan 13/05/2015 Fix for rounding issue
+  if ($invamount eq $paid){
+          my $invamount2 = $dbh->selectrow_array("
+              SELECT round(sum(amount)::numeric,2)
+              FROM acc_trans ac
+              JOIN chart c ON ac.chart_id = c.id
+              WHERE trans_id=$form->{id}
+              AND c.link LIKE '$ARAP'
+          ");
+          if ($invamount2){
+              my ($transdate) = $dbh->selectrow_array("select max(transdate) from acc_trans where trans_id = $form->{id}");
+              ($accno) = split /--/, $form->{$ARAP};
+              $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
+                    VALUES ($form->{id}, (SELECT id FROM chart WHERE accno = '$accno'),
+                    $invamount2 * -1 * $ml * $arapml, '$transdate', '$approved')|;
+              $dbh->do($query) || $form->dberror($query);
+              $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
+                    VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2 * $ml * $arapml, '$transdate', '$approved')|;
+              $dbh->do($query) || $form->dberror($query);
+          }
+  };
+
   # save printed and queued
   $form->save_status($dbh);
   
