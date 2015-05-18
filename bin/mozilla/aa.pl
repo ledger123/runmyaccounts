@@ -425,7 +425,7 @@ sub create_links {
 
     }
     else {
-        for (@taxaccounts) { $form->{"calctax_$_"} = 1 }
+        for (@taxaccounts) { $form->{"calctax_$_"} = !$linetax } # Uncheck summary tax accounts by default when linetax is enabled.
     }
 
     for (qw(payment discount)) { $form->{"${_}_accno"} = $form->escape( $form->{"${_}_accno"}, 1 ) }
