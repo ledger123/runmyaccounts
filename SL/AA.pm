@@ -360,7 +360,7 @@ sub post_transaction {
   # save taxes
   foreach $ref (@{ $form->{acc_trans}{taxes} }) {
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
-    if ($ref->{amount}) {
+    #if ($ref->{amount}) {
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		  transdate, fx_transaction, approved)
 		  VALUES ($form->{id},
@@ -369,7 +369,7 @@ sub post_transaction {
 		  $ref->{amount} * $ml * $arapml, '$ref->{transdate}',
 		  '$ref->{fx_transaction}', '$approved')|;
       $dbh->do($query) || $form->dberror($query);
-    }
+      #}
   }
 
 
