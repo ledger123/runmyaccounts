@@ -1672,7 +1672,9 @@ sub display_rows {
 
     if ( $form->{selecttax} ) {
         $tax = $form->{"tax_$i"};
-        $tax = qq|<td>$tax</td>|;
+        $tax = qq|
+            <td>$tax</td>
+            <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
     }
 
 	if ($form->{fxadj}) {
@@ -1696,7 +1698,9 @@ sub display_rows {
 	}
 
     if ( $form->{selecttax} ) {
-        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>|;
+        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
+        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
+ 
     }
 
 	if ($form->{fxadj}) {
