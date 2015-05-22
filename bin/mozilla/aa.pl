@@ -121,7 +121,6 @@ sub edit {
     }
 
     &update;
-    &display_form;
 
 }
 
