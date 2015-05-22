@@ -120,6 +120,7 @@ sub edit {
         $form->{title} = $locale->text($title);
     }
 
+    &update;
     &display_form;
 
 }
