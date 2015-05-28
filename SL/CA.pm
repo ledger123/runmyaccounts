@@ -272,7 +272,7 @@ sub all_transactions {
 
     # get all transactions
     $query .= qq|$union
-                 SELECT a.id, a.reference, a.description, ac.transdate,
+                 SELECT a.id, a.reference, a.description, '' AS name, ac.transdate,
 	         $false AS invoice, ac.amount, 'gl' as module, ac.cleared,
 		 ac.source,
 		 '' AS till, ac.chart_id, '0' AS vc_id
@@ -289,7 +289,7 @@ sub all_transactions {
       
              UNION ALL
       
-                 SELECT a.id, a.invnumber, c.name, ac.transdate,
+                 SELECT a.id, a.invnumber, a.description, c.name, ac.transdate,
 	         a.invoice, ac.amount, 'ar' as module, ac.cleared,
 		 ac.source,
 		 a.till, ac.chart_id, c.id AS vc_id
@@ -307,7 +307,7 @@ sub all_transactions {
       
              UNION ALL
       
-                 SELECT a.id, a.invnumber, v.name, ac.transdate,
+                 SELECT a.id, a.invnumber, a.description, v.name, ac.transdate,
 	         a.invoice, ac.amount, 'ap' as module, ac.cleared,
 		 ac.source,
 		 a.till, ac.chart_id, v.id AS vc_id

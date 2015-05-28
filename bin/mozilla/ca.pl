@@ -243,7 +243,7 @@ sub list_transactions {
 
   # construct href
   $href = "$form->{script}?action=list_transactions&department=$department&projectnumber=$projectnumber&title=$title";
-  for (qw(path oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno)) { $href .= "&$_=$form->{$_}" }
+  for (qw(path oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno l_name)) { $href .= "&$_=$form->{$_}" }
 
   $drilldown = $href;
   $drilldown .= "&sort=$form->{sort}";
@@ -262,6 +262,7 @@ sub list_transactions {
   $column_header{transdate} = qq|<th><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</a></th>|;
   $column_header{reference} = qq|<th><a class=listheading href=$href&sort=reference>|.$locale->text('Reference').qq|</a></th>|;
   $column_header{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
+  $column_header{name} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Company Name').qq|</a></th>|;
   $column_header{cleared} = qq|<th class=listheading>|.$locale->text('R').qq|</th>|;
   $column_header{source} = qq|<th class=listheading>|.$locale->text('Source').qq|</th>|;
   $column_header{debit} = qq|<th class=listheading>|.$locale->text('Debit').qq|</th>|;
@@ -273,6 +274,14 @@ sub list_transactions {
   if ($form->{link} =~ /_paid/) {
     @columns = qw(transdate reference description source cleared debit credit);
   }
+
+  if ($form->{l_name}){
+      @columns = qw(transdate reference description name debit credit);
+      if ($form->{link} =~ /_paid/) {
+        @columns = qw(transdate reference description name source cleared debit credit);
+      }
+  }
+
   push @columns, "accno" if $form->{l_accno};
   @column_index = $form->sort_columns(@columns);
 
@@ -407,12 +416,9 @@ sub list_transactions {
     $column_data{transdate} = qq|<td nowrap>$ca->{transdate}</td>|;
     $column_data{reference} = qq|<td>$href</td>|;
 
-    if ($ca->{vc_id}) {
-      $href = "<a href=ct.pl?path=$form->{path}&action=edit&id=$ca->{vc_id}&db=$ca->{db}&login=$form->{login}&callback=$form->{callback}>$ca->{description}</a>";
-      $column_data{description} = qq|<td>$href</td>|;
-    } else {
-      $column_data{description} = qq|<td>$ca->{description}&nbsp;</td>|;
-    }
+    $href = "<a href=ct.pl?path=$form->{path}&action=edit&id=$ca->{vc_id}&db=$ca->{db}&login=$form->{login}&callback=$form->{callback}>$ca->{name}</a>";
+    $column_data{name} = qq|<td>$href</td>|;
+    $column_data{description} = qq|<td>$ca->{description}&nbsp;</td>|;
     
     $column_data{cleared} = ($ca->{cleared}) ? qq|<td>*</td>| : qq|<td>&nbsp;</td>|;
     $column_data{source} = qq|<td>$ca->{source}&nbsp;</td>|;
