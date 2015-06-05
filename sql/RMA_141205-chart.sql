@@ -282,7 +282,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('7010','Aufwand aus Nebenbetrieb','A','E','','701',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8','AUSSERORDENTLICHER UND BETRIEBSFREMDER ERFOLG, STEUERN','H','E','','800',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('800','BETRIEBSFREMDER AUFWAND','H','E','','800',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8000','Betriebsfremder Aufwand','A','E','','800',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8000','Betriebsfremder Aufwand','A','E','AP_amount:AR_amount','800',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('810','BETRIEBSFREMDER ERTRAG','H','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8100','Betriebsfremder Ertrag','A','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('850','AUSSERORDENTLICHER AUFWAND','H','E','','850',false,true,'');
