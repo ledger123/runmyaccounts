@@ -140,7 +140,7 @@ sub all_transactions {
   my $false = ($myconfig->{dbdriver} =~ /Pg/) ? FALSE : q|'0'|;
   
   # Oracle workaround, use ordinal positions
-  my %ordinal = ( transdate => 4,
+  my %ordinal = ( transdate => 5,
 		  reference => 2,
 		  description => 3 );
 
