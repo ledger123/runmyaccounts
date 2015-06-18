@@ -1182,9 +1182,13 @@ sub update {
         $form->redo_rows( \@flds, \@a, $count, $form->{rowcount} );
         $form->{rowcount} = $count + 1;
 
-        for $i (1 .. $form->{rowcount} ){
-            for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
+        # reset tax amounts only when we are using per line vat taxes
+        if ($form->{selecttax}){
+            for $i (1 .. $form->{rowcount} ){
+                for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
+            }
         }
+
         for ( 1 .. $form->{rowcount} ) { 
             if ($form->{"tax_$_"}){
                 ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
