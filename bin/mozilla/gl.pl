@@ -1796,7 +1796,7 @@ sub form_header {
 |;
   }
 
-  $focus = ($form->{focus}) ? $form->{focus} : "debit_$form->{rowcount}";
+  $focus = ($form->{focus}) ? $form->{focus} : "accno_$form->{rowcount}";
   
   if ($form->{batch} && ! $form->{approved}) {
     $transdate = qq|
