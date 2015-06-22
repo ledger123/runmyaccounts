@@ -2023,8 +2023,8 @@ sub form_footer {
 	     'Pricelist' => { ndx => 18, key => 'P', value => $locale->text('Pricelist') },
 	     'New Number' => { ndx => 19, key => 'M', value => $locale->text('New Number') },
 	     'Delete' => { ndx => 19, key => 'D', value => $locale->text('Delete') },
+	     'Report' => { ndx => 20, value => $locale->text('Report') },
 	    );
-  
   
   %a = ();
   
@@ -2037,6 +2037,7 @@ sub form_footer {
 
       if ($form->{id}) {
 	$a{'Save as new'} = 1;
+	$a{'Report'} = 1;
 	if ($form->{status} eq 'orphaned') {
 	  $a{'Delete'} = 1;
 	}
@@ -2079,6 +2080,7 @@ sub form_footer {
 
       if ($form->{id}) {
 	$a{'Save as new'} = 1;
+	$a{'Report'} = 1;
 	if ($form->{status} eq 'orphaned') {
 	  $a{'Delete'} = 1;
 	}
@@ -2136,6 +2138,13 @@ sub form_footer {
 
 }
 
+sub report {
+    my $module = lc $form->{ARAP};
+    $form->{callback} = qq|$module.pl?action=search&due_checked=checked&$form->{db}number=$form->{"$form->{db}number"}&vc=$form->{db}&nextsub=transactions|;
+    for (qw(path login)){  $form->{callback} .= "&$_=$form->{$_}" }
+    #$form->error($form->{callback});
+    $form->redirect($locale->text('Report'));
+}
 
 sub shipping_address {
 

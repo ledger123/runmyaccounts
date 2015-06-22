@@ -1536,7 +1536,9 @@ sub yes {
 
 sub search {
 
+    my $old_number = $form->{"$form->{vc}number"}; # customer/vendor number is changed in $form->create_links
     $form->create_links( $form->{ARAP}, \%myconfig, $form->{vc} );
+    $form->{"$form->{vc}number"} = $old_number;
 
     $form->{"select$form->{ARAP}"} = "<option>\n";
     for ( @{ $form->{"$form->{ARAP}_links"}{ $form->{ARAP} } } ) { $form->{"select$form->{ARAP}"} .= "<option>" . $form->quote("$_->{accno}--$_->{description}") . "\n" }
@@ -1555,9 +1557,18 @@ sub search {
         $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> $vclabel|;
         $l_vendornumber   = qq|<input name="l_vendornumber" class=checkbox type=checkbox value=Y> $vcnumber|;
     }
+
     if ( @{ $form->{"all_$form->{vc}"} } ) {
         $form->{"select$form->{vc}"} = "";
-        for ( @{ $form->{"all_$form->{vc}"} } ) { $form->{"select$form->{vc}"} .= qq|<option value="| . $form->quote( $_->{name} ) . qq|--$_->{id}">$_->{name} ($_->{"$form->{vc}number"})\n| }
+        for ( @{ $form->{"all_$form->{vc}"} } ) {
+            $selected = '';
+            if ($_->{"$form->{vc}number"} eq $form->{"$form->{vc}number"}){
+                $selected = 'selected';
+            } else {
+                $selected = '';
+            }
+            $form->{"select$form->{vc}"} .= qq|<option value="| . $form->quote( $_->{name} ) . qq|--$_->{id}" $selected>$_->{name} ($_->{"$form->{vc}number"})\n| 
+        }
         $vc = qq|
               <tr>
 	        <th align=right nowrap>$vclabel</th>
@@ -1575,7 +1586,7 @@ sub search {
 	      </tr>
 	      <tr>
 	        <th align=right nowrap>$vcnumber</th>
-		<td colspan=3><input name="$form->{vc}number" size=35>
+		<td colspan=3><input name="$form->{vc}number" size=35 value='$form->{"$form->{vc}number"}'>
 		</td>
 	      </tr>
 |;
@@ -1751,7 +1762,7 @@ sub search {
     push @a, qq|<input name="l_paid" class=checkbox type=checkbox value=Y checked> | . $locale->text('Paid');
     push @a, qq|<input name="l_paymentmethod" class=checkbox type=checkbox value=Y> | . $locale->text('Payment Method');
     push @a, qq|<input name="l_duedate" class=checkbox type=checkbox value=Y> | . $locale->text('Due Date');
-    push @a, qq|<input name="l_due" class=checkbox type=checkbox value=Y> | . $locale->text('Due');
+    push @a, qq|<input name="l_due" class=checkbox type=checkbox value=Y $form->{due_checked}> | . $locale->text('Due');
     push @a, qq|<input name="l_memo" class=checkbox type=checkbox value=Y> | . $locale->text('Line Item');
     push @a, qq|<input name="l_notes" class=checkbox type=checkbox value=Y> | . $locale->text('Notes');
     push @a, qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y> | . $locale->text('Internal Notes');
