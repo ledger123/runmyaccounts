@@ -116,6 +116,14 @@ sub create_links {
     $form->{selectemployee} = $form->escape($form->{selectemployee},1);
   }
 
+  $form->all_departments(\%myconfig);
+  if (@{ $form->{all_department} }) {
+     $form->{selectdepartment} = "\n";
+     $form->{department} = qq|$form->{department}--$form->{department_id}| if $form->{department_id};
+
+     for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+  }
+
 }
 
  
@@ -1650,6 +1658,16 @@ sub form_header {
 	  </td>
 |;
   }
+
+  $department = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Department').qq|</th>
+		<td><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+		</td>
+	      </tr>
+| if $form->{selectdepartment};
   
   $lang = qq|
           <th></th>
@@ -1889,6 +1907,7 @@ sub form_header {
         <tr valign=top>
 	  <td>
 	    <table>
+          $department
 	      $arapaccount
 	      $paymentaccount
 	      $discountaccount

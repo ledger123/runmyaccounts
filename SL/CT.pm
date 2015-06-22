@@ -70,6 +70,14 @@ sub create_links {
     }
     $sth->finish;
 
+    ($form->{department_id}, $form->{department}) = $dbh->selectrow_array(qq|
+        SELECT id, description 
+        FROM department 
+        WHERE id IN (
+            SELECT department_id FROM dpt_trans WHERE trans_id = $form->{id}
+        )
+    |);
+
     # check if it is orphaned
     $query = qq|SELECT a.id
               FROM $arap a
@@ -251,6 +259,10 @@ sub save {
   if ($form->{id}) {
     $query = qq|DELETE FROM $form->{db}tax
                 WHERE $form->{db}_id = $form->{id}|;
+    $dbh->do($query) || $form->dberror($query);
+
+    $query = qq|DELETE FROM dpt_trans
+                WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
 
     $query = qq|DELETE FROM shipto
@@ -443,6 +455,14 @@ sub save {
 				        WHERE accno = '$item'))|;
       $dbh->do($query) || $form->dberror($query);
     }
+  }
+
+  # save department
+  if ($form->{department}){
+     ($null, $form->{department_id}) = split /--/, $form->{department};
+     $form->{department_id} *= 1;
+     $query = qq|INSERT INTO dpt_trans (trans_id, department_id) VALUES ($form->{id}, $form->{department_id})|;
+     $dbh->do($query) || $form->dberror($query);
   }
 
   # add address
