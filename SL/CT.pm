@@ -640,6 +640,12 @@ sub search {
     $form->{l_invnumber} = $form->{l_ordnumber} = $form->{l_quonumber} = "";
   }
   
+  my $department_where;
+  if ($form->{department}){
+     ($null, $department_id) = split /--/, $form->{department};
+     $department_id *= 1;
+     $department_where = qq|AND c.id IN (SELECT trans_id FROM dpt_trans WHERE department_id = $department_id)|;
+  }
 
   my $query = qq|SELECT c.*, b.description AS business,
                  e.name AS employee, g.pricegroup, l.description AS language,
@@ -658,7 +664,8 @@ sub search {
 	      LEFT JOIN pricegroup g ON (c.pricegroup_id = g.id)
 	      LEFT JOIN language l ON (l.code = c.language_code)
 	      LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
-                 WHERE $where|;
+                 WHERE $where
+                 $department_where|;
 
   # redo for invoices, orders and quotations
   if ($form->{l_transnumber} || $form->{l_invnumber} || $form->{l_ordnumber} || $form->{l_quonumber}) {

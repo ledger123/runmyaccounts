@@ -491,6 +491,24 @@ sub search_name {
 	  <td><input name=employee size=32></td>
 |;
   }
+
+  $form->all_departments(\%myconfig);
+  if (@{ $form->{all_department} }) {
+     $form->{selectdepartment} = "\n";
+     $form->{department} = qq|$form->{department}--$form->{department_id}| if $form->{department_id};
+
+     for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+  }
+
+  $department = qq|
+              <tr>
+	        <th align="right" nowrap>|.$locale->text('Department').qq|</th>
+		<td><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+		</td>
+	      </tr>
+| if $form->{selectdepartment};
  
   $focus = "name";
 
@@ -540,9 +558,9 @@ sub search_name {
 		<th align=right nowrap>|.$locale->text('Notes').qq|</th>
 		<td colspan=3><textarea name=notes rows=3 cols=32></textarea></td>
 	      </tr>
+      $department
 	    </table>
 	  </td>
-
 	  <td>
 	    <table>
 	      <tr>
@@ -735,6 +753,12 @@ sub list_names {
     $callback .= "&name=".$form->escape($form->{name},1);
     $href .= "&name=".$form->escape($form->{name});
     $option .= "\n<br>$vcname : $form->{name}";
+  }
+  if ($form->{department}) {
+    $callback .= "&department=".$form->escape($form->{department},1);
+    $href .= "&name=".$form->escape($form->{department});
+    ($department) = split /--/, $form->{department};
+    $option .= "\n<br>".$locale->text('Department')." : $department";
   }
   if ($form->{address}) {
     $callback .= "&address=".$form->escape($form->{address},1);
