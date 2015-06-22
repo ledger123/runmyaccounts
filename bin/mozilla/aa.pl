@@ -1544,7 +1544,7 @@ sub search {
     $vclabel          = $locale->text('Customer');
     $vcnumber         = $locale->text('Customer Number');
     $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> $vclabel|;
-    $l_customernumber = qq|<input name="l_customernumber" class=checkbox type=checkbox value=Y> $vcnumber|;
+    $l_customernumber = qq|<input name="l_customernumber" class=checkbox type=checkbox value=Y checked> $vcnumber|;
     $l_till           = qq|<input name="l_till" class=checkbox type=checkbox value=Y> | . $locale->text('Till');
 
     if ( $form->{vc} eq 'vendor' ) {
