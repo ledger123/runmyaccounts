@@ -1293,8 +1293,18 @@ sub get_name {
     }
     $sth->finish;
     $form->{rowcount} = $i if ($i && !$form->{type});
+
+    # armaghan 26/06/15 override department with the one specified for the customer
+    my ($department_id, $department) = $dbh->selectrow_array(qq|
+        SELECT id, description FROM department WHERE id IN (
+            SELECT department_id FROM dpt_trans WHERE trans_id = $form->{"$form->{vc}_id"}
+        )|
+    );
+    if ($department_id){
+       $form->{department} = "$department--$department_id";
+       $form->{department_id} = $department_id;
+    }
   }
-  
   $dbh->disconnect if $disconnect;
   
 }
