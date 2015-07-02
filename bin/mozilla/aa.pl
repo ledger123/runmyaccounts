@@ -783,21 +783,34 @@ $(document).on("click", ":submit", function(e){
         $project = '';
     }
 
-    $linetax = qq|
-      <th>| . $locale->text('Tax') . qq|</th>
-      <th>| . $locale->text('Tax Amount') . qq|</th>
-| if $form->{selecttax};
+    if ($form->{selecttax}){
+        if ($form->{selectprojectnumber}){
+            $linetax = qq|
+              <th>| . $locale->text('Tax') . ' / ' . $locale->text('Project') . qq|</th>
+              <th>| . $locale->text('Tax Amount') . qq|</th>
+              |;
+        } else {
+            $linetax = qq|
+              <th>| . $locale->text('Tax') . qq|</th>
+              <th>| . $locale->text('Tax Amount') . qq|</th>
+              |;
+        }
+    }
 
     print qq|
 	<tr>
 	  <th>| . $locale->text('Amount') . qq|</th>
 	  <th></th>
-	  <th>| . $locale->text('Account') . qq|</th>
 |;
 
-    print qq|<th>|.$locale->text('Description').qq|</th>| if !$form->{selecttax};
+   if ($form->{selecttax}){
+	  print qq|<th>| . $locale->text('Account') . qq| / | . $locale->text('Description') . qq|</th>|;
+   } else {
+	  print qq|<th>| . $locale->text('Account') . qq|</th>|;
+	  print qq|<th>| . $locale->text('Description') . qq|</th>|;
+   }
 
-    print qq|
+   print qq|
       $linetax
 	  $project
 	</tr>
