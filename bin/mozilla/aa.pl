@@ -2086,9 +2086,16 @@ sub transactions {
         $option   .= $locale->text('Paid Early');
     }
 
-    @columns = $form->sort_columns(
-        qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department)
-    );
+    @columns = qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department);
+
+    @columns = $form->sort_columns(@columns);
+
+    # Don't change column positions if it 'paid';
+    if ($form->{sort} eq 'paid'){
+       shift @columns;
+       push @columns, 'paid';
+    }
+
     pop @columns if $form->{department};
     unshift @columns, "runningnumber";
 
@@ -2144,6 +2151,7 @@ sub transactions {
     $column_data{tax}           = "<th class=listheading>" . $locale->text('Tax') . "</th>";
     $column_data{amount}        = "<th class=listheading>" . $locale->text('Total') . "</th>";
     $column_data{paid}          = "<th class=listheading>" . $locale->text('Paid') . "</th>";
+    $column_data{paid}          = "<th><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
     $column_data{paymentmethod} = "<th><a class=listheading href=$href&sort=paymentmethod>" . $locale->text('Payment Method') . "</a></th>";
     $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
     $column_data{due}           = "<th class=listheading>" . $locale->text('Due') . "</th>";

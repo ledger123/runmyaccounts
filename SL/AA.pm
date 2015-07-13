@@ -849,6 +849,7 @@ sub transactions {
 		  ordnumber => 3,
 		  transdate => 4,
 		  duedate => 5,
+		  paid => 8,
 		  datepaid => 10,
 		  shipvia => 14,
 		  waybill => 15,
