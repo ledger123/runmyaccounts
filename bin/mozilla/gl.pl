@@ -1641,8 +1641,9 @@ sub display_rows {
 
 
      if ( $form->{selecttax} ) {
-        $tax = qq|<td align="center"><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>|;
-        $taxamount = qq|<td><input name="taxamount_$i" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
+        $tax = qq|
+            <td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
+            <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
      }
 
       if ($form->{fxadj}) {
@@ -1671,8 +1672,9 @@ sub display_rows {
 
     if ( $form->{selecttax} ) {
         $tax = $form->{"tax_$i"};
-        $tax = qq|<td align="center">$tax</td>|;
-        $taxamount = qq|<td><input name="taxamount_$i" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
+        $tax = qq|
+            <td>$tax</td>
+            <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
     }
 
 	if ($form->{fxadj}) {
@@ -1696,10 +1698,9 @@ sub display_rows {
 	}
 
     if ( $form->{selecttax} ) {
-        $tax = qq|<td align="center"><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>|;
-        $taxamount = qq|<td><input name="taxamount_$i" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
-        $project2 = $project;
-        $project = ''; 
+        $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
+        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="|.$form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision}).qq|"></td>|;
+ 
     }
 
 	if ($form->{fxadj}) {
@@ -1709,7 +1710,7 @@ sub display_rows {
 	}
       }
     }
-
+    
     print qq|<tr valign=top>
     $accno
     $fx_transaction
@@ -1717,15 +1718,9 @@ sub display_rows {
     <td><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
     $source
     $memo
+    $tax
     $project
   </tr>
-|;
-
-    print qq|<tr valign="top">
-    $tax
-    $taxamount
-    $project2
-    </tr>
 |;
 
     $form->hide_form("cleared_$i");
@@ -1785,6 +1780,15 @@ sub form_header {
 	  <th align=right nowrap>|.$locale->text('Department').qq|</th>
 	  <td><select name=department>|.$form->select_option($form->unescape($form->{selectdepartment}), $form->{department}, 1).qq|</select></td>
 | if $form->{selectdepartment};
+
+  $project = qq| 
+	  <th class=listheading>|.$locale->text('Project').qq|</th>
+| if $form->{selectprojectnumber};
+
+   $tax = qq| 
+	  <th class=listheading>| . $locale->text('Tax Included') . qq|</th>
+	  <th class=listheading>| . $locale->text('Tax Amount') . qq|</th>
+| if $form->{selecttax};
 
   if ($form->{fxadj}) {
     $fx_transaction = qq|
@@ -1853,35 +1857,12 @@ sub form_header {
     <td>
       <table width=100%>
 	<tr class=listheading>
-|;
-
-   $taxdisabled = qq| 
-	  <th class=listheading>| . $locale->text('Tax Included') . qq|</th>
-	  <th class=listheading>| . $locale->text('Tax Amount') . qq|</th>
-| if $form->{selecttax};
-
-   if ($form->{selecttax}){
-       $account = qq|<th class=listheading>|.$locale->text('Account').qq|<br>|.$locale->text('Tax Included').qq|</th>|;
-       $debit = qq|<th class=listheading>|.$locale->text('Debit').qq|<br>|.$locale->text('Tax Amount').qq|</th>|;
-       if ($form->{selectprojectnumber}){
-            $credit = qq|<th class=listheading>|.$locale->text('Credit').qq|<br/>|.$locale->text('Project').qq|</th>|;
-       } else {
-            $credit = qq|<th class=listheading>|.$locale->text('Credit').qq|</th>|;
-       }
-   } else {
-       $account = qq|<th class=listheading>|.$locale->text('Account').qq|</th>|;
-       $debit = qq|<th class=listheading>|.$locale->text('Debit').qq|</th>|;
-       $credit = qq|<th class=listheading>|.$locale->text('Credit').qq|</th>|;
-       $project = qq|<th class=listheading>|.$locale->text('Project').qq|</th>|;
-   }
-
-   print qq|
-      $account
+	  <th class=listheading>|.$locale->text('Account').qq|</th>
 	  $fx_transaction
-      $debit
-      $credit
-      <th class=listheading>|.$locale->text('Source').qq|</th>
-      <th class=listheading>|.$locale->text('Memo').qq|</th>
+	  <th class=listheading>|.$locale->text('Debit').qq|</th>
+	  <th class=listheading>|.$locale->text('Credit').qq|</th>
+	  <th class=listheading>|.$locale->text('Source').qq|</th>
+	  <th class=listheading>|.$locale->text('Memo').qq|</th>
       $tax
 	  $project
 	</tr>
