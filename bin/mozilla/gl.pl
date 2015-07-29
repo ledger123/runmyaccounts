@@ -1696,30 +1696,24 @@ sub display_rows {
 
     for $i ( 1 .. $form->{rowcount} ) {
 
-        $source = qq|
-    <td><input name="source_$i" size=10 value="| . $form->quote( $form->{"source_$i"} ) . qq|"></td>|;
-        $memo = qq|
-    <td><input name="memo_$i" value="| . $form->quote( $form->{"memo_$i"} ) . qq|"></td>|;
+        $source = qq|<td><input name="source_$i" size=10 value="| . $form->quote( $form->{"source_$i"} ) . qq|"></td>|;
+        $memo = qq|<td><input name="memo_$i" value="| . $form->quote( $form->{"memo_$i"} ) . qq|"></td>|;
 
         if ($init) {
-            $accno = qq|
-      <td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
+            $accno = qq|<td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
 
             if ( $form->{selectprojectnumber} ) {
-                $project = qq|
-    <td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+                $project = qq|<td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
             }
 
             if ( $form->{selecttax} ) {
                 $tax = qq|
-            <td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
-            <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>|;
+                    <td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
+                    <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>|;
             }
 
             if ( $form->{fxadj} ) {
-                $fx_transaction = qq|
-	<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>
-|;
+                $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>|;
             }
 
         }
@@ -1744,16 +1738,15 @@ sub display_rows {
                 if ( $form->{selecttax} ) {
                     $tax = $form->{"tax_$i"};
                     $tax = qq|
-            <td>$tax</td>
-            <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>|;
+                        <td>$tax</td>
+                        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>
+                    |;
                 }
 
                 if ( $form->{fxadj} ) {
                     $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
                     $x = ($checked) ? "x" : "";
-                    $fx_transaction = qq|
-      <td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>
-|;
+                    $fx_transaction = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>|;
                 }
 
                 $form->hide_form( map { "${_}_$i" } qw(accno projectnumber tax) );
@@ -1761,24 +1754,19 @@ sub display_rows {
             }
             else {
 
-                $accno = qq|
-      <td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
+                $accno = qq|<td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
 
                 if ( $form->{selectprojectnumber} ) {
-                    $project = qq|
-      <td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+                    $project = qq|<td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
                 }
 
                 if ( $form->{selecttax} ) {
                     $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
-        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>|;
-
+                        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>|;
                 }
 
                 if ( $form->{fxadj} ) {
-                    $fx_transaction = qq|
-      <td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>
-|;
+                    $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>|;
                 }
             }
         }
@@ -1836,11 +1824,11 @@ sub form_header {
             $form->{exchangerate} = $form->format_amount( \%myconfig, $form->{exchangerate} );
 
             $exchangerate .= qq|
-      <th align=right nowrap>| . $locale->text('Exchange Rate') . qq| <font color=red>*</font></th>
-      <td><input name=exchangerate size=10 value=$form->{exchangerate}></td>
-      <th align=right nowrap>|
+              <th align=right nowrap>| . $locale->text('Exchange Rate') . qq| <font color=red>*</font></th>
+              <td><input name=exchangerate size=10 value=$form->{exchangerate}></td>
+              <th align=right nowrap>|
               . $locale->text('Buy') . qq|</th><td>| . $form->format_amount( \%myconfig, $form->{fxbuy} ) . qq|</td>
-      <th align=right nowrap>|
+              <th align=right nowrap>|
               . $locale->text('Sell') . qq|</th><td>| . $form->format_amount( \%myconfig, $form->{fxsell} ) . qq|</td>|;
         }
         $exchangerate .= qq|</tr></table></td></tr>|;
