@@ -1696,24 +1696,23 @@ sub display_rows {
 
     for $i ( 1 .. $form->{rowcount} ) {
 
-        $source = qq|<td><input name="source_$i" size=10 value="| . $form->quote( $form->{"source_$i"} ) . qq|"></td>|;
-        $memo = qq|<td><input name="memo_$i" value="| . $form->quote( $form->{"memo_$i"} ) . qq|"></td>|;
+        $source = qq|<input name="source_$i" size=10 value="| . $form->quote( $form->{"source_$i"} ) . qq|">|;
+        $memo = qq|<input name="memo_$i" value="| . $form->quote( $form->{"memo_$i"} ) . qq|">|;
 
         if ($init) {
-            $accno = qq|<td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
+            $accno = qq|<select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select>|;
 
             if ( $form->{selectprojectnumber} ) {
-                $project = qq|<td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+                $project = qq|<select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select>|;
             }
 
             if ( $form->{selecttax} ) {
-                $tax = qq|
-                    <td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
-                    <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>|;
+                $tax = qq|<select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select>|;
+                $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|">|;
             }
 
             if ( $form->{fxadj} ) {
-                $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>|;
+                $fx_transaction = qq|<input name="fx_transaction_$i" class=checkbox type=checkbox value=1>|;
             }
 
         }
@@ -1727,26 +1726,24 @@ sub display_rows {
 
             if ( $i < $form->{rowcount} ) {
 
-                $accno = qq|<td>$form->{"accno_$i"}</td>|;
+                $accno = qq|$form->{"accno_$i"}|;
 
                 if ( $form->{selectprojectnumber} ) {
                     $project = $form->{"projectnumber_$i"};
                     $project =~ s/--.*//;
-                    $project = qq|<td>$project</td>|;
+                    $project = qq|$project|;
                 }
 
                 if ( $form->{selecttax} ) {
                     $tax = $form->{"tax_$i"};
-                    $tax = qq|
-                        <td>$tax</td>
-                        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>
-                    |;
+                    $tax = qq|$tax|;
+                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|">|;
                 }
 
                 if ( $form->{fxadj} ) {
                     $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
                     $x = ($checked) ? "x" : "";
-                    $fx_transaction = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>|;
+                    $fx_transaction = qq|<input type=hidden name="fx_transaction_$i" value="$checked">$x|;
                 }
 
                 $form->hide_form( map { "${_}_$i" } qw(accno projectnumber tax) );
@@ -1754,37 +1751,47 @@ sub display_rows {
             }
             else {
 
-                $accno = qq|<td><select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select></td>|;
+                $accno = qq|<select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select>|;
 
                 if ( $form->{selectprojectnumber} ) {
-                    $project = qq|<td><select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select></td>|;
+                    $project = qq|<select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select>|;
                 }
 
                 if ( $form->{selecttax} ) {
-                    $tax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select></td>
-                        <td align="right"><input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|"></td>|;
+                    $tax = qq|<select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select>|;
+                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|">|;
                 }
 
                 if ( $form->{fxadj} ) {
-                    $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>|;
+                    $fx_transaction = qq|<input name="fx_transaction_$i" class=checkbox type=checkbox value=1>|;
                 }
             }
         }
 
-        print qq|<tr valign=top>
-    $accno
-    $fx_transaction
-    <td><input name="debit_$i" size=12 value="$form->{"debit_$i"}" accesskey=$i></td>
-    <td><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
-    $source
-    $memo
-    $tax
-    $project
-  </tr>
-|;
+        if ($form->{selecttax}){
+            print qq|
+            <tr valign=top>
+                <td>$accno<br><p style="margin:5px"></p>$memo $source</td>
+                $fx_transaction
+                <td align="right"><input name="debit_$i" size=12 value="$form->{"debit_$i"}" accesskey=$i></td>
+                <td align="right"><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
+                <td>$tax<br/><p style="margin:5px"></p>$project</td>
+                <td>$taxamount</td>
+            </tr>|;
+        } else {
+            print qq|
+            <tr valign=top>
+                <td>$accno</td>
+                $fx_transaction
+                <td align="right"><input name="debit_$i" size=12 value="$form->{"debit_$i"}" accesskey=$i></td>
+                <td align="right"><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
+                <td>$source</td>
+                <td>$memo</td>
+                <td>$project</td>
+            </tr>|;
+        }
 
         $form->hide_form("cleared_$i");
-
     }
 
     $form->hide_form(qw(rowcount));
@@ -1845,7 +1852,7 @@ sub form_header {
 
     if ( $form->{selecttax} ) {
         $tax = qq|<th class=listheading>| . $locale->text('Tax Included');
-        $tax .= qq| / | . $locale->text('Project') if $form->{projectnumber};
+        $tax .= qq| / | . $locale->text('Project') if $form->{selectprojectnumber};
         $tax .= qq|</th>|;
         $taxamount = qq|<th class=listheading>| . $locale->text('Tax Amount') . qq|</th>|;
     }
