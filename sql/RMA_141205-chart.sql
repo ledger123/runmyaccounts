@@ -187,6 +187,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5402','Erfolgsbeteiligungen','A','E','','500',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5403','Provisionen','A','E','','500',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5405','Leistungen von Sozialversicherungen','A','E','AP_amount','500',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5406','Personalausleihung','A','E','AP_amount','500',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('57','SOZIALVERSICHERUNGSAUFWAND','H','E','','570',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5700','AHV, IV, EO, ALV','A','E','AP_amount','570',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5710','FAK','A','E','AP_amount','570',false,true,'');
