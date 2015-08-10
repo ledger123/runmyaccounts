@@ -120,7 +120,7 @@ sub edit {
         $form->{title} = $locale->text($title);
     }
 
-    &display_form;
+    &update;
 
 }
 
@@ -425,7 +425,7 @@ sub create_links {
 
     }
     else {
-        for (@taxaccounts) { $form->{"calctax_$_"} = 1 }
+        for (@taxaccounts) { $form->{"calctax_$_"} = !$linetax } # Uncheck summary tax accounts by default when linetax is enabled.
     }
 
     for (qw(payment discount)) { $form->{"${_}_accno"} = $form->escape( $form->{"${_}_accno"}, 1 ) }
@@ -760,23 +760,42 @@ sub form_header {
       <table>
 |;
 
-    if ( $form->{selectprojectnumber} ) {
+    if ( $form->{selectprojectnumber} and !$form->{selecttax}) {
         $project = qq|
 	  <th>| . $locale->text('Project') . qq|</th>
 |;
+    } else {
+        $project = '';
     }
 
-    $linetax = qq|
-      <th>| . $locale->text('Tax') . qq|</th>
-      <th>| . $locale->text('Tax Amount') . qq|</th>
-| if $form->{selecttax};
+    if ($form->{selecttax}){
+        if ($form->{selectprojectnumber}){
+            $linetax = qq|
+              <th>| . $locale->text('Tax') . ' / ' . $locale->text('Project') . qq|</th>
+              <th>| . $locale->text('Tax Amount') . qq|</th>
+              |;
+        } else {
+            $linetax = qq|
+              <th>| . $locale->text('Tax') . qq|</th>
+              <th>| . $locale->text('Tax Amount') . qq|</th>
+              |;
+        }
+    }
 
     print qq|
 	<tr>
 	  <th>| . $locale->text('Amount') . qq|</th>
 	  <th></th>
-	  <th>| . $locale->text('Account') . qq|</th>
-	  <th>| . $locale->text('Line Item') . qq|</th>
+|;
+
+   if ($form->{selecttax}){
+	  print qq|<th>| . $locale->text('Account') . qq| / | . $locale->text('Description') . qq|</th>|;
+   } else {
+	  print qq|<th>| . $locale->text('Account') . qq|</th>|;
+	  print qq|<th>| . $locale->text('Description') . qq|</th>|;
+   }
+
+   print qq|
       $linetax
 	  $project
 	</tr>
@@ -786,23 +805,25 @@ sub form_header {
 
     for $i ( 1 .. $form->{rowcount} ) {
 
-        if ( $form->{selectprojectnumber} ) {
-            $project = qq|
-	  <td align=right><select name="projectnumber_$i">|
-              . $form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select></td>
-|;
-        }
-
-        if ( ( $rows = $form->numtextrows( $form->{"description_$i"}, 40 ) ) > 1 ) {
-            $description = qq|<td><textarea name="description_$i" rows=$rows cols=40>$form->{"description_$i"}</textarea></td>|;
-        }
-        else {
-            $description = qq|<td><input name="description_$i" size=40 value="| . $form->quote( $form->{"description_$i"} ) . qq|"></td>|;
-        }
-
         if ($form->{selecttax}){
-            $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select></td>|;
+            $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select>|;
+            if ( $form->{selectprojectnumber} ) {
+                $linetax .= qq|<p style="margin:5px"></p>
+          <select name="projectnumber_$i">|
+                  . $form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select>
+    |;
+            }
+            $linetax .= qq|</td>|;
             $linetaxamount = qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
+            $project = '';
+        } else {
+
+            if ( $form->{selectprojectnumber} ) {
+                $project = qq|
+          <td align=right><select name="projectnumber_$i">|
+                  . $form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select></td>
+    |;
+            }
         }
 
         $form->{subtotal} += $form->{"amount_$i"};
@@ -812,9 +833,27 @@ sub form_header {
 	  <td><input name="amount_$i" size=11 value="|
           . $form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
 	  <td></td>
-	  <td><select name="$form->{ARAP}_amount_$i">|
-          . $form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select></td>
-	  $description
+|;
+
+       if ( ( $rows = $form->numtextrows( $form->{"description_$i"}, 40 ) ) > 1 ) {
+            $description = qq|<textarea name="description_$i" rows=$rows cols=40 title="|.$locale->text('Description').qq|">$form->{"description_$i"}</textarea></td>|;
+       }
+       else {
+           $description = qq|<input name="description_$i" size=40 value="| . $form->quote( $form->{"description_$i"} ) . qq|" title="|.$locale->text('Description').qq|"></td>|;
+       }
+
+       if ($form->{selecttax}){
+            print qq|
+	        <td><select name="$form->{ARAP}_amount_$i">|
+                . $form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select><p style="margin:5px"></p>
+                $description|;
+       } else {
+            print qq|
+	        <td><select name="$form->{ARAP}_amount_$i">|
+                . $form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select><td>
+                $description|;
+       }
+       print qq|
       $linetax
       $linetaxamount
 	  $project
@@ -1167,9 +1206,13 @@ sub update {
         $form->redo_rows( \@flds, \@a, $count, $form->{rowcount} );
         $form->{rowcount} = $count + 1;
 
-        for $i (1 .. $form->{rowcount} ){
-            for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
+        # reset tax amounts only when we are using per line vat taxes
+        if ($form->{selecttax}){
+            for $i (1 .. $form->{rowcount} ){
+                for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
+            }
         }
+
         for ( 1 .. $form->{rowcount} ) { 
             if ($form->{"tax_$_"}){
                 ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
@@ -1502,7 +1545,9 @@ sub yes {
 
 sub search {
 
+    my $old_number = $form->{"$form->{vc}number"}; # customer/vendor number is changed in $form->create_links
     $form->create_links( $form->{ARAP}, \%myconfig, $form->{vc} );
+    $form->{"$form->{vc}number"} = $old_number;
 
     $form->{"select$form->{ARAP}"} = "<option>\n";
     for ( @{ $form->{"$form->{ARAP}_links"}{ $form->{ARAP} } } ) { $form->{"select$form->{ARAP}"} .= "<option>" . $form->quote("$_->{accno}--$_->{description}") . "\n" }
@@ -1510,7 +1555,7 @@ sub search {
     $vclabel          = $locale->text('Customer');
     $vcnumber         = $locale->text('Customer Number');
     $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> $vclabel|;
-    $l_customernumber = qq|<input name="l_customernumber" class=checkbox type=checkbox value=Y> $vcnumber|;
+    $l_customernumber = qq|<input name="l_customernumber" class=checkbox type=checkbox value=Y checked> $vcnumber|;
     $l_till           = qq|<input name="l_till" class=checkbox type=checkbox value=Y> | . $locale->text('Till');
 
     if ( $form->{vc} eq 'vendor' ) {
@@ -1521,9 +1566,18 @@ sub search {
         $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> $vclabel|;
         $l_vendornumber   = qq|<input name="l_vendornumber" class=checkbox type=checkbox value=Y> $vcnumber|;
     }
+
     if ( @{ $form->{"all_$form->{vc}"} } ) {
         $form->{"select$form->{vc}"} = "";
-        for ( @{ $form->{"all_$form->{vc}"} } ) { $form->{"select$form->{vc}"} .= qq|<option value="| . $form->quote( $_->{name} ) . qq|--$_->{id}">$_->{name} ($_->{"$form->{vc}number"})\n| }
+        for ( @{ $form->{"all_$form->{vc}"} } ) {
+            $selected = '';
+            if ($_->{"$form->{vc}number"} eq $form->{"$form->{vc}number"}){
+                $selected = 'selected';
+            } else {
+                $selected = '';
+            }
+            $form->{"select$form->{vc}"} .= qq|<option value="| . $form->quote( $_->{name} ) . qq|--$_->{id}" $selected>$_->{name} ($_->{"$form->{vc}number"})\n| 
+        }
         $vc = qq|
               <tr>
 	        <th align=right nowrap>$vclabel</th>
@@ -1541,7 +1595,7 @@ sub search {
 	      </tr>
 	      <tr>
 	        <th align=right nowrap>$vcnumber</th>
-		<td colspan=3><input name="$form->{vc}number" size=35>
+		<td colspan=3><input name="$form->{vc}number" size=35 value='$form->{"$form->{vc}number"}'>
 		</td>
 	      </tr>
 |;
@@ -1717,7 +1771,7 @@ sub search {
     push @a, qq|<input name="l_paid" class=checkbox type=checkbox value=Y checked> | . $locale->text('Paid');
     push @a, qq|<input name="l_paymentmethod" class=checkbox type=checkbox value=Y> | . $locale->text('Payment Method');
     push @a, qq|<input name="l_duedate" class=checkbox type=checkbox value=Y> | . $locale->text('Due Date');
-    push @a, qq|<input name="l_due" class=checkbox type=checkbox value=Y> | . $locale->text('Due');
+    push @a, qq|<input name="l_due" class=checkbox type=checkbox value=Y $form->{due_checked}> | . $locale->text('Due');
     push @a, qq|<input name="l_memo" class=checkbox type=checkbox value=Y> | . $locale->text('Line Item');
     push @a, qq|<input name="l_notes" class=checkbox type=checkbox value=Y> | . $locale->text('Notes');
     push @a, qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y> | . $locale->text('Internal Notes');
@@ -2017,9 +2071,16 @@ sub transactions {
         $option   .= $locale->text('Paid Early');
     }
 
-    @columns = $form->sort_columns(
-        qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department)
-    );
+    @columns = qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department);
+
+    @columns = $form->sort_columns(@columns);
+
+    # Don't change column positions if it 'paid';
+    if ($form->{sort} eq 'paid'){
+       shift @columns;
+       push @columns, 'paid';
+    }
+
     pop @columns if $form->{department};
     unshift @columns, "runningnumber";
 
@@ -2075,6 +2136,7 @@ sub transactions {
     $column_data{tax}           = "<th class=listheading>" . $locale->text('Tax') . "</th>";
     $column_data{amount}        = "<th class=listheading>" . $locale->text('Total') . "</th>";
     $column_data{paid}          = "<th class=listheading>" . $locale->text('Paid') . "</th>";
+    $column_data{paid}          = "<th><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
     $column_data{paymentmethod} = "<th><a class=listheading href=$href&sort=paymentmethod>" . $locale->text('Payment Method') . "</a></th>";
     $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
     $column_data{due}           = "<th class=listheading>" . $locale->text('Due') . "</th>";

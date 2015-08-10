@@ -2070,7 +2070,7 @@ sub all_vc {
 		LEFT JOIN address ad
 		  ON vc.id=ad.trans_id
 		WHERE vc.id = $self->{"${vc}_id"}
-		ORDER BY name|;
+		ORDER BY name, lastname, firstname|;
     # ISNA_end
     $sth = $dbh->prepare($query);
     $sth->execute || $self->dberror($query);
