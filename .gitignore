@@ -9,3 +9,4 @@ locales*.pl
 /build.xml
 /.DS_Store
 /.settings
+/spool
