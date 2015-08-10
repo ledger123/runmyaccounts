@@ -1963,7 +1963,7 @@ sub form_footer {
 	  <th>&nbsp;</th>
 | if $form->{selectprojectnumber};
 
-    $tax = qq|<th>&nbsp;</th>| if $form->{selecttax};
+    $tax = '';
     $taxamount = qq|
 	  <th class=listtotal align="right">| . $form->format_amount( \%myconfig, $form->{totaltaxamount}, 2 ) . qq|</th>
 | if $form->{selecttax};
@@ -1980,7 +1980,6 @@ sub form_footer {
 	  $fx_transaction
 	  <th class=listtotal align=right>$form->{totaldebit}</th>
 	  <th class=listtotal align=right>$form->{totalcredit}</th>
-	  <th>&nbsp;</th>
 	  <th>&nbsp;</th>
       $tax
       $taxamount
