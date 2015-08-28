@@ -160,6 +160,8 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('38','ERLÖSMINDERUNGEN','H','I','','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3800','Skonti','A','I','AR_paid','380',false,true,'debitorskonto');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3801','Rabatte und Preisnachlässe','A','I','AR_paid','380',false,true,'debitordifferenz');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('38011','Rabatte','A','I','AR_amount','380',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('38012','Rundungsdifferenzen','A','I','AR_amount','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3804','Inkassospesen','A','I','','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3805','Verluste Forderungen, Veränderung Wertberichtigungen','A','I','AR_amount:IC_income','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('39','BESTANDESÄNDERUNGEN AN UNFERTIGEN UND FERTIGEN ERZEUGNISSEN SOWIE AN NICHT FAKTURIERTEN DIENSTLEISTUNGEN','H','I','','390',false,true,'');
@@ -283,7 +285,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('7010','Aufwand aus Nebenbetrieb','A','E','','701',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8','AUSSERORDENTLICHER UND BETRIEBSFREMDER ERFOLG, STEUERN','H','E','','800',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('800','BETRIEBSFREMDER AUFWAND','H','E','','800',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8000','Betriebsfremder Aufwand','A','E','AP_amount:AR_amount','800',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8000','Betriebsfremder Aufwand','A','E','','800',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('810','BETRIEBSFREMDER ERTRAG','H','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8100','Betriebsfremder Ertrag','A','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('850','AUSSERORDENTLICHER AUFWAND','H','E','','850',false,true,'');
@@ -378,7 +380,7 @@ INSERT INTO curr (rn, curr, precision) VALUES (1,'CHF',2);
 INSERT INTO curr (rn, curr, precision) VALUES (2,'EUR',2);
 INSERT INTO curr (rn, curr, precision) VALUES (3,'USD',2);
 INSERT INTO curr (rn, curr, precision) VALUES (4,'GBP',2);
-INSERT INTO curr (rn, curr, precision) VALUES (5,'JPY',0);
+INSERT INTO curr (rn, curr, precision) VALUES (5,'JPY',2);
 INSERT INTO curr (rn, curr, precision) VALUES (6,'CAD',2);
 INSERT INTO curr (rn, curr, precision) VALUES (7,'AUD',2);
 INSERT INTO curr (rn, curr, precision) VALUES (8,'CNY',2);
