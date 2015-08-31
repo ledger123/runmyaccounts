@@ -354,7 +354,9 @@ sub dbcreate {
                 'Sybase' => qq|CREATE DATABASE $form->{db}|,
                'Oracle' => qq|CREATE USER "$form->{db}" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP IDENTIFIED BY "$form->{db}"|);
 
+  # CREATE DATABASE "testoo" WITH ENCODING = 'ISO-8859-1' LC_CTYPE = 'de_CH.ISO-8859-1' LC_COLLATE = 'de_CH.ISO-8859-1' TEMPLATE = template0
   $dbcreate{Pg} .= " WITH ENCODING = '$form->{encoding}'" if $form->{encoding};
+  $dbcreate{Pg} .= " LC_CTYPE = '$form->{ctype}' LC_COLLATE = '$form->{ctype}' TEMPLATE = template0" if $form->{ctype};
   $dbcreate{Sybase} .= " CHARACTER SET $form->{encoding}" if $form->{encoding};
   
   $form->{sid} = $form->{dbdefault};
