@@ -819,60 +819,54 @@ $(document).on("click", ":submit", function(e){
     $form->{subtotal} = 0;
 
     for $i ( 1 .. $form->{rowcount} ) {
-
         if ($form->{selecttax}){
-            $linetax = qq|<td><select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select>|;
-            if ( $form->{selectprojectnumber} ) {
-                $linetax .= qq|<p style="margin:5px"></p>
-          <select name="projectnumber_$i">|
-                  . $form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select>
-    |;
+            $line1 = qq|<tr valign=top>|;
+            $line1 .= qq|<td><input name="amount_$i" size=11 value="|.$form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
+                            <td></td>|;
+            $line1 .= qq|<td><select name="$form->{ARAP}_amount_$i">|.$form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select>|;
+            $line1 .= qq|<td><select name="tax_$i">|.$form->select_option( $form->{selecttax}, $form->{"tax_$i"} ).qq|</select>|;
+            $line1 .= qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
+            $line1 .= qq|</tr>|;
+
+            $line2 = qq|<tr valign="top">|;
+            $line2 .= qq|<td></td><td></td>|;
+            if ( ( $rows = $form->numtextrows( $form->{"description_$i"}, 40 ) ) > 1 ) {
+                $line2 .= qq|<td><textarea name="description_$i" rows=$rows cols=40 title="|.$locale->text('Description').qq|">$form->{"description_$i"}</textarea></td>|;
             }
-            $linetax .= qq|</td>|;
-            $linetaxamount = qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
-            $project = '';
+            else {
+                $line2 .= qq|<td><input name="description_$i" size=40 value="| . $form->quote( $form->{"description_$i"} ) . qq|" title="|.$locale->text('Description').qq|"></td>|;
+            }
+            if ( $form->{selectprojectnumber} ) {
+               $line2 .= qq|<td><select name="projectnumber_$i">|.$form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select></td>|;
+            } else {
+               $line2 .= qq|<td></td>|;
+            }
+            $line2 .= qq|</tr>|;
         } else {
+            $line1 = qq|<tr valign=top>|;
+            $line1 .= qq|<td><input name="amount_$i" size=11 value="|.$form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
+                            <td></td>|;
+            $line1 .= qq|<td><select name="$form->{ARAP}_amount_$i">|.$form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select>|;
 
-            if ( $form->{selectprojectnumber} ) {
-                $project = qq|
-          <td align=right><select name="projectnumber_$i">|
-                  . $form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select></td>
-    |;
+            if ( ( $rows = $form->numtextrows( $form->{"description_$i"}, 40 ) ) > 1 ) {
+                $line1 .= qq|<td><textarea name="description_$i" rows=$rows cols=40 title="|.$locale->text('Description').qq|">$form->{"description_$i"}</textarea></td>|;
             }
+            else {
+                $line1 .= qq|<td><input name="description_$i" size=40 value="| . $form->quote( $form->{"description_$i"} ) . qq|" title="|.$locale->text('Description').qq|"></td>|;
+            }
+            if ( $form->{selectprojectnumber} ) {
+               $line1 .= qq|<td><select name="projectnumber_$i">|.$form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select></td>|;
+            } else {
+               $line1 .= qq|<td></td>|;
+            }
+            $line1 .= qq|</tr>|;
+            $line2 = '';
         }
-
         $form->{subtotal} += $form->{"amount_$i"};
 
         print qq|
-	<tr valign=top>
-	  <td><input name="amount_$i" size=11 value="|
-          . $form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
-	  <td></td>
-|;
-
-       if ( ( $rows = $form->numtextrows( $form->{"description_$i"}, 40 ) ) > 1 ) {
-            $description = qq|<textarea name="description_$i" rows=$rows cols=40 title="|.$locale->text('Description').qq|">$form->{"description_$i"}</textarea></td>|;
-       }
-       else {
-           $description = qq|<input name="description_$i" size=40 value="| . $form->quote( $form->{"description_$i"} ) . qq|" title="|.$locale->text('Description').qq|"></td>|;
-       }
-
-       if ($form->{selecttax}){
-            print qq|
-	        <td><select name="$form->{ARAP}_amount_$i">|
-                . $form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select><p style="margin:5px"></p>
-                $description|;
-       } else {
-            print qq|
-	        <td><select name="$form->{ARAP}_amount_$i">|
-                . $form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select><td>
-                $description|;
-       }
-       print qq|
-      $linetax
-      $linetaxamount
-	  $project
-	</tr>
+      $line1
+      $line2
 |;
     }
 
