@@ -809,7 +809,8 @@ sub form_header {
             $line1 .= qq|<td><input name="amount_$i" size=11 value="|.$form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
                             <td></td>|;
             $line1 .= qq|<td><select name="$form->{ARAP}_amount_$i">|.$form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select>|;
-            $line1 .= qq|<td><select name="tax_$i">|.$form->select_option( $form->{selecttax}, $form->{"tax_$i"} ).qq|</select>|;
+            $line1 .= qq|<td><select name="tax_$i">|.$form->select_option( $form->{selecttax}, $form->{"tax_$i"} ).qq|</select>
+                             <input type=hidden name="oldtax_$i" value='$form->{"tax_$i"}'></td>|;
             $line1 .= qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
             $line1 .= qq|</tr>|;
 
@@ -1211,7 +1212,7 @@ sub update {
             $form->{"linetaxamount_$_"} = $form->parse_amount(\%myconfig, $form->{"linetaxamount_$_"});
             if ($form->{"tax_$_"}){
                 ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
-                if (!$form->{"linetaxamount_$_"}){
+                if (!$form->{"linetaxamount_$_"} || $form->{"tax_$_"} ne $form->{"oldtax_$_"}){
                     if ($form->{taxincluded}){
                         $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
                     } else {
