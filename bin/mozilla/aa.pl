@@ -1208,6 +1208,7 @@ sub update {
         }
 
         for ( 1 .. $form->{rowcount} ) { 
+            $form->{"linetaxamount_$_"} = $form->parse_amount(\%myconfig, $form->{"linetaxamount_$_"});
             if ($form->{"tax_$_"}){
                 ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
                 if (!$form->{"linetaxamount_$_"}){
@@ -1218,7 +1219,7 @@ sub update {
                     }
                }
 
-                $form->{"tax_$taxaccno"} += $form->{"linetaxamount_$_"};
+               $form->{"tax_$taxaccno"} += $form->{"linetaxamount_$_"};
             } else {
                 $form->{"linetaxamount_$_"} = 0;
             }
