@@ -484,6 +484,7 @@ sub form_header {
 		<td align=right><input name=taxincluded class=checkbox type=checkbox value=1 $form->{taxincluded}></td>
 		<th align=left nowrap>| . $locale->text('Tax Included') . qq|</th>
 	      </tr>
+          <input type=hidden name=oldtaxincluded value="$form->{taxincluded}">
 |;
     }
 
@@ -810,7 +811,7 @@ sub form_header {
         if ($form->{selecttax}){
             $line1 = qq|<tr valign=top>|;
             $line1 .= qq|<td><input name="amount_$i" size=11 value="|.$form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
-                            <td></td>|;
+                            <input type=hidden name="oldamount_$i" value="$form->{"amount_$i"}"><td></td>|;
             $line1 .= qq|<td><select name="$form->{ARAP}_amount_$i">|.$form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select>|;
             $line1 .= qq|<td><select name="tax_$i">|.$form->select_option( $form->{selecttax}, $form->{"tax_$i"} ).qq|</select>
                              <input type=hidden name="oldtax_$i" value='$form->{"tax_$i"}'></td>|;
@@ -1210,12 +1211,13 @@ sub update {
             }
         }
 
+        $form->{oldtaxincluded} = ($form->{oldtaxincluded}) ? '1' : "";
         for ( 1 .. $form->{rowcount} ) { 
             $form->{"amount_$_"} = $form->parse_amount(\%myconfig, $form->{"amount_$_"});
             $form->{"linetaxamount_$_"} = $form->parse_amount(\%myconfig, $form->{"linetaxamount_$_"});
             if ($form->{"tax_$_"}){
                ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
-               if (!$form->{"linetaxamount_$_"} || $form->{"tax_$_"} ne $form->{"oldtax_$_"}){
+               if (!$form->{"linetaxamount_$_"} || $form->{"tax_$_"} ne $form->{"oldtax_$_"} || $form->{"amount_$_"} != $form->{"oldamount_$_"} || $form->{taxincluded} ne $form->{oldtaxincluded} ){
                     if ($form->{taxincluded}){
                         $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
                     } else {
