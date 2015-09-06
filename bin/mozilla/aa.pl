@@ -1332,7 +1332,7 @@ sub update {
     }
     else {
         foreach $item (@taxaccounts) {
-            $form->{"calctax_$item"} = 1 if $form->{calctax};
+            $form->{"calctax_$item"} = 0 if $form->{calctax};
 
             if ( $form->{"calctax_$item"} ) {
                 $a = ( $form->{cdt} ) ? $form->{invtotal} - $form->{discount_paid} : $form->{invtotal};
