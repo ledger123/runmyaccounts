@@ -1534,9 +1534,7 @@ sub aging {
     a.invnumber, a.transdate, a.till, a.ordnumber, a.ponumber, a.notes,
     $c{$_}{flds},
     a.duedate, a.invoice, a.id, a.curr,
-      (SELECT $buysell FROM exchangerate e
-       WHERE a.curr = e.curr
-       AND e.transdate = a.transdate) AS exchangerate,
+    a.exchangerate,
     ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
     s.*
     FROM $form->{arap} a
