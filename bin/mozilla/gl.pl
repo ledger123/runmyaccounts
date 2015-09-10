@@ -1715,8 +1715,7 @@ sub display_rows {
                 $fx_transaction = qq|<input name="fx_transaction_$i" class=checkbox type=checkbox value=1>|;
             }
 
-        }
-        else {
+        } else {
 
             $form->{totaldebit}     += $form->{"debit_$i"};
             $form->{totalcredit}    += $form->{"credit_$i"};
@@ -1771,12 +1770,19 @@ sub display_rows {
         if ($form->{selecttax}){
             print qq|
             <tr valign=top>
-                <td>$accno<br><p style="margin:5px"></p>$memo $source</td>
+                <td>$accno</td>
                 $fx_transaction
                 <td align="right"><input name="debit_$i" size=12 value="$form->{"debit_$i"}" accesskey=$i></td>
                 <td align="right"><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
-                <td>$tax<br/><p style="margin:5px"></p>$project</td>
+                <td>$tax<br/>
                 <td>$taxamount</td>
+            </tr>
+            <tr>
+                <td>$memo $source</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>$project</td>
+                <td>&nbsp;</td>
             </tr>|;
         } else {
             print qq|
