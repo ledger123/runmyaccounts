@@ -1084,6 +1084,8 @@ sub trial_balance {
   my $dpt_where;
   my $dpt_join;
   my $project;
+
+  my $fx_transaction;
   
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
@@ -1109,7 +1111,13 @@ sub trial_balance {
                 AND ac.project_id = $project_id
 		|;
   }
-  
+
+  if (!$form->{fx_transaction}){
+    $fx_transaction = qq|
+                AND fx_transaction = '0' 
+|; 
+  }
+ 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month}; 
    
   # get beginning balances
@@ -1127,6 +1135,7 @@ sub trial_balance {
 		  AND ac.approved = '1'
 		  $dpt_where
 		  $project
+          $fx_transaction
 		  GROUP BY g.accno, c.category, g.description, c.contra
 		  |;
    
@@ -1143,6 +1152,7 @@ sub trial_balance {
 		  AND ac.approved = '1'
 		  $dpt_where
 		  $project
+          $fx_transaction
 		  GROUP BY c.accno, c.category, c.description, c.contra, translation
 		  |;
 		  
@@ -1228,6 +1238,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		GROUP BY g.accno, g.description, c.category, c.contra
 		ORDER BY accno|;
     
@@ -1243,6 +1254,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		GROUP BY c.accno, c.description, c.category, c.contra, translation
                 ORDER BY accno|;
 
@@ -1259,6 +1271,7 @@ sub trial_balance {
 	      WHERE $where
 	      $dpt_where
 	      $project
+          $fx_transaction
 	      AND ac.amount < 0
 	      AND c.accno = ?) AS debit,
 	      
@@ -1269,6 +1282,7 @@ sub trial_balance {
 	      WHERE $where
 	      $dpt_where
 	      $project
+          $fx_transaction
 	      AND ac.amount > 0
 	      AND c.accno = ?) AS credit
 	      |;
@@ -1282,6 +1296,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		AND ac.amount < 0
 		AND c.gifi_accno = ?) AS debit,
 		
@@ -1292,6 +1307,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		AND ac.amount > 0
 		AND c.gifi_accno = ?) AS credit|;
   

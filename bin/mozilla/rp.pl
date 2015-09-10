@@ -411,7 +411,8 @@ sub report {
 	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Heading').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
 	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('All Accounts').qq|
-	  <input name=l_name class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Company Name') . qq|</td>
+	  <input name=l_name class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Company Name') . qq|
+      <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|</td>
 	</tr>
 |;
   }
@@ -1052,7 +1053,7 @@ sub generate_trial_balance {
   $form->{title} = $locale->text('Trial Balance') . " / $form->{company}";
 
   $form->{callback} = "$form->{script}?action=generate_trial_balance";
-  for (qw(login path nextsub fromdate todate month year interval l_heading l_subtotal all_accounts l_name accounttype)) { $form->{callback} .= "&$_=$form->{$_}" }
+  for (qw(login path nextsub fromdate todate month year interval l_heading l_subtotal all_accounts l_name accounttype fx_transaction)) { $form->{callback} .= "&$_=$form->{$_}" }
   for (qw(department title)) { $form->{callback} .= "&$_=".$form->escape($form->{$_},1) }
 
   $form->{callback} = $form->escape($form->{callback});
