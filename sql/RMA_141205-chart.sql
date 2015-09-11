@@ -244,6 +244,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6542','Revisionsstelle','A','E','AP_amount','650',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6550','Gründungs-, Kapitalerhöhungs- und Organisationsaufwand','A','E','AP_amount','650',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6551','Inkasso- und Betreibungsaufwand','A','E','AP_amount','650',false,true,'');
+insert into chart (accno,description,charttype,gifi_accno,category,link) VALUES ('6558','Steuerlich nicht abzugsfähiger Verwaltungsaufwand','A','650','E','AP_amount');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('657','INFORMATIKAUFWAND','H','E','','657',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6570','Leasing Hardware und Software','A','E','AP_amount','657',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6580','Lizenzen, Updates','A','E','AP_amount','657',false,true,'');
