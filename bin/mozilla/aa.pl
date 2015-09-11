@@ -484,6 +484,7 @@ sub form_header {
 		<td align=right><input name=taxincluded class=checkbox type=checkbox value=1 $form->{taxincluded}></td>
 		<th align=left nowrap>| . $locale->text('Tax Included') . qq|</th>
 	      </tr>
+          <input type=hidden name=oldtaxincluded value="$form->{taxincluded}">
 |;
     }
 
@@ -804,10 +805,13 @@ sub form_header {
     $form->{subtotal} = 0;
 
     for $i ( 1 .. $form->{rowcount} ) {
+
+        $form->{subtotal} += $form->{"amount_$i"};
+
         if ($form->{selecttax}){
             $line1 = qq|<tr valign=top>|;
             $line1 .= qq|<td><input name="amount_$i" size=11 value="|.$form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
-                            <td></td>|;
+                            <input type=hidden name="oldamount_$i" value="$form->{"amount_$i"}"><td></td>|;
             $line1 .= qq|<td><select name="$form->{ARAP}_amount_$i">|.$form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select>|;
             $line1 .= qq|<td><select name="tax_$i">|.$form->select_option( $form->{selecttax}, $form->{"tax_$i"} ).qq|</select>
                              <input type=hidden name="oldtax_$i" value='$form->{"tax_$i"}'></td>|;
@@ -848,7 +852,6 @@ sub form_header {
             $line1 .= qq|</tr>|;
             $line2 = '';
         }
-        $form->{subtotal} += $form->{"amount_$i"};
 
         print qq|
       $line1
@@ -1208,11 +1211,13 @@ sub update {
             }
         }
 
+        $form->{oldtaxincluded} = ($form->{oldtaxincluded}) ? '1' : "";
         for ( 1 .. $form->{rowcount} ) { 
+            $form->{"amount_$_"} = $form->parse_amount(\%myconfig, $form->{"amount_$_"});
             $form->{"linetaxamount_$_"} = $form->parse_amount(\%myconfig, $form->{"linetaxamount_$_"});
             if ($form->{"tax_$_"}){
-                ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
-                if (!$form->{"linetaxamount_$_"} || $form->{"tax_$_"} ne $form->{"oldtax_$_"}){
+               ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
+               if (!$form->{"linetaxamount_$_"} || $form->{"tax_$_"} ne $form->{"oldtax_$_"} || $form->{"amount_$_"} != $form->{"oldamount_$_"} || $form->{taxincluded} ne $form->{oldtaxincluded} ){
                     if ($form->{taxincluded}){
                         $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
                     } else {
@@ -1234,7 +1239,6 @@ sub update {
         $form->{cashdiscount}  = $form->parse_amount( \%myconfig, $form->{cashdiscount} );
         $form->{discount_paid} = $form->parse_amount( \%myconfig, $form->{discount_paid} );
 
-        #$form->info($form->unescape($form->{selectcustomer}));
         if ( $newname = &check_name( $form->{vc} ) ) {
             &rebuild_vc( $form->{vc}, $form->{ARAP}, $form->{transdate} );
         }
@@ -1277,8 +1281,6 @@ sub update {
 
     # recalculate taxes
     @taxaccounts = split / /, $form->{taxaccounts};
-
-    for (@taxaccounts) { $form->{"tax_$_"} = $form->parse_amount( \%myconfig, $form->{"tax_$_"} ) }
 
     if ( $form->{taxincluded} ) {
 
@@ -1330,7 +1332,7 @@ sub update {
     }
     else {
         foreach $item (@taxaccounts) {
-            $form->{"calctax_$item"} = 1 if $form->{calctax};
+            $form->{"calctax_$item"} = 0 if $form->{calctax};
 
             if ( $form->{"calctax_$item"} ) {
                 $a = ( $form->{cdt} ) ? $form->{invtotal} - $form->{discount_paid} : $form->{invtotal};
@@ -1395,12 +1397,6 @@ sub update {
     $form->{creditremaining} -= ( $form->{invtotal} - $totalpaid + $form->{oldtotalpaid} - $form->{oldinvtotal} ) * $ml;
     $form->{oldinvtotal}  = $form->{invtotal};
     $form->{oldtotalpaid} = $totalpaid;
-
-    if ($form->{taxincluded}){
-        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
-    } else {
-        $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
-    }
 
     &display_form;
 

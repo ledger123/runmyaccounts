@@ -107,6 +107,7 @@ sub all_transactions {
 
   my $fromdate_where;
   my $todate_where;
+  my $fx_transaction;
 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
 
@@ -135,7 +136,11 @@ sub all_transactions {
 		$subwhere
   )| if $form->{method} eq 'cash';
 
-
+  if (!$form->{fx_transaction}){
+    $fx_transaction = qq|
+                AND ac.fx_transaction = '0' 
+|; 
+  }
 
   my $false = ($myconfig->{dbdriver} =~ /Pg/) ? FALSE : q|'0'|;
   
@@ -212,6 +217,7 @@ sub all_transactions {
 			AND ac.transdate < '$form->{fromdate}'
 			AND a.department_id = $department_id
 			$project
+            $fx_transaction
 			$subquery
 			|;
 		      
@@ -228,6 +234,7 @@ sub all_transactions {
 			AND ac.transdate < '$form->{fromdate}'
 			AND a.department_id = $department_id
 			$project
+            $fx_transaction
 			$subquery
 			|;
 	  }
@@ -244,6 +251,7 @@ sub all_transactions {
 		    AND ac.approved = '1'
 		    AND ac.transdate < '$form->{fromdate}'
 		    $project
+            $fx_transaction
 		    $subquery
 		    |;
 	} else {
@@ -254,6 +262,7 @@ sub all_transactions {
 		      AND ac.approved = '1'
 		      AND ac.transdate < '$form->{fromdate}'
 		      $project
+              $fx_transaction
 		      $subquery
 		      |;
 	}
@@ -285,6 +294,7 @@ sub all_transactions {
 		 $todate_where
 		 $dpt_where
 		 $project
+         $fx_transaction
 		 $subquery
       
              UNION ALL
@@ -303,6 +313,7 @@ sub all_transactions {
 		 $todate_where
 		 $dpt_where
 		 $project
+         $fx_transaction
 		 $subquery
       
              UNION ALL
@@ -321,6 +332,7 @@ sub all_transactions {
 		 $todate_where
 		 $dpt_where
 		 $project
+         $fx_tranaction
 		 $subquery
 		 |;
 

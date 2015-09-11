@@ -65,17 +65,27 @@ sub post_transaction {
   my %tax = ();
   my $accno;
 
+  my %zerotax; # Taxes checked or selected in this transaction to decide 0 tax posting.
+  for (1 .. $form->{rowcount}){
+     ($accno, $null) = split /--/, $form->{"tax_$_"};
+     $zerotax{$accno} = 1 if $form->{"tax_$_"};
+  }
+
   # add taxes
   foreach $accno (@taxaccounts) {
+    $zerotax{$accno} = 1 if $form->{"calctax_$accno"};
+
     $fxtax += $tax{fxamount}{$accno} = $form->parse_amount($myconfig, $form->{"tax_$accno"});
     $tax += $tax{fxamount}{$accno};
     
+    if ($zerotax{$accno} or $tax{fxamount}{$accno}){
     push @{ $form->{acc_trans}{taxes} }, {
       accno => $accno,
       amount => $tax{fxamount}{$accno},
       transdate => $form->{transdate},
       fx_transaction => 0 };
-      
+    }
+
     $amount = $tax{fxamount}{$accno} * $form->{exchangerate};
     $tax{amount}{$accno} = $form->round_amount($amount - $diff, $form->{precision});
     $diff = $tax{amount}{$accno} - ($amount - $diff);
@@ -83,11 +93,13 @@ sub post_transaction {
     $tax += $amount;
 
     if ($form->{currency} ne $form->{defaultcurrency}) {
+    if ($zerotax{$accno} or $amount){
       push @{ $form->{acc_trans}{taxes} }, {
 	accno => $accno,
 	amount => $amount,
 	transdate => $form->{transdate},
 	fx_transaction => 1 };
+    }
     }
 
   }
