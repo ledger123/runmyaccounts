@@ -1534,9 +1534,7 @@ sub aging {
     a.invnumber, a.transdate, a.till, a.ordnumber, a.ponumber, a.notes,
     $c{$_}{flds},
     a.duedate, a.invoice, a.id, a.curr,
-      (SELECT $buysell FROM exchangerate e
-       WHERE a.curr = e.curr
-       AND e.transdate = a.transdate) AS exchangerate,
+    a.exchangerate,
     ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
     s.*
     FROM $form->{arap} a
@@ -1706,7 +1704,7 @@ sub reminder {
 	      JOIN address ad ON (ad.trans_id = c.id)
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
-	      WHERE a.duedate <= current_date
+	      WHERE a.duedate < current_date
 	      AND $where
 	      ORDER BY vc_id, transdate, invnumber|;
   $sth = $dbh->prepare($query) || $form->dberror($query);

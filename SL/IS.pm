@@ -2286,7 +2286,6 @@ sub price_matrix_query {
 	      '$form->{defaultcurrency}' AS curr, '' AS pricegroup
               FROM parts p
 	      WHERE p.id = ?
-
 	      UNION
   
               SELECT p.*, g.pricegroup
@@ -2296,7 +2295,6 @@ sub price_matrix_query {
 	      AND p.customer_id = $form->{customer_id}
 	      
 	      UNION
-
 	      SELECT p.*, g.pricegroup 
 	      FROM partscustomer p 
 	      LEFT JOIN pricegroup g ON (g.id = p.pricegroup_id)
@@ -2305,13 +2303,11 @@ sub price_matrix_query {
 	      AND c.id = $form->{customer_id}
 	      
 	      UNION
-
 	      SELECT p.*, '' AS pricegroup
 	      FROM partscustomer p
 	      WHERE p.customer_id = 0
 	      AND p.pricegroup_id = 0
 	      AND p.parts_id = ?
-
 	      ORDER BY customer_id DESC, pricegroup_id DESC, pricebreak
 	      
 	      |;
@@ -2436,4 +2432,3 @@ sub exchangerate_defaults {
 
 
 1;
-
