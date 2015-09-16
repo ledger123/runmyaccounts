@@ -898,7 +898,7 @@ sub transaction {
 	        LEFT JOIN project p ON (p.id = ac.project_id)
 		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 	        WHERE ac.trans_id = $form->{id}
-            AND tax <> 'auto'
+            AND (tax <> 'auto' OR tax IS NULL)
 	        ORDER BY accno|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
