@@ -2653,32 +2653,29 @@ sub do_print_reminder {
 
       $form->{formname} = 'reminder';
 
-      ($filename) = $dbh->selectrow_array("SELECT spoolfile FROM status WHERE trans_id = $form->{id}");
+      if ($form->{media} eq 'queue'){
+         ($filename) = $dbh->selectrow_array("SELECT spoolfile FROM status WHERE trans_id = $form->{id}");
 
-      if ($filename) {
-        unlink "$spool/$filename";
-        $filename =~ s/\..*$//g;
-      } else {
-        $filename = time;
-        $filename .= int rand 10000;
+         if ($filename) {
+            unlink "$spool/$filename";
+            $filename =~ s/\..*$//g;
+         } else {
+            $filename = time;
+            $filename .= int rand 10000;
+         }
+
+         $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
+         $form->{OUT} = ">$spool/$filename";
+
+         # save status
+         $form->update_status(\%myconfig);
+
+         %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
+                    reference   => $form->{"${inv}number"},
+                    formname    => $form->{formname},
+                    action      => 'queued',
+                    id          => $form->{id} );
       }
-
-      $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
-      $form->{OUT} = ">$spool/$filename";
-
-      $form->{queued} .= " $form->{formname} $filename";
-      $form->{queued} =~ s/^ //;
-
-      # save status
-      $form->update_status(\%myconfig);
-
-      %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
-                reference   => $form->{"${inv}number"},
-                formname    => $form->{formname},
-                action      => 'queued',
-                id          => $form->{id} );
-
-
       $form->parse_template(\%myconfig, $userspath);
 
     }
