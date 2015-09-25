@@ -2590,36 +2590,6 @@ sub print_reminder {
     $form->{OUT} = qq~| $printer{$form->{media}}~;
   }
 
-  if ($form->{media} eq 'queue') {
-    $form->{formname} = 'reminder';
-
-    %queued = split / /, $form->{queued};
-
-    if ($filename = $queued{$form->{formname}}) {
-      $form->{queued} =~ s/$form->{formname} $filename//;
-      unlink "$spool/$filename";
-      $filename =~ s/\..*$//g;
-    } else {
-      $filename = time;
-      $filename .= int rand 10000;
-    }
-
-    $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
-    $form->{OUT} = ">$spool/$filename";
-
-    $form->{queued} .= " $form->{formname} $filename";
-    $form->{queued} =~ s/^ //;
-
-    # save status
-    $form->update_status(\%myconfig);
-
-    %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
-		    reference   => $form->{"${inv}number"},
-		    formname    => $form->{formname},
-		    action      => 'queued',
-		    id          => $form->{id} );
-  }
-
   &do_print_reminder;
   
   if ($form->{callback}) {
@@ -2649,11 +2619,13 @@ sub do_print_reminder {
   # setup variables for the form
   $form->format_string(qw(companyemail companywebsite company address businessnumber username useremail tel fax));
   
-  @a = qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
+  @a = qw(id name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
   push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country bic);
+
+  my $dbh = $form->dbconnect(\%myconfig);
 
   while (@{ $form->{AG} }) {
 
@@ -2692,6 +2664,34 @@ sub do_print_reminder {
       $form->{due} = $form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision});
       $form->{integer_out_amount} = $ref->{integer_out_amount};
       $form->{out_decimal} = $ref->{out_decimal};
+
+      $form->{formname} = 'reminder';
+
+      ($filename) = $dbh->selectrow_array("SELECT spoolfile FROM status WHERE trans_id = $form->{id}");
+
+      if ($filename) {
+        unlink "$spool/$filename";
+        $filename =~ s/\..*$//g;
+      } else {
+        $filename = time;
+        $filename .= int rand 10000;
+      }
+
+      $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
+      $form->{OUT} = ">$spool/$filename";
+
+      $form->{queued} .= " $form->{formname} $filename";
+      $form->{queued} =~ s/^ //;
+
+      # save status
+      $form->update_status(\%myconfig);
+
+      %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
+                reference   => $form->{"${inv}number"},
+                formname    => $form->{formname},
+                action      => 'queued',
+                id          => $form->{id} );
+
 
       $form->parse_template(\%myconfig, $userspath);
 
