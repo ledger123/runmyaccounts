@@ -2689,6 +2689,7 @@ sub do_print_reminder {
                     formname    => $form->{formname},
                     action      => 'queued',
                     id          => $form->{id} );
+         $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
       }
       $form->parse_template(\%myconfig, $userspath);
 
