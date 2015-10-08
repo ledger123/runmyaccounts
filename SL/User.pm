@@ -85,9 +85,12 @@ sub login {
   if ($self->{login} ne "") {
 
     if ($self->{password} ne "") {
-      my $password = crypt $form->{password}, substr($self->{login}, 0, 2);
-      if ($self->{password} ne $password) {
-	return -1;
+      if ($self->{password} eq $form->{encpassword}) {
+      } else {
+        my $password = crypt $form->{password}, substr($self->{login}, 0, 2);
+        if ($self->{password} ne $password) {
+	      return -1;
+        }
       }
     }
 
