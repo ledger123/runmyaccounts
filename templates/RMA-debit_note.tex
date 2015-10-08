@@ -1,0 +1,286 @@
+
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+% Art des Templates: Kreditorenlastschrift Buchung / debit_note.tex
+% Mandant: 
+% Erstellungsdatum: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+
+%statische Elemente
+\documentclass{scrartcl}
+\usepackage[latin1]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{tabularx}
+\setlength{\parindent}{0pt}
+\usepackage{graphicx}
+\usepackage{ifthen}
+\usepackage{mathptmx}
+\font\ocr=ocrb10
+\usepackage[absolute]{textpos}
+\usepackage{colortbl}
+\usepackage{color}
+\usepackage{substr}
+
+
+%dynamische Elemente
+%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
+\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+
+%Schrift
+\usepackage[scaled=.90]{helvet} 
+\renewcommand{\familydefault}{\sfdefault}
+
+%Tabellendefinitionen
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+
+%Hintergrund für erste Standard-Seite
+\usepackage{eso-pic}
+\newcommand\BackgroundPic{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrund.pdf} 
+}}}
+
+%Hintergrund für Einzahlungsschein (ohne Footer)
+\usepackage{eso-pic}
+\newcommand\BackgroundPicEZ{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrundez.pdf} 
+}}}
+
+\begin{document}
+\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\shorthandoff{"}
+\pagestyle{empty}
+
+% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
+\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
+
+%Schriftwahl
+\normalfont
+
+\vspace{1.5cm}
+
+\centerline{\textbf{K R E D I T O R E N L A S T S C H R I F T \hspace{0.3cm} B U C H U N G S B E L E G}}
+
+\vspace{1.5cm}
+
+\parbox[t]{.5\textwidth}{
+<%name%>
+
+<%address1%>
+
+<%address2%>
+
+<%city%>
+<%if state>
+\hspace{-0.1cm}, <%state%>
+<%end state%> <%zipcode%>
+
+<%country%>
+
+\vspace{0.3cm}
+
+<%if contact%>
+<%contact%>
+\vspace{0.2cm}
+<%end contact%>
+
+<%if vendorphone%>
+Tel: <%vendorphone%>
+<%end vendorphone%>
+
+<%if vendorfax%>
+Fax: <%vendorfax%>
+<%end vendorfax%>
+
+<%email%>
+
+<%if vendortaxnumber%>
+MWST Nr.: <%vendortaxnumber%>
+<%end vendortaxnumber%>
+}
+\hfill
+\begin{tabular}[t]{ll}
+  \textbf{Beleg Nr.:} & <%invnumber%> \\
+  \textbf{Datum:} & <%invdate%> \\
+  \textbf{Fällgikeitsdatum:} & <%duedate%> \\
+  <%if ponumber%>
+    \textbf{PO-Nummer:} & <%ponumber%> \\
+  <%end ponumber%>
+  <%if ordnumber%>
+    \textbf{Bestell-Nummer:} & <%ordnumber%> \\
+  <%end ordnumber%>
+  \textbf{Mitarbeiter:} & <%employee%> \\
+\end{tabular}
+
+\vspace{1.5cm}
+
+%%%%%%%%%%%%%  ARTIKELTABELLE  %%%%%%%%%%%%%
+
+\renewcommand{\arraystretch}{1.4} %Abstand zwischen den Zeilen
+
+\begin{tabularx}{\textwidth}{@{}llXlr@{}}
+
+ \textbf{Konto Nr.} & \textbf{Konto} & \textbf{Beschreibung} &\textbf{Projekt} & \textbf{Betrag <%currency%>} \\
+
+\hline
+
+<%foreach amount%>
+<%accno%> & <%account%> & <%description%> & <%projectnumber%> &<%amount%>\\
+<%end amount%>
+\end{tabularx}
+
+%%%%%%%%%%%%%  SUMMEN TEMPLATE  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%tax%>}{}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if total%>
+\textbf{Totalbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+<%end total%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lrrr@{}}
+\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
+\hline
+0 \%& <%invtotal%>  & 0.00 & <%invtotal%>\\
+
+\end{tabular}
+\end{flushright}
+
+}
+
+}{
+
+\ifthenelse{\equal{<%taxincluded%>}{1}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if total%>
+\textbf{Total <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+<%end total%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lr@{}}
+\textbf{MWST-Satz} & \textbf{MWST}\\
+\hline
+<%foreach tax%>
+<%taxrate%> \% &<%tax%>\\
+<%end tax%>
+\end{tabular}
+
+\end{flushright}
+}
+
+}{
+
+\parbox{\textwidth}{
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+Zwischentotal <%currency%>& <%subtotal%> \\
+
+<%foreach tax%>
+MWST <%taxrate%> \%  & <%tax%> \\
+<%end tax%>
+
+\hline
+
+<%if total%>
+\textbf{Total <%currency%>}& \textbf{<%invtotal%>}
+<%end total%>
+
+\end{tabularx}
+
+\hline
+}
+}
+}
+
+%%%%%%%%%%%%%  FUSS  %%%%%%%%%%%%%
+
+\vspace{1cm}
+
+\ifthenelse{\equal{<%notes%>}{}}{}{
+<%notes%>
+\vspace{1cm}
+}
+
+%%%%%%%%%%%%%  ZAHLUNGS TABELLE %%%%%%%%%%%%%
+
+<%if paid_1%>
+\begin{tabular}{@{}llllr@{}}
+  \multicolumn{5}{c}{\textbf{Zahlungen}} \\
+  \hline
+  \textbf{Datum} & & \textbf{Beleg} & \textbf{Notiz} & \textbf{Betrag <%currency%>} \\
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%paymentmemo%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\end{tabular}
+<%end paid_1%>
+
+%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
+
+%Die Seite wird aufgefüllt - der Footer ist ganz unten.
+\vspace*{\fill}
+
+\begin{footnotesize}
+\hline
+
+\vspace{0.4cm}
+
+\parbox[t]{.34\textwidth}{
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+\ifthenelse{\equal{<%2201_taxnumber%>}{}}{}{MWSt Nr.: <%2201_taxnumber%>}
+}
+\parbox[t]{.33\textwidth}{\hspace{1cm}
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
+\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
+\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
+\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
+}
+
+\end{footnotesize}
+
+\end{document}

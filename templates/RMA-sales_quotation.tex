@@ -1,0 +1,341 @@
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+% Art des Templates: Offerte / sales_quotation.tex
+% Mandant: 
+% Erstellungsdatum: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+
+%statische Elemente
+\documentclass{scrartcl}
+\usepackage[latin1]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{tabularx}
+\setlength{\parindent}{0pt}
+\usepackage{graphicx}
+\usepackage{ifthen}
+\usepackage{mathptmx}
+\font\ocr=ocrb10
+\usepackage[absolute]{textpos}
+\usepackage{colortbl}
+\usepackage{color}
+\usepackage{substr}
+
+
+%dynamische Elemente
+%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
+\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+
+%Schrift
+\usepackage[scaled=.90]{helvet} 
+\renewcommand{\familydefault}{\sfdefault}
+
+%Tabellendefinitionen
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+
+%Hintergrund für erste Standard-Seite
+\usepackage{eso-pic}
+\newcommand\BackgroundPic{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrund.pdf} 
+}}}
+
+%Hintergrund für Einzahlungsschein (ohne Footer)
+\usepackage{eso-pic}
+\newcommand\BackgroundPicEZ{
+\put(0,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/hintergrundez.pdf} 
+}}}
+
+\begin{document}
+\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\shorthandoff{"}
+\pagestyle{empty}
+
+% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
+\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
+
+%Schriftwahl
+\normalfont
+
+%%%%%%%%%%%%%  PAGEBREAK SECTION  %%%%%%%%%%%%%
+
+<%pagebreak 54 15 24%>
+
+%Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
+\end{tabularx} 
+
+%Eine Zwischensummentabelle wird eingefügt
+\begin{tabularx}{\textwidth}{@{}Xr@{}} 
+\hline
+Zwischensumme &<%sumcarriedforward%> \\
+\end{tabularx}
+
+%Eine neue Seite wird initialisiert.
+\newpage
+
+%Die Artikeltabelle auf der neuen Seite wird initialisiert.
+\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
+
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
+\hline
+
+%Der Übertrag der letzten Seite wird geschrieben.
+\"{U}bertrag von Seite <%lastpage%> & & & & <%sumcarriedforward%> \\
+<%end pagebreak%>
+
+%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
+
+% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
+%\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
+
+% Bei rechter Positionierung des Adresskopfs:
+\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
+
+\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
+\small
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+%Firmenanschrift
+
+<%name%>
+
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
+
+}{
+
+%Privatanschrift
+
+<%salutation%>
+
+<%firstname%> <%lastname%>
+
+} 
+
+\ifthenelse{\equal{<%address1%>}{}}{}{<%address1%>}
+
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+
+\end{textblock*}
+
+\vspace{3.2cm}
+
+%%%%%%%%%%%%%  RECHNUNGSKOPF  %%%%%%%%%%%%%
+
+\parbox{\textwidth}{
+\textbf{\large{Offerte Nr. <%quonumber%>}\hfill {Datum:} <%quodate%>}
+}
+
+\vspace{0.5cm}
+
+%Rechnungstitel
+\ifthenelse{\equal{<%quodescription%>}{}}{}{
+\textbf{<%quodescription%>}
+\vspace{0.2cm}
+}
+
+%Bestellnummer
+\ifthenelse{\equal{<%ordnumber%>}{}}{}{Bestellnummer: <%ordnumber%>
+\vspace{0.2cm}
+}
+
+%Ihre Bestellnummer
+\ifthenelse{\equal{<%ponumber%>}{}}{}{Ihre Bestellnummer: <%ponumber%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 1
+\ifthenelse{\equal{<%shippingpoint%>}{}}{}{<%shippingpoint%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 2
+\ifthenelse{\equal{<%shipvia%>}{}}{}{<%shipvia%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 3
+\ifthenelse{\equal{<%waybill%>}{}}{}{<%waybill%>
+\vspace{0.2cm}
+}
+
+\vspace{0.3cm}
+
+%%%%%%%%%%%%%  ARTIKELTABELLE  %%%%%%%%%%%%%
+
+\renewcommand{\arraystretch}{1.4} %Abstand zwischen den Zeilen
+
+\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
+
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
+
+\hline
+
+<%foreach number%>
+ <%description%> \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline <%itemnotes%>} 
+\ifthenelse{\equal{<%deliverydate%>}{}}{}{\newline Lieferdatum: <%deliverydate%>} 
+\ifthenelse{\equal{<%serialnumber%>}{}}{}{\newline Seriennummer: <%serialnumber%>}
+\ifthenelse{\equal{<%projectnumber%>}{}}{}{\newline Projekt: <%projectnumber%>}
+\ifthenelse{\equal{<%ordernumber%>}{}}{}{\newline Bestellnummer: <%ordernumber%>}
+\ifthenelse{\equal{<%customerponumber%>}{}}{}{\newline Ihre Bestellnummer: <%customerponumber%>}
+\ifthenelse{\equal{<%package%>}{}}{}{\newline Verpackung: <%package%>}
+\ifthenelse{\equal{<%netweight%>}{}}{}{\newline Netto Gewicht: <%netweight%>}
+\ifthenelse{\equal{<%grossweight%>}{}}{}{\newline Brutto Gewicht: <%grossweight%>}
+& <%qty%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%discountrate%> \%} & <%unit%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline Rabatt}& <%sellprice%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%netprice%>}  & <%linetotal%>\\
+<%end number%>
+\end{tabularx}
+
+%%%%%%%%%%%%%  SUMMEN TEMPLATE  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%tax%>}{}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if quototal%>
+\textbf{Offertebetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%quototal%>}\\
+<%end quototal%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lrrr@{}}
+\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
+\hline
+0 \%& <%quototal%>  & 0.00 & <%quototal%>\\
+
+\end{tabular}
+\end{flushright}
+
+}
+
+}{
+
+\ifthenelse{\equal{<%taxincluded%>}{1}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if quototal%>
+\textbf{Offertebetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%quototal%>}\\
+<%end quototal%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lrrr@{}}
+\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
+\hline
+<%foreach tax%>
+<%taxrate%> \%&<%taxbase%>  &<%tax%> & <%taxbaseinclusive%>\\
+<%end tax%>
+\end{tabular}
+
+\end{flushright}
+}
+
+}{
+
+\parbox{\textwidth}{
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+Zwischentotal <%currency%>& <%subtotal%> \\
+
+<%foreach tax%>
+MWST <%taxrate%> \% auf <%taxbase%> & <%tax%> \\
+<%end tax%>
+
+\hline
+
+<%if quototal%>
+\textbf{Offertebetrag <%currency%>}& \textbf{<%quototal%>}
+<%end quototal%>
+
+\end{tabularx}
+
+\hline
+}
+}
+}
+
+%%%%%%%%%%%%%  RECHNUNGSFUSS  %%%%%%%%%%%%%
+
+%Anpassung der Zeilenabstände
+\renewcommand{\arraystretch}{1}
+
+
+\vspace{0.5cm}
+
+\ifthenelse{\equal{<%notes%>}{}}{}{
+<%notes%>
+\vspace{0.5cm}
+}
+
+Freundliche Grüsse
+
+\vspace{0.5cm}
+
+<%company%>
+
+%%%%%%%%%%%%%  BEZAHLT TABELLE  %%%%%%%%%%%%%
+
+%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
+
+%Die Seite wird aufgefüllt - der Footer ist ganz unten.
+\vspace*{\fill}
+
+\begin{footnotesize}
+\hline
+
+\vspace{0.4cm}
+
+\parbox[t]{.34\textwidth}{
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+}
+\parbox[t]{.33\textwidth}{\hspace{1cm}
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
+\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
+\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
+\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
+}
+
+\end{footnotesize}
+
+%Abschluss des Dokuments, NUR falls kein Einzahlungsschein folgt.
+\end{document}
