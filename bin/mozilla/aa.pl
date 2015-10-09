@@ -409,20 +409,12 @@ sub create_links {
     }
 
     $form->{invtotal} = $netamount + $tax;
-
     if ( $form->{id} ) {
-
-        $cdt = ( $form->{cdt} ) ? ( $netamount - $form->{discount_paid} ) : $netamount;
-
         for (@taxaccounts) {
-            $tax = $form->round_amount( $cdt * $form->{"${_}_rate"}, $form->{precision} );
-            if ($tax) {
-                if ( $form->{"tax_$_"} == $tax ) {
-                    $form->{"calctax_$_"} = 1;
-                }
-            }
+           if ( $form->{"tax_$_"} ) {
+               $form->{"calctax_$_"} = 1;
+           }
         }
-
     }
     else {
         for (@taxaccounts) { $form->{"calctax_$_"} = !$linetax } # Uncheck summary tax accounts by default when linetax is enabled.
