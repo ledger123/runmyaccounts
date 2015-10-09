@@ -120,6 +120,7 @@ sub edit {
         $form->{title} = $locale->text($title);
     }
 
+    $form->{firsttime} = 1; # do not use parse_amount if is first time and amounts are not formatted.
     &update;
 
 }
@@ -1177,13 +1178,13 @@ sub update {
 
         $form->{invtotal} = 0;
 
-        $form->{exchangerate} = $form->parse_amount( \%myconfig, $form->{exchangerate} );
+        $form->{exchangerate} = $form->parse_amount( \%myconfig, $form->{exchangerate} ) if !$form->{firsttime};
 
         @flds  = ( "amount", "$form->{ARAP}_amount", "projectnumber", "description", "tax" );
         $count = 0;
         @a     = ();
         for $i ( 1 .. $form->{rowcount} ) {
-            $form->{"amount_$i"} = $form->parse_amount( \%myconfig, $form->{"amount_$i"} );
+            $form->{"amount_$i"} = $form->parse_amount( \%myconfig, $form->{"amount_$i"} ) if !$form->{firsttime}
             if ( $form->{"amount_$i"} ) {
                 push @a, {};
                 $j = $#a;
@@ -1205,8 +1206,8 @@ sub update {
 
         $form->{oldtaxincluded} = ($form->{oldtaxincluded}) ? '1' : "";
         for ( 1 .. $form->{rowcount} ) { 
-            $form->{"amount_$_"} = $form->parse_amount(\%myconfig, $form->{"amount_$_"});
-            $form->{"linetaxamount_$_"} = $form->parse_amount(\%myconfig, $form->{"linetaxamount_$_"});
+            $form->{"amount_$_"} = $form->parse_amount(\%myconfig, $form->{"amount_$_"}) if !$form->{firsttime};
+            $form->{"linetaxamount_$_"} = $form->parse_amount(\%myconfig, $form->{"linetaxamount_$_"}) if !$form->{firsttime};
             if ($form->{"tax_$_"}){
                ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
                if (!$form->{"linetaxamount_$_"} || $form->{"tax_$_"} ne $form->{"oldtax_$_"} || $form->{"amount_$_"} != $form->{"oldamount_$_"} || $form->{taxincluded} ne $form->{oldtaxincluded} ){
@@ -1228,8 +1229,8 @@ sub update {
             $form->{exchangerate} = $form->check_exchangerate( \%myconfig, $form->{currency}, $form->{transdate}, ( $form->{ARAP} eq 'AR' ) ? 'buy' : 'sell' );
         }
 
-        $form->{cashdiscount}  = $form->parse_amount( \%myconfig, $form->{cashdiscount} );
-        $form->{discount_paid} = $form->parse_amount( \%myconfig, $form->{discount_paid} );
+        $form->{cashdiscount}  = $form->parse_amount( \%myconfig, $form->{cashdiscount} ) if !$form->{firsttime};
+        $form->{discount_paid} = $form->parse_amount( \%myconfig, $form->{discount_paid} ) if !$form->{firsttime};
 
         if ( $newname = &check_name( $form->{vc} ) ) {
             &rebuild_vc( $form->{vc}, $form->{ARAP}, $form->{transdate} );
@@ -1361,7 +1362,7 @@ sub update {
     for $i ( 1 .. $form->{paidaccounts} ) {
         if ( $form->{"paid_$i"} ) {
             for (qw(olddatepaid datepaid source memo cleared paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
-            for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+            for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) if !$form->{firsttime} }
 
             $totalpaid += $form->{"paid_$j"};
 
