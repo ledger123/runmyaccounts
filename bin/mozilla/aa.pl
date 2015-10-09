@@ -1306,8 +1306,8 @@ sub update {
                     if ($taxrate) {
                         $a = ( $form->{cdt} ) ? ( $form->{invtotal} - $form->{discount_paid} ) : $form->{invtotal};
                         $a *= $form->{"${item}_rate"} / ( 1 + $taxrate );
-                        $b   = $form->round_amount( $a,         $form->{precision} );
-                        $tax = $form->round_amount( $a - $diff, $form->{precision} );
+                        $b   = $a;
+                        $tax = $a - $diff;
                         $diff = $b - ( $a - $diff );
                     }
                     $form->{"tax_$item"} = $tax if $form->{"calctax_$item"};
