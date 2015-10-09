@@ -1184,7 +1184,7 @@ sub update {
         $count = 0;
         @a     = ();
         for $i ( 1 .. $form->{rowcount} ) {
-            $form->{"amount_$i"} = $form->parse_amount( \%myconfig, $form->{"amount_$i"} ) if !$form->{firsttime}
+            $form->{"amount_$i"} = $form->parse_amount( \%myconfig, $form->{"amount_$i"} ) if !$form->{firsttime};
             if ( $form->{"amount_$i"} ) {
                 push @a, {};
                 $j = $#a;
