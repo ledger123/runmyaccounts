@@ -1716,12 +1716,18 @@ sub reminder {
 		 WHERE a.curr = e.curr
 		 AND e.transdate = a.transdate) AS exchangerate,
 	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
-	      s.*
+	      s.*,
+          bank.name bankname, bank.iban bankiban, bank.bic bankbic,
+          bank.dcn bankdcn, bank.rvc bankrvc, bank.membernumber bankmembernumber,
+          ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
+          ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
 	      FROM ar a
 	      JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
 	      JOIN address ad ON (ad.trans_id = c.id)
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
+          LEFT JOIN bank ON (bank.id = c.payment_accno_id)
+          LEFT JOIN address ad2 ON (ad2.trans_id = c.payment_accno_id)
 	      WHERE a.duedate <= current_date
 	      AND $where
 	      ORDER BY vc_id, transdate, invnumber|;
@@ -1740,6 +1746,10 @@ sub reminder {
 	$ref->{module} = 'ps' if $ref->{till};
 	$ref->{exchangerate} ||= 1;
 	$ref->{language_code} = $item->{language_code};
+
+    ($whole, $decimal) = split /\./, $ref->{due};
+    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
+    $ref->{integer_out_amount} = $whole;
 
 	$rth->execute($ref->{id}, $curr);
 	$found = 0;

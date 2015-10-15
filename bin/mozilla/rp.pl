@@ -2581,7 +2581,6 @@ sub print_reminder {
   }
 
   RP->reminder(\%myconfig, \%$form);
-  
   if ($form->{media} !~ /(screen|email)/) {
     $form->{OUT} = qq~| $printer{$form->{media}}~;
   }
@@ -2649,6 +2648,7 @@ sub do_print_reminder {
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
+  push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country dcn iban rvc bic membernumber );
 
   while (@{ $form->{AG} }) {
 
@@ -2681,6 +2681,8 @@ sub do_print_reminder {
     
       $ref->{exchangerate} ||= 1;
       $form->{due} = $form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision});
+      $form->{integer_out_amount} = $ref->{integer_out_amount};
+      $form->{out_decimal} = $ref->{out_decimal};
 
       $form->parse_template(\%myconfig, $userspath);
 
