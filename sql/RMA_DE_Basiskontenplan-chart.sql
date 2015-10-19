@@ -2740,7 +2740,8 @@ INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = 'acc
 
 
 DELETE FROM DEFAULTS;
-INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.10');INSERT INTO defaults (fldname, fldvalue) VALUES ('weightunit', 'kg');
+INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.10');
+INSERT INTO defaults (fldname, fldvalue) VALUES ('weightunit', 'kg');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('precision', '2');
 INSERT INTO DEFAULTS (fldname, fldvalue) VALUES ('cdt', '1');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('glnumber','X-0');
