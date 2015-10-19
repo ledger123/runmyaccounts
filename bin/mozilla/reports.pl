@@ -1117,6 +1117,23 @@ sub income_statement {
 
    print qq|
 <body>
+|;
+
+print q|
+<script>
+$(document).ready(function(){
+    $('.check:button').toggle(function(){
+        $('input:checkbox').attr('checked','checked');
+        $(this).val('uncheck all')
+    },function(){
+        $('input:checkbox').removeAttr('checked');
+        $(this).val('check all');        
+    })
+})
+</script>
+|;
+
+   print qq|
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
 <form method=post action='$form->{script}'>
 
@@ -1140,11 +1157,16 @@ $selectfrom
    my $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute || $form->dberror($query);
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1 checked>$ref->{description}<br>\n|;
+      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description}<br>\n|;
    }
 
 print qq|
 </td></tr>
+
+<tr><td>&nbsp;</td><td>
+  <input type="button" class="check" value="|.$locale->text('check all').qq|" />
+</td></tr>
+
 </table>
 <hr>
 <input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">|;

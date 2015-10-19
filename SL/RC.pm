@@ -65,21 +65,20 @@ sub payment_transactions {
 
   if ($form->{fromdate}) {
     $transdate = qq| AND ac.transdate < date '$form->{fromdate}'|;
+     # get beginning balance
+     $query = qq|SELECT sum(ac.amount)
+              FROM acc_trans ac
+              JOIN chart ch ON (ch.id = ac.chart_id)
+              WHERE ch.accno = '$form->{accno}'
+              AND ac.approved = '1'
+              $transdate
+              $cleared
+              |;
+     ($form->{beginningbalance}) = $dbh->selectrow_array($query);
   } else {
-    $cleared = qq| AND ac.cleared IS NOT NULL|;
+     $form->{beginningbalance} = 0;
   }
-  
-  # get beginning balance
-  $query = qq|SELECT sum(ac.amount)
-	      FROM acc_trans ac
-	      JOIN chart ch ON (ch.id = ac.chart_id)
-	      WHERE ch.accno = '$form->{accno}'
-	      AND ac.approved = '1'
-	      $transdate
-	      $cleared
-	      |;
-  ($form->{beginningbalance}) = $dbh->selectrow_array($query);
-
+ 
   # fx balance
   $query = qq|SELECT sum(ac.amount)
 	      FROM acc_trans ac
@@ -145,8 +144,6 @@ sub payment_transactions {
 
   if ($form->{fromdate}) {
     $transdate .= qq| AND ac.transdate >= '$form->{fromdate}'|;
-  } else {
-    $cleared = qq| AND ac.cleared IS NULL|;
   }
   if ($form->{todate}) {
     $transdate .= qq| AND ac.transdate <= '$form->{todate}'|;

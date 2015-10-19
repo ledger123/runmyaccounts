@@ -70,6 +70,14 @@ sub create_links {
     }
     $sth->finish;
 
+    ($form->{department_id}, $form->{department}) = $dbh->selectrow_array(qq|
+        SELECT id, description 
+        FROM department 
+        WHERE id IN (
+            SELECT department_id FROM dpt_trans WHERE trans_id = $form->{id}
+        )
+    |);
+
     # check if it is orphaned
     $query = qq|SELECT a.id
               FROM $arap a
@@ -251,6 +259,10 @@ sub save {
   if ($form->{id}) {
     $query = qq|DELETE FROM $form->{db}tax
                 WHERE $form->{db}_id = $form->{id}|;
+    $dbh->do($query) || $form->dberror($query);
+
+    $query = qq|DELETE FROM dpt_trans
+                WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
 
     $query = qq|DELETE FROM shipto
@@ -445,6 +457,14 @@ sub save {
     }
   }
 
+  # save department
+  if ($form->{department}){
+     ($null, $form->{department_id}) = split /--/, $form->{department};
+     $form->{department_id} *= 1;
+     $query = qq|INSERT INTO dpt_trans (trans_id, department_id) VALUES ($form->{id}, $form->{department_id})|;
+     $dbh->do($query) || $form->dberror($query);
+  }
+
   # add address
   my $id;
   my $var;
@@ -620,6 +640,12 @@ sub search {
     $form->{l_invnumber} = $form->{l_ordnumber} = $form->{l_quonumber} = "";
   }
   
+  my $department_where;
+  if ($form->{department}){
+     ($null, $department_id) = split /--/, $form->{department};
+     $department_id *= 1;
+     $department_where = qq|AND c.id IN (SELECT trans_id FROM dpt_trans WHERE department_id = $department_id)|;
+  }
 
   my $query = qq|SELECT c.*, b.description AS business,
                  e.name AS employee, g.pricegroup, l.description AS language,
@@ -638,7 +664,8 @@ sub search {
 	      LEFT JOIN pricegroup g ON (c.pricegroup_id = g.id)
 	      LEFT JOIN language l ON (l.code = c.language_code)
 	      LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
-                 WHERE $where|;
+                 WHERE $where
+                 $department_where|;
 
   # redo for invoices, orders and quotations
   if ($form->{l_transnumber} || $form->{l_invnumber} || $form->{l_ordnumber} || $form->{l_quonumber}) {

@@ -1385,9 +1385,13 @@ sub post_invoice {
 	$dbh->do($query) || $form->dberror($query);
       }
 
+      my $paymentadjust1 = $amount;
+
       # record payment
       $amount = $form->{"paid_$i"} * -1;
       $fxtotalamount_paid += $amount * -1;
+
+      my $paymentadjust2 = $amount;
 
       if ($keepcleared) {
 	$cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
@@ -1410,9 +1414,26 @@ sub post_invoice {
       $dbh->do($query) || $form->dberror($query);
 		  
       $paymentid++;
-      
+
+      # gain/loss
+      $amount = $form->round_amount(($form->round_amount($form->{"paid_$i"} * $form->{exchangerate}, $form->{precision}) - $form->round_amount($form->{"paid_$i"} * $form->{"exchangerate_$i"}, $form->{precision})) * -1, $form->{precision});
+
+      my $paymentadjust3 = $amount;
+
+      if ($amount) {
+	my $accno_id = ($amount > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
+	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+	            transdate, fx_transaction, cleared, approved, vr_id)
+	            VALUES ($form->{id}, $accno_id,
+		    $amount, '$form->{"datepaid_$i"}', '1', $cleared,
+		    '$approved', $voucherid)|;
+	$dbh->do($query) || $form->dberror($query);
+      }
+
       # exchangerate difference
       $amount = $form->round_amount(($form->round_amount($form->{"paid_$i"} * $form->{"exchangerate_$i"} - $form->{"paid_$i"}, $form->{precision})) * -1, $form->{precision});
+
+      $amount = ($paymentadjust1 + $paymentadjust2 + $paymentadjust3) * -1; # Override calculated value above to fix outstanding report difference
 
       if ($amount) { 
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
@@ -1425,19 +1446,6 @@ sub post_invoice {
 	$dbh->do($query) || $form->dberror($query);
       }
      
-      # gain/loss
-      $amount = $form->round_amount(($form->round_amount($form->{"paid_$i"} * $form->{exchangerate}, $form->{precision}) - $form->round_amount($form->{"paid_$i"} * $form->{"exchangerate_$i"}, $form->{precision})) * -1, $form->{precision});
-
-
-      if ($amount) {
-	my $accno_id = ($amount > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-	            transdate, fx_transaction, cleared, approved, vr_id)
-	            VALUES ($form->{id}, $accno_id,
-		    $amount, '$form->{"datepaid_$i"}', '1', $cleared,
-		    '$approved', $voucherid)|;
-	$dbh->do($query) || $form->dberror($query);
-      }
     }
   }
 
@@ -1478,8 +1486,8 @@ sub post_invoice {
   my $fxtotalamount = 0;
   $fxtotalamount = $form->round_amount($fxtax_total, $form->{precision}) + $fxamount;
 
-  if (($form->{currency} ne $form->{defaultcurrency}) and ($fxtotalamount eq $fxtotalamount_paid) and ($invamount ne $form->{paid})){
-      $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
+  if (($fxtotalamount eq $fxtotalamount_paid) and ($invamount ne $form->{paid})){
+     $correction = $form->round_amount($invamount - $form->{paid}, $form->{precision});
      $form->{paid} = $invamount;
      $query = qq|
          update acc_trans 
@@ -1508,15 +1516,13 @@ sub post_invoice {
        |;
        $dbh->do($query) or $form->dberror($query);
      } else {
-       if ( $correction != 0 ) {
-  	      $correction = (-1)*$correction;
-          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-		            transdate, fx_transaction, cleared)
+	    $correction = (-1)*$correction;
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+		            transdate, fx_transaction, cleared, approved, vr_id)
 		            VALUES ($form->{id}, $defaults{fxloss_accno_id},
-			    $correction, '$form->{"datepaid_1"}', '1', $cleared)|;
-	      print STDERR "$query\n";
-		  $dbh->do($query) || $form->dberror($query);
-	   }
+			    $correction, '$form->{"datepaid_1"}', '1', $cleared,
+			    '$approved', $voucherid)|;
+		$dbh->do($query) || $form->dberror($query);
      }
   }
 
@@ -2283,7 +2289,6 @@ sub price_matrix_query {
 	      '$form->{defaultcurrency}' AS curr, '' AS pricegroup
               FROM parts p
 	      WHERE p.id = ?
-
 	      UNION
   
               SELECT p.*, g.pricegroup
@@ -2293,7 +2298,6 @@ sub price_matrix_query {
 	      AND p.customer_id = $form->{customer_id}
 	      
 	      UNION
-
 	      SELECT p.*, g.pricegroup 
 	      FROM partscustomer p 
 	      LEFT JOIN pricegroup g ON (g.id = p.pricegroup_id)
@@ -2302,13 +2306,11 @@ sub price_matrix_query {
 	      AND c.id = $form->{customer_id}
 	      
 	      UNION
-
 	      SELECT p.*, '' AS pricegroup
 	      FROM partscustomer p
 	      WHERE p.customer_id = 0
 	      AND p.pricegroup_id = 0
 	      AND p.parts_id = ?
-
 	      ORDER BY customer_id DESC, pricegroup_id DESC, pricebreak
 	      
 	      |;
@@ -2433,4 +2435,3 @@ sub exchangerate_defaults {
 
 
 1;
-

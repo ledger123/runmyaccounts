@@ -65,17 +65,27 @@ sub post_transaction {
   my %tax = ();
   my $accno;
 
+  my %zerotax; # Taxes checked or selected in this transaction to decide 0 tax posting.
+  for (1 .. $form->{rowcount}){
+     ($accno, $null) = split /--/, $form->{"tax_$_"};
+     $zerotax{$accno} = 1 if $form->{"tax_$_"};
+  }
+
   # add taxes
   foreach $accno (@taxaccounts) {
+    $zerotax{$accno} = 1 if $form->{"calctax_$accno"};
+
     $fxtax += $tax{fxamount}{$accno} = $form->parse_amount($myconfig, $form->{"tax_$accno"});
     $tax += $tax{fxamount}{$accno};
     
+    if ($zerotax{$accno} or $tax{fxamount}{$accno}){
     push @{ $form->{acc_trans}{taxes} }, {
       accno => $accno,
       amount => $tax{fxamount}{$accno},
       transdate => $form->{transdate},
       fx_transaction => 0 };
-      
+    }
+
     $amount = $tax{fxamount}{$accno} * $form->{exchangerate};
     $tax{amount}{$accno} = $form->round_amount($amount - $diff, $form->{precision});
     $diff = $tax{amount}{$accno} - ($amount - $diff);
@@ -83,11 +93,13 @@ sub post_transaction {
     $tax += $amount;
 
     if ($form->{currency} ne $form->{defaultcurrency}) {
+    if ($zerotax{$accno} or $amount){
       push @{ $form->{acc_trans}{taxes} }, {
 	accno => $accno,
 	amount => $amount,
 	transdate => $form->{transdate},
 	fx_transaction => 1 };
+    }
     }
 
   }
@@ -140,7 +152,10 @@ sub post_transaction {
 	project_id => $project_id,
 	description => $form->{"description_$i"},
 	cleared => $cleared,
-	fx_transaction => 0 };
+	fx_transaction => 0,
+    tax => $form->{"tax_$i"},
+    taxamount => $form->{"linetaxamount_$i"},
+    };
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
 	$amount = $amount{amount}{$i} - $amount{fxamount}{$i};
@@ -150,7 +165,10 @@ sub post_transaction {
 	  project_id => $project_id,
 	  description => $form->{"description_$i"},
 	  cleared => $cleared,
-	  fx_transaction => 1 };
+	  fx_transaction => 1, 
+      tax => $form->{"tax_$i"},
+      taxamount => $form->{"linetaxamount_$i"},
+        };
       }
 
       $invnetamount += $amount{amount}{$i};
@@ -339,13 +357,14 @@ sub post_transaction {
     # insert detail records in acc_trans
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
     if ($ref->{amount}) {
+      $ref->{taxamount} *= 1;
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
-		  project_id, memo, fx_transaction, cleared, approved)
+		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount)
 		  VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$ref->{accno}'),
 		  $ref->{amount} * $ml * $arapml, '$form->{transdate}',
 		  $ref->{project_id}, |.$dbh->quote($ref->{description}).qq|,
-		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved')|;
+		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $ref->{taxamount})|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
@@ -353,7 +372,7 @@ sub post_transaction {
   # save taxes
   foreach $ref (@{ $form->{acc_trans}{taxes} }) {
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
-    if ($ref->{amount}) {
+    #if ($ref->{amount}) {
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		  transdate, fx_transaction, approved)
 		  VALUES ($form->{id},
@@ -362,7 +381,7 @@ sub post_transaction {
 		  $ref->{amount} * $ml * $arapml, '$ref->{transdate}',
 		  '$ref->{fx_transaction}', '$approved')|;
       $dbh->do($query) || $form->dberror($query);
-    }
+      #}
   }
 
 
@@ -547,6 +566,28 @@ sub post_transaction {
       }
     }
   }
+
+  # armaghan 13/05/2015 Fix for rounding issue
+  if ($invamount eq $paid){
+          my $invamount2 = $dbh->selectrow_array("
+              SELECT round(sum(amount)::numeric,2)
+              FROM acc_trans ac
+              JOIN chart c ON ac.chart_id = c.id
+              WHERE trans_id=$form->{id}
+              AND c.link LIKE '$ARAP'
+          ");
+          if ($invamount2){
+              my ($transdate) = $dbh->selectrow_array("select max(transdate) from acc_trans where trans_id = $form->{id}");
+              ($accno) = split /--/, $form->{$ARAP};
+              $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
+                    VALUES ($form->{id}, (SELECT id FROM chart WHERE accno = '$accno'),
+                    $invamount2 * -1 * $ml * $arapml, '$transdate', '$approved')|;
+              $dbh->do($query) || $form->dberror($query);
+              $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
+                    VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2 * $ml * $arapml, '$transdate', '$approved')|;
+              $dbh->do($query) || $form->dberror($query);
+          }
+  };
 
   # save printed and queued
   $form->save_status($dbh);
@@ -820,6 +861,7 @@ sub transactions {
 		  ordnumber => 3,
 		  transdate => 4,
 		  duedate => 5,
+		  paid => 8,
 		  datepaid => 10,
 		  shipvia => 14,
 		  waybill => 15,
@@ -1264,8 +1306,18 @@ sub get_name {
     }
     $sth->finish;
     $form->{rowcount} = $i if ($i && !$form->{type});
+
+    # armaghan 26/06/15 override department with the one specified for the customer
+    my ($department_id, $department) = $dbh->selectrow_array(qq|
+        SELECT id, description FROM department WHERE id IN (
+            SELECT department_id FROM dpt_trans WHERE trans_id = $form->{"$form->{vc}_id"}
+        )|
+    );
+    if ($department_id){
+       $form->{department} = "$department--$department_id";
+       $form->{department_id} = $department_id;
+    }
   }
-  
   $dbh->disconnect if $disconnect;
   
 }

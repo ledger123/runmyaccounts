@@ -175,6 +175,7 @@ $self{texts} = {
   'Subtotal'                    => 'Zwischensumme',
   'Summary'                     => 'Zusammenfassung',
   'Tax'                         => 'MWST',
+  'Tax Amount'					=> 'MWST',
   'Tax Included'                => 'MWST im Preis enthalten',
   'Terms'                       => 'Zahlungsbedingungen',
   'Till'                        => 'Kasse',

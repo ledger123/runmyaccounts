@@ -160,6 +160,8 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('38','ERLÖSMINDERUNGEN','H','I','','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3800','Skonti','A','I','AR_paid','380',false,true,'debitorskonto');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3801','Rabatte und Preisnachlässe','A','I','AR_paid','380',false,true,'debitordifferenz');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('38011','Rabatte','A','I','AR_amount','380',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('38012','Rundungsdifferenzen','A','I','AR_amount','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3804','Inkassospesen','A','I','','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3805','Verluste Forderungen, Veränderung Wertberichtigungen','A','I','AR_amount:IC_income','380',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('39','BESTANDESÄNDERUNGEN AN UNFERTIGEN UND FERTIGEN ERZEUGNISSEN SOWIE AN NICHT FAKTURIERTEN DIENSTLEISTUNGEN','H','I','','390',false,true,'');

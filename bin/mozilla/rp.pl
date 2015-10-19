@@ -198,6 +198,7 @@ sub report {
       for (@curr) { $form->{selectcurrency} .= "$_\n" }
       
       $curr = qq|
+            <input type=hidden name=fx_transaction value=1>
           <tr>
 	    <th align=right>|.$locale->text('Currency').qq|</th>
 	    <td><select name=currency>|
@@ -410,7 +411,9 @@ sub report {
 	  <th align=right nowrap>|.$locale->text('Include in Report').qq|</th>
 	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Heading').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
-	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('All Accounts').qq|</td>
+	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('All Accounts').qq|
+	  <input name=l_name class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Company Name') . qq|
+      <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|</td>
 	</tr>
 |;
   }
@@ -1051,7 +1054,7 @@ sub generate_trial_balance {
   $form->{title} = $locale->text('Trial Balance') . " / $form->{company}";
 
   $form->{callback} = "$form->{script}?action=generate_trial_balance";
-  for (qw(login path nextsub fromdate todate month year interval l_heading l_subtotal all_accounts accounttype)) { $form->{callback} .= "&$_=$form->{$_}" }
+  for (qw(login path nextsub fromdate todate month year interval l_heading l_subtotal all_accounts l_name accounttype fx_transaction)) { $form->{callback} .= "&$_=$form->{$_}" }
   for (qw(department title)) { $form->{callback} .= "&$_=".$form->escape($form->{$_},1) }
 
   $form->{callback} = $form->escape($form->{callback});
@@ -1139,7 +1142,7 @@ sub list_accounts {
 
     $description = $form->escape($ref->{description});
     
-    $href = qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{accounttype}&login=$form->{login}&fromdate=$form->{fromdate}&todate=$form->{todate}&sort=transdate&l_heading=$form->{l_heading}&l_subtotal=$form->{l_subtotal}&department=$department&projectnumber=$projectnumber&project_id=$form->{project_id}&title=$title&nextsub=$form->{nextsub}&prevreport=$form->{callback}|;
+    $href = qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{accounttype}&login=$form->{login}&fromdate=$form->{fromdate}&todate=$form->{todate}&sort=transdate&l_heading=$form->{l_heading}&l_name=$form->{l_name}&l_subtotal=$form->{l_subtotal}&department=$department&projectnumber=$projectnumber&project_id=$form->{project_id}&title=$title&nextsub=$form->{nextsub}&fx_transaction=$form->{fx_transaction}&prevreport=$form->{callback}|;
     
     if ($form->{accounttype} eq 'gifi') {
       $href .= "&gifi_accno=$ref->{accno}&gifi_description=$description";
@@ -2578,9 +2581,38 @@ sub print_reminder {
   }
 
   RP->reminder(\%myconfig, \%$form);
-  
   if ($form->{media} !~ /(screen|email)/) {
     $form->{OUT} = qq~| $printer{$form->{media}}~;
+  }
+
+  if ($form->{media} eq 'queue') {
+    $form->{formname} = 'reminder';
+
+    %queued = split / /, $form->{queued};
+
+    if ($filename = $queued{$form->{formname}}) {
+      $form->{queued} =~ s/$form->{formname} $filename//;
+      unlink "$spool/$filename";
+      $filename =~ s/\..*$//g;
+    } else {
+      $filename = time;
+      $filename .= int rand 10000;
+    }
+
+    $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
+    $form->{OUT} = ">$spool/$filename";
+
+    $form->{queued} .= " $form->{formname} $filename";
+    $form->{queued} =~ s/^ //;
+
+    # save status
+    $form->update_status(\%myconfig);
+
+    %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
+		    reference   => $form->{"${inv}number"},
+		    formname    => $form->{formname},
+		    action      => 'queued',
+		    id          => $form->{id} );
   }
 
   &do_print_reminder;
@@ -2612,12 +2644,11 @@ sub do_print_reminder {
   # setup variables for the form
   $form->format_string(qw(companyemail companywebsite company address businessnumber username useremail tel fax));
   
-  @a = qw(id name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname);
+  @a = qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname);
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
-
-  my $dbh = $form->dbconnect(\%myconfig);
+  push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country dcn iban rvc bic membernumber );
 
   while (@{ $form->{AG} }) {
 
@@ -2650,33 +2681,9 @@ sub do_print_reminder {
     
       $ref->{exchangerate} ||= 1;
       $form->{due} = $form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision});
+      $form->{integer_out_amount} = $ref->{integer_out_amount};
+      $form->{out_decimal} = $ref->{out_decimal};
 
-      $form->{formname} = 'reminder';
-
-      if ($form->{media} eq 'queue'){
-         ($filename) = $dbh->selectrow_array("SELECT spoolfile FROM status WHERE trans_id = $form->{id}");
-
-         if ($filename) {
-            unlink "$spool/$filename";
-            $filename =~ s/\..*$//g;
-         } else {
-            $filename = time;
-            $filename .= int rand 10000;
-         }
-
-         $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
-         $form->{OUT} = ">$spool/$filename";
-
-         # save status
-         $form->update_status(\%myconfig);
-
-         %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
-                    reference   => $form->{"${inv}number"},
-                    formname    => $form->{formname},
-                    action      => 'queued',
-                    id          => $form->{id} );
-         $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
-      }
       $form->parse_template(\%myconfig, $userspath);
 
     }

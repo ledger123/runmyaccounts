@@ -1084,6 +1084,8 @@ sub trial_balance {
   my $dpt_where;
   my $dpt_join;
   my $project;
+
+  my $fx_transaction;
   
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
@@ -1109,7 +1111,13 @@ sub trial_balance {
                 AND ac.project_id = $project_id
 		|;
   }
-  
+
+  if (!$form->{fx_transaction}){
+    $fx_transaction = qq|
+                AND fx_transaction = '0' 
+|; 
+  }
+ 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month}; 
    
   # get beginning balances
@@ -1127,6 +1135,7 @@ sub trial_balance {
 		  AND ac.approved = '1'
 		  $dpt_where
 		  $project
+          $fx_transaction
 		  GROUP BY g.accno, c.category, g.description, c.contra
 		  |;
    
@@ -1143,6 +1152,7 @@ sub trial_balance {
 		  AND ac.approved = '1'
 		  $dpt_where
 		  $project
+          $fx_transaction
 		  GROUP BY c.accno, c.category, c.description, c.contra, translation
 		  |;
 		  
@@ -1228,6 +1238,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		GROUP BY g.accno, g.description, c.category, c.contra
 		ORDER BY accno|;
     
@@ -1243,6 +1254,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		GROUP BY c.accno, c.description, c.category, c.contra, translation
                 ORDER BY accno|;
 
@@ -1259,6 +1271,7 @@ sub trial_balance {
 	      WHERE $where
 	      $dpt_where
 	      $project
+          $fx_transaction
 	      AND ac.amount < 0
 	      AND c.accno = ?) AS debit,
 	      
@@ -1269,6 +1282,7 @@ sub trial_balance {
 	      WHERE $where
 	      $dpt_where
 	      $project
+          $fx_transaction
 	      AND ac.amount > 0
 	      AND c.accno = ?) AS credit
 	      |;
@@ -1282,6 +1296,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		AND ac.amount < 0
 		AND c.gifi_accno = ?) AS debit,
 		
@@ -1292,6 +1307,7 @@ sub trial_balance {
 		WHERE $where
 		$dpt_where
 		$project
+        $fx_transaction
 		AND ac.amount > 0
 		AND c.gifi_accno = ?) AS credit|;
   
@@ -1534,7 +1550,9 @@ sub aging {
     a.invnumber, a.transdate, a.till, a.ordnumber, a.ponumber, a.notes,
     $c{$_}{flds},
     a.duedate, a.invoice, a.id, a.curr,
-    a.exchangerate,
+      (SELECT $buysell FROM exchangerate e
+       WHERE a.curr = e.curr
+       AND e.transdate = a.transdate) AS exchangerate,
     ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
     s.*
     FROM $form->{arap} a
@@ -1698,13 +1716,19 @@ sub reminder {
 		 WHERE a.curr = e.curr
 		 AND e.transdate = a.transdate) AS exchangerate,
 	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
-	      s.*
+	      s.*,
+          bank.name bankname, bank.iban bankiban, bank.bic bankbic,
+          bank.dcn bankdcn, bank.rvc bankrvc, bank.membernumber bankmembernumber,
+          ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
+          ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
 	      FROM ar a
 	      JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
 	      JOIN address ad ON (ad.trans_id = c.id)
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
-	      WHERE a.duedate < current_date
+          LEFT JOIN bank ON (bank.id = c.payment_accno_id)
+          LEFT JOIN address ad2 ON (ad2.trans_id = c.payment_accno_id)
+	      WHERE a.duedate <= current_date
 	      AND $where
 	      ORDER BY vc_id, transdate, invnumber|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -1722,6 +1746,10 @@ sub reminder {
 	$ref->{module} = 'ps' if $ref->{till};
 	$ref->{exchangerate} ||= 1;
 	$ref->{language_code} = $item->{language_code};
+
+    ($whole, $decimal) = split /\./, $ref->{due};
+    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
+    $ref->{integer_out_amount} = $whole;
 
 	$rth->execute($ref->{id}, $curr);
 	$found = 0;
