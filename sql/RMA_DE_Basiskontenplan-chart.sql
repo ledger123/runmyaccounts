@@ -2732,16 +2732,15 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 
 
 DELETE FROM tax;
-INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = 'accno'),0.19);
-INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = 'accno'),0.19);
-INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = 'accno'),0.19);
-INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = 'accno'),0.07);
+INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '1406'),0.19);
+INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '3806'),0.19);
+INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '3800'),0.19);
+INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '1401'),0.07);
 
 
 
 DELETE FROM DEFAULTS;
-INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.10');
-INSERT INTO defaults (fldname, fldvalue) VALUES ('weightunit', 'kg');
+INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.10');INSERT INTO defaults (fldname, fldvalue) VALUES ('weightunit', 'kg');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('precision', '2');
 INSERT INTO DEFAULTS (fldname, fldvalue) VALUES ('cdt', '1');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('glnumber','X-0');

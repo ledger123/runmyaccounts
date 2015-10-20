@@ -287,6 +287,9 @@ sub create_links {
 
     my $dbh = $form->dbconnect(\%myconfig);
     my ($linetax) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='linetax'");
+    if ($linetax and $form->{id}){
+        ($linetax) = $dbh->selectrow_array("SELECT 1 FROM acc_trans WHERE trans_id = $form->{id} AND tax <> '' LIMIT 1");
+    }
     if ($linetax){
         $form->{selecttax} = "\n";
         my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%$form->{ARAP}_tax%' ORDER BY accno|;
@@ -413,7 +416,7 @@ sub create_links {
     if ( $form->{id} ) {
         for (@taxaccounts) {
            if ( $form->{"tax_$_"} ) {
-               $form->{"calctax_$_"} = 1;
+               $form->{"calctax_$_"} = 0;
            }
         }
     }
@@ -1202,6 +1205,8 @@ sub update {
             for $i (1 .. $form->{rowcount} ){
                 for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
             }
+        } else {
+            for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = $form->parse_amount( \%myconfig, $form->{"tax_$_"} ) if !$form->{firsttime} }
         }
 
         $form->{oldtaxincluded} = ($form->{oldtaxincluded}) ? '1' : "";
