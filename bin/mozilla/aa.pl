@@ -1205,6 +1205,8 @@ sub update {
             for $i (1 .. $form->{rowcount} ){
                 for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = 0 }
             }
+        } else {
+            for (split / /, $form->{taxaccounts}) { $form->{"tax_$_"} = $form->parse_amount( \%myconfig, $form->{"tax_$_"} ) if !$form->{firsttime} }
         }
 
         $form->{oldtaxincluded} = ($form->{oldtaxincluded}) ? '1' : "";
