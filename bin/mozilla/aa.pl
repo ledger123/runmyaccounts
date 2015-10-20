@@ -410,14 +410,7 @@ sub create_links {
     }
 
     $form->{invtotal} = $netamount + $tax;
-    if ( $form->{id} ) {
-        for (@taxaccounts) {
-           if ( $form->{"tax_$_"} ) {
-               $form->{"calctax_$_"} = 1;
-           }
-        }
-    }
-    else {
+    if ( !$form->{id} ) {
         for (@taxaccounts) { $form->{"calctax_$_"} = !$linetax } # Uncheck summary tax accounts by default when linetax is enabled.
     }
 
@@ -1173,7 +1166,6 @@ sub form_footer {
 
 sub update {
     my $display = shift;
-
     if ( !$display ) {
 
         $form->{invtotal} = 0;
