@@ -180,6 +180,7 @@ sub create_links {
     # tax accounts
     my $dbh = $form->dbconnect( \%myconfig );
     my ($linetax) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='linetax'");
+    $linetax = 0 if $form->{fxadj};
 
     if ($linetax) {
         my $sth = $dbh->prepare(
@@ -1743,7 +1744,8 @@ sub display_rows {
                 if ( $form->{fxadj} ) {
                     $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
                     $x = ($checked) ? "x" : "";
-                    $fx_transaction = qq|<input type=hidden name="fx_transaction_$i" value="$checked">$x|;
+                    $fx_transaction = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>|;
+                    $fx_transaction2 = qq|<td>&nbsp;</td>|;
                 }
 
                 $form->hide_form( map { "${_}_$i" } qw(accno projectnumber tax) );
@@ -1763,7 +1765,8 @@ sub display_rows {
                 }
 
                 if ( $form->{fxadj} ) {
-                    $fx_transaction = qq|<input name="fx_transaction_$i" class=checkbox type=checkbox value=1>|;
+                    $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>|;
+                    $fx_transaction2 = qq|<td>&nbsp;</td>|;
                 }
             }
         }
