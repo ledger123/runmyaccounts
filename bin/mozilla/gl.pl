@@ -1712,7 +1712,8 @@ sub display_rows {
             }
 
             if ( $form->{fxadj} ) {
-                $fx_transaction = qq|<input name="fx_transaction_$i" class=checkbox type=checkbox value=1>|;
+                $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>|;
+                $fx_transaction2 = qq|<td>&nbsp;</td>|;
             }
 
         } else {
@@ -1779,6 +1780,7 @@ sub display_rows {
             </tr>
             <tr>
                 <td>$memo $source</td>
+                $fx_transaction2
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>$project</td>
