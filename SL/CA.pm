@@ -332,7 +332,7 @@ sub all_transactions {
 		 $todate_where
 		 $dpt_where
 		 $project
-         $fx_tranaction
+         $fx_transaction
 		 $subquery
 		 |;
 
