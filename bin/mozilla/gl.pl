@@ -2161,7 +2161,7 @@ sub post {
             }
         }
     }
-    $form->{rowcount} = $j;
+    $form->{rowcount} = $count;
 
     if ( $form->{batch} ) {
         $rc = VR->post_transaction( \%myconfig, \%$form );
