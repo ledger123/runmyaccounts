@@ -81,7 +81,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2200','Geschuldete MWST','A','L','AP_amount','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2206','Verrechnungssteuer','A','L','AP_amount','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('221','ÜBRIGE KURZFRISTIGE VERBINDLICHKEITEN GEGENÜBER DRITTEN (UNVERZINSLICH)','H','L','','221',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2215','Kreditkarte','A','L','','221',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2215','Kreditkarte','A','L','','221',false,true,'kreditkarten');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('225','ÜBRIGE KURZFRISTIGE VERBINDLICHKEITEN GEGENÜBER BETEILIGUNGEN (UNVERZINSLICH)','H','L','','225',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('227','ÜBRIGE KURZFRISTIGE VERBINDLICHKEITEN GEGENÜBER SOZIALVERSICHERUNGEN UND VORSORGEEINRICHTUNGEN (UNVERZINSLICH)','H','L','','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2270','Kontokorrent Vorsorgeeinrichtung','A','L','AP_amount','227',false,true,'');
