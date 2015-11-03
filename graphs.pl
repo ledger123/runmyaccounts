@@ -126,6 +126,19 @@ sub check_password {
 
     require "$form->{path}/pw.pl";
 
+    if ($form->{encpassword}) {
+      if ($form->{encpassword} ne $myconfig{password}) {
+        if ($ENV{HTTP_USER_AGENT}) {
+          &getpassword;
+        } else {
+          $form->error($locale->text('Access Denied!'));
+        }
+        exit;
+      } else {
+        return;
+      }
+    }
+
     if ($form->{password}) {
       if ((crypt $form->{password}, substr($form->{login}, 0, 2)) ne $myconfig{password}) {
 	if ($ENV{HTTP_USER_AGENT}) {
