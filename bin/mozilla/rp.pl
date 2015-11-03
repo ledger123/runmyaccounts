@@ -2658,6 +2658,10 @@ sub do_print_reminder {
     if ($form->{"ndx_$ref->{id}"}) {
 
       for (@a) { $form->{$_} = $ref->{$_} }
+
+      $form->{bankrvc} = $form->format_dcn($form->{bankrvc});
+      $form->{bankdcn} = $form->format_dcn($form->{bankdcn});
+
       $form->format_string(@a);
 
       $form->{IN} = qq|$form->{type}$form->{"level_$ref->{id}"}.html|;
