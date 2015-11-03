@@ -1,70 +1,27 @@
-%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
-% Art des Templates: Kreditorenbuchung / ap_transaction.tex
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Kreditorenbuchung
+% Name: ap_transaction.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 9. Oktober 2015
 % Mandant: 
-% Erstellungsdatum: 
 % Version: 
 % Ersteller: 
 % © by Run my Accounts AG
 
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+<%include definitions_packages.tex%>
 
-%statische Elemente
-\documentclass{scrartcl}
-\usepackage[latin1]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage[T1]{fontenc}
-\usepackage{tabularx}
-\setlength{\parindent}{0pt}
-\usepackage{graphicx}
-\usepackage{ifthen}
-\usepackage{mathptmx}
-\font\ocr=ocrb10
-\usepackage[absolute]{textpos}
-\usepackage{colortbl}
-\usepackage{color}
-\usepackage{substr}
+<%include definitions_settings.tex%>
 
+<%include content_footer.tex%>
 
-%dynamische Elemente
-%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
-\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
 
-%Schrift
-\usepackage[scaled=.90]{helvet} 
-\renewcommand{\familydefault}{\sfdefault}
+\newcommand{\AmountType}{Rechnungsbetrag}
 
-%Tabellendefinitionen
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
-
-%Hintergrund für erste Standard-Seite
-\usepackage{eso-pic}
-\newcommand\BackgroundPic{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrund.pdf} 
-}}}
-
-%Hintergrund für Einzahlungsschein (ohne Footer)
-\usepackage{eso-pic}
-\newcommand\BackgroundPicEZ{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrundez.pdf} 
-}}}
-
-\begin{document}
-\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
-\shorthandoff{"}
-\pagestyle{empty}
-
-% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
-\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
-
-%Schriftwahl
-\normalfont
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
 
 \vspace{1.5cm}
 
@@ -123,115 +80,29 @@ MWST Nr.: <%vendortaxnumber%>
 
 \vspace{1.5cm}
 
-%%%%%%%%%%%%%  ARTIKELTABELLE  %%%%%%%%%%%%%
+\renewcommand{\arraystretch}{1.3} %Abstand zwischen den Zeilen
 
-\renewcommand{\arraystretch}{1.4} %Abstand zwischen den Zeilen
+\begin{tabularx}{\textwidth}{@{}L{1.9cm}L{4.3cm}L{5.07cm}L{1.3cm}R{3.15cm}@{}}
 
-\begin{tabularx}{\textwidth}{@{}llXlr@{}}
-
+\hline
  \textbf{Konto Nr.} & \textbf{Konto} & \textbf{Beschreibung} &\textbf{Projekt} & \textbf{Betrag <%currency%>} \\
-
+\hline
+\end{tabularx}
 \hline
 
 <%foreach amount%>
+\begin{tabularx}{\textwidth}{@{}L{1.9cm}L{4.3cm}L{5.07cm}L{1.3cm}R{3.15cm}@{}}
 <%accno%> & <%account%> & <%description%> & <%projectnumber%> &<%amount%>\\
+\end{tabularx}
+\par
+\begingroup
+\rightskip=7.4cm % Parameter anpassen
+\noindent <%itemnotes%>
+\par
+\endgroup
 <%end amount%>
-\end{tabularx}
 
-%%%%%%%%%%%%%  SUMMEN TEMPLATE  %%%%%%%%%%%%%
-
-\ifthenelse{\equal{<%tax%>}{}}{
-
-\parbox{\textwidth}{
-
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-<%if total%>
-\textbf{Totalbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
-<%end total%>
-
-\hline
-
-\end{tabularx}
-
-\vspace{0.2cm}
-
-\footnotesize 
-
-\begin{flushright}
-\begin{tabular}{@{}lrrr@{}}
-\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
-\hline
-0 \%& <%invtotal%>  & 0.00 & <%invtotal%>\\
-
-\end{tabular}
-\end{flushright}
-
-}
-
-}{
-
-\ifthenelse{\equal{<%taxincluded%>}{1}}{
-
-\parbox{\textwidth}{
-
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-<%if total%>
-\textbf{Total <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
-<%end total%>
-
-\hline
-
-\end{tabularx}
-
-\vspace{0.2cm}
-
-\footnotesize 
-
-\begin{flushright}
-\begin{tabular}{@{}lr@{}}
-\textbf{MWST-Satz} & \textbf{MWST}\\
-\hline
-<%foreach tax%>
-<%taxrate%> \% &<%tax%>\\
-<%end tax%>
-\end{tabular}
-
-\end{flushright}
-}
-
-}{
-
-\parbox{\textwidth}{
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-Zwischentotal <%currency%>& <%subtotal%> \\
-
-<%foreach tax%>
-MWST <%taxrate%> \%  & <%tax%> \\
-<%end tax%>
-
-\hline
-
-<%if total%>
-\textbf{Total <%currency%>}& \textbf{<%invtotal%>}
-<%end total%>
-
-\end{tabularx}
-
-\hline
-}
-}
-}
-
-%%%%%%%%%%%%%  FUSS  %%%%%%%%%%%%%
+<%include content_sum_bookings.tex%>
 
 \vspace{1cm}
 
@@ -240,7 +111,6 @@ MWST <%taxrate%> \%  & <%tax%> \\
 \vspace{1cm}
 }
 
-%%%%%%%%%%%%%  ZAHLUNGS TABELLE %%%%%%%%%%%%%
 
 <%if paid_1%>
 \begin{tabular}{@{}llllr@{}}
@@ -255,31 +125,6 @@ MWST <%taxrate%> \%  & <%tax%> \\
 \end{tabular}
 <%end paid_1%>
 
-%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
-
-%Die Seite wird aufgefüllt - der Footer ist ganz unten.
-\vspace*{\fill}
-
-\begin{footnotesize}
-\hline
-
-\vspace{0.4cm}
-
-\parbox[t]{.34\textwidth}{
-<%company%>\\
-\BeforeSubString{ --}{<%address%>}\\
-\BehindSubString{-- }{<%address%>}\\
-\ifthenelse{\equal{<%2201_taxnumber%>}{}}{}{MWSt Nr.: <%2201_taxnumber%>}
-}
-\parbox[t]{.33\textwidth}{\hspace{1cm}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
-\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
-\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
-\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
-}
-
-\end{footnotesize}
-
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
 \end{document}

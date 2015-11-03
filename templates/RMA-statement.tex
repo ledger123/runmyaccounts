@@ -1,112 +1,30 @@
-%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
-% Art des Templates: Zahlungserinnerung / statement.tex
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Zahlungserinnerung
+% Name: statement.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 14. Oktober 2015
 % Mandant: 
-% Erstellungsdatum: 
 % Version: 
 % Ersteller: 
 % © by Run my Accounts AG
 
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
 
-%statische Elemente
-\documentclass{scrartcl}
-\usepackage[latin1]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage[T1]{fontenc}
-\usepackage{tabularx}
-\setlength{\parindent}{0pt}
-\usepackage{graphicx}
-\usepackage{ifthen}
-\usepackage{mathptmx}
-\font\ocr=ocrb10
-\usepackage[absolute]{textpos}
-\usepackage{colortbl}
-\usepackage{color}
-\usepackage{substr}
+<%include definitions_packages.tex%>
 
+<%include definitions_settings.tex%>
 
-%dynamische Elemente
-%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
-\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+<%include content_footer.tex%>
 
-%Schrift
-\usepackage[scaled=.90]{helvet} 
-\renewcommand{\familydefault}{\sfdefault}
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
 
-%Tabellendefinitionen
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
 
-%Hintergrund für erste Standard-Seite
-\usepackage{eso-pic}
-\newcommand\BackgroundPic{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrund.pdf} 
-}}}
+<%include content_address.tex%>
 
-%Hintergrund für Einzahlungsschein (ohne Footer)
-\usepackage{eso-pic}
-\newcommand\BackgroundPicEZ{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrundez.pdf} 
-}}}
-
-\begin{document}
-\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
-\shorthandoff{"}
-\pagestyle{empty}
-
-% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
-\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
-
-%Schriftwahl
-\normalfont
-
-%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
-
-% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
-%\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
-
-% Bei rechter Positionierung des Adresskopfs:
-\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
-
-\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
-\small
-\ifthenelse{\equal{<%typeofcontact%>}{company}}{
-
-%Firmenanschrift
-
-<%name%>
-
-\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
-
-}{
-
-%Privatanschrift
-
-<%salutation%>
-
-<%firstname%> <%lastname%>
-
-} 
-
-\ifthenelse{\equal{address1}{}}{}{<%address1%>}
-
-\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
-
-<%zipcode%> <%city%>
-
-\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
-
-\end{textblock*}
-
-\vspace{3.2cm}
-
-%%%%%%%%%%%%%  KONTOAUSZUG  %%%%%%%%%%%%%
+\null\vspace{4.2cm}
 
 \parbox{\textwidth}{
 \textbf{\large{Kontoauszug}} \hfill \textbf{Datum: <%statementdate%>}
@@ -115,6 +33,8 @@
 \vspace{0.5cm}
 
 \parbox{\textwidth}{
+Sehr geehrte Damen und Herren\\
+\\
 Wir mussten feststellen, dass untenstehende Betr\"{a}ge in der H\"{o}he von <%currency%> <%total%> offen sind. Wir bitten Sie h\"{o}flich, die ausstehenden Rechnungen baldm\"{o}glichst zu begleichen.
 }
 
@@ -157,37 +77,6 @@ Freundliche Grüsse
 }
 }
 
-\vspace{1cm}
-
-%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
-
-%Die Seite wird aufgefüllt - der Footer ist ganz unten.
-\vspace*{\fill}
-
-\begin{footnotesize}
-\hline
-
-\vspace{0.4cm}
-
-\parbox[t]{.34\textwidth}{
-<%company%>\\
-\BeforeSubString{ --}{<%address%>}\\
-\BehindSubString{-- }{<%address%>}\\
-\ifthenelse{\equal{<%2201_taxnumber%>}{}}{}{MWSt Nr.: <%2201_taxnumber%>}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
-\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
-\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
-\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%bankname%>}{}}{}{Bank: <%bankname%>\\}
-\ifthenelse{\equal{<%iban%>}{}}{}{IBAN: <%iban%>\\}
-\ifthenelse{\equal{<%bic%>}{}}{}{BIC: <%bic%>\\}
-}
-
-\end{footnotesize}
-
-%Abschluss des Dokuments, NUR falls kein Einzahlungsschein folgt.
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
 \end{document}

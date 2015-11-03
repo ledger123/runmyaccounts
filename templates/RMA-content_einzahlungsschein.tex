@@ -1,0 +1,185 @@
+% Einzahlungsschein
+
+\AddToShipoutPicture{\BackgroundPicEZ} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+
+\pagestyle{empty}
+
+ \ifthenelse{\equal{<%bankname%>}{POSTFINANCE}}{
+
+ %LINKS POSTFINANCE
+ %Einzahlung für
+ \begin{textblock*}{5.8cm}(0.6cm,19.8cm)
+ \begin{flushleft}
+ <%company%>
+
+\BeforeSubString{ --}{<%address%>}
+
+\BehindSubString{-- }{<%address%>}
+
+ \end{flushleft}
+ \end{textblock*}
+
+ }{
+
+ %LINKS BANK
+ %Einzahlung für
+ \begin{textblock*}{5.8cm}(0.6cm,19.8cm)
+ \begin{flushleft}
+ <%bankname%>
+
+ <%bankzipcode%> <%bankcity%>
+ \end{flushleft}
+ \end{textblock*}
+  
+  %Zugunsten von
+  \begin{textblock*}{5.8cm}(0.6cm,21.3cm)
+  \begin{flushleft}
+  <%company%>
+
+  \BeforeSubString{ --}{<%address%>}
+
+  \BehindSubString{-- }{<%address%>}
+
+  \end{flushleft}
+  \end{textblock*}
+
+  }
+
+  %Konto
+  \begin{textblock*}{3cm}(2.8cm,23.3cm)
+  \begin{flushleft}
+  \ocr{<%membernumber%>}
+
+  \end{flushleft}
+  \end{textblock*}
+
+  %Betrag Franken
+  \begin{textblock*}{3.7cm}(0.4cm,24.0cm)
+  \begin{flushright}
+  \ocr{<%integer_out_amount%>}
+
+  \end{flushright}
+  \end{textblock*}
+
+  %Betrag Rappen
+  \begin{textblock*}{1cm}(5.1cm,24.0cm)
+  \begin{flushleft}
+  \ocr{<%out_decimal%>}
+
+  \end{flushleft}
+  \end{textblock*}
+
+  %Einbezahlt von
+  \begin{textblock*}{5.5cm}(0.6cm,25.0cm)
+  \begin{flushleft}
+  \ocr{<%dcn group=5right%>}
+  \normalfont 
+
+  \ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+  <%name%>}{
+
+  <%salutation%> <%firstname%> <%lastname%>}
+
+  <%address1%>
+
+  <%zipcode%> <%city%>
+
+  \end{flushleft}
+  \end{textblock*}
+
+  \ifthenelse{\equal{<%bankname%>}{POSTFINANCE}}{
+
+  %MITTE POSTFINANCE
+  %Einzahlung für
+  \begin{textblock*}{6cm}(6.3cm,19.8cm)
+  \begin{flushleft}
+  <%company%>
+
+\BeforeSubString{ --}{<%address%>}
+
+\BehindSubString{-- }{<%address%>}
+
+  \end{flushleft}
+  \end{textblock*}
+
+  }{
+
+  %MITTE BANK
+  %Einzahlung für 
+  \begin{textblock*}{6cm}(6.3cm,19.8cm)
+  \begin{flushleft}
+  <%bankname%>
+
+  <%bankzipcode%> <%bankcity%>
+  \end{flushleft}
+  \end{textblock*}
+   
+   %Zugunsten von
+   \begin{textblock*}{6cm}(6.3cm,21.3cm)
+   \begin{flushleft}
+   <%company%>
+
+   \BeforeSubString{ --}{<%address%>}
+
+   \BehindSubString{-- }{<%address%>}
+   \end{flushleft}
+   \end{textblock*}
+
+   }
+
+   %Konto
+   \begin{textblock*}{6cm}(8.9cm,23.3cm)
+   \begin{flushleft}
+   \ocr{<%membernumber%>}
+
+   \end{flushleft}
+   \end{textblock*}
+
+   %Betrag Franken
+   \begin{textblock*}{3.9cm}(6.3cm,24.0cm)
+   \begin{flushright}
+   \ocr{<%integer_out_amount%>}
+   \end{flushright}
+   \end{textblock*}
+
+   %Betrag Rappen
+   \begin{textblock*}{1cm}(11.15cm,24.0cm)
+   \begin{flushleft}
+   \ocr{<%out_decimal%>}
+
+   \end{flushleft}
+   \end{textblock*}
+
+   %Kodierzeile
+   \begin{textblock*}{16cm}(6.85cm,27.4cm)
+   \begin{flushleft}
+   \ocr{<%rvc%>><%dcn%>+ <%bankstate%>>}
+   \end{flushleft}
+   \end{textblock*}
+
+   %RECHTS
+   %Referenz-Nr.
+   \begin{textblock*}{8.3cm}(12.38cm,22.3cm)
+   \begin{flushleft}
+   \ocr{<%dcn group=5right%>}
+
+   \end{flushleft}
+   \end{textblock*}
+
+   %Name
+   \begin{textblock*}{6.5cm}(12.38cm,24.6cm)
+   \begin{flushleft}
+   \ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+   <%name%>}{
+
+   <%salutation%> <%firstname%> <%lastname%>}
+
+   <%address1%>
+
+   <%zipcode%> <%city%>
+
+
+   \end{flushleft}
+   \end{textblock*}

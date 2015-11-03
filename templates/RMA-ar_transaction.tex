@@ -1,330 +1,47 @@
-%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
-% Art des Templates: Debitorenbuchung / ar_transaction.tex
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Debitorenbuchung
+% Name: ar_transaction.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 8. Oktober 2015
 % Mandant: 
-% Erstellungsdatum: 
 % Version: 
 % Ersteller: 
 % © by Run my Accounts AG
 
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
 
-%statische Elemente
-\documentclass{scrartcl}
-\usepackage[latin1]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage[T1]{fontenc}
-\usepackage{tabularx}
-\setlength{\parindent}{0pt}
-\usepackage{graphicx}
-\usepackage{ifthen}
-\usepackage{mathptmx}
-\font\ocr=ocrb10
-\usepackage[absolute]{textpos}
-\usepackage{colortbl}
-\usepackage{color}
-\usepackage{substr}
+<%include definitions_packages.tex%>
 
+<%include definitions_settings.tex%>
 
-%dynamische Elemente
-%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
-\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+<%include content_footer.tex%>
 
-%Schrift
-\usepackage[scaled=.90]{helvet} 
-\renewcommand{\familydefault}{\sfdefault}
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
 
-%Tabellendefinitionen
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcommand{\DocType}{Rechnung}
 
-%Hintergrund für erste Standard-Seite
-\usepackage{eso-pic}
-\newcommand\BackgroundPic{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrund.pdf} 
-}}}
+\newcommand{\AmountType}{Rechnungsbetrag}
 
-%Hintergrund für Einzahlungsschein (ohne Footer)
-\usepackage{eso-pic}
-\newcommand\BackgroundPicEZ{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrundez.pdf} 
-}}}
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
 
-\begin{document}
-\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
-\shorthandoff{"}
-\pagestyle{empty}
+% No pagebreak
 
-% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
-\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
+<%include content_address.tex%>
 
-%Schriftwahl
-\normalfont
+<%include content_header.tex%>
 
-%%%%%%%%%%%%%  PAGEBREAK SECTION  %%%%%%%%%%%%%
+<%include content_bookings.tex%>
 
-<%pagebreak 54 15 24%>
+<%include content_sum_articles_invoices.tex%>
 
-%Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
-\end{tabularx} 
+<%include content_terms.tex%>
 
-%Eine Zwischensummentabelle wird eingefügt
-\begin{tabularx}{\textwidth}{@{}Xr@{}} 
-\hline
-Zwischensumme &<%sumcarriedforward%> \\
-\end{tabularx}
+<%include content_notes.tex%>
+ 
+%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
 
-%Eine neue Seite wird initialisiert.
-\newpage
-
-%Die Artikeltabelle auf der neuen Seite wird initialisiert.
-\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
-
-\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
-\hline
-
-%Der Übertrag der letzten Seite wird geschrieben.
-\"{U}bertrag von Seite <%lastpage%> & & & & <%sumcarriedforward%> \\
-<%end pagebreak%>
-
-%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
-
-% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
-%\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
-
-% Bei rechter Positionierung des Adresskopfs:
-\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
-
-\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
-\small
-\ifthenelse{\equal{<%typeofcontact%>}{company}}{
-
-%Firmenanschrift
-
-<%name%>
-
-\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
-
-}{
-
-%Privatanschrift
-
-<%salutation%>
-
-<%firstname%> <%lastname%>
-
-} 
-
-\ifthenelse{\equal{address1}{}}{}{<%address1%>}
-
-\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
-
-<%zipcode%> <%city%>
-
-\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
-
-\end{textblock*}
-
-\vspace{3.2cm}
-
-%%%%%%%%%%%%%  RECHNUNGSKOPF  %%%%%%%%%%%%%
-
-\parbox{\textwidth}{
-\textbf{\large{Rechnung Nr. <%invnumber%>}\hfill {Datum:} <%invdate%>}
-}
-
-\vspace{0.5cm}
-
-%Rechnungstitel
-\ifthenelse{\equal{<%invdescription%>}{}}{}{
-\textbf{<%invdescription%>}
-\vspace{0.2cm}
-}
-
-%Bestellnummer
-\ifthenelse{\equal{<%ordnumber%>}{}}{}{Bestellnummer: <%ordnumber%>
-\vspace{0.2cm}
-}
-
-%Ihre Bestellnummer
-\ifthenelse{\equal{<%ponumber%>}{}}{}{Ihre Bestellnummer: <%ponumber%>
-\vspace{0.2cm}
-}
-
-\vspace{0.3cm}
-
-%%%%%%%%%%%%%  ARTIKELTABELLE  %%%%%%%%%%%%%
-
-\renewcommand{\arraystretch}{1.4} %Abstand zwischen den Zeilen
-
-\begin{tabularx}{\textwidth}{@{}Xlllr@{}}
-
-\textbf{Beschreibung} & \textbf{Konto Nr.} & \textbf{Konto} & \textbf{Projekt} & \textbf{Betrag <%currency%>} \\
-
-\hline
-
-<%foreach amount%>
-  <%description%> & <%accno%> & <%account%> & <%projectnumber%> &<%amount%>\\
-<%end amount%>
-\end{tabularx}
-
-%%%%%%%%%%%%%  SUMMEN TEMPLATE  %%%%%%%%%%%%%
-
-\ifthenelse{\equal{<%tax%>}{}}{
-
-\parbox{\textwidth}{
-
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-<%if total%>
-\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
-<%end total%>
-
-\hline
-
-\end{tabularx}
-
-\vspace{0.2cm}
-
-\footnotesize 
-
-\begin{flushright}
-\begin{tabular}{@{}lrrr@{}}
-\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
-\hline
-0 \%& <%invtotal%>  & 0.00 & <%invtotal%>\\
-
-\end{tabular}
-\end{flushright}
-
-}
-
-}{
-
-\ifthenelse{\equal{<%taxincluded%>}{1}}{
-
-\parbox{\textwidth}{
-
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-<%if total%>
-\textbf{Rechnungsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
-<%end total%>
-
-\hline
-
-\end{tabularx}
-
-\vspace{0.2cm}
-
-\footnotesize 
-
-\begin{flushright}
-\begin{tabular}{@{}lr@{}}
-\textbf{MWST-Satz} &  \textbf{MWST}\\
-\hline
-<%foreach tax%>
-<%taxrate%> \% &<%tax%> &\\
-<%end tax%>
-\end{tabular}
-
-\end{flushright}
-}
-
-}{
-
-\parbox{\textwidth}{
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-Zwischentotal <%currency%>& <%subtotal%> \\
-
-<%foreach tax%>
-MWST <%taxrate%> \% auf <%taxbase%> & <%tax%> \\
-<%end tax%>
-
-\hline
-
-<%if total%>
-\textbf{Rechnungsbetrag <%currency%>}& \textbf{<%invtotal%>}
-<%end total%>
-
-\end{tabularx}
-
-\hline
-}
-}
-}
-
-%%%%%%%%%%%%%  RECHNUNGSFUSS  %%%%%%%%%%%%%
-
-%Anpassung der Zeilenabstände
-\renewcommand{\arraystretch}{1}
-
-\vspace{0.5cm}
-
-\parbox{\textwidth}{
-Wir bedanken uns für Ihre \textbf{Überweisung innerhalb von <%terms%> Tagen} bis zum <%duedate%>.
-}
-\vspace{0.5cm}
-
-\ifthenelse{\equal{<%notes%>}{}}{}{
-<%notes%>
-\vspace{0.5cm}
-}
-
-Freundliche Grüsse
-
-\vspace{0.5cm}
-
-<%company%>
-
-%%%%%%%%%%%%%  BEZAHLT TABELLE  %%%%%%%%%%%%%
-
-%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
-
-%Die Seite wird aufgefüllt - der Footer ist ganz unten.
-\vspace*{\fill}
-
-\begin{footnotesize}
-\hline
-
-\vspace{0.4cm}
-
-\parbox[t]{.34\textwidth}{
-<%company%>\\
-\BeforeSubString{ --}{<%address%>}\\
-\BehindSubString{-- }{<%address%>}\\
-\ifthenelse{\equal{<%2201_taxnumber%>}{}}{}{MWSt Nr.: <%2201_taxnumber%>}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
-\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
-\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
-\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%bankname%>}{}}{}{Bank: <%bankname%>\\}
-\ifthenelse{\equal{<%iban%>}{}}{}{IBAN: <%iban%>\\}
-\ifthenelse{\equal{<%bic%>}{}}{}{BIC: <%bic%>\\}
-}
-
-\end{footnotesize}
-
-%Abschluss des Dokuments, NUR falls kein Einzahlungsschein folgt.
-%\end{document}
-
-%%%%%%%%%%%%%  EZ UMBRUCH  %%%%%%%%%%%%%
 \ifthenelse{\equal{<%rvc%>}{}}{
 
 %Hier könnte man IBAN Infos anfügen
@@ -332,9 +49,7 @@ Freundliche Grüsse
 }{
 
 \ifthenelse{\equal{<%currency%>}{CHF}}{
-
 \ifthenelse{\equal{<%invtotal%>}{0.00}}{
-
 \end{document}
 
 }{
@@ -343,233 +58,13 @@ Freundliche Grüsse
 
 %\AddToShipoutPicture{\BackgroundPicEZ} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
 
-\pagestyle{empty}
+<%include content_einzahlungsschein.tex%>
 
-%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
 
-% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
-%\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
-
-% Bei rechter Positionierung des Adresskopfs:
-\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
-
-\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
-\small
-\ifthenelse{\equal{<%typeofcontact%>}{company}}{
-
-%Firmenanschrift
-
-<%name%>
-
-\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
-
-}{
-
-%Privatanschrift
-
-<%salutation%>
-
-<%firstname%> <%lastname%>
-
-} 
-
-\ifthenelse{\equal{address1}{}}{}{<%address1%>}
-
-\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
-
-<%zipcode%> <%city%>
-
-\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
-
-\end{textblock*}
-
-\vspace{3.2cm}
-
-%%%%%%%%%%%%%  EZ KOPF  %%%%%%%%%%%%%
-
-\textbf{\large{Rechnung Nr. <%invnumber%>}}
-
-\vspace{0.5cm}
-
-\begin{tabular}{@{}lll}
-\textbf{Rechnungsdatum:} & & <%invdate%>\\
-\textbf{Rechnungsbetrag:} & & <%currency%> <%invtotal%>\\
-\textbf{Zahlbar bis:} & & <%duedate%>\\
-
-\end{tabular}
-
-%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
-
-\ifthenelse{\equal{<%bankname%>}{POSTFINANCE}}{
-
-%LINKS POSTFINANCE
-%Einzahlung für
-\begin{textblock*}{5.8cm}(0.6cm,19.6cm)
-\begin{flushleft}
-<%company%>
-
-<%address%>
-\end{flushleft}
-\end{textblock*}
-
-}{
-
-%LINKS BANK
-%Einzahlung für
-\begin{textblock*}{5.8cm}(0.6cm,19.6cm)
-\begin{flushleft}
-<%bankname%>
-
-<%bankzipcode%> <%bankcity%>
-\end{flushleft}
-\end{textblock*}
+}
+}
+{} }
+  
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
  
-%Zugunsten von
-\begin{textblock*}{5.8cm}(0.6cm,21.1cm)
-\begin{flushleft}
-<%company%>
-
-\BeforeSubString{ --}{<%address%>}
-
-\BehindSubString{-- }{<%address%>}
-
-\end{flushleft}
-\end{textblock*}
-
-}
-
-%Konto
-\begin{textblock*}{3cm}(2.8cm,23.1cm)
-\begin{flushleft}
-\ocr{<%membernumber%>}
-
-\end{flushleft}
-\end{textblock*}
-
-%Betrag Franken
-\begin{textblock*}{3.7cm}(0.4cm,23.8cm)
-\begin{flushright}
-\ocr{<%integer_out_amount%>}
-
-\end{flushright}
-\end{textblock*}
-
-%Betrag Rappen
-\begin{textblock*}{1cm}(5.1cm,23.8cm)
-\begin{flushleft}
-\ocr{<%out_decimal%>}
-
-\end{flushleft}
-\end{textblock*}
-
-%Einbezahlt von
-\begin{textblock*}{5.5cm}(0.6cm,24.8cm)
-\begin{flushleft}
-\ocr{<%dcn group=5right%>}
-\normalfont 
-
-<%name%>
-
-<%address1%>
-
-<%zipcode%> <%city%>
-
-\end{flushleft}
-\end{textblock*}
-
-\ifthenelse{\equal{<%bankname%>}{POSTFINANCE}}{
-
-%MITTE POSTFINANCE
-%Einzahlung für
-\begin{textblock*}{6cm}(6.3cm,19.6cm)
-\begin{flushleft}
-<%company%>
-
-<%address%>
-\end{flushleft}
-\end{textblock*}
-
-}{
-
-%MITTE BANK
-%Einzahlung für 
-\begin{textblock*}{6cm}(6.3cm,19.6cm)
-\begin{flushleft}
-<%bankname%>
-
-<%bankzipcode%> <%bankcity%>
-\end{flushleft}
-\end{textblock*}
- 
-%Zugunsten von
-\begin{textblock*}{6cm}(6.3cm,21.1cm)
-\begin{flushleft}
-<%company%>
-
-\BeforeSubString{ --}{<%address%>}
-
-\BehindSubString{-- }{<%address%>}
-\end{flushleft}
-\end{textblock*}
-
-}
-
-%Konto
-\begin{textblock*}{6cm}(8.9cm,23.1cm)
-\begin{flushleft}
-\ocr{<%membernumber%>}
-
-\end{flushleft}
-\end{textblock*}
-
-%Betrag Franken
-\begin{textblock*}{3.9cm}(6.3cm,23.8cm)
-\begin{flushright}
-\ocr{<%integer_out_amount%>}
-\end{flushright}
-\end{textblock*}
-
-%Betrag Rappen
-\begin{textblock*}{1cm}(11.15cm,23.8cm)
-\begin{flushleft}
-\ocr{<%out_decimal%>}
-
-\end{flushleft}
-\end{textblock*}
-
-%Kodierzeile
-\begin{textblock*}{16cm}(6.85cm,27.2cm)
-\begin{flushleft}
-\ocr{<%rvc%>><%dcn%>+ <%bankstate%>>}
-\end{flushleft}
-\end{textblock*}
-
-%RECHTS
-%Referenz-Nr.
-\begin{textblock*}{8.3cm}(12.38cm,22.1cm)
-\begin{flushleft}
-\ocr{<%dcn group=5right%>}
-
-\end{flushleft}
-\end{textblock*}
-
-%Name
-\begin{textblock*}{6.5cm}(12.38cm,24.4cm)
-\begin{flushleft}
-<%name%>
-
-<%address1%>
-
-<%zipcode%> <%city%>
-
-
-\end{flushleft}
-\end{textblock*}
-
-%DIESE BEIDEN KLAMMERN WERDEN GEBRAUCHT, WENN DIE EINFÜGUNG DES EZ AUTOMATISCH ERFOLGT
-}
-}
-}
-}
-
 \end{document}

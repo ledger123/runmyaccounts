@@ -1,345 +1,43 @@
-%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
-% Art des Templates: Gutschriftsrechnung / credit_invoice.tex
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Gutschriftsrechnung
+% Name: credit_invoice.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 8. Oktober 2015
 % Mandant: 
-% Erstellungsdatum: 
 % Version: 
 % Ersteller: 
 % © by Run my Accounts AG
 
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
 
-%statische Elemente
-\documentclass{scrartcl}
-\usepackage[latin1]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage[T1]{fontenc}
-\usepackage{tabularx}
-\setlength{\parindent}{0pt}
-\usepackage{graphicx}
-\usepackage{ifthen}
-\usepackage{mathptmx}
-\font\ocr=ocrb10
-\usepackage[absolute]{textpos}
-\usepackage{colortbl}
-\usepackage{color}
-\usepackage{substr}
+<%include definitions_packages.tex%>
 
+<%include definitions_settings.tex%>
 
-%dynamische Elemente
-%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
-\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+<%include content_footer.tex%>
 
-%Schrift
-\usepackage[scaled=.90]{helvet} 
-\renewcommand{\familydefault}{\sfdefault}
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
 
-%Tabellendefinitionen
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcommand{\DocType}{Gutschrift}
 
-%Hintergrund für erste Standard-Seite
-\usepackage{eso-pic}
-\newcommand\BackgroundPic{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrund.pdf} 
-}}}
+\newcommand{\AmountType}{Gutschriftsbetrag}
 
-%Hintergrund für Einzahlungsschein (ohne Footer)
-\usepackage{eso-pic}
-\newcommand\BackgroundPicEZ{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrundez.pdf} 
-}}}
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
 
-\begin{document}
-\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
-\shorthandoff{"}
-\pagestyle{empty}
+<%include content_pagebreak_withamount_withfooter.tex%>
 
-% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
-\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
+<%include content_address.tex%>
 
-%Schriftwahl
-\normalfont
+<%include content_header.tex%>
 
-%%%%%%%%%%%%%  PAGEBREAK SECTION  %%%%%%%%%%%%%
+<%include content_articles_withamount.tex%>
 
-<%pagebreak 54 15 24%>
+<%include content_sum_articles_invoices.tex%>
 
-%Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
-\end{tabularx} 
+<%include content_notes.tex%>
 
-%Eine Zwischensummentabelle wird eingefügt
-\begin{tabularx}{\textwidth}{@{}Xr@{}} 
-\hline
-Zwischensumme &<%sumcarriedforward%> \\
-\end{tabularx}
-
-%Eine neue Seite wird initialisiert.
-\newpage
-
-%Die Artikeltabelle auf der neuen Seite wird initialisiert.
-\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
-
-\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
-\hline
-
-%Der Übertrag der letzten Seite wird geschrieben.
-\"{U}bertrag von Seite <%lastpage%> & & & & <%sumcarriedforward%> \\
-<%end pagebreak%>
-
-%%%%%%%%%%%%%  ADRESSKOPF  %%%%%%%%%%%%%
-
-% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
-%\begin{textblock*}{6.5cm}(2.25cm,5.75cm)
-
-% Bei rechter Positionierung des Adresskopfs:
-\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
-
-\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
-\small
-\ifthenelse{\equal{<%typeofcontact%>}{company}}{
-
-%Firmenanschrift
-
-<%name%>
-
-\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
-
-}{
-
-%Privatanschrift
-
-<%salutation%>
-
-<%firstname%> <%lastname%>
-
-} 
-
-\ifthenelse{\equal{address1}{}}{}{<%address1%>}
-
-\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
-
-<%zipcode%> <%city%>
-
-\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
-
-\end{textblock*}
-
-\vspace{3.2cm}
-
-%%%%%%%%%%%%%  RECHNUNGSKOPF  %%%%%%%%%%%%%
-
-\parbox{\textwidth}{
-\textbf{\large{Gutschrifts Nr. <%invnumber%>}\hfill {Datum:} <%invdate%>}
-}
-
-\vspace{0.5cm}
-
-%Rechnungstitel
-\ifthenelse{\equal{<%invdescription%>}{}}{}{
-\textbf{<%invdescription%>}
-\vspace{0.2cm}
-}
-
-%Bestellnummer
-\ifthenelse{\equal{<%ordnumber%>}{}}{}{Bestellnummer: <%ordnumber%>
-\vspace{0.2cm}
-}
-
-%Ihre Bestellnummer
-\ifthenelse{\equal{<%ponumber%>}{}}{}{Ihre Bestellnummer: <%ponumber%>
-\vspace{0.2cm}
-}
-
-%Text-Feld 1
-\ifthenelse{\equal{<%shippingpoint%>}{}}{}{<%shippingpoint%>
-\vspace{0.2cm}
-}
-
-%Text-Feld 2
-\ifthenelse{\equal{<%shipvia%>}{}}{}{<%shipvia%>
-\vspace{0.2cm}
-}
-
-%Text-Feld 3
-\ifthenelse{\equal{<%waybill%>}{}}{}{<%waybill%>
-\vspace{0.2cm}
-}
-
-\vspace{0.3cm}
-
-%%%%%%%%%%%%%  ARTIKELTABELLE  %%%%%%%%%%%%%
-
-\renewcommand{\arraystretch}{1.4} %Abstand zwischen den Zeilen
-
-\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
-
-\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
-
-\hline
-
-<%foreach number%>
- <%description%> \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline <%itemnotes%>} 
-\ifthenelse{\equal{<%deliverydate%>}{}}{}{\newline Lieferdatum: <%deliverydate%>} 
-\ifthenelse{\equal{<%serialnumber%>}{}}{}{\newline Seriennummer: <%serialnumber%>}
-\ifthenelse{\equal{<%projectnumber%>}{}}{}{\newline Projekt: <%projectnumber%>}
-\ifthenelse{\equal{<%ordernumber%>}{}}{}{\newline Bestellnummer: <%ordernumber%>}
-\ifthenelse{\equal{<%customerponumber%>}{}}{}{\newline Ihre Bestellnummer: <%customerponumber%>}
-\ifthenelse{\equal{<%package%>}{}}{}{\newline Verpackung: <%package%>}
-\ifthenelse{\equal{<%netweight%>}{}}{}{\newline Netto Gewicht: <%netweight%>}
-\ifthenelse{\equal{<%grossweight%>}{}}{}{\newline Brutto Gewicht: <%grossweight%>}
-& <%qty%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%discountrate%> \%} & <%unit%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline Rabatt}& <%sellprice%> \ifthenelse{\equal{<%discountrate%>}{}}{}{\newline <%netprice%>}  & <%linetotal%>\\
-<%end number%>
-\end{tabularx}
-
-%%%%%%%%%%%%%  SUMMEN TEMPLATE  %%%%%%%%%%%%%
-
-\ifthenelse{\equal{<%tax%>}{}}{
-
-\parbox{\textwidth}{
-
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-<%if total%>
-\textbf{Gutschriftsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{ (ohne MWST)} { inkl. MWST}}& \textbf{<%invtotal%>}\\
-<%end total%>
-
-\hline
-
-\end{tabularx}
-
-\vspace{0.2cm}
-
-\footnotesize 
-
-\begin{flushright}
-\begin{tabular}{@{}lrrr@{}}
-\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
-\hline
-0 \%& <%invtotal%>  & 0.00 & <%invtotal%>\\
-
-\end{tabular}
-\end{flushright}
-
-}
-
-}{
-
-\ifthenelse{\equal{<%taxincluded%>}{1}}{
-
-\parbox{\textwidth}{
-
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-<%if total%>
-\textbf{Gutschriftsbetrag <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
-<%end total%>
-
-\hline
-
-\end{tabularx}
-
-\vspace{0.2cm}
-
-\footnotesize 
-
-\begin{flushright}
-\begin{tabular}{@{}lrrr@{}}
-\textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
-\hline
-<%foreach tax%>
-<%taxrate%> \%&<%taxbase%>  &<%tax%> & <%taxbaseinclusive%>\\
-<%end tax%>
-\end{tabular}
-
-\end{flushright}
-}
-
-}{
-
-\parbox{\textwidth}{
-\begin{tabularx}{\textwidth}{@{}Xr@{}}
-
-\hline
-
-Zwischentotal <%currency%>& <%subtotal%> \\
-
-<%foreach tax%>
-MWST <%taxrate%> \% auf <%taxbase%> & <%tax%> \\
-<%end tax%>
-
-\hline
-
-<%if total%>
-\textbf{Gutschriftsbetrag <%currency%>}& \textbf{<%invtotal%>}
-<%end total%>
-
-\end{tabularx}
-
-\hline
-}
-}
-}
-
-%%%%%%%%%%%%%  RECHNUNGSFUSS  %%%%%%%%%%%%%
-
-%Anpassung der Zeilenabstände
-\renewcommand{\arraystretch}{1}
-
-\vspace{0.5cm}
-
-
-\ifthenelse{\equal{<%notes%>}{}}{}{
-<%notes%>
-\vspace{0.5cm}
-}
-
-Freundliche Grüsse
-
-\vspace{0.5cm}
-
-<%company%>
-
-%%%%%%%%%%%%%  BEZAHLT TABELLE  %%%%%%%%%%%%%
-
-%%%%%%%%%%%%%  FOOTER  %%%%%%%%%%%%%
-
-%Die Seite wird aufgefüllt - der Footer ist ganz unten.
-\vspace*{\fill}
-
-\begin{footnotesize}
-\hline
-
-\vspace{0.4cm}
-
-\parbox[t]{.34\textwidth}{
-<%company%>\\
-\BeforeSubString{ --}{<%address%>}\\
-\BehindSubString{-- }{<%address%>}\\
-\ifthenelse{\equal{<%2201_taxnumber%>}{}}{}{MWSt Nr.: <%2201_taxnumber%>}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
-\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
-\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
-\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%bankname%>}{}}{}{Bank: <%bankname%>\\}
-\ifthenelse{\equal{<%iban%>}{}}{}{IBAN: <%iban%>\\}
-\ifthenelse{\equal{<%bic%>}{}}{}{BIC: <%bic%>\\}
-}
-
-\end{footnotesize}
-
-%Abschluss des Dokuments, NUR falls kein Einzahlungsschein folgt.
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
 \end{document}

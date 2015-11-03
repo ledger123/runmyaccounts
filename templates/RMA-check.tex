@@ -1,70 +1,26 @@
-%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
-% Art des Templates: Scheck / check.tex
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Scheck
+% Name: check.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 8. Oktober 2015
 % Mandant: 
-% Erstellungsdatum: 
 % Version: 
 % Ersteller: 
 % © by Run my Accounts AG
 
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
 
-%statische Elemente
-\documentclass{scrartcl}
-\usepackage[latin1]{inputenc}
-\usepackage[ngerman]{babel}
-\usepackage[T1]{fontenc}
-\usepackage{tabularx}
-\setlength{\parindent}{0pt}
-\usepackage{graphicx}
-\usepackage{ifthen}
-\usepackage{mathptmx}
-\font\ocr=ocrb10
-\usepackage[absolute]{textpos}
-\usepackage{colortbl}
-\usepackage{color}
-\usepackage{substr}
+<%include definitions_packages.tex%>
 
+<%include definitions_settings.tex%>
 
-%dynamische Elemente
-%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
-\usepackage[a4paper,top=6cm,bottom=1cm,left=1.8cm,right=1.8cm]{geometry} 
+<%include content_footer.tex%>
 
-%Schrift
-\usepackage[scaled=.90]{helvet} 
-\renewcommand{\familydefault}{\sfdefault}
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
 
-%Tabellendefinitionen
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
-
-%Hintergrund für erste Standard-Seite
-\usepackage{eso-pic}
-\newcommand\BackgroundPic{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrund.pdf} 
-}}}
-
-%Hintergrund für Einzahlungsschein (ohne Footer)
-\usepackage{eso-pic}
-\newcommand\BackgroundPicEZ{
-\put(0,0){
-\parbox[b][\paperheight]{\paperwidth}{%
-\vfill
-\includegraphics{../<%templates%>/hintergrundez.pdf} 
-}}}
-
-\begin{document}
-\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
-\shorthandoff{"}
-\pagestyle{empty}
-
-% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
-\textblockorigin{0.00cm}{0.00cm} % + nach links / + nach unten
-
-%Schriftwahl
-\normalfont
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
 
 \parbox[t]{12cm}{
   <%company%>
@@ -124,6 +80,6 @@
 
 <%memo%>
 
-\vfill
-
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
 \end{document}
