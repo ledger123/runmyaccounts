@@ -1,0 +1,61 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Kreditorenrechnung
+% Name: vendor_invoice.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 10. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Rechnung}
+
+\newcommand{\AmountType}{Rechnungsbetrag}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_pagebreak_withamount_withfooter.tex%>
+
+<%include content_vendoraddress.tex%>
+
+<%include content_header.tex%>
+
+<%include content_articles_withamount.tex%>
+
+<%include content_sum_articles_invoices.tex%>
+
+\parbox{\textwidth}{
+Fällig innerhalb von <%terms%> Tagen bis zum <%duedate%>. 
+}
+
+\vspace{0.5cm}
+
+% Hier haben die Bankenvariablen die Funktion der Lieferanten-Banken-Infos.
+\ifthenelse{\equal{<%iban%>}{}}{}{
+\vspace{0.5cm}
+Bankverbindung: \\
+IBAN: <%iban%>\\
+BIC: <%bic%>\\
+}
+
+\vspace{0.5cm}
+
+\ifthenelse{\equal{<%notes%>}{}}{}{
+<%notes%>
+}
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

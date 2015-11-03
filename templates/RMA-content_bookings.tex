@@ -1,0 +1,22 @@
+\renewcommand{\arraystretch}{1.3} %Abstand zwischen den Zeilen
+
+\begin{tabularx}{\textwidth}{@{}p{6.07cm}L{1.3cm}L{4.3cm}L{1.9cm}R{2.15cm}@{}}
+
+\hline
+\textbf{Beschreibung} & \textbf{Konto} & \textbf{Beschreibung} &\textbf{Projekt} & \textbf{Betrag <%currency%>} \\
+\hline
+\end{tabularx}
+
+
+<%foreach amount%>
+
+\begin{tabularx}{\textwidth}{@{}p{6.07cm}L{1.3cm}L{4.3cm}L{1.9cm}R{2.15cm}@{}}
+  <%description%> & <%accno%> & <%account%> & <%projectnumber%> &<%amount%>\\
+\end{tabularx}
+\par
+\begingroup
+\rightskip=7.4cm % Parameter anpassen
+\noindent <%itemnotes%>
+\par
+\endgroup
+<%end amount%>
