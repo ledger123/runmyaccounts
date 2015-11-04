@@ -354,7 +354,12 @@ sub transactions {
     $arwhere .= " AND ac.project_id = $var";
     $apwhere .= " AND ac.project_id = $var";
   }
-
+  if (!$form->{fx_transaction}) {
+    $glwhere .= " AND ac.fx_transaction = '0'";
+    $arwhere .= " AND ac.fx_transaction = '0'";
+    $apwhere .= " AND ac.fx_transaction = '0'";
+  }
+ 
   my $gdescription = "''";
   my $invoicejoin;
   my $lineitem = "''";

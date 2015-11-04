@@ -438,6 +438,7 @@ $selectfrom
    &print_checkbox('l_notransactions', $locale->text('No Transactions'), '', '<br>');
    &print_checkbox('l_group', $locale->text('Group'), '', '');
    &print_checkbox('l_csv', $locale->text('CSV'), '');
+   &print_checkbox('fx_transaction', $locale->text('Include Exchange Rate Difference'), 'checked');
    print qq|</td></tr>|;
    &end_table;
    print('<hr size=3 noshade>');
@@ -463,6 +464,7 @@ sub gl_list {
    $glwhere .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
    $glwhere .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};
    $glwhere .= qq| AND ac.amount <> 0|;
+   $glwhere .= qq| AND ac.fx_transaction = '0'| if !$form->{fx_transaction};
    my $arwhere = $glwhere;
    my $apwhere = $glwhere;
 
