@@ -397,9 +397,13 @@ sub set_cookie {
 sub redirect {
   my ($self, $msg) = @_;
 
+
   if ($self->{callback}) {
 
     $self->{callback} .= "&redirectmsg=$msg";
+    if ( $self->{encpassword} ) {
+    	$self->{callback} .= "&encpassword=$self->{encpassword}";
+    }
     my ($script, $argv) = split(/\?/, $self->{callback});
     exec ("perl", $script, $argv);
    

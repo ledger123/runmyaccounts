@@ -1,0 +1,85 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Scheck
+% Name: check.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 8. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+\parbox[t]{12cm}{
+  <%company%>
+
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\}
+
+\hfill <%source%>
+
+\vspace*{0.6cm}
+
+<%text_amount%> \dotfill <%decimal%>/100
+
+\vspace{0.5cm}
+
+\hfill <%datepaid%> \makebox[2cm]{\hfill} <%amount%>
+
+\vspace{0.5cm}
+
+<%name%>
+
+<%address1%>
+
+<%address2%>
+
+<%city%>
+<%if state%>
+\hspace{-0.1cm}, <%state%>
+<%end state%>
+<%zipcode%>
+
+<%country%>
+
+\vspace{1.8cm}
+
+<%memo%>
+
+\vspace{0.8cm}
+
+<%company%>
+
+\vspace{0.5cm}
+
+<%name%> \hfill <%datepaid%> \hfill <%source%>
+
+\vspace{0.5cm}
+\begin{tabularx}{\textwidth}{@{}lXrr@{}}
+\textbf{Rechnungsnummer:} & \textbf{Rechnungsdatum:}
+  & \textbf{Betrag Fällig} & \textbf{Bezahlt} \\
+<%foreach invnumber%>
+<%invnumber%> & <%invdate%> \dotfill
+  & <%due%> & <%paid%> \\
+<%end invnumber%>
+\end{tabularx}
+
+\vspace{1cm}
+
+<%memo%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}
