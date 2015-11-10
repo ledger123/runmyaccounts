@@ -17,8 +17,6 @@ sub new {
 
   read(STDIN, $_, $ENV{CONTENT_LENGTH});
 
-  print STDERR "$ENV{QUERY_STRING}\n";
-
   if ($ENV{QUERY_STRING}) {
     $_ = $ENV{QUERY_STRING};
   }
