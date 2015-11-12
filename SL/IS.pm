@@ -224,8 +224,12 @@ sub invoice_details {
       push(@{ $form->{number} }, $form->{"partnumber_$i"});
 
       # if not grouped strip id
-      ($projectnumber) = split /--/, $form->{"projectnumber_$i"};
+      ($projectnumber, $project_id) = split /--/, $form->{"projectnumber_$i"};
+      $project_id *= 1;
+      ($projectname) = $dbh->selectrow_array("SELECT description FROM project WHERE id = $project_id");
+
       push(@{ $form->{projectnumber} }, $projectnumber);
+      push(@{ $form->{projectname} }, $projectname);
       
       for (qw(sku serialnumber ordernumber customerponumber bin description unit deliverydate sellprice listprice package netweight grossweight volume countryorigin hscode barcode itemnotes)) { push(@{ $form->{$_} }, $form->{"${_}_$i"}) }
 	
@@ -622,7 +626,6 @@ sub invoice_details {
   }
 
   $dbh->disconnect;
-  
 }
 
 

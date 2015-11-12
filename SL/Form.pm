@@ -17,6 +17,8 @@ sub new {
 
   read(STDIN, $_, $ENV{CONTENT_LENGTH});
 
+  print STDERR "$ENV{QUERY_STRING}\n";
+
   if ($ENV{QUERY_STRING}) {
     $_ = $ENV{QUERY_STRING};
   }
@@ -25,8 +27,11 @@ sub new {
     $_ = $ARGV[0];
   }
 
-  %$self = split /[&=]/;
-
+  foreach my $part (split /[&]/) {
+    my ($key, $value) = split /=/, $part;
+  	$self->{$key} = $value;
+  }
+  
   my $esc = 1;
   
   # if multipart form take apart on boundary
