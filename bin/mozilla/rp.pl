@@ -327,7 +327,7 @@ sub report {
 	  <th align=right nowrap>|.$locale->text('Include in Report').qq|</th>
 	  <td colspan=3><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Heading').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
-	  <input name=l_accno class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Account Number').qq|</td>
+	  <input name=l_accno class=checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text('Account Number').qq|</td>
 	</tr>
 |;
   }
@@ -386,7 +386,7 @@ sub report {
 	  <th align=right nowrap>|.$locale->text('Include in Report').qq|</th>
 	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Heading').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
-	  <input name=l_accno class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Account Number').qq|</td>
+	  <input name=l_accno class=checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text('Account Number').qq|</td>
 	</tr>
 |;
   }
