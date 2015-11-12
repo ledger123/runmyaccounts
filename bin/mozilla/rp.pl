@@ -412,7 +412,7 @@ sub report {
 	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Heading').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
 	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('All Accounts').qq|
-	  <input name=l_name class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Company Name') . qq|
+	  <input name=l_name class=checkbox type=checkbox value=Y checked>&nbsp;| . $locale->text('Company Name') . qq|
       <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|</td>
 	</tr>
 |;
