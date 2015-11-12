@@ -171,7 +171,7 @@ sub income_statement {
   
   my $str;
   my $tmpstr;
-  my $translink = qq|ca.pl?action=list_transactions&fx_transaction=1|;
+  my $translink = qq|ca.pl?action=list_transactions&fx_transaction=1&l_name=1|;
   for (qw(path login fromdate todate method)){ $translink .= qq|&$_=$form->{$_}| }
   for (qw(projectnumber department)){ 
      $translink .= "&$_=" . $form->escape($form->{$_});
