@@ -502,7 +502,7 @@ sub gl_list {
        $callback .= "&l_$item=Y";
      }
    }
-   $callback .= "&l_subtotal=$form->{l_subtotal}";
+   $callback .= "&l_subtotal=$form->{l_subtotal}&fx_transaction=$form->{fx_transaction}";
    my $href = $callback;
    $form->{callback} = $form->escape($callback,1);
 
