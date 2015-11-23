@@ -529,10 +529,10 @@ sub im_sales_invoice {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(ndx transdate invnumber customer customernumber city invoicedescription total curr totalqty unit duedate employee department warehouse);
+  @column_index = qw(ndx transdate invnumber customer customernumber city dcn invoicedescription total curr totalqty unit duedate employee department warehouse);
   @flds = @column_index;
   shift @flds;
-  push @flds, qw(ordnumber quonumber customer_id datepaid shippingpoint shipvia waybill terms notes intnotes language_code ponumber cashdiscount discountterms employee_id parts_id description sellprice discount qty unit serialnumber projectnumber deliverydate AR taxincluded department_id warehouse_id);
+  push @flds, qw(ordnumber quonumber customer_id datepaid dcn shippingpoint shipvia waybill terms notes intnotes language_code ponumber cashdiscount discountterms employee_id parts_id description sellprice discount qty unit serialnumber projectnumber deliverydate AR taxincluded department_id warehouse_id);
   unshift @column_index, "runningnumber";
     
   $form->{callback} = "$form->{script}?action=import";
@@ -547,6 +547,7 @@ sub im_sales_invoice {
   $column_data{transdate} = $locale->text('Invoice Date');
   $column_data{invnumber} = $locale->text('Invoice Number');
   $column_data{invoicedescription} = $locale->text('Description');
+  $column_data{dcn} = $locale->text('DCN');
   $column_data{customer} = $locale->text('Customer');
   $column_data{customernumber} = $locale->text('Customer Number');
   $column_data{city} = $locale->text('City');
@@ -1072,9 +1073,10 @@ sub import_sales_invoices {
 
       for (keys %$newform) { delete $newform->{$_} };
 
+      $newform->{importing} = 1;
       $newform->{precision} = $form->{precision};
 
-      for (qw(invnumber ordnumber quonumber transdate customer customer_id datepaid duedate shippingpoint shipvia waybill terms notes intnotes curr language_code ponumber cashdiscount discountterms AR taxincluded)) { $newform->{$_} = $form->{"${_}_$k"} }
+      for (qw(invnumber ordnumber quonumber transdate customer customer_id datepaid duedate dcn shippingpoint shipvia waybill terms notes intnotes curr language_code ponumber cashdiscount discountterms AR taxincluded)) { $newform->{$_} = $form->{"${_}_$k"} }
       $newform->{description} = $form->{"invoicedescription_$k"};
 
       $newform->{employee} = qq|--$form->{"employee_id_$k"}|;
