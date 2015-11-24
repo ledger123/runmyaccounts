@@ -2650,6 +2650,8 @@ sub do_print_reminder {
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
   push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country dcn iban rvc bic membernumber );
 
+  for (qw(dcn iban rvc)){ $form->{$_} = $form->{"bank$_"} } # renamed for consistancy with other templates
+
   while (@{ $form->{AG} }) {
 
     $ref = shift @{ $form->{AG} };
@@ -2659,8 +2661,8 @@ sub do_print_reminder {
 
       for (@a) { $form->{$_} = $ref->{$_} }
 
-      $form->{bankrvc} = $form->format_dcn($form->{bankrvc});
-      $form->{bankdcn} = $form->format_dcn($form->{bankdcn});
+      $form->{rvc} = $form->format_dcn($form->{rvc});
+      $form->{dcn} = $form->format_dcn($form->{dcn});
 
       $form->format_string(@a);
 
