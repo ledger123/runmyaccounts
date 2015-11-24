@@ -1396,6 +1396,23 @@ sub update {
     $form->{oldinvtotal}  = $form->{invtotal};
     $form->{oldtotalpaid} = $totalpaid;
 
+    # rebuild selecttax variable if customer / vendor has changed.
+    my $dbh = $form->dbconnect(\%myconfig);
+    my ($linetax) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='linetax'");
+    if ($linetax and $form->{id}){
+        ($linetax) = $dbh->selectrow_array("SELECT 1 FROM acc_trans WHERE trans_id = $form->{id} AND tax <> '' LIMIT 1");
+    }
+    if ($linetax){
+        $form->{selecttax} = "\n";
+        my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%$form->{ARAP}_tax%' ORDER BY accno|;
+        my $sth = $dbh->prepare($query);
+        $sth->execute || $form->dberror($query);
+        while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+            $form->{"selecttax"} .= "$ref->{accno}--$ref->{description}\n" if index($form->{taxaccounts}, $ref->{accno}) != -1;
+        }
+    }
+    $dbh->disconnect;
+
     &display_form;
 
 }
