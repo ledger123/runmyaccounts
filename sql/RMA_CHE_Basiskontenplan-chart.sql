@@ -246,9 +246,9 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('810','BETRIEBSFREMDER ERTRAG','H','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8100','Betriebsfremder Ertrag','A','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('850','AUSSERORDENTLICHER AUFWAND','H','E','','850',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8500','Ausserordentlicher Aufwand','A','E','','850',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8500','Ausserordentlicher Aufwand','A','E','AP_amount','850',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('851','AUSSERORDENTLICHER ERTRAG','H','E','','851',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8510','Ausserordentlicher Ertrag','A','E','','851',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8510','Ausserordentlicher Ertrag','A','E','AR_amount:AP_amount','851',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('860','EINMALIGER AUFWAND','H','E','','860',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8600','Einmaliger Aufwand','A','E','','860',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('861','EINMALIGER ERTRAG','H','E','','861',false,true,'');
