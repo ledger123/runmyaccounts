@@ -2644,11 +2644,11 @@ sub do_print_reminder {
   # setup variables for the form
   $form->format_string(qw(companyemail companywebsite company address businessnumber username useremail tel fax));
   
-  @a = qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname);
+  @a = qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
-  push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country dcn iban rvc bic membernumber );
+  push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country bic);
 
   while (@{ $form->{AG} }) {
 
@@ -2659,8 +2659,8 @@ sub do_print_reminder {
 
       for (@a) { $form->{$_} = $ref->{$_} }
 
-      $form->{bankrvc} = $form->format_dcn($form->{bankrvc});
-      $form->{bankdcn} = $form->format_dcn($form->{bankdcn});
+      $form->{rvc} = $form->format_dcn($form->{rvc});
+      $form->{dcn} = $form->format_dcn($form->{dcn});
 
       $form->format_string(@a);
 

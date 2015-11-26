@@ -1475,9 +1475,12 @@ sub post_invoice {
 	      FROM bank bk
 	      JOIN chart c ON (c.id = bk.id)
 	      WHERE c.accno = '$paymentaccno'|;
+
+  if (!$form->{importing}){ # We are not coming from data import script im.pl
   ($form->{membernumber}, $form->{dcn}) = $dbh->selectrow_array($query);
 
   $form->{dcn} = ($form->{dcn} == '<%external%>') ? '' : $form->format_dcn($form->{dcn});
+  }
 
   # Fix rounding error
   $invamount = $form->round_amount($invamount, 6);
@@ -1561,14 +1564,13 @@ sub post_invoice {
 	      discountterms = $form->{discountterms},
 	      onhold = '$form->{onhold}',
 	      warehouse_id = $form->{warehouse_id},
-	      exchangerate = $form->{exchangerate}
-	      | . (($form->{dcn}=='') ? '' : qq|,dcn = '$form->{dcn}'| ) . qq|,
+	      exchangerate = $form->{exchangerate},
+	      dcn = '$form->{dcn}',
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
           paymentmethod_id = $paymentmethod_id
               WHERE id = $form->{id}
              |;
   $dbh->do($query) || $form->dberror($query);
-
   # Remove incorrect 0 taxes from $form and acc_trans
   # First find all taxes which are applicable to this invoice.
   my %taxaccs;
