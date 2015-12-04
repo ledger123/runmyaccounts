@@ -1717,7 +1717,7 @@ sub reminder {
 		 AND e.transdate = a.transdate) AS exchangerate,
 	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
 	      s.*,
-          bank.name bankname, bank.iban bankiban, bank.bic bankbic,
+          bank.name bankname, bank.iban, bank.bic,
           bank.dcn, bank.rvc, bank.membernumber,
           ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
           ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
