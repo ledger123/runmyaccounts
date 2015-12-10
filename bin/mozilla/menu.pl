@@ -225,7 +225,7 @@ sub js_menu {
 	} else {
 	
 	  print qq|<div class="submenu"> |.
-          $menu->menuitem(\%myconfig, \%$form, $item, $level).qq|$label</a></div>|;
+          $menu->menuitem(\%myconfig, \%$form, $item, $level, $i).qq|$label</a></div>|;
 	}
 
       } else {
