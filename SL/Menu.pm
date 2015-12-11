@@ -18,14 +18,14 @@ use SL::Inifile;
 
 
 sub menuitem {
-  my ($self, $myconfig, $form, $item) = @_;
+  my ($self, $myconfig, $form, $item, $level, $i) = @_;
 
   my $module = ($self->{$item}{module}) ? $self->{$item}{module} : $form->{script};
   my $action = ($self->{$item}{action}) ? $self->{$item}{action} : "section_menu";
   my $target = ($self->{$item}{target}) ? $self->{$item}{target} : "";
 
   my $level = $form->escape($item);
-  my $str = qq|<a href=$module?path=$form->{path}&action=$action&level=$level&login=$form->{login}&js=$form->{js}|;
+  my $str = qq|<a id="menu$i" href=$module?path=$form->{path}&action=$action&level=$level&login=$form->{login}&js=$form->{js}|;
 
   my @vars = qw(module action target href);
   
@@ -46,7 +46,6 @@ sub menuitem {
     
     $str .= $form->escape($value);
   }
-
   $str .= qq|#id$form->{tag}| if $target eq 'acc_menu';
   
   if ($target) {

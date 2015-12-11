@@ -1726,7 +1726,7 @@ sub reminder {
 	      JOIN address ad ON (ad.trans_id = c.id)
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
-          LEFT JOIN bank ON (bank.id = c.payment_accno_id)
+          LEFT JOIN bank ON (bank.id = a.bank_id)
           LEFT JOIN address ad2 ON (ad2.trans_id = c.payment_accno_id)
 	      WHERE a.duedate <= current_date
 	      AND $where
