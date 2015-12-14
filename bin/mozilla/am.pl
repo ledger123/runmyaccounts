@@ -3022,35 +3022,15 @@ sub company_logo {
 
 
 </pre>
+<div class="mainpage">
 <center>
 <a class="mainpageref" href="http://www.runmyaccounts.com" target=_blank><img src=$images/sql-ledger.gif border=0></a>
-<h1 class=login>|.$locale->text('Version').qq| $form->{version}</h1>
+<h1 class=login>|.$locale->text('Version').qq| $release</h1>
 <p>
-|.$locale->text('Licensed to').qq|
-<p>
-<b>
-$form->{company}
-<br>$form->{address}
-</b>
-
-<p>
-<table border=0>
-  <tr>
-    <th align=right>|.$locale->text('User').qq|</th>
-    <td>$myconfig{name}</td>
-  </tr>
-  <tr>
-    <th align=right>|.$locale->text('Dataset').qq|</th>
-    <td>$myconfig{dbname}</td>
-  </tr>
-  <tr>
-    <th align=right>|.$locale->text('Database Host').qq|</th>
-    <td>$myconfig{dbhost}</td>
-  </tr>
-</table>
-
+<a class="roadmapref" href="$roadmap" target=_blank>roadmap</a>
+</p>
 </center>
-
+</div>
 </body>
 </html>
 |;

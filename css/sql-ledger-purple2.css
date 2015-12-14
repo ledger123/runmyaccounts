@@ -96,6 +96,15 @@ table.login td.login a img, center a img {
     background: url("../images/rma/login_background.jpg") no-repeat scroll right bottom transparent;
 }
 
+.mainpage {
+	visibility: hidden;
+}
+
+a.roadmapref {
+	font-size: 10px;
+	font-style: italic;
+}
+
 a.mainpageref {
     background: url("../images/rma/logo-run-my-accounts.gif") no-repeat scroll center top transparent;
     display: block;
