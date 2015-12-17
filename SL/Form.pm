@@ -360,6 +360,12 @@ $(document).ready(function(){
 	} else {
 	   	$("div.redirectmsg").hide();
 	}
+|;
+
+  @menuids = split(':', $self->{menuids});
+  for (@menuids) { print q|$("#menu|.$_.qq|").trigger("click");\n|; }
+
+  print q|
 });
 </script>
 </head>

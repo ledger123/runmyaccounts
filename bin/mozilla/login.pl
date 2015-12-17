@@ -314,16 +314,16 @@ sub login {
   # made it this far, setup callback for the menu
   $form->{callback} = "menu.pl?action=display";
   for (qw(login path password js sessioncookie)) { $form->{callback} .= "&$_=$form->{$_}" }
-  
+
   # check for recurring transactions
   if ($user->{acs} !~ /Recurring Transactions/) {
     if ($user->check_recurring(\%$form)) {
       $form->{callback} .= "&main=recurring_transactions";
     } else {
-      $form->{callback} .= "&main=company_logo";
+      $form->{callback} .= "&main=company_logo&menuids=$form->{menuids}";
     }
   } else {
-    $form->{callback} .= "&main=company_logo";
+    $form->{callback} .= "&main=company_logo&menuids=$form->{menuids}";
   }
 
   $form->redirect;
