@@ -26,13 +26,24 @@ sub display {
 
   $form->header;
 
+  $callbacks = { 
+	'1:6:7' => 'ar.pl?action=search&nextsub=transactions',
+	'1:6:8' => 'ar.pl?action=search&nextsub=transactions&outstanding=1' 
+  };
+
   print qq|
 
 <FRAMESET COLS="240,*" BORDER="1" bordercolor="#53626A">
+  <FRAME NAME="acc_menu" SRC="$form->{script}?login=$form->{login}&action=acc_menu&path=$form->{path}&js=$form->{js}&menuids=$form->{menuids}">
+|;
 
-  <FRAME NAME="acc_menu" SRC="$form->{script}?login=$form->{login}&action=acc_menu&path=$form->{path}&js=$form->{js}">
-  <FRAME NAME="main_window" SRC="am.pl?login=$form->{login}&action=$form->{main}&path=$form->{path}">
+  if ($form->{menuids}){
+    print qq|  <FRAME NAME="main_window" SRC="$callbacks->{$form->{menuids}}&login=$form->{login}&path=$form->{path}">|;
+  } else {
+    print qq|  <FRAME NAME="main_window" SRC="am.pl?login=$form->{login}&action=$form->{main}&path=$form->{path}">|;
+  }
 
+  print qq|
 </FRAMESET>
 
 </BODY>

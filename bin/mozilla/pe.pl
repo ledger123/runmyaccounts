@@ -969,6 +969,11 @@ sub project_header {
   
   $label = ucfirst $form->{vc};
 
+  my $vcdetail;
+  if ( $form->{"$form->{vc}"} ) {
+    $vcdetail = qq|<a href="ct.pl?login=$form->{login}&path=$form->{path}&action=edit&db=customer&id=$form->{customer_id}" target=_blank>?</a>|;
+  }
+
   if ($form->{"select$form->{vc}"}) {
     $addvc = "ct.pl?action=add&db=customer&path=$form->{path}&login=$form->{login}&addvc=1";
     $addvc .= "&callback=" . $form->escape($form->{callback},2);
@@ -982,7 +987,7 @@ sub project_header {
 	  <th align=right nowrap>|.$locale->text($label).qq|</th>
 	  <td colspan=3><select name="$form->{vc}">|
 	  .$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1)
-	  .qq|</select> $addvc
+	  .qq|</select> $vcdetail $addvc
 	  </td>
 	</tr>
 |;
@@ -990,7 +995,7 @@ sub project_header {
     $name = qq|
 	<tr>
 	  <th align=right nowrap>|.$locale->text($label).qq|</th>
-	  <td colspan=3><input name="$form->{vc}" value="|.$form->quote($form->{"$form->{vc}"}).qq|" size=35> $addvc</td>
+	  <td colspan=3><input name="$form->{vc}" value="|.$form->quote($form->{"$form->{vc}"}).qq|" size=35> $vcdetail $addvc</td>
 	</tr>
 |;
   }
