@@ -1421,8 +1421,14 @@ sub post_invoice {
       my $paymentadjust3 = $amount;
 
       if ($amount) {
-	#my $accno_id = ($amount > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
-	my ($accno_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$araccno'");
+	my $accno_id;
+	if ($form->round_amount($amount,1)){
+ 	   # real gain / loss
+	   $accno_id = ($amount > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
+	} else {
+	   # rounding difference
+	   ($accno_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$araccno'");
+	}
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 	            transdate, fx_transaction, cleared, approved, vr_id)
 	            VALUES ($form->{id}, $accno_id,
