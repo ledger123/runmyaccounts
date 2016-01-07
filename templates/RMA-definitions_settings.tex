@@ -28,6 +28,7 @@
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
 \newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcolumntype{Z}{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}X}
 
 %Hintergrund für erste Standard-Seite
 \usepackage{eso-pic}
@@ -52,6 +53,54 @@
 \AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
 \shorthandoff{"}
 \pagestyle{empty}
+
+% Bei rechter Positionierung des Adresskopfs:
+\newcommand{\Addressblock}{right}
+%\newcommand{\Addressblock}{left}
+%\newcommand{\Addressblock}{pingenleft}
+
+%Definiert die Lieferadresse:
+\newcommand{\ShiptoAddress}{
+\ifthenelse{\equal{<%shiptoname%>}{}}{}{<%shiptoname%>\\}
+\ifthenelse{\equal{<%shiptocontact%>}{}}{}{<%shiptocontact%>\\}
+\ifthenelse{\equal{<%shiptoaddress1%>}{}}{}{<%shiptoaddress1%>\\}
+\ifthenelse{\equal{<%shiptoaddress2%>}{}}{}{<%shiptoaddress2%>\\}
+\ifthenelse{\equal{<%shiptocity%>}{}}{}{<%shiptozipcode%> <%shiptocity%>\\}
+\ifthenelse{\equal{<%shiptocountry%>}{}}{}{<%shiptocountry%>\\}
+}
+
+%Definiert die Rechnungsadresse:
+
+\newcommand{\Address}{
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+%Firmenanschrift
+
+<%name%>
+
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%>
+\ifthenelse{\equal{<%contacttitle%>}{}}{}{<%contacttitle%>
+}<%firstname%> <%lastname%>}
+
+}{
+
+%Privatanschrift
+
+<%salutation%>
+
+\ifthenelse{\equal{<%contacttitle%>}{}}{}{<%contacttitle%>
+}<%firstname%> <%lastname%>
+
+}
+
+\ifthenelse{\equal{address1}{}}{}{<%address1%>}
+
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+}
 
 % Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
 \textblockorigin{0.00cm}{0.00cm} % - nach links / + nach unten

@@ -1,6 +1,6 @@
 % Pagebreak mit Betrag
 
-<%pagebreak 54 17 25%>
+<%pagebreak 58 27 38%>
 
 %Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
 \end{tabularx} 
@@ -19,14 +19,14 @@ Zwischensumme &<%sumcarriedforward%> \\
 \Footer
 
 %Die Artikeltabelle auf der neuen Seite wird initialisiert.
-\begin{tabularx}{\textwidth}{@{}XR{1.4cm}R{1.4cm}R{2cm}R{2cm}@{}}
+\begin{tabularx}{\textwidth}{@{}X@{}R{1.4cm}@{}R{1.4cm}@{}R{2cm}L{0.7cm}@{}R{2cm}@{}}
 
 \hline
-\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & \textbf{Betrag <%currency%>} \\
+\textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} & \textbf{Preis <%currency%>} & & \textbf{Betrag <%currency%>} \\
 \hline
 
 %Der Übertrag der letzten Seite wird geschrieben.
 
-\"{U}bertrag von Seite <%lastpage%> & & & & <%sumcarriedforward%> \\
+\"{U}bertrag von Seite <%lastpage%> & & & & & <%sumcarriedforward%> \\
 
 <%end pagebreak%>
