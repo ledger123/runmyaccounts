@@ -3026,9 +3026,14 @@ sub company_logo {
 <center>
 <a class="mainpageref" href="http://www.runmyaccounts.com" target=_blank><img src=$images/sql-ledger.gif border=0></a>
 <h1 class=login>|.$locale->text('Version').qq| $release</h1>
-<!--<p>
+<p>
 <a class="roadmapref" href="$roadmap" target=_blank>roadmap</a>
-</p>-->
+</p>
+<br/>
+<h1 class=login>
+$form->{company}
+<br>$form->{address}
+</h1>
 </center>
 </div>
 </body>
