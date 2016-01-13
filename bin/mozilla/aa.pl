@@ -1552,6 +1552,8 @@ sub yes {
 
 sub search {
 
+    $form->error($locale->text('Access denied!')) if $myconfig{acs} =~ $form->{level};
+
     my $old_number = $form->{"$form->{vc}number"}; # customer/vendor number is changed in $form->create_links
     $form->create_links( $form->{ARAP}, \%myconfig, $form->{vc} );
     $form->{"$form->{vc}number"} = $old_number;
