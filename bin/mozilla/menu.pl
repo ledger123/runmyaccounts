@@ -27,8 +27,8 @@ sub display {
   $form->header;
 
   $callbacks = { 
-	'ar:ar_reports:ar_reports_transactions' => 'ar.pl?action=search&nextsub=transactions',
-	'ar:ar_reports:ar_reports_outstanding' => 'ar.pl?action=search&nextsub=transactions&outstanding=1' 
+	'ar:ar_reports:ar_reports_transactions' => 'ar.pl?action=search&nextsub=transactions&level=AR--Reports--Transactions',
+	'ar:ar_reports:ar_reports_outstanding' => 'ar.pl?action=search&nextsub=transactions&outstanding=1&level=AR--Reports--Outstanding',
   };
 
   print qq|
