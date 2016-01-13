@@ -27,8 +27,8 @@ sub display {
   $form->header;
 
   $callbacks = { 
-	'1:6:7' => 'ar.pl?action=search&nextsub=transactions',
-	'1:6:8' => 'ar.pl?action=search&nextsub=transactions&outstanding=1' 
+	'ar:ar_reports:ar_reports_transactions' => 'ar.pl?action=search&nextsub=transactions',
+	'ar:ar_reports:ar_reports_outstanding' => 'ar.pl?action=search&nextsub=transactions&outstanding=1' 
   };
 
   print qq|
@@ -196,9 +196,16 @@ sub js_menu {
   my @menuorder = $menu->access_control(\%myconfig, $level);
 
   while (@menuorder){
-    $i++;
+    #$i++;
     $item = shift @menuorder;
     $label = $item;
+    $i = lc $label;
+    $i =~ s/--/_/g;
+    $i =~ s/&//g;
+    $i =~ s/  /_/g;
+    $i =~ s/ /_/g;
+    $i =~ s/-/_/g;
+    $i =~ s/\//_/g;
     $label =~ s/.*--//g;
     $label = $locale->text($label);
 
