@@ -3029,6 +3029,11 @@ sub company_logo {
 <p>
 <a class="roadmapref" href="$roadmap" target=_blank>roadmap</a>
 </p>
+<br/>
+<h1 class=login>
+$form->{company}
+<br>$form->{address}
+</h1>
 </center>
 </div>
 </body>
