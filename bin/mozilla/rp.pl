@@ -2062,12 +2062,12 @@ function CheckAll() {
     
     $href = qq|$ref->{module}.pl?path=$form->{path}&action=edit&id=$ref->{id}&login=$form->{login}&callback=|.$form->escape($form->{callback});
     
-    $column_data{invnumber} = qq|<td><a href=$href>$ref->{invnumber}</a></td>|;
-    $column_data{ordnumber} = qq|<td>$ref->{ordnumber}</td>|;
-    $column_data{invdescription} = qq|<td>$ref->{invdescription}</td>|;
+    $column_data{invnumber} = qq|<td nowrap><a href=$href>$ref->{invnumber}</a></td>|;
+    $column_data{ordnumber} = qq|<td nowrap>$ref->{ordnumber}</td>|;
+    $column_data{invdescription} = qq|<td nowrap>$ref->{invdescription}</td>|;
     for (qw(transdate duedate)) { $column_data{$_} = qq|<td nowrap>$ref->{$_}</td>| }
     
-    $column_data{due} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision}).qq|</td>|;
+    $column_data{due} = qq|<td align=right nowrap>|.$form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision}).qq|</td>|;
 
     $j++; $j %= 2;
     print qq|
