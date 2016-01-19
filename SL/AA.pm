@@ -30,6 +30,7 @@ sub post_transaction {
   ($null, $form->{department_id}) = split(/--/, $form->{department});
   $form->{department_id} *= 1;
   
+
   my %defaults = $form->get_defaults($dbh, \@{['fx%accno_id', 'cdt', 'precision']});
   $form->{precision} = $defaults{precision};
 
@@ -292,7 +293,6 @@ sub post_transaction {
     }
   }
 
-
   $query = qq|UPDATE $table SET
 	      invnumber = |.$dbh->quote($form->{invnumber}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
@@ -305,6 +305,8 @@ sub post_transaction {
 	      paid = $paid * $arapml,
 	      datepaid = $datepaid,
 	      netamount = $invnetamount * $arapml,
+	      fxamount = $form->{oldinvtotal}*1,
+	      fxpaid = $form->{oldtotalpaid}*1,
 	      terms = $form->{terms},
 	      curr = '$form->{currency}',
 	      notes = |.$dbh->quote($form->{notes}).qq|,
