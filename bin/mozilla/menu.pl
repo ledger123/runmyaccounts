@@ -30,6 +30,7 @@ sub display {
 	'ar:ar_reports:ar_reports_transactions' => 'ar.pl?action=search&nextsub=transactions&level=AR--Reports--Transactions',
 	'ar:ar_reports:ar_reports_outstanding' => 'ar.pl?action=search&nextsub=transactions&outstanding=1&level=AR--Reports--Outstanding',
 	'ap:ap_reports:ap_reports_outstanding' => 'ap.pl?action=search&nextsub=transactions&outstanding=1&level=AP--Reports--Outstanding',
+  	'general_ledger:general_ledger_reports:general_ledger_reports_income_statement' => 'rp.pl?action=report&report=income_statement&level=General+Ledger--Reports--Income+Statement',
   };
 
   print qq|
