@@ -1410,6 +1410,10 @@ sub print_form {
 
   $numberfld = "sinumber";
 
+  use Email::Valid;
+  my $validemail = Email::Valid->address($form->{email});
+  $form->error($locale->text('Invalid email. Please correct ...')) if !$validemail;
+
   $display_form = ($form->{display_form}) ? $form->{display_form} : "display_form";
 
   if (! ($form->{copies} = abs($form->{copies}))) {
