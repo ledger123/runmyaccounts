@@ -1573,7 +1573,6 @@ sub post_invoice {
 	      warehouse_id = $form->{warehouse_id},
 	      exchangerate = $form->{exchangerate}
 	      | . (($form->{dcn}=='') ? '' : qq|,dcn = '$form->{dcn}'| ) . qq|,
-	      dcn = '$form->{dcn}',
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
           paymentmethod_id = $paymentmethod_id
               WHERE id = $form->{id}
