@@ -1,41 +1,9 @@
-% Bei bündiger Positionierung des Adresskopfs 
-%\begin{textblock*}{6.5cm}(1.8cm,6.10cm)
-
-% Bei linker Positionierung des Adresskopfs 
-%\begin{textblock*}{6.5cm}(2.25cm,6.10cm)
-
-% Bei rechter Positionierung des Adresskopfs:
-\begin{textblock*}{6.5cm}(11.85cm,6.10cm)
+\ifthenelse{\equal{\Addressblock}{right}}{\begin{textblock*}{6.5cm}(11.85cm,6.10cm)}{}
+\ifthenelse{\equal{\Addressblock}{left}}{\begin{textblock*}{6.5cm}(1.8cm,6.10cm)}{}
+\ifthenelse{\equal{\Addressblock}{pingenleft}}{\begin{textblock*}{6.5cm}(2.25cm,6.10cm)}{}
 
 %\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
 
-\ifthenelse{\equal{<%typeofcontact%>}{company}}{
-
-%Firmenanschrift
-
-<%name%>
-
-\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%>
-\ifthenelse{\equal{<%contacttitle%>}{}}{}{<%contacttitle%>
-}<%firstname%> <%lastname%>}
-
-}{
-
-%Privatanschrift
-
-<%salutation%>
-
-\ifthenelse{\equal{<%contacttitle%>}{}}{}{<%contacttitle%>
-}<%firstname%> <%lastname%>
-
-}
-
-\ifthenelse{\equal{address1}{}}{}{<%address1%>}
-
-\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
-
-<%zipcode%> <%city%>
-
-\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+\ifthenelse{\equal{\DocType}{Lieferschein}}{\ShiptoAddress}{\Address}
 
 \end{textblock*}

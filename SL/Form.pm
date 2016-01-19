@@ -17,8 +17,6 @@ sub new {
 
   read(STDIN, $_, $ENV{CONTENT_LENGTH});
 
-  print STDERR "$ENV{QUERY_STRING}\n";
-
   if ($ENV{QUERY_STRING}) {
     $_ = $ENV{QUERY_STRING};
   }
@@ -27,10 +25,20 @@ sub new {
     $_ = $ARGV[0];
   }
 
+  my $maxlength = 0;
+  my $countofparams = 0;
   foreach my $part (split /[&]/) {
     my ($key, $value) = split /=/, $part;
   	$self->{$key} = $value;
+  	$countofparams++;
+  	
+  	if (length($value) > $maxlength) {
+  		$maxlength = length($value);
+  	}
   }
+  
+  print STDERR "params: $countofparams, max_length: $maxlength\n";
+  
   
   my $esc = 1;
   

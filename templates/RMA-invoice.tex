@@ -38,11 +38,13 @@
 
 <%include content_terms.tex%>
 
+<%include content_shiptoaddresstext.tex%>
+
 <%include content_notes.tex%>
 
 %%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
 
-\ifthenelse{\equal{<%rvc%>}{}}{
+\ifthenelse{\equal{<%membernumber%>}{}}{
 
 %Hier könnte man IBAN Infos anfügen
 

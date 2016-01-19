@@ -89,7 +89,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2272','Kontokorrent FAK','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2273','Kontokorrent Unfallversicherung','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2274','Kontokorrent Krankentaggeldversicherung','A','L','AP_amount','227',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2279','Kontokorrekt Quellensteuer','A','L','AP_amount','227',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2279','Kontokorrent Quellensteuer','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('230','PASSIVE RECHNUNGSABGRENZUNG UND KURZFRISTIGE RÜCKSTELLUNGEN','H','L','','230',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2300','Noch nicht bezahlter Aufwand','A','L','','230',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2301','Erhaltener Ertrag des Folgejahrs','A','L','','230',false,true,'');
@@ -246,9 +246,9 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('810','BETRIEBSFREMDER ERTRAG','H','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8100','Betriebsfremder Ertrag','A','E','','810',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('850','AUSSERORDENTLICHER AUFWAND','H','E','','850',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8500','Ausserordentlicher Aufwand','A','E','','850',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8500','Ausserordentlicher Aufwand','A','E','AP_amount','850',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('851','AUSSERORDENTLICHER ERTRAG','H','E','','851',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8510','Ausserordentlicher Ertrag','A','E','','851',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8510','Ausserordentlicher Ertrag','A','E','AR_amount:AP_amount','851',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('860','EINMALIGER AUFWAND','H','E','','860',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8600','Einmaliger Aufwand','A','E','','860',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('861','EINMALIGER ERTRAG','H','E','','861',false,true,'');

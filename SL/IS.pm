@@ -1571,8 +1571,8 @@ sub post_invoice {
 	      discountterms = $form->{discountterms},
 	      onhold = '$form->{onhold}',
 	      warehouse_id = $form->{warehouse_id},
-	      exchangerate = $form->{exchangerate},
-	      dcn = '$form->{dcn}',
+	      exchangerate = $form->{exchangerate}
+	      | . (($form->{dcn}=='') ? '' : qq|,dcn = '$form->{dcn}'| ) . qq|,
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
           paymentmethod_id = $paymentmethod_id
               WHERE id = $form->{id}

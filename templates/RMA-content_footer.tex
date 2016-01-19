@@ -12,7 +12,6 @@
 <%company%>\\
 \BeforeSubString{ --}{<%address%>}\\
 \BehindSubString{-- }{<%address%>}\\
-\ifthenelse{\equal{<%businessnumber%>}{}}{}{MWST Nr.: <%businessnumber%>}
 }
 \parbox[t]{.33\textwidth}{
 \ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
