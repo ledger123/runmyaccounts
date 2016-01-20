@@ -36,7 +36,7 @@ if (-f "$form->{path}/$form->{login}_$form->{script}") {
 }
 
 # window title bar
-$form->{titlebar} = "Run my Accounts ".$locale->text('Version');
+$form->{titlebar} = $myconfig{provider}.$locale->text('Version');
 
 if ($form->{action}) {
   &{ $locale->findsub($form->{action}) };

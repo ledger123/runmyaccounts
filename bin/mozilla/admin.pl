@@ -174,7 +174,7 @@ sub logout {
 
 sub add_user {
   
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Administration')." / ".$locale->text('Add User');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Administration')." / ".$locale->text('Add User');
 
   $form->{Oracle_sid} = $sid;
   $form->{Oracle_dbport} = '1521';
@@ -196,7 +196,7 @@ sub add_user {
 
 sub edit {
 
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Administration')." / ".$locale->text('Edit User');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Administration')." / ".$locale->text('Edit User');
   $form->{edit} = 1;
 
   &form_header;
@@ -281,7 +281,7 @@ sub list_users {
 
   @column_index = qw(login name company dbdriver dbhost dataset templates);
 
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Administration');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Administration');
 
 
   $form->header;
@@ -1187,7 +1187,7 @@ sub dbselect_source {
 
   &dbdriver_defaults;
 
- $form->{title} = "Run my Accounts ".$locale->text('Accounting')." / ".$locale->text('Database Administration');
+ $form->{title} = $myconfig{provider}.$locale->text('Accounting')." / ".$locale->text('Database Administration');
   
   $form->header;
 
@@ -1269,7 +1269,7 @@ sub update_dataset {
 
   %needsupdate = User->dbneedsupdate(\%$form);
 
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Update Dataset');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Update Dataset');
   
   $form->header;
 
@@ -1400,7 +1400,7 @@ sub create_dataset {
   <option value=WIN874>Windows CP874 (Thai)
   |;
   
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
   
   $form->header;
 
@@ -1518,7 +1518,7 @@ sub dbcreate {
 
   User->dbcreate(\%$form);
   
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
 
   $form->header;
 
@@ -1561,7 +1561,7 @@ sub delete_dataset {
     $form->error($locale->text('Nothing to delete!'));
   }
 
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
 
   $form->header;
 
@@ -1624,7 +1624,7 @@ sub dbdelete {
 
   User->dbdelete(\%$form);
 
-  $form->{title} = "Run my Accounts ".$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
+  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
 
   $form->header;
 

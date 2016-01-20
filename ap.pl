@@ -120,7 +120,7 @@ if (-f "$form->{path}/$form->{login}_$form->{script}") {
 
 if ($form->{action}) {
   # window title bar, user info
-  $form->{titlebar} = "Run my Accounts ".$locale->text('Version'). " $form->{version} - $myconfig{name} - $myconfig{dbname}";
+  $form->{titlebar} = $myconfig{provider}.$locale->text('Version'). " $form->{version} - $myconfig{name} - $myconfig{dbname}";
 
   &check_password;
 
