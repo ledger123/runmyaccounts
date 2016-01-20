@@ -1406,9 +1406,19 @@ sub list_history {
   $discount = 0;
   $qty = 0;
 
+  my $subtotal;
+  my $total;
   foreach $ref (@{ $form->{CT} }) {
 
     if ($ref->{id} ne $sameid) {
+      if ($total){
+         for (@column_index) { $column_data{$_} = "<td>&nbsp;</td>" }
+         $column_data{total} = qq|<td align=right>|.$form->format_amount(\%myconfig, $subtotal, $form->{precision})."</td>";
+         print qq|<tr class=listsubtotal>|;
+         for (@column_index) { print "$column_data{$_}\n" }
+         print qq|</tr>|;
+      }
+      $subtotal = 0;
       # print the header
       print qq|
         <tr class=listheading>
@@ -1416,6 +1426,8 @@ sub list_history {
 	</tr>
 |;
     }
+    $subtotal += $ref->{sellprice} * $ref->{qty};
+    $total += $ref->{sellprice} * $ref->{qty};
 
     $ref->{fxsellprice} = $ref->{sellprice};
     if ($form->{type} ne 'invoice') {
@@ -1506,6 +1518,19 @@ sub list_history {
     $sameinvid = $ref->{invid};
 
   }
+
+  # Last subtotal
+  for (@column_index) { $column_data{$_} = "<td>&nbsp;</td>" }
+  $column_data{total} = qq|<td align=right>|.$form->format_amount(\%myconfig, $subtotal, $form->{precision})."</td>";
+  print qq|<tr class=listsubtotal>|;
+  for (@column_index) { print "$column_data{$_}\n" }
+  print qq|</tr>|;
+
+  # Grand total
+  $column_data{total} = qq|<td align=right>|.$form->format_amount(\%myconfig, $total, $form->{precision})."</td>";
+  print qq|<tr class=listtotal>|;
+  for (@column_index) { print "$column_data{$_}\n" }
+  print qq|</tr>|;
 
  
   print qq|

@@ -1703,6 +1703,7 @@ sub reminder {
 	  $where .= qq| AND ((a.amount > 0 AND a.paid < a.amount) OR (a.amount < 0 AND a.paid > a.amount))|;
   }
 
+  $exclude_credits = 'AND a.amount > 0' if $form->{exclude_credits};
   $query = qq|SELECT c.id AS vc_id, c.$form->{vc}number, c.name, c.terms,
               ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
 	      c.contact, c.email,
@@ -1730,6 +1731,7 @@ sub reminder {
           LEFT JOIN address ad2 ON (ad2.trans_id = c.payment_accno_id)
 	      WHERE a.duedate <= current_date
 	      AND $where
+	      $exclude_credits
 	      ORDER BY vc_id, transdate, invnumber|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
 
