@@ -529,7 +529,7 @@ sub im_sales_invoice {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(ndx transdate invnumber customer customernumber city dcn invoicedescription total curr totalqty unit duedate employee department warehouse);
+  @column_index = qw(ndx transdate invnumber customer customernumber city dcn invoicedescription total curr exchangerate totalqty unit duedate employee department warehouse);
   @flds = @column_index;
   shift @flds;
   push @flds, qw(ordnumber quonumber customer_id datepaid dcn shippingpoint shipvia waybill terms notes intnotes language_code ponumber cashdiscount discountterms employee_id parts_id description sellprice discount qty unit serialnumber projectnumber deliverydate AR taxincluded department_id warehouse_id);
@@ -554,6 +554,7 @@ sub im_sales_invoice {
   $column_data{total} = $locale->text('Total');
   $column_data{totalqty} = $locale->text('Qty');
   $column_data{curr} = $locale->text('Curr');
+  $column_data{exchangerate} = $locale->text('Exchange Rate');
   $column_data{unit} = $locale->text('Unit');
   $column_data{duedate} = $locale->text('Due Date');
   $column_data{employee} = $locale->text('Salesperson');
@@ -1076,7 +1077,7 @@ sub import_sales_invoices {
       $newform->{importing} = 1;
       $newform->{precision} = $form->{precision};
 
-      for (qw(invnumber ordnumber quonumber transdate customer customer_id datepaid duedate dcn shippingpoint shipvia waybill terms notes intnotes curr language_code ponumber cashdiscount discountterms AR taxincluded)) { $newform->{$_} = $form->{"${_}_$k"} }
+      for (qw(invnumber ordnumber quonumber transdate customer customer_id datepaid duedate dcn shippingpoint shipvia waybill terms notes intnotes curr exchangerate language_code ponumber cashdiscount discountterms AR taxincluded)) { $newform->{$_} = $form->{"${_}_$k"} }
       $newform->{description} = $form->{"invoicedescription_$k"};
 
       $newform->{employee} = qq|--$form->{"employee_id_$k"}|;
