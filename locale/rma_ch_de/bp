@@ -85,6 +85,7 @@ $self{texts} = {
   'Quotation Number'            => 'Offertenummer',
   'Quotations'                  => 'Offerten',
   'RFQs'                        => 'Offerte-Anfragen',
+  'Reminders'                   => 'Mahnungen',
   'Remittance Vouchers'         => 'Zahlscheine',
   'Remove'                      => 'Entfernen',
   'Removed spoolfiles!'         => 'Spoolfiles gelöscht!',

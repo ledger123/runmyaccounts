@@ -2134,7 +2134,7 @@ sub transactions {
     $column_data{id}            = "<th><a class=listheading href=$href&sort=id>" . $locale->text('ID') . "</a></th>";
     $column_data{transdate}     = "<th><a class=listheading href=$href&sort=transdate>" . $locale->text('Date') . "</a></th>";
     $column_data{duedate}       = "<th><a class=listheading href=$href&sort=duedate>" . $locale->text('Due Date') . "</a></th>";
-    $column_data{invnumber}     = "<th><a class=listheading href=$href&sort=invnumber>" . $locale->text('Invoice') . "</a></th>";
+    $column_data{invnumber}     = "<th><a class=listheading href=$href&sort=invnumber>" . $locale->text('Invoice Number') . "</a></th>";
     $column_data{ordnumber}     = "<th><a class=listheading href=$href&sort=ordnumber>" . $locale->text('Order') . "</a></th>";
     $column_data{ponumber}      = "<th><a class=listheading href=$href&sort=ponumber>" . $locale->text('PO Number') . "</a></th>";
     $column_data{name}          = "<th><a class=listheading href=$href&sort=name>$name</a></th>";

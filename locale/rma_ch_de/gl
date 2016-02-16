@@ -57,6 +57,7 @@ $self{texts} = {
   'Equity'                      => 'Passiva/Eigenkapital',
   'Every'                       => 'Jeden',
   'Exchange Rate'               => 'Wechselkurs',
+  'Exchange Rate Difference'    => 'Währungsdifferenzen einbeziehen',
   'Expense'                     => 'Aufwand',
   'FX'                          => 'FX',
   'Feb'                         => 'Feb',

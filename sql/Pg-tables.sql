@@ -70,7 +70,7 @@ INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.10');
 --
 CREATE TABLE acc_trans (
   trans_id int,
-  chart_id int,
+  chart_id int not null,
   amount float,
   transdate date DEFAULT current_date,
   source text,

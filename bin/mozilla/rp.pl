@@ -1928,6 +1928,7 @@ sub reminder {
   $column_header{ordnumber} = qq|<th class=listheading>|.$locale->text('Order').qq|</th>|;
   $column_header{transdate} = qq|<th class=listheading nowrap>|.$locale->text('Date').qq|</th>|;
   $column_header{duedate} = qq|<th class=listheading nowrap>|.$locale->text('Due Date').qq|</th>|;
+  $column_header{duedays} = qq|<th class=listheading nowrap>|.$locale->text('Due Days').qq|</th>|;
   $column_header{due} = qq|<th class=listheading nowrap>|.$locale->text('Due').qq|</th>|;
   
   @column_index = qw(ndx vc);
@@ -1944,7 +1945,7 @@ sub reminder {
     for (@{ $form->{all_language} }) { $form->{selectlanguage} .= qq|$_->{code}--$_->{description}\n| }
   }
   
-  push @column_index, qw(invnumber invdescription ordnumber transdate duedate due);
+  push @column_index, qw(invnumber invdescription ordnumber transdate duedate duedays due);
   
   if ($form->{department}) {
       $option .= "\n<br>" if $option;
@@ -2071,6 +2072,7 @@ function CheckAll() {
     $column_data{ordnumber} = qq|<td nowrap>$ref->{ordnumber}</td>|;
     $column_data{invdescription} = qq|<td nowrap>$ref->{invdescription}</td>|;
     for (qw(transdate duedate)) { $column_data{$_} = qq|<td nowrap>$ref->{$_}</td>| }
+    for (qw(duedays)) { $column_data{$_} = qq|<td nowrap align="right">$ref->{$_}</td>| }
     
     $column_data{due} = qq|<td align=right nowrap>|.$form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision}).qq|</td>|;
 

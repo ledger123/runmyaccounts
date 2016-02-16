@@ -45,6 +45,7 @@ $self{texts} = {
   'Group'                       => 'Warengruppe',
   'In'                          => 'In',
   'Include'                     => 'Inklusive',
+  'Include Exchange Rate Difference' => 'Währungsdifferenzen einbeziehen',
   'Include Months'              => 'Inklusive Monate',
   'Include in Report'           => 'In Bericht aufnehmen',
   'Income'                      => 'Ertrag',
