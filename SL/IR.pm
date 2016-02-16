@@ -1343,6 +1343,8 @@ sub post_invoice {
               amount = $invamount,
               netamount = $invnetamount,
               paid = $form->{paid},
+	      fxamount = |.( ($form->{oldinvtotal}) ? $form->{oldinvtotal}*1 : 0 ).qq|,
+	      fxpaid = |.( ($form->{oldtotalpaid}) ? $form->{oldtotalpaid}*1 : 0 ).qq|,
 	      datepaid = |.$form->dbquote($form->{datepaid}, SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->{duedate}, SQL_DATE).qq|,
 	      invoice = '1',
