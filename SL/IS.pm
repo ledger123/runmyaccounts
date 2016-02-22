@@ -1527,12 +1527,14 @@ sub post_invoice {
        $dbh->do($query) or $form->dberror($query);
      } else {
 	    $correction = (-1)*$correction;
-        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+	    if ( $correction != 0 ) {
+          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		            transdate, fx_transaction, cleared, approved, vr_id)
 		            VALUES ($form->{id}, $defaults{fxloss_accno_id},
 			    $correction, '$form->{"datepaid_1"}', '1', $cleared,
 			    '$approved', $voucherid)|;
-		$dbh->do($query) || $form->dberror($query);
+		  $dbh->do($query) || $form->dberror($query);
+		}
      }
   }
 
