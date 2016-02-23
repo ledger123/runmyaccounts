@@ -25,7 +25,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1100','Forderungen Schweiz','A','A','AR','110',false,false,'forderungenschweiz');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1101','Forderungen Ausland','A','A','AR','110',false,false,'forderungenauslandchf');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1102','Forderungen Ausland Fremdwährungen','A','A','AR','110',false,false,'forderungenauslandandere');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1103','Forderungen alt','A','A','','110',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1103','Forderungen FiBu','A','A','','110',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1109','Wertberichtigungen Forderungen aus Lieferungen und Leistungen gegenüber Dritten','A','A','','110',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('111','FORDERUNGEN AUS LIEFERUNGEN UND LEISTUNGEN GEGENÜBER BETEILIGUNGEN','H','A','','111',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1110','Forderungen aus Lieferungen und Leistungen gegenüber Beteiligungen','A','A','','111',false,true,'');
@@ -70,7 +70,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('20','KURZFRISTIGES FREMDKAPITAL','H','L','','200',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('200','VERBINDLICHKEITEN AUS LIEFERUNGEN UND LEISTUNGEN','H','L','','200',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2000','Verbindlichkeiten aus Lieferungen und Leistungen','A','L','AP','200',false,false,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2001','Verbindlichkeiten aus Lieferungen und Leistungen alt','A','L','','200',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2001','Verbindlichkeiten aus Lieferungen und Leistungen FiBu','A','L','','200',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2002','Verbindlichkeiten für Personalaufwand','A','L','','200',false,true,'lohnzahlung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('203','ERHALTENE ANZAHLUNGEN VON DRITTEN','H','L','','203',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2030','Erhaltene Anzahlungen von Dritten','A','L','AR_amount:IC_income','203',false,true,'');
