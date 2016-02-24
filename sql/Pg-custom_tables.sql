@@ -138,3 +138,6 @@ create table debitscredits (id serial, reference text, description text, transda
 ALTER TABLE acc_trans ADD tax_chart_id integer DEFAULT 0;
 ALTER TABLE tax ADD datev_flag CHAR(1);
 
+ALTER TABLE acc_trans ADD amount2 float default 0;
+
+
