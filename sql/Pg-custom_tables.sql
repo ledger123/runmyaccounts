@@ -135,3 +135,6 @@ create table debits (id serial, reference text, description text, transdate date
 create table credits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2));
 create table debitscredits (id serial, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2));
 
+ALTER TABLE acc_trans ADD tax_chart_id integer DEFAULT 0;
+ALTER TABLE tax ADD datev_flag CHAR(1);
+

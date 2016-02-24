@@ -2072,7 +2072,7 @@ sub taxes {
     $form->{"taxrate_$i"} = $ref->{rate};
     $form->{"taxdescription_$i"} = $ref->{description};
     
-    for (qw(taxnumber validto)) { $form->{"${_}_$i"} = $ref->{$_} }
+    for (qw(taxnumber validto datev_flag)) { $form->{"${_}_$i"} = $ref->{$_} }
     $form->{taxaccounts} .= "$ref->{id}_$i ";
   }
   chop $form->{taxaccounts};
@@ -2105,6 +2105,7 @@ sub display_taxes {
 	  <th>|.$locale->text('Rate').qq| (%)</th>
 	  <th>|.$locale->text('Number').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
+	  <th>|.$locale->text('Datev Flag').qq|</th>
 	</tr>
 |;
 
@@ -2125,11 +2126,12 @@ sub display_taxes {
     } else {
       print qq|$form->{"taxdescription_$i"}|;
     }
-    
+ 
     print qq|</th>
 	  <td><input name="taxrate_$i" size=6 value=$form->{"taxrate_$i"}></td>
 	  <td><input name="taxnumber_$i" value="$form->{"taxnumber_$i"}"></td>
 	  <td><input name="validto_$i" size=11 class=date value="$form->{"validto_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
+	  <td><input name="datev_flag_$i" size=1 maxlength=1 value="$form->{"datev_flag_$i"}"></td>
 	</tr>
 |;
     my $sametax = $form->{"taxdescription_$i"};
@@ -2177,7 +2179,7 @@ sub update {
 sub update_taxes {
 
   @tax = ();
-  @flds = qw(id taxrate taxdescription taxnumber accno validto);
+  @flds = qw(id taxrate taxdescription taxnumber accno validto datev_flag);
   foreach $item (split / /, $form->{taxaccounts}) {
     ($id, $i) = split /_/, $item;
     $form->{"id_$i"} = $id;
@@ -2193,9 +2195,10 @@ sub update_taxes {
       $id = $ref->{id};
       $accno = $ref->{accno};
       $taxdescription = $ref->{taxdescription};
+      $datev_flag = $ref->{datev_flag};
     }
     if ($i > 1 && $validto) {
-      push @tax, { id => $id, accno => $accno, taxdescription => $taxdescription };
+      push @tax, { id => $id, accno => $accno, taxdescription => $taxdescription, datev_flag => $datev_flag };
     }
   }
 
