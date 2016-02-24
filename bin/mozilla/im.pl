@@ -2947,6 +2947,10 @@ sub export_datev {
         $accounttype_standard = '';
     }
 
+    ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+    $form->{datefrom} = $form->format_date($myconfig{dateformat}, $form->{datefrom}) if $form->{datefrom};
+    $form->{dateto} = $form->format_date($myconfig{dateformat}, $form->{dateto}) if $form->{dateto};
+
     if (!$form->{l_csv}){
         $form->header;
         print qq|
@@ -2958,6 +2962,30 @@ sub export_datev {
 </table>
 |;
 
+   $form->all_years(\%myconfig);
+   if (@{ $form->{all_years} }) {
+        # accounting years
+        $selectaccountingyear = "<option>\n";
+        for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|<option>$_\n| }
+        $selectaccountingmonth = "<option>\n";
+        for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|<option value=$_>|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+        $selectfrom = qq|
+        <tr>
+            <th align=right>|.$locale->text('Period').qq|</th>
+            <td>
+            <select name=month>$selectaccountingmonth</select>
+            <select name=year>$selectaccountingyear</select>
+            <br>
+            <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+            <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+            <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+            <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+            </td>
+        </tr>
+|;
+   }
+
         print qq|
 <form action="$form->{script}" method="post">
 <table>
@@ -2967,12 +2995,13 @@ sub export_datev {
 </tr>
 <tr>
     <th align="right">|.$locale->text('From').qq|</th>
-    <td><input name=fromdate type=text size=12 class=date value='$form->{fromdate}' title='$myconfig{dateformat}'></td>
+    <td><input name=datefrom type=text size=12 class=date value='$form->{datefrom}' title='$myconfig{dateformat}'></td>
 </tr>
 <tr>
     <th align="right">|.$locale->text('To').qq|</th>
-    <td><input name=todate type=text size=12 class=date value='$form->{todate}' title='$myconfig{dateformat}'></td>
+    <td><input name=dateto type=text size=12 class=date value='$form->{dateto}' title='$myconfig{dateformat}'></td>
 </tr>
+$selectfrom
 <tr>
   <th align=right>| . $locale->text('Accounts') . qq|</th>
   <td>
@@ -2995,22 +3024,22 @@ sub export_datev {
 |;
     }
 
-
     my $where = ' 1 = 1 ';
     $where = ' 1 = 2 ' if !$form->{runit};    # Display data only when Update button is pressed.
 
     my @bind = ();
+
 
     my $query;
     if ($form->{reference}){
         my $reference = $form->like(lc $form->{reference});
         $where .= qq| AND LOWER(reference) LIKE '$reference'|;
     }
-    if ( $form->{fromdate} ) {
-        $where .= qq| AND transdate >= '$form->{fromdate}'|;
+    if ( $form->{datefrom} ) {
+        $where .= qq| AND transdate >= '$form->{datefrom}'|;
     }
-    if ( $form->{todate} ) {
-        $where .= qq| AND transdate <= '$form->{todate}'|;
+    if ( $form->{dateto} ) {
+        $where .= qq| AND transdate <= '$form->{dateto}'|;
     }
 
     if ($form->{runit}){
