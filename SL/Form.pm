@@ -7,8 +7,9 @@
 #
 #======================================================================
 
-package Form;
+use DBIx::Simple;
 
+package Form;
 
 sub new {
   my $type = shift;
@@ -98,6 +99,16 @@ sub new {
   
 }
 
+sub db_init {
+   my ($self, $myconfig) = @_;
+   $self->{dbh} = $self->dbconnect_noauto($myconfig);
+   $self->{dbs} = DBIx::Simple->connect($self->{dbh});
+}
+
+sub param {
+   my ($self, $fldname) = @_;
+   return $self->{$fldname};
+}
 
 sub debug {
   my ($self, $file) = @_;
