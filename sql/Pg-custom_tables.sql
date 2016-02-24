@@ -131,3 +131,8 @@ CREATE TABLE partsattr (
 ALTER TABLE acc_trans ADD tax TEXT;
 ALTER TABLE acc_trans ADD taxamount float;
 
+create table debits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2));
+create table credits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2));
+create table debitscredits (id serial, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2));
+
+
