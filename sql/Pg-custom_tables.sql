@@ -150,3 +150,4 @@ ALTER TABLE debits ADD taxamount float;
 ALTER TABLE credits ADD taxamount float;
 ALTER TABLE debitscredits ADD taxamount float;
 
+
