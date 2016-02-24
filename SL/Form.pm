@@ -118,8 +118,12 @@ sub debug {
     for (sort keys %$self) { print FH "$_ = $self->{$_}\n" }
     close(FH);
   } else {
-    print "\n";
+    if ($ENV{HTTP_USER_AGENT}) {
+      &header unless $self->{header};
+      print "<pre>";
+    }
     for (sort keys %$self) { print "$_ = $self->{$_}\n" }
+    print "</pre>" if $ENV{HTTP_USER_AGENT};
   }
   
 } 
