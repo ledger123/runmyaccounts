@@ -128,7 +128,22 @@ sub debug {
   
 } 
 
-  
+# Dump hash values for debugging
+sub dumper {
+   my ($self, $var) = @_;
+
+   use Data::Dumper;
+   $Data::Dumper::Indent = 3;
+   $Data::Dumper::Sortkeys = 1;
+
+   if ($ENV{HTTP_USER_AGENT}) {
+      &header unless $self->{header};
+      print "<pre>";
+   }
+   print Dumper($var);
+   print "</pre>" if $ENV{HTTP_USER_AGENT};
+}
+
 sub escape {
   my ($self, $str, $beenthere) = @_;
 
