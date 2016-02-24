@@ -503,6 +503,7 @@ sub post_transaction {
         }
 
     $fx_diff_amount *= 1;
+
 	# add payment
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, amount2, 
 		    transdate, source, memo, cleared, approved, vr_id, id)
