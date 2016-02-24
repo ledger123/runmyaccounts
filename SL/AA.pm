@@ -150,6 +150,7 @@ sub post_transaction {
       push @{ $form->{acc_trans}{lineitems} }, {
 	accno => $accno,
 	amount => $amount{fxamount}{$i},
+	amount2 => $amount{amount}{$i} - $amount{fxamount}{$i},
 	project_id => $project_id,
 	description => $form->{"description_$i"},
 	cleared => $cleared,
@@ -163,6 +164,7 @@ sub post_transaction {
 	push @{ $form->{acc_trans}{lineitems} }, {
 	  accno => $accno,
 	  amount => $amount,
+	  amount2 => 0,
 	  project_id => $project_id,
 	  description => $form->{"description_$i"},
 	  cleared => $cleared,
@@ -177,7 +179,6 @@ sub post_transaction {
       
     }
   }
-
 
   my $invamount = $invnetamount + $tax;
   
@@ -360,11 +361,11 @@ sub post_transaction {
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
     if ($ref->{amount}) {
       $ref->{taxamount} *= 1;
-      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
+      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, amount2, transdate,
 		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount)
 		  VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$ref->{accno}'),
-		  $ref->{amount} * $ml * $arapml, '$form->{transdate}',
+		  $ref->{amount} * $ml * $arapml, $ref->{amount2} * $ml * $arapml, '$form->{transdate}',
 		  $ref->{project_id}, |.$dbh->quote($ref->{description}).qq|,
 		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $ref->{taxamount})|;
       $dbh->do($query) || $form->dberror($query);
@@ -486,13 +487,23 @@ sub post_transaction {
       $amount = $paid{fxamount}{$i};
       
       if ($amount) {
+
+	if ($form->{currency} ne $form->{defaultcurrency}) {
+	  
+	  # exchangerate gain/loss
+	  $gain_loss_amount = $form->round_amount(($form->round_amount($paid{fxamount}{$i} * $form->{exchangerate}, $form->{precision}) - $form->round_amount($paid{fxamount}{$i} * $form->{"exchangerate_$i"}, $form->{precision})) * -1, $form->{precision});
+
+	  # exchangerate difference
+	  $fx_diff_amount = $form->round_amount($paid{amount}{$i} - $paid{fxamount}{$i} + $gain_loss_amount, $form->{precision});
+        }
+
 	# add payment
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, amount2, 
 		    transdate, source, memo, cleared, approved, vr_id, id)
 		    VALUES ($form->{id},
 			   (SELECT id FROM chart
 			    WHERE accno = '$accno'),
-		    $amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', |
+		    $amount * -1 * $ml * $arapml, $fx_diff_amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', |
 		    .$dbh->quote($form->{"source_$i"}).qq|, |
 		    .$dbh->quote($form->{"memo_$i"}).qq|,
 		    $cleared, '$approved', $voucherid, $paymentid)|;
@@ -506,30 +517,24 @@ sub post_transaction {
 
 	$paymentid++;
 
-
 	if ($form->{currency} ne $form->{defaultcurrency}) {
 	  
-	  # exchangerate gain/loss
-	  $amount = $form->round_amount(($form->round_amount($paid{fxamount}{$i} * $form->{exchangerate}, $form->{precision}) - $form->round_amount($paid{fxamount}{$i} * $form->{"exchangerate_$i"}, $form->{precision})) * -1, $form->{precision});
-	  
-	  if ($amount) {
-	    my $accno_id = (($amount * $ml * $arapml) > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
+	  if ($gain_loss_amount) {
+	    my $accno_id = (($gain_loss_amount * $ml * $arapml) > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
 	    $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 			transdate, fx_transaction, cleared, approved, vr_id)
 			VALUES ($form->{id}, $accno_id,
-			$amount * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
+			$gain_loss_amount * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
 			$cleared, '$approved', $voucherid)|;
 	    $dbh->do($query) || $form->dberror($query);
 	  }
 
-	  # exchangerate difference
-	  $amount = $form->round_amount($paid{amount}{$i} - $paid{fxamount}{$i} + $amount, $form->{precision});
 	  $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		      transdate, fx_transaction, cleared, source, approved, vr_id)
 		      VALUES ($form->{id},
 			     (SELECT id FROM chart
 			      WHERE accno = '$accno'),
-		      $amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
+		      $fx_diff_amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
 		      $cleared, |
 		      .$dbh->quote($form->{"source_$i"}).qq|, '$approved',
 		      $voucherid)|;
