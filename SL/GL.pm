@@ -226,13 +226,19 @@ sub post_transaction {
     }
     
     if ($amount || $form->{"source_$i"} || $form->{"memo_$i"} || ($project_id ne 'NULL')) {
-      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
+
+      if ($form->{currency} ne $form->{defaultcurrency}) {
+	$amount2 = $form->round_amount($amount * ($exchangerate - 1), $form->{precision});
+      }
+      $amount2 *= 1;
+
+      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, amount2, transdate,
 		  source, fx_transaction, project_id, memo, cleared, approved, tax, taxamount)
 		  VALUES
 		  ($form->{id}, (SELECT id
 				 FROM chart
 				 WHERE accno = |.$dbh->quote($accno).qq|),
-		   $amount, '$form->{transdate}', |.
+		   $amount, $amount2, '$form->{transdate}', |.
 		   $dbh->quote($form->{"source_$i"}) .qq|,
 		  '$form->{"fx_transaction_$i"}',
 		  $project_id, |.$dbh->quote($form->{"memo_$i"}).qq|,
@@ -241,16 +247,14 @@ sub post_transaction {
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
 
-	$amount = $form->round_amount($amount * ($exchangerate - 1), $form->{precision});
-	
-	if ($amount) {
+	if ($amount2) {
 	  $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
 		      source, project_id, fx_transaction, memo, cleared, approved, tax, taxamount)
 		      VALUES
 		      ($form->{id}, (SELECT id
 				     FROM chart
 				     WHERE accno = |.$dbh->quote($accno).qq|),
-		       $amount, '$form->{transdate}', |.
+		       $amount2, '$form->{transdate}', |.
 		       $dbh->quote($form->{"source_$i"}) .qq|,
 		      $project_id, '1', |.$dbh->quote($form->{"memo_$i"}).qq|,
 		      $cleared, '$approved', '$form->{"tax_$i"}', $taxamount)|;
