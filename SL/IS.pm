@@ -1390,6 +1390,7 @@ sub post_invoice {
 	   cleared 	=> 'NULL',
 	   approved	=> $approved,
 	   vr_id	=> $voucherid,
+	   id 		=> 0,
         };
 
       }
@@ -1457,6 +1458,7 @@ sub post_invoice {
 	   cleared	=> $cleared,
 	   approved	=> $approved,
 	   vr_id	=> $voucherid,
+	   id 		=> 0,
         };
 
       }
@@ -1479,6 +1481,7 @@ sub post_invoice {
 	   cleared	=> $cleared,
 	   approved	=> $approved,
 	   vr_id	=> $voucherid,
+	   id		=> 0,
         };
 	for (@acc_trans){
             if ($_->{key} == $payment_key){
@@ -1497,14 +1500,13 @@ sub post_invoice {
 		trans_id, chart_id, amount,
 		amount2, transdate, source,
 		memo, fx_transaction, cleared,
-		approved
+		approved, id
 	) VALUES (
 		$form->{id}, $_->{chart_id}, $_->{amount},
-		$_->{amount2}, '$_->{transdate}', '$_->{source}',
-		'$_->{memo}', '$_->{fx_transaction}', $_->{cleared},
-		'$_->{approved}'
+		$_->{amount2}, '$_->{transdate}', |.$dbh->quote($_->{source}).qq|, |.
+		$dbh->quote($_->{memo}).qq|, '$_->{fx_transaction}', $_->{cleared},
+		'$_->{approved}', $_->{id}
 	)|;
-
 	$dbh->do($query) || $form->dberror($query);
   }
 
