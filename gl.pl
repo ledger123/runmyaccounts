@@ -54,6 +54,8 @@ $form->{login} =~ s/(\.\.|\/|\\|\x00)//g;
 # check for user config file, could be missing or ???
 eval { require("$userspath/$form->{login}.conf"); };
 
+$form->db_init(\%myconfig);
+
 if ($@) {
   $locale = new Locale "$language", "$script";
   
