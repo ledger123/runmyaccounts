@@ -1335,6 +1335,8 @@ sub post_invoice {
   my $paymentmethod_id;
   my $fxtotalamount_paid = 0;
 
+  my @acc_trans;
+  my $key;
   # record payments and offsetting AR
   for $i (1 .. $form->{paidaccounts}) {
     
@@ -1382,13 +1384,19 @@ sub post_invoice {
 
       
       if ($form->{receivables}) {
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-	            transdate, approved, vr_id)
-		    VALUES ($form->{id}, (SELECT id FROM chart
-					WHERE accno = '$araccno'),
-		    $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|,
-		    '$approved', $voucherid)|;
-	$dbh->do($query) || $form->dberror($query);
+ 	$accno_id = $form->{dbs}->query('SELECT id FROM chart WHERE accno = ?', $araccno)->list;
+        push @acc_trans, {
+	   key 		=> ++$key,
+	   chart_id	=> $accno_id,
+	   amount	=> $amount,
+	   amount2	=> 0,
+	   transdate	=> $form->{"datepaid_$i"},
+	   fx_transaction => 0,
+	   cleared 	=> 'NULL',
+	   approved	=> $approved,
+	   vr_id	=> $voucherid,
+        };
+
       }
 
       my $paymentadjust1 = $amount;
@@ -1403,15 +1411,23 @@ sub post_invoice {
 	$cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
       }
       
-      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
-                  source, memo, cleared, approved, vr_id, id)
-                  VALUES ($form->{id}, (SELECT id FROM chart
-		                      WHERE accno = '$accno'),
-		  $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|, |
-		  .$dbh->quote($form->{"source_$i"}).qq|, |
-		  .$dbh->quote($form->{"memo_$i"}).qq|, $cleared,
-		  '$approved', $voucherid, $paymentid)|;
-      $dbh->do($query) || $form->dberror($query);
+      $accno_id = $form->{dbs}->query('SELECT id FROM chart WHERE accno = ?', $accno)->list;
+
+      push @acc_trans, {
+	   key 		=> ++$key,
+	   chart_id	=> $accno_id,
+	   amount	=> $amount,
+	   amount2	=> 0,
+	   transdate	=> $form->{"datepaid_$i"},
+	   source 	=> $form->{"source_$i"},
+	   memo 	=> $form->{"memo_$i"},
+	   fx_transaction => 0,
+	   cleared	=> $cleared,
+	   approved	=> $approved,
+	   vr_id	=> $voucherid,
+	   id		=> $paymentid,
+      };
+      $payment_key = $key;
 
       $query = qq|INSERT INTO payment (id, trans_id, exchangerate,
                   paymentmethod_id)
@@ -1435,12 +1451,19 @@ sub post_invoice {
 	   # rounding difference
 	   ($accno_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$araccno'");
 	}
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-	            transdate, fx_transaction, cleared, approved, vr_id)
-	            VALUES ($form->{id}, $accno_id,
-		    $amount, '$form->{"datepaid_$i"}', '1', $cleared,
-		    '$approved', $voucherid)|;
-	$dbh->do($query) || $form->dberror($query);
+
+        push @acc_trans, {
+	   key 		=> ++$key,
+	   chart_id	=> $accno_id,
+	   amount	=> $amount,
+	   amount2	=> 0,
+	   transdate	=> $form->{"datepaid_$i"},
+	   fx_transaction => 1,
+	   cleared	=> $cleared,
+	   approved	=> $approved,
+	   vr_id	=> $voucherid,
+        };
+
       }
 
       # exchangerate difference
@@ -1449,17 +1472,44 @@ sub post_invoice {
       $amount = ($paymentadjust1 + $paymentadjust2 + $paymentadjust3) * -1; # Override calculated value above to fix outstanding report difference
 
       if ($amount) { 
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-	            transdate, source, fx_transaction, cleared, approved, vr_id)
-		    VALUES ($form->{id}, (SELECT id FROM chart
-					WHERE accno = |.$dbh->quote($accno).qq|),
-		    $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|, |
-		    .$dbh->quote($form->{"source_$i"}).qq|, '1', $cleared,
-		    '$approved', $voucherid)|;
-	$dbh->do($query) || $form->dberror($query);
+ 	$accno_id = $form->{dbs}->query('SELECT id FROM chart WHERE accno = ?', $accno)->list;
+        push @acc_trans, {
+	   key 		=> ++$key,
+	   chart_id	=> $accno_id,
+	   amount	=> $amount,
+	   amount2	=> 0,
+	   transdate	=> $form->{"datepaid_$i"},
+	   fx_transaction => 1,
+	   cleared	=> $cleared,
+	   approved	=> $approved,
+	   vr_id	=> $voucherid,
+        };
+	for (@acc_trans){
+            if ($_->{key} == $payment_key){
+	       $_->{amount2} = $amount;
+	       $payment_key = 0;
+	    }
+	}
       }
      
     }
+  }
+
+  for (@acc_trans){
+      $query = qq|
+	INSERT INTO acc_trans (
+		trans_id, chart_id, amount,
+		amount2, transdate, source,
+		memo, fx_transaction, cleared,
+		approved
+	) VALUES (
+		$form->{id}, $_->{chart_id}, $_->{amount},
+		$_->{amount2}, '$_->{transdate}', '$_->{source}',
+		'$_->{memo}', '$_->{fx_transaction}', $_->{cleared},
+		'$_->{approved}'
+	)|;
+
+	$dbh->do($query) || $form->dberror($query);
   }
 
   ($paymentaccno) = split /--/, $form->{"AR_paid_$form->{paidaccounts}"};
