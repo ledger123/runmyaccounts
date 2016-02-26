@@ -203,6 +203,7 @@ sub post_transaction {
 
     # extract accno
     ($accno) = split(/--/, $form->{"accno_$i"});
+    ($tax_accno) = split(/--/, $form->{"tax_$i"});
     
     if ($credit) {
       $amount = $credit;
@@ -233,7 +234,8 @@ sub post_transaction {
       $amount2 *= 1;
 
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, amount2, transdate,
-		  source, fx_transaction, project_id, memo, cleared, approved, tax, taxamount)
+		  source, fx_transaction, project_id, memo, cleared, approved, tax, taxamount,
+		  tax_chart_id)
 		  VALUES
 		  ($form->{id}, (SELECT id
 				 FROM chart
@@ -242,7 +244,8 @@ sub post_transaction {
 		   $dbh->quote($form->{"source_$i"}) .qq|,
 		  '$form->{"fx_transaction_$i"}',
 		  $project_id, |.$dbh->quote($form->{"memo_$i"}).qq|,
-		  $cleared, '$approved', '$form->{"tax_$i"}', $taxamount)|;
+		  $cleared, '$approved', '$form->{"tax_$i"}', $taxamount,
+		  (SELECT id FROM chart WHERE accno = '$tax_accno'))|;
       $dbh->do($query) || $form->dberror($query);
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
