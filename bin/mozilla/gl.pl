@@ -396,7 +396,7 @@ sub search {
 	</tr>
 	<tr>
 	  <th align=right>| . $locale->text('Reference') . qq| / | . $locale->text('Invoice Number') . qq|</th>
-	  <td><input name=reference size=20></td>
+	  <td><input name=reference size=20 value='$form->{reference}'></td>
 	</tr>
 	<tr>
 	  <th align=right>| . $locale->text('Description') . qq|</th>
