@@ -140,4 +140,7 @@ ALTER TABLE tax ADD datev_flag CHAR(1);
 
 ALTER TABLE acc_trans ADD amount2 float default 0;
 
+CREATE TABLE acc_trans2 AS SELECT * FROM acc_trans WHERE 1 = 2;
+
+
 
