@@ -3055,6 +3055,8 @@ $selectfrom
 
     my @bind = ();
 
+    $callback = "$form->{script}?action=export_datev";
+    for (qw(path login l_subtotal reference datefrom dateto accounttype runit)) { $callback .= qq|&$_=$form->{$_}| if $form->{$_} }
 
     my $query;
     if ($form->{reference}){
@@ -3114,6 +3116,17 @@ $selectfrom
                     tr => { class => [ 'listrow0', 'listrow1' ] },
                     th => { class => ['listheading'] },
         );
+
+    	$pageurl = qq|gl.pl?action=search&path=$form->{path}&login=$form->{login}&callback=$callback|;
+
+	$table1->map_cell(
+		sub {
+		    my $datum = shift;
+		    return qq|<a href="$pageurl&reference=$datum" target="_blank">$datum</a>|;
+		},
+		'reference'
+	);
+
         $table1->set_group('reference');
         $table1->modify( td => { align => 'right' }, 'amount' );
         $table1->modify( td => { align => 'right' }, 'taxamount' );
