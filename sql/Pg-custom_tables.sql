@@ -142,5 +142,12 @@ ALTER TABLE acc_trans ADD amount2 float default 0;
 
 CREATE TABLE acc_trans2 AS SELECT * FROM acc_trans WHERE 1 = 2;
 
+ALTER TABLE debits ADD tax_chart_id INTEGER;
+ALTER TABLE credits ADD tax_chart_id INTEGER;
+ALTER TABLE debitscredits ADD tax_chart_id INTEGER;
+
+ALTER TABLE debits ADD taxamount float;
+ALTER TABLE credits ADD taxamount float;
+ALTER TABLE debitscredits ADD taxamount float;
 
 

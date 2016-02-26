@@ -2796,11 +2796,11 @@ sub prepare_datev {
     $form->{dbs}->query('delete from acc_trans2');
 
     $form->{dbs}->query('
-	INSERT INTO acc_trans2 (trans_id, transdate, chart_id, amount)
-	   SELECT trans_id, transdate, chart_id, SUM(amount+amount2)
+	INSERT INTO acc_trans2 (trans_id, transdate, chart_id, tax_chart_id, amount, taxamount)
+	   SELECT trans_id, transdate, chart_id, tax_chart_id, SUM(amount+amount2), SUM(taxamount)
 	   FROM acc_trans
 	   WHERE NOT fx_transaction
-	   GROUP BY trans_id, transdate, chart_id');
+	   GROUP BY trans_id, transdate, chart_id, tax_chart_id');
     $form->{dbs}->commit;
 
     my @rows = $form->{dbs}->query(qq~
@@ -2815,6 +2815,8 @@ sub prepare_datev {
                 ap.description ap_description,
                 c.accno,
                 ac.transdate,
+		ac.tax_chart_id,
+		ac.taxamount,
 
                 case 
                 when ac.amount < 0 then 0-ac.amount
@@ -2850,6 +2852,8 @@ sub prepare_datev {
         $form->{"accno_$i"} = $row->{accno};
         $form->{"debit_$i"} = $row->{debit};
         $form->{"credit_$i"} = $row->{credit};
+        $form->{"tax_chart_id_$i"} = $row->{tax_chart_id};
+        $form->{"taxamount_$i"} = $row->{taxamount};
         $i++;
     }
     $form->{rowcount} = $i;
@@ -2887,14 +2891,16 @@ sub prepare_datev2 {
       #$form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
       #$form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
      $form->{dbs}->query(qq|
-         insert into debits (reference, description, transdate, accno, amount)
-         values (?, ?, ?, ?, ?)|,
-         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"debit_$i"}
+         insert into debits (reference, description, transdate, accno, amount, tax_chart_id, taxamount)
+         values (?, ?, ?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"debit_$i"},
+	 $form->{"tax_chart_id_$i"}, $form->{"taxamount_$i"}
      ) if $form->{"debit_$i"} > 0;
      $form->{dbs}->query(qq|
-         insert into credits (reference, description, transdate, accno, amount) 
-         values (?, ?, ?, ?, ?)|,
-         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"credit_$i"}
+         insert into credits (reference, description, transdate, accno, amount, tax_chart_id, taxamount) 
+         values (?, ?, ?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"credit_$i"},
+	 $form->{"tax_chart_id_$i"}, $form->{"taxamount_$i"}
      ) if $form->{"credit_$i"} > 0;
      for (qw(reference description transdate accno debit credit)){ delete $form->{"${_}_$i"} }
   }
@@ -2902,8 +2908,10 @@ sub prepare_datev2 {
   # matching amounts and accounts should not be same
   for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
      for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} and accno <> '$row->{accno}' limit 1|)->hashes)){
-        $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
+        $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount)
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}, $row->{taxamount});
         $form->{dbs}->query('delete from debits where id = ?', $row->{id});
         $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
      }
@@ -2912,8 +2920,10 @@ sub prepare_datev2 {
   # matching amount but accounts can be same
   for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
      for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} limit 1|)->hashes)){
-        $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
+        $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount)
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}, $row->{taxamount});
         $form->{dbs}->query('delete from debits where id = ?', $row->{id});
         $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
      }
@@ -2924,13 +2934,17 @@ sub prepare_datev2 {
       $creditrow = $form->{dbs}->query(qq|select * from credits order by amount DESC limit 1|)->hash;
       if ($debitrow->{amount} and $creditrow->{amount}){
           if ($debitrow->{amount} > $creditrow->{amount}){
-              $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-                    $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount});
+              $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount) 
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount}, $creditrow->{tax_chart_id}, $creditrow->{taxamount});
               $form->{dbs}->query(qq|delete from credits where id = $creditrow->{id}|);
               $form->{dbs}->query(qq|update debits set amount = amount - $creditrow->{amount} where id = $debitrow->{id}|);
           } else {
-              $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-                    $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount});
+              $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount) 
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount}, $creditrow->{tax_chart_id}, $creditrow->{taxamount});
               $form->{dbs}->query(qq|delete from debits where id = $debitrow->{id}|);
               $form->{dbs}->query(qq|update credits set amount = amount - $debitrow->{amount} where id = $creditrow->{id}|);
           }
@@ -3057,14 +3071,18 @@ $selectfrom
     if ($form->{runit}){
         if ($form->{accounttype} eq 'standard'){
            $query = qq|
-            SELECT reference, description, transdate, debit_accno, credit_accno, amount,
+            SELECT dc.reference, dc.description, dc.transdate,
+			dc.debit_accno, dc.credit_accno, dc.amount,
+			dc.taxamount, c.accno tax_accno, t.datev_flag,
                 CASE
                     WHEN debit_accno = credit_accno THEN
                     'ERROR'
                     ELSE
                     ''
                 END error
-            FROM debitscredits 
+            FROM debitscredits dc
+	    LEFT JOIN chart c ON (c.id = dc.tax_chart_id)
+	    LEFT JOIN tax t ON (t.chart_id = dc.tax_chart_id)
             WHERE $where
             ORDER BY reference, amount DESC
             |;
