@@ -2790,10 +2790,18 @@ sub prepare_datev {
         exit;
     }
 
-
     $form->info("Started ...\n");
 
     $form->{dbs}->query('delete from debitscredits');
+    $form->{dbs}->query('delete from acc_trans2');
+
+    $form->{dbs}->query('
+	INSERT INTO acc_trans2 (trans_id, transdate, chart_id, amount)
+	   SELECT trans_id, transdate, chart_id, SUM(amount+amount2)
+	   FROM acc_trans
+	   WHERE NOT fx_transaction
+	   GROUP BY trans_id, transdate, chart_id');
+    $form->{dbs}->commit;
 
     my @rows = $form->{dbs}->query(qq~
         SELECT 
@@ -2818,7 +2826,7 @@ sub prepare_datev {
                 else 0
                 end credit
 
-        FROM acc_trans ac
+        FROM acc_trans2 ac
         LEFT JOIN gl ON (gl.id = ac.trans_id)
         LEFT JOIN ar ON (ar.id = ac.trans_id)
         LEFT JOIN ap ON (ap.id = ac.trans_id)
@@ -3013,6 +3021,10 @@ $selectfrom
       <th align="right">|.$locale->text('Options').qq|</th>
       <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
 </tr>
+<tr>
+      <th align="right">|.$locale->text('Subtotal').qq|</th>
+      <td><input name="l_subtotal" class=checkbox type=checkbox value=checked $form->{l_subtotal}></td>
+</tr>
 </table>
 <hr/>
 <input type=hidden name=runit value=1>
@@ -3087,7 +3099,7 @@ $selectfrom
         $table1->set_group('reference');
         $table1->modify( td => { align => 'right' }, 'amount' );
         $table1->map_cell( sub { return $form->format_amount( \%myconfig, shift ) }, 'amount' );
-        #$table1->calc_subtotals( 'amount' );
+        $table1->calc_subtotals( 'amount' ) if $form->{l_subtotal};
         $table1->calc_totals( 'amount' );
 
         print $table1->output;
