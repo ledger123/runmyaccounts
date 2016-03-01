@@ -359,15 +359,20 @@ sub post_transaction {
 
     # insert detail records in acc_trans
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
+
+    ($tax_accno, $null) = split /--/, $ref->{tax};
+    $tax_chart_id = $form->{dbs}->query('SELECT id FROM chart WHERE accno = ?', $tax_accno)->list;
+    $tax_chart_id *= 1;
+
     if ($ref->{amount}) {
       $ref->{taxamount} *= 1;
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, amount2, transdate,
-		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount)
+		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount, tax_chart_id)
 		  VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$ref->{accno}'),
 		  $ref->{amount} * $ml * $arapml, $ref->{amount2} * $ml * $arapml, '$form->{transdate}',
 		  $ref->{project_id}, |.$dbh->quote($ref->{description}).qq|,
-		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $ref->{taxamount})|;
+		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $ref->{taxamount}, $tax_chart_id)|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
