@@ -2911,7 +2911,7 @@ sub prepare_datev2 {
         $form->{dbs}->query('
 		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount)
 		values (?, ?, ?, ?, ?, ?, ?, ?)',
-            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}, $row->{taxamount});
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}+$row2->{tax_chart_id}, $row->{taxamount}+$row2->{taxamount});
         $form->{dbs}->query('delete from debits where id = ?', $row->{id});
         $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
      }
@@ -2923,7 +2923,7 @@ sub prepare_datev2 {
         $form->{dbs}->query('
 		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount)
 		values (?, ?, ?, ?, ?, ?, ?, ?)',
-            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}, $row->{taxamount});
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}+$row2->{tax_chart_id}, $row->{taxamount}+$row2->{taxamount});
         $form->{dbs}->query('delete from debits where id = ?', $row->{id});
         $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
      }
@@ -2937,14 +2937,14 @@ sub prepare_datev2 {
               $form->{dbs}->query('
 		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount) 
 		values (?, ?, ?, ?, ?, ?, ?, ?)',
-                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount}, $creditrow->{tax_chart_id}, $creditrow->{taxamount});
+                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount}, $debitrow->{tax_chart_id}+$creditrow->{tax_chart_id}, $debitrow->{taxamount}+$creditrow->{taxamount});
               $form->{dbs}->query(qq|delete from credits where id = $creditrow->{id}|);
               $form->{dbs}->query(qq|update debits set amount = amount - $creditrow->{amount} where id = $debitrow->{id}|);
           } else {
               $form->{dbs}->query('
 		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount) 
 		values (?, ?, ?, ?, ?, ?, ?, ?)',
-                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount}, $creditrow->{tax_chart_id}, $creditrow->{taxamount});
+                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount}, $debitrow->{tax_chart_id}+$creditrow->{tax_chart_id}, $debitrow->{taxamount}+$creditrow->{taxamount});
               $form->{dbs}->query(qq|delete from debits where id = $debitrow->{id}|);
               $form->{dbs}->query(qq|update credits set amount = amount - $debitrow->{amount} where id = $creditrow->{id}|);
           }
@@ -3116,9 +3116,12 @@ $selectfrom
         );
         $table1->set_group('reference');
         $table1->modify( td => { align => 'right' }, 'amount' );
+        $table1->modify( td => { align => 'right' }, 'taxamount' );
         $table1->map_cell( sub { return $form->format_amount( \%myconfig, shift ) }, 'amount' );
         $table1->calc_subtotals( 'amount' ) if $form->{l_subtotal};
+        $table1->calc_subtotals( 'taxamount' ) if $form->{l_subtotal};
         $table1->calc_totals( 'amount' );
+        $table1->calc_totals( 'taxamount' );
 
         print $table1->output;
     }
