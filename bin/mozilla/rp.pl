@@ -762,6 +762,10 @@ sub report {
 		  <th align=right nowrap>|.$locale->text('Exclude Credits').qq|</th>
 		  <td nowrap width=70><input name=exclude_credits type=checkbox class=checkbox value=on></td>
 		</tr>
+    	<tr>
+		  <th align=right nowrap>|.$locale->text('Exclude On Hold').qq|</th>
+		  <td nowrap width=70><input name=exclude_onhold type=checkbox class=checkbox value=on></td>
+		</tr>
 
 	<input type=hidden name=action value="$form->{nextsub}">
 |;

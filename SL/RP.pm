@@ -1704,6 +1704,7 @@ sub reminder {
   }
 
   $exclude_credits = 'AND a.amount > 0' if $form->{exclude_credits};
+  $exclude_onhold  = 'AND NOT a.onhold' if $form->{exclude_onhold};
   $query = qq|SELECT c.id AS vc_id, c.$form->{vc}number, c.name, c.terms,
               ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
 	      c.contact, c.email,
@@ -1733,6 +1734,7 @@ sub reminder {
 	      WHERE a.duedate <= current_date
 	      AND $where
 	      $exclude_credits
+          $exclude_onhold
 	      ORDER BY vc_id, transdate, invnumber|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
 
