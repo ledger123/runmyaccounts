@@ -502,6 +502,7 @@ sub post_transaction {
 	  $fx_diff_amount = $form->round_amount($paid{amount}{$i} - $paid{fxamount}{$i} + $gain_loss_amount, $form->{precision});
         }
 
+    $fx_diff_amount *= 1;
 	# add payment
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, amount2, 
 		    transdate, source, memo, cleared, approved, vr_id, id)
@@ -512,6 +513,7 @@ sub post_transaction {
 		    .$dbh->quote($form->{"source_$i"}).qq|, |
 		    .$dbh->quote($form->{"memo_$i"}).qq|,
 		    $cleared, '$approved', $voucherid, $paymentid)|;
+
 	$dbh->do($query) || $form->dberror($query);
 
 	$query = qq|INSERT INTO payment (id, trans_id, exchangerate,
