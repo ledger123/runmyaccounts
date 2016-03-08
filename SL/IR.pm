@@ -1210,10 +1210,14 @@ sub post_invoice {
   my $paymentaccno;
   my $paymentmethod_id;
   
+  my $fxpaid = 0;
   # record payments and offsetting AP
   for $i (1 .. $form->{paidaccounts}) {
 
     if ($form->{"paid_$i"}) {
+
+      $fxpaid += $form->{"paid_$i"} * 1;
+
       ($accno) = split /--/, $form->{"AP_paid_$i"};
 
       ($null, $paymentmethod_id) = split /--/, $form->{"paymentmethod_$i"};
@@ -1332,6 +1336,9 @@ sub post_invoice {
     $invamount -= $cd_tax if !$form->{taxincluded};
   }
   
+  $fxamount = $form->round_amount($invamount / $form->{exchangerate} , $form->{precision});
+  $fxamount *= 1;
+
   # save AP record
   $query = qq|UPDATE ap set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
@@ -1343,8 +1350,8 @@ sub post_invoice {
               amount = $invamount,
               netamount = $invnetamount,
               paid = $form->{paid},
-	      fxamount = |.( ($form->{oldinvtotal}) ? $form->{oldinvtotal}*1 : 0 ).qq|,
-	      fxpaid = |.( ($form->{oldtotalpaid}) ? $form->{oldtotalpaid}*1 : 0 ).qq|,
+	      fxamount = $fxamount,
+	      fxpaid = $fxpaid,
 	      datepaid = |.$form->dbquote($form->{datepaid}, SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->{duedate}, SQL_DATE).qq|,
 	      invoice = '1',
