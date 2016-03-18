@@ -130,7 +130,10 @@ sub get_openvc {
 		 AND a.onhold = '0'
 		 AND NOT a.id IN (SELECT id
 		                  FROM semaphore)|;
-		 
+
+
+  $form->{vc} = 'customer' if $form->{vc} ne 'vendor'; # SQLI protection
+
   my $arap = ($form->{vc} eq 'customer') ? 'ar' : 'ap';
 
   my %defaults = $form->get_defaults($dbh, \@{['namesbynumber']});

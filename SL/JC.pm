@@ -274,6 +274,8 @@ sub retrieve_item {
 sub delete_timecard {
   my ($self, $myconfig, $form) = @_;
 
+  # SQLI protection: $form->{type} needs to be validated
+
   # connect to database
   my $dbh = $form->dbconnect_noauto($myconfig);
  

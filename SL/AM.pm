@@ -331,6 +331,8 @@ sub warehouses {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
+  # SQLI protection. $form->{direction} variable needs to be investigated.
+
   $form->sort_order();
   my $query = qq|SELECT w.id, w.description,
                  a.address1, a.address2, a.city, a.state, a.zipcode, a.country

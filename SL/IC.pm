@@ -345,6 +345,7 @@ sub save {
 
   $form->{partnumber} = $form->update_defaults($myconfig, "partnumber", $dbh) if ! $form->{partnumber};
 
+  # SQLI protection: All text/varchar columns need to be quoted.
   $query = qq|UPDATE parts SET
 	      partnumber = |.$dbh->quote($form->{partnumber}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
