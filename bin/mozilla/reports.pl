@@ -1144,6 +1144,11 @@ $(document).ready(function(){
   <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
   |.$locale->text('To').qq| <input name=dateto size=11 title='$myconfig{dateformat}'></td>
 </tr>
+<tr>
+    <th align=right>|.$locale->text('Decimalplaces').qq|</th>
+    <td><input name=decimalplaces size=3 value=$form->{precision}></td>
+</tr>
+
 $selectfrom
 <tr>
 <th>|.$locale->text('Include').qq|:</th>
@@ -1259,6 +1264,7 @@ sub income_statement_by_project {
 </tr>
 |;
 
+  $form->{decimalplaces} *= 1;
   my $line_total = 0;
   # Print INCOME
   print qq|<tr><td colspan=2><b>INCOME<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
@@ -1268,11 +1274,11 @@ sub income_statement_by_project {
      print qq|<td>$form->{I}{$accno}{description}</td>|;
      $line_total = 0;
      for (keys %projects){
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, $form->{decimalplaces}) . qq|</td>|;
 	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
 	$line_total += $form->{I}{$accno}{$_};
      }
-     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</td>|;
      print qq|</tr>|;
   }
   print qq|<tr><td colspan=2>&nbsp;</td>|;
@@ -1282,10 +1288,10 @@ sub income_statement_by_project {
   $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
   for (keys %projects){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|;
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, $form->{decimalplaces}) . qq|</td>|;
 	$line_total += $form->{I}{$_}{totalincome};
   }
-  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</td>|;
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
@@ -1300,11 +1306,11 @@ sub income_statement_by_project {
      print qq|<td>$form->{E}{$accno}{description}</td>|;
      $line_total = 0;
      for (keys %projects){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, $form->{decimalplaces}) . qq|</td>|; 
 	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
 	$line_total += ($form->{E}{$accno}{$_} * -1);
      }
-     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</td>|;
      print qq|</tr>|;
   }
   print qq|<tr><td colspan=2>&nbsp;</td>|;
@@ -1314,10 +1320,10 @@ sub income_statement_by_project {
   $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
   for (keys %projects){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, $form->{decimalplaces}) . qq|</td>|; 
 	$line_total += $form->{E}{$_}{totalexpenses}; 
   }
-  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</td>|;
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
@@ -1327,10 +1333,10 @@ sub income_statement_by_project {
   $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
   for (keys %projects){
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses}, $form->{decimalplaces}) . qq|</td>|; 
 	$line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
   }
-  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|; 
+  print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</td>|; 
   print qq|</tr>|;
 
   print qq|<tr><td colspan=2>&nbsp;</td>|;
@@ -1355,6 +1361,7 @@ sub income_statement_by_department {
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute || $form->dberror($query);
 
+  $form->{decimalplaces} *= 1;
   my @sorted;
   my $no = 1;
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
@@ -1429,21 +1436,21 @@ sub income_statement_by_department {
      print qq|<td>$form->{I}{$accno}{description}</td>|;
      $line_total = 0;
      for (sort keys %departments){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, $form->{decimalplaces}) . qq|</td>|;
 	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
 	$line_total += $form->{I}{$accno}{$_};
      }
-     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</td>|;
      print qq|</tr>|;
   }
 
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('Income').qq|</th>|;
   $line_total = 0;
   for (sort keys %departments){ 
-	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</th>|; 
+	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, $form->{decimalplaces}) . qq|</th>|; 
 	$line_total += $form->{I}{$_}{totalincome}; 
   }
-  print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</th>|;
+  print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</th>|;
   print qq|</tr>|;
 
 
@@ -1455,30 +1462,30 @@ sub income_statement_by_department {
      print qq|<td>$form->{E}{$accno}{description}</td>|;
      $line_total = 0;
      for (sort keys %departments){
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
+	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, $form->{decimalplaces}) . qq|</td>|; 
 	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
 	$line_total += $form->{E}{$accno}{$_} * -1;
      }
-     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</td>|;
      print qq|</tr>|;
   }
 
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('COGS').qq|</th>|;
   $line_total = 0;
   for (sort keys %departments){ 
-	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</th>|; 
+	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, $form->{decimalplaces}) . qq|</th>|; 
 	$line_total += $form->{E}{$_}{totalexpenses};
   }
-  print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</th>|;
+  print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</th>|;
   print qq|</tr>|;
 
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Income/(Loss)').qq|</th>|;
   $line_total = 0;
   for (sort keys %departments){
-	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</th>|; 
+	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses}, $form->{decimalplaces}) . qq|</th>|; 
 	$line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
   }
-  print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</th>|;
+  print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, $form->{decimalplaces}) . qq|</th>|;
   print qq|</tr>|;
 }
 
