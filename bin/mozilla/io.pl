@@ -1410,8 +1410,10 @@ sub print_form {
 
   $numberfld = "sinumber";
 
+  if ($form->{media} eq 'email'){
   $invalidemail = ($form->{'email'} !~ /^.+\@(\[?)[a-zA-Z0-9\-\.]+\.([a-zA-Z0-9]+)(\]?)+$/);
   $form->error($locale->text('Invalid email. Please correct ...')) if $invalidemail;
+  }
 
   $display_form = ($form->{display_form}) ? $form->{display_form} : "display_form";
 
