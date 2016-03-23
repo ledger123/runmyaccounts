@@ -140,10 +140,12 @@ sub history {
     $invlabel = $locale->text('Sales Invoices');
     $ordlabel = $locale->text('Sales Orders');
     $quolabel = $locale->text('Quotations');
+    $translabel = $locale->text('AR Transactions');
   } else {
     $invlabel = $locale->text('Vendor Invoices');
     $ordlabel = $locale->text('Purchase Orders');
     $quolabel = $locale->text('Request for Quotations');
+    $translabel = $locale->text('AP Transactions');
   }
   
   $form->{title} = $locale->text($label);
@@ -166,6 +168,9 @@ sub history {
 		    </tr>
 		    <tr>
 		      <td><input name="type" type=radio class=radio value=quotation> $quolabel</td>
+		    </tr>
+		    <tr>
+		      <td><input name="type" type=radio class=radio value=transaction> $translabel</td>
 		    </tr>
 		  </table>
 		</td>
@@ -1325,7 +1330,11 @@ sub list_history {
   $form->{callback} = "$callback&sort=$form->{sort}";
   $callback = $form->escape($form->{callback});
 
-  $column_header{partnumber} = qq|<th><a class=listheading href=$href&sort=partnumber>|.$locale->text('Part Number').qq|</a></th>|;
+  if ($form->{type} eq 'transaction'){
+    $column_header{partnumber} = qq|<th><a class=listheading href=$href&sort=partnumber>|.$locale->text('Account').qq|</a></th>|;
+  } else {
+    $column_header{partnumber} = qq|<th><a class=listheading href=$href&sort=partnumber>|.$locale->text('Part Number').qq|</a></th>|;
+  }
   $column_header{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
   $column_header{transdate} = qq|<th><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</a></th>|;
 
@@ -1379,6 +1388,7 @@ sub list_history {
   $module = 'oe';
   if ($form->{db} eq 'customer') {
     $invlabel = $locale->text('Sales Invoice');
+    $translabel = $locale->text('AR Transaction');
     $ordlabel = $locale->text('Sales Order');
     $quolabel = $locale->text('Quotation');
     
@@ -1386,9 +1396,12 @@ sub list_history {
     $quotationtype = 'sales_quotation';
     if ($form->{type} eq 'invoice') {
       $module = 'is';
+    } elsif ($form->{type} eq 'transaction') {
+      $module = 'ar';
     }
   } else {
     $invlabel = $locale->text('Vendor Invoice');
+    $translabel = $locale->text('AP Transaction');
     $ordlabel = $locale->text('Purchase Order');
     $quolabel = $locale->text('RFQ');
     
@@ -1396,10 +1409,13 @@ sub list_history {
     $quotationtype = 'request_quotation';
     if ($form->{type} eq 'invoice') {
       $module = 'ir';
+    } elsif ($form->{type} eq 'transaction') {
+      $module = 'ap';
     }
   }
     
   $ml = ($form->{db} eq 'vendor') ? -1 : 1;
+
   $lastndx = $#{$form->{CT}};
   $j = 0;
   $sellprice = 0;
@@ -1476,7 +1492,11 @@ sub list_history {
       if ($form->{type} eq 'invoice') {
 	print qq|<th align=left colspan=$colspan><a href=${module}.pl?action=edit&id=$ref->{invid}&path=$form->{path}&login=$form->{login}&callback=$callback>$invlabel $ref->{invnumber} / $ref->{employee}</a></th>|;
       }
-       
+
+      if ($form->{type} eq 'transaction') {
+	print qq|<th align=left colspan=$colspan><a href=${module}.pl?action=edit&id=$ref->{invid}&path=$form->{path}&login=$form->{login}&callback=$callback>$translabel $ref->{invnumber} / $ref->{employee}</a></th>|;
+      }
+ 
       if ($form->{type} eq 'order') {
 	print qq|<th align=left colspan=$colspan><a href=${module}.pl?action=edit&id=$ref->{invid}&type=$ordertype&path=$form->{path}&login=$form->{login}&callback=$callback>$ordlabel $ref->{ordnumber} / $ref->{employee}</a></th>|;
       }
@@ -1495,13 +1515,20 @@ sub list_history {
     if ($form->{l_curr}) {
       $column_data{fxsellprice} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{sellprice} / $ref->{exchangerate}, $form->{precision})."</td>";
     }
+    if ($form->{type} eq 'transaction'){
+    $column_data{sellprice} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{sellprice} * $ml, $form->{precision})."</td>";
+    } else {
     $column_data{sellprice} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{sellprice}, $form->{precision})."</td>";
+    }
     $column_data{total} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{sellprice} * $ref->{qty}, $form->{precision})."</td>";
       
     $column_data{qty} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{qty} * $ml)."</td>";
     $column_data{discount} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{discount} * 100, 1, "&nbsp;")."</td>";
-    $column_data{partnumber} = qq|<td><a href=ic.pl?action=edit&id=$ref->{pid}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partnumber}</td>|;
-    
+    if ($form->{type} ne 'transaction'){
+        $column_data{partnumber} = qq|<td><a href=ic.pl?action=edit&id=$ref->{pid}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partnumber}</td>|;
+    } else {
+        $column_data{partnumber} = qq|<td>$ref->{partnumber}</td>|;
+    }
    
     $i++; $i %= 2;
     print qq|
