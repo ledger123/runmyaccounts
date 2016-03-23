@@ -995,10 +995,13 @@ sub get_history {
   
   if ($form->{db} eq 'customer') {
     $buysell = "buy";
+    $link = 'AR_amount';
     if ($form->{type} eq 'invoice') {
       $where .= qq| AND a.invoice = '1' AND i.assemblyitem = '0'|;
       $table = 'ar';
       $sellprice = "fxsellprice";
+    } elsif ($form->{type} eq 'transaction') {
+      $table = 'ar';
     } else {
       $table = 'oe';
       if ($form->{type} eq 'order') {
@@ -1013,10 +1016,13 @@ sub get_history {
   }
   if ($form->{db} eq 'vendor') {
     $buysell = "sell";
+    $link = 'AP_amount';
     if ($form->{type} eq 'invoice') {
       $where .= qq| AND a.invoice = '1' AND i.assemblyitem = '0'|;
       $table = 'ap';
       $sellprice = "fxsellprice";
+    } elsif ($form->{type} eq 'transaction') {
+      $table = 'ap';
     } else {
       $table = 'oe';
       if ($form->{type} eq 'order') {
@@ -1073,6 +1079,30 @@ sub get_history {
 	      LEFT JOIN employee e ON (e.id = a.employee_id)
 	      WHERE $where
 	      ORDER BY $sortorder|;
+
+  if ($form->{type} eq 'transaction'){
+    $ml = ($form->{db} eq 'vendor') ? -1 : 1;
+    $query = qq|SELECT ct.id AS ctid, ct.$form->{db}number, a.transdate, ct.name, ad.address1,
+	      ad.address2, ad.city, ad.state,
+	      c.accno AS partnumber, a.id AS invid,
+	      a.$invnumber, a.curr, c.description AS description,
+	      $ml AS qty, ac.amount AS sellprice, 0 AS discount,
+	      '' AS reqdate, '' AS serialnumber, pr.projectnumber,
+	      e.name AS employee, ad.zipcode, ad.country, '' AS unit,
+              (SELECT $buysell FROM exchangerate ex
+		    WHERE a.curr = ex.curr
+		    AND a.transdate = ex.transdate) AS exchangerate
+	      FROM $form->{db} ct
+	      JOIN address ad ON (ad.trans_id = ct.id)
+	      JOIN $table a ON (a.$form->{db}_id = ct.id)
+	      JOIN acc_trans ac ON (a.id = ac.trans_id)
+          JOIN chart c ON (c.id = ac.chart_id)
+	      LEFT JOIN project pr ON (pr.id = ac.project_id)
+	      LEFT JOIN employee e ON (e.id = a.employee_id)
+	      WHERE $where
+          AND c.link LIKE '%$link%'
+	      ORDER BY $sortorder|;
+  }
 
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
