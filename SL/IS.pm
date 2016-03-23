@@ -1192,8 +1192,8 @@ sub post_invoice {
     }
   }
 
-
-  if ($form->round_amount($form->{paid} - $fxamount + $fxtax_total, $form->{precision}) == 0) {
+  # armaghan 22/03/2016 Added braces to $fxamout + $fxtax_total to fix https://github.com/ledger123/runmyaccounts/issues/58
+  if ($form->round_amount($form->{paid} - ($fxamount + $fxtax_total), $form->{precision}) == 0) {
     $form->{paid} = $invamount;
   } else {
     $form->{paid} = $form->round_amount($form->{paid} * $form->{exchangerate}, $form->{precision});
