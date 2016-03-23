@@ -25,7 +25,9 @@ sub create_links {
   my $accno;
   my $description;
   my $translation;
- 
+  
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
+
   if ($form->{id} *= 1) {
     $query = qq/SELECT ct.*,
                 ad.id AS addressid, ad.address1, ad.address2, ad.city,
