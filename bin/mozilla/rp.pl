@@ -1924,6 +1924,8 @@ sub reminder {
   $column_header{level} = qq|<th class=listheading>|.$locale->text('Level').qq|</th>|;
   $column_header{language} = qq|<th class=listheading>|.$locale->text('Language').qq|</th>|;
   $column_header{invnumber} = qq|<th class=listheading>|.$locale->text('Invoice').qq|</th>|;
+  $column_header{rvc} = qq|<th class=listheading>|.$locale->text('RVC').qq|</th>|;
+  $column_header{dcn} = qq|<th class=listheading>|.$locale->text('DCN').qq|</th>|;
   $column_header{invdescription} = qq|<th class=listheading>|.$locale->text('Description').qq|</th>|;
   $column_header{ordnumber} = qq|<th class=listheading>|.$locale->text('Order').qq|</th>|;
   $column_header{transdate} = qq|<th class=listheading nowrap>|.$locale->text('Date').qq|</th>|;
@@ -1945,7 +1947,7 @@ sub reminder {
     for (@{ $form->{all_language} }) { $form->{selectlanguage} .= qq|$_->{code}--$_->{description}\n| }
   }
   
-  push @column_index, qw(invnumber invdescription ordnumber transdate duedate duedays due);
+  push @column_index, qw(invnumber dcn rvc transdate duedate);
   
   if ($form->{department}) {
       $option .= "\n<br>" if $option;
@@ -2075,6 +2077,14 @@ function CheckAll() {
     for (qw(duedays)) { $column_data{$_} = qq|<td nowrap align="right">$ref->{$_}</td>| }
     
     $column_data{due} = qq|<td align=right nowrap>|.$form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision}).qq|</td>|;
+
+    for (qw(dcn rvc invnumber integer_out_amount out_decimal)) { $form->{$_} = $ref->{$_} }
+
+    $form->{dcn} = $form->format_dcn($form->{dcn});
+    $form->{rvc} = $form->format_dcn($form->{rvc});
+
+    $column_data{dcn} = qq|<td nowrap>$form->{dcn}</td>|;
+    $column_data{rvc} = qq|<td nowrap>$form->{rvc}</td>|;
 
     $j++; $j %= 2;
     print qq|
