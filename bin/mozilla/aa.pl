@@ -1412,11 +1412,14 @@ sub update {
     }
     $dbh->disconnect;
 
-    &display_form;
+    &display_form if !$form->{prevent_display};
 
 }
 
 sub post {
+
+    $form->{prevent_display} = 1;
+    &update;
 
     $label = ( $form->{vc} eq 'customer' ) ? $locale->text('Customer missing!') : $locale->text('Vendor missing!');
 
