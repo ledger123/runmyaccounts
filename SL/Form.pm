@@ -614,6 +614,8 @@ sub parse_template {
   my %include = ();
   my $ok;
 
+  print STDERR "[SL] Form.pm Opening template file ...\n";
+
   if (-f "$self->{templates}/$self->{language_code}/$self->{IN}") {
     open(IN, "$self->{templates}/$self->{language_code}/$self->{IN}") or $self->error("$self->{templates}/$self->{language_code}/$self->{IN} : $!");
   } else {
@@ -631,11 +633,12 @@ sub parse_template {
   $tmpfile =~ s/\./_$self->{fileid}./ if $self->{fileid};
   $self->{tmpfile} = "$userspath/${fileid}_${tmpfile}";
   
+  print STDERR "[SL] Form.pm Opening temporary output file $self->{tmpfile} ...\n";
+
   if ($self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email') {
     $out = $self->{OUT};
     $self->{OUT} = ">$self->{tmpfile}";
   }
-
 
   if ($self->{OUT}) {
     open(OUT, "$self->{OUT}") or $self->error("$self->{OUT} : $!");
@@ -645,6 +648,8 @@ sub parse_template {
     $self->header;
     
   }
+
+  print STDERR "[SL] Form.pm File is open $self->{tmpfile} ...\n";
 
   $self->{copies} ||= 1;
 
@@ -886,6 +891,7 @@ sub parse_template {
 
   close(OUT);
 
+  print STDERR "[SL] Form.pm Output tex file generated. Now will be converted to pdf/ps ...\n";
 
   # Convert the tex file to postscript
   if ($self->{format} =~ /(postscript|pdf)/) {
@@ -908,6 +914,8 @@ sub parse_template {
     my $r = 1;
     if ($self->{format} eq 'postscript') {
 
+      print STDERR "[SL] Form.pm About to call latex for ps format ...\n";
+
       system("latex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}");
       while ($self->rerun_latex) {
 	system("latex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}");
@@ -921,6 +929,9 @@ sub parse_template {
       $self->{tmpfile} =~ s/dvi$/ps/;
     }
     if ($self->{format} eq 'pdf') {
+      
+      print STDERR "[SL] Form.pm About to call latex for pdf format ...\n";
+
       system("pdflatex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}");
       while ($self->rerun_latex) {
 	system("pdflatex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}");
@@ -933,6 +944,8 @@ sub parse_template {
 
   }
 
+  
+  print STDERR "[SL] Form.pm ps/pdf generation successful ...\n";
 
   if ($self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email') {
 
@@ -1400,8 +1413,13 @@ sub format_dcn {
 
 }
 
-
 sub cleanup {
+    # cleanup disabled to keep temporary files intact after any error.
+    # All temporary files can be found in users/ folder within sql-ledger installation
+    # and usually start with a number.
+}
+
+sub cleanup_disabled {
   my $self = shift;
 
   chdir("$self->{tmpdir}");

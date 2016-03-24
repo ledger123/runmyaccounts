@@ -1790,8 +1790,11 @@ sub print_form {
 
   $form->format_string(qw(email cc bcc));
   
+  print STDERR "[SL] io.pl About to parse template ...\n";
+
   $form->parse_template(\%myconfig, $userspath) if $form->{copies};
 
+  print STDERR "[SL] io.pl Parsing template successful ...\n";
 
   # if we got back here restore the previous form
   # ISNA: 00023 tekki
