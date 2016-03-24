@@ -1666,7 +1666,7 @@ sub reminder {
 	      JOIN ar a ON (a.$form->{vc}_id = vc.id)
 	      WHERE $where
               AND a.paid != a.amount
-              ORDER BY $sortorder|;
+              ORDER BY vc.name|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror;
 

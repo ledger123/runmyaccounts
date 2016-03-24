@@ -1913,17 +1913,51 @@ sub export_as_csv {
 
 sub reminder {
 
+  $form->{sort} = "vc" if !$form->{sort};
+
+  if ($form->{direction}) {
+    if ($form->{sort} eq $form->{oldsort}) {
+      if ($form->{direction} eq 'ASC') {
+	    $form->{direction} = "DESC";
+      } else {
+	    $form->{direction} = "ASC";
+      }
+    }
+  } else {
+    $form->{direction} = "ASC";
+  }
+
+  my @sorted;
+  if ($form->{sort} eq 'name'){
+     if ($form->{direction} eq 'ASC'){
+        @sorted = sort { $a->{$form->{sort}} cmp $b->{$form->{sort}} } @{ $form->{AG} };
+     } else {
+        @sorted = sort { $b->{$form->{sort}} cmp $a->{$form->{sort}} } @{ $form->{AG} };
+     }
+     $form->{AG} = \@sorted;
+  }
+  if ($form->{sort} eq 'duedays'){
+     if ($form->{direction} eq 'ASC'){
+        @sorted = sort { $a->{$form->{sort}} <=> $b->{$form->{sort}} } @{ $form->{AG} };
+     } else {
+        @sorted = sort { $b->{$form->{sort}} <=> $a->{$form->{sort}} } @{ $form->{AG} };
+     }
+     $form->{AG} = \@sorted;
+  }
+
   $form->{callback} = $form->{initcallback};
   for (qw(path login type format)) { $form->{callback} .= "&$_=$form->{$_}" }
-  for (qw(title media report)) { $form->{callback} .= qq|&$_=|.$form->escape($form->{$_},1) }
+  for (qw(title media report overpaid exclude_credits exclude_onhold)) { $form->{callback} .= qq|&$_=|.$form->escape($form->{$_},1) }
   $form->{callback} .= qq|&$form->{vc}=|.$form->escape($form->{"$form->{vc}"},1);
+
+  my $href = $form->{callback};
 
   $vcnumber = $locale->text('Customer Number');
   
   $form->{allbox} = ($form->{allbox}) ? "checked" : "";
   $action = ($form->{deselect}) ? "deselect_all" : "select_all";
   $column_header{ndx} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;
-  $column_header{vc} = qq|<th class=listheading width=60%>|.$locale->text(ucfirst $form->{vc}).qq|</th>|;
+  $column_header{vc} = qq|<th class=listheading width=60%><a href="$href&sort=name&direction=$form->{direction}&oldsort=$form->{sort}">|.$locale->text(ucfirst $form->{vc}).qq|</a></th>|;
   $column_header{"$form->{vc}number"} = qq|<th class=listheading>$vcnumber</th>|;
   $column_header{level} = qq|<th class=listheading>|.$locale->text('Level').qq|</th>|;
   $column_header{language} = qq|<th class=listheading>|.$locale->text('Language').qq|</th>|;
@@ -1932,7 +1966,7 @@ sub reminder {
   $column_header{ordnumber} = qq|<th class=listheading>|.$locale->text('Order').qq|</th>|;
   $column_header{transdate} = qq|<th class=listheading nowrap>|.$locale->text('Date').qq|</th>|;
   $column_header{duedate} = qq|<th class=listheading nowrap>|.$locale->text('Due Date').qq|</th>|;
-  $column_header{duedays} = qq|<th class=listheading nowrap>|.$locale->text('Due Days').qq|</th>|;
+  $column_header{duedays} = qq|<th class=listheading nowrap><a href="$href&sort=duedays&direction=$form->{direction}&oldsort=$form->{sort}">|.$locale->text('Due Days').qq|</a></th>|;
   $column_header{due} = qq|<th class=listheading nowrap>|.$locale->text('Due').qq|</th>|;
   
   @column_index = qw(ndx vc);
