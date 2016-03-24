@@ -25,7 +25,9 @@ sub create_links {
   my $accno;
   my $description;
   my $translation;
- 
+  
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
+
   if ($form->{id} *= 1) {
     $query = qq/SELECT ct.*,
                 ad.id AS addressid, ad.address1, ad.address2, ad.city,
@@ -409,6 +411,7 @@ sub save {
   $gifi = qq|
 	      gifi_accno = '$form->{gifi_accno}',| if $form->{db} eq 'vendor';
 
+  # SQLI: use of dbh->quote for all columns
   $query = qq|UPDATE $form->{db} SET
               $form->{db}number = |.$dbh->quote($form->{"$form->{db}number"}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,
@@ -579,6 +582,8 @@ sub search {
   my $ref;
   my $var;
   my $item;
+
+  $form->{db} = 'vendor' if $form->{db} ne 'customer'; # SQLI protection
 
   @a = ("$form->{db}number");
   push @a, qw(name contact notes phone email);
@@ -1248,6 +1253,7 @@ sub ship_to {
 
   my $query;
   
+  $form->{db} = 'vendor' if $form->{db} ne 'customer'; # SQLI protection
   my $table = ($form->{db} eq 'customer') ? 'ar' : 'ap';
 
   if ($form->{id} *= 1) {

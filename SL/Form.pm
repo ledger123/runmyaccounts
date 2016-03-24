@@ -1733,6 +1733,8 @@ sub dbquote {
 sub update_balance {
   my ($self, $dbh, $table, $field, $where, $value) = @_;
 
+  # SQLI protection. $table, $field, $where need to be validated against allowed range or may be replaced with inline UPDATE
+ 
   # if we have a value, go do it
   if ($value) {
     # retrieve balance from table
@@ -2072,6 +2074,8 @@ sub all_vc {
                WHERE $where|;
   my ($count) = $dbh->selectrow_array($query);
 
+  $form->{vc} = 'customer' if $form->{vc} ne 'vendor'; # SQLI protection
+
   # build selection list
   if ($count < $myconfig->{vclimit}) {
     $self->{"${vc}_id"} *= 1;
@@ -2184,7 +2188,8 @@ sub all_taxaccounts {
   my $sth;
   my $query;
   my $where;
-  
+
+  # SQLI protection: transdate validation needs to be checked
   if ($transdate) {
     $where = qq| AND (t.validto >= '$transdate' OR t.validto IS NULL)|;
   }
@@ -2225,6 +2230,7 @@ sub all_employees {
  	         FROM employee
 		 WHERE 1 = 1|;
 		 
+  # SQLI protection: transdate validation needs to be checked
   if ($transdate) {
     $query .= qq| AND (startdate IS NULL OR startdate <= '$transdate')
                   AND (enddate IS NULL OR enddate >= '$transdate')|;
@@ -2278,6 +2284,7 @@ sub all_projects {
 		WHERE t.language_code = '$form->{language_code}'|;
   }
 
+  # SQLI protection: transdate validation needs to be checked
   if ($transdate) {
     $query .= qq| AND (startdate IS NULL OR startdate <= '$transdate')
                   AND (enddate IS NULL OR enddate >= '$transdate')|;
@@ -2430,6 +2437,8 @@ sub create_links {
   my $dbh = $self->dbconnect($myconfig);
 
   my %xkeyref = ();
+
+  $vc = 'customer' if $vc ne 'vendor'; #SQLI protection
 
   my %defaults = $self->get_defaults($dbh, \@{[qw(closedto revtrans weightunit cdt precision)]});
   for (keys %defaults) { $self->{$_} = $defaults{$_} }
@@ -2645,6 +2654,7 @@ sub remove_locks {
     $dbh = $self->dbconnect($myconfig);
   }
 
+  # SQLI protection. $module validation needs to be checked
   my $query = qq|DELETE FROM semaphore
 	         WHERE login = '$self->{login}'|;
   $query .= qq|
@@ -2658,6 +2668,8 @@ sub remove_locks {
 
 sub lastname_used {
   my ($self, $myconfig, $dbh, $vc, $module) = @_;
+
+  $vc = 'customer' if $vc ne 'vendor'; # SQLI protection
 
   my $arap = ($vc eq 'customer') ? "ar" : "ap";
   my $where = "1 = 1";

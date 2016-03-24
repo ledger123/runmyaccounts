@@ -1,3 +1,6 @@
+
+# SQLI protection. This file looks clean
+
 package Trf;
 
 sub transfer_details {

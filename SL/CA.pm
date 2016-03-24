@@ -89,6 +89,8 @@ sub all_transactions {
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
     
+  # SQLI protection: accno, gifi_accno need to be validated/escaped
+
   # get chart_id
   my $query = qq|SELECT id FROM chart
                  WHERE accno = '$form->{accno}'|;

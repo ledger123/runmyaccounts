@@ -95,6 +95,8 @@ sub yearend_statement {
 sub create_links {
   my ($self, $myconfig, $form, $vc) = @_;
 
+  $vc = 'vendor' if $vc ne 'customer'; # SQLI protection
+
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
@@ -1425,6 +1427,8 @@ sub aging {
   my $ref;
   my $transdate = ($form->{overdue}) ? "duedate" : "transdate";
 
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   if ($form->{"$form->{vc}_id"}) {
     $where .= qq| AND ct.id = $form->{"$form->{vc}_id"}|;
   } else {
@@ -1637,6 +1641,8 @@ sub reminder {
   my $name;
   my $null;
   my $ref;
+
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
 
   if ($form->{"$form->{vc}_id"}) {
     $where .= qq| AND vc.id = $form->{"$form->{vc}_id"}|;
@@ -1935,6 +1941,8 @@ sub tax_report {
   my $vc;
   my $ARAP;
   
+  # SQLI protection: $form->{db} needs to be validated.
+
   if ($form->{db} eq 'ar') {
     $vc = "customer";
     $ARAP = "AR";

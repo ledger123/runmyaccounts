@@ -782,6 +782,8 @@ sub transactions {
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
   
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   if ($form->{vc} eq 'vendor') {
     $ml = -1;
     $ARAP = 'AP';
@@ -1098,6 +1100,8 @@ sub get_name {
 
   my $arap = "ar";
   my $buysell = "buy";
+  $form->{vc} = 'customer' if $form->{vc} eq 'vendor';
+
   if ($form->{vc} eq 'vendor') {
     $arap = "ap";
     $buysell = "sell";

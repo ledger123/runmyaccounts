@@ -46,6 +46,8 @@ sub transactions {
     $orderitems_join = qq|JOIN orderitems oi ON (oi.trans_id = o.id)| unless $orderitems_join;
   }
 
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   my $rate = ($form->{vc} eq 'customer') ? 'buy' : 'sell';
 
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
@@ -710,6 +712,8 @@ sub retrieve {
   
   $form->remove_locks($myconfig, $dbh, 'oe') unless $form->{readonly};
 
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   if ($form->{id} *= 1) {
     
     # retrieve order
@@ -1010,6 +1014,9 @@ sub exchangerate_defaults {
 
   my $var;
   my $query;
+
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   my $buysell = ($form->{vc} eq "customer") ? "buy" : "sell";
   
   # get default currencies
@@ -1678,6 +1685,8 @@ sub save_inventory {
       $serialnumber .= " " if $serialnumber;
       $serialnumber .= qq|$form->{"serialnumber_$i"}|;
       $ship += $form->{"ship_$i"};
+
+      # SQLI protection: $serialnumber needs to be quoted
 
       $query = qq|UPDATE orderitems SET
                   serialnumber = '$serialnumber',

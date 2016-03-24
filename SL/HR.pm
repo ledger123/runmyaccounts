@@ -115,6 +115,7 @@ sub save_employee {
 
   $form->{employeenumber} = $form->update_defaults($myconfig, "employeenumber", $dbh) if ! $form->{employeenumber};
 
+  # SQLI protection: all text/varchar columns need to be quoted
   $query = qq|UPDATE employee SET
               employeenumber = |.$dbh->quote($form->{employeenumber}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,

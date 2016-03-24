@@ -584,6 +584,7 @@ sub save_job {
   
   my $partnumber = ($form->{partnumber}) ? $form->{partnumber} : $form->{projectnumber};
   
+  # SQLI protection: bin needs to be quoted
   $query = qq|UPDATE parts SET
               partnumber = |.$dbh->quote($partnumber).qq|,
 	      description = |.$dbh->quote($form->{partdescription}).qq|,
@@ -1494,6 +1495,8 @@ sub get_jcitems {
 
   my $query;
   my $ref;
+
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
 
   $query = qq|SELECT j.id, j.description, j.qty - j.allocated AS qty,
 	       j.sellprice, j.parts_id, pr.$form->{vc}_id, j.project_id,

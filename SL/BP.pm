@@ -41,6 +41,8 @@ sub get_vc {
   my $vc;
   my $wildcard;
   
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+  # SQLI protection: $form->{type} needs to be validated
   if ($form->{batch} eq 'queue') {
     for (keys %{ $arap{$form->{type}} }) {
       $query = qq|
