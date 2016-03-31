@@ -89,6 +89,18 @@ sub create_links {
     for (@{ $form->{all_business} }) { $form->{selectbusiness} .= qq|$_->{description}--$_->{id}\n| }
     $form->{selectbusiness} = $form->escape($form->{selectbusiness},1);
   }
+
+  if (@{ $form->{all_dispatch} }) {
+    $form->{selectdispatch} = qq|\n|;
+    for (@{ $form->{all_dispatch} }) { $form->{selectdispatch} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectdispatch} = $form->escape($form->{selectdispatch},1);
+  }
+
+  if (@{ $form->{all_dispatch} }) {
+    $form->{selectdispatch} = qq|\n|;
+    for (@{ $form->{all_dispatch} }) { $form->{selectdispatch} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectdispatch} = $form->escape($form->{selectdispatch},1);
+  }
   
   if (@{ $form->{all_paymentmethod} }) {
     $form->{selectpaymentmethod} = qq|\n|;
@@ -392,6 +404,7 @@ sub include_in_report {
   push @a, qq|<input name="l_iban" type=checkbox class=checkbox value=Y> |.$locale->text('IBAN');
   push @a, qq|<input name="l_bic" type=checkbox class=checkbox value=Y> |.$locale->text('BIC');
   push @a, qq|<input name="l_business" type=checkbox class=checkbox value=Y> |.$locale->text('Type of Business');
+  push @a, qq|<input name="l_dispatch" type=checkbox class=checkbox value=Y> |.$locale->text('Dispatch Method');
   push @a, qq|<input name="l_creditlimit" type=checkbox class=checkbox value=Y> |.$locale->text('Credit Limit');
   push @a, qq|<input name="l_terms" type=checkbox class=checkbox value=Y> |.$locale->text('Terms');
   push @a, qq|<input name="l_language" type=checkbox class=checkbox value=Y> |.$locale->text('Language');
@@ -689,7 +702,7 @@ sub list_names {
   }
 
   push @columns, (paymentmethod, threshold, taxnumber, gifi_accno, sic_code,
-             business, pricegroup, language, curr, bankname);
+             business, dispatch, pricegroup, language, curr, bankname);
   
   if ($form->{l_bankaddress}) {
     for (bankaddress1, bankaddress2, bankcity, bankstate, bankzipcode, bankcountry) {
@@ -919,6 +932,7 @@ sub list_names {
   $column_header{gifi_accno} = qq|<th><a class=listheading href=$href&sort=gifi_accno>|.$locale->text('GIFI').qq|</a></th>|;
   $column_header{sic_code} = qq|<th><a class=listheading href=$href&sort=sic_code>|.$locale->text('SIC').qq|</a></th>|;
   $column_header{business} = qq|<th><a class=listheading href=$href&sort=business>|.$locale->text('Type of Business').qq|</a></th>|;
+  $column_header{dispatch} = qq|<th><a class=listheading href=$href&sort=dispatch>|.$locale->text('Dispatch Method').qq|</a></th>|;
 
   $column_header{bank} = qq|<th class=listheading>|.$locale->text('Bank').qq|</th>|;
   $column_header{bankname} = qq|<th class=listheading>|.$locale->text('Bank').qq|</th>|;
@@ -1704,6 +1718,25 @@ sub form_header {
 |;
 
   }
+
+  $dispatchmothod = qq|
+          <th></th>
+	  <td></td>
+|;
+
+  if ($form->{selectdispatch}) {
+
+    $dispatchmethod = qq|
+ 	  <th align=right>|.$locale->text('Dispatch Method').qq|</th>
+	  <td><select name=dispatch>|
+	  .$form->select_option($form->{selectdispatch}, $form->{dispatch}, 1)
+	  .qq|</select>
+	  </td>
+|;
+
+  }
+  
+
   
   if ($form->{selectpricegroup} && $form->{db} eq 'customer') {
     
@@ -1997,6 +2030,7 @@ sub form_header {
 	</tr>
 	<tr>
 	  $typeofbusiness
+      $dispatchmethod
 	  $lang
 	  $currency
 	</tr>
@@ -2072,7 +2106,7 @@ sub form_header {
 
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
-  $form->hide_form(map { "select$_" } qw(currency arap discount payment business pricegroup language employee paymentmethod));
+  $form->hide_form(map { "select$_" } qw(currency arap discount payment business dispatch pricegroup language employee paymentmethod));
   $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
 
 }

@@ -32,7 +32,9 @@ sub create_links {
     $query = qq/SELECT ct.*,
                 ad.id AS addressid, ad.address1, ad.address2, ad.city,
 		ad.state, ad.zipcode, ad.country,
-		b.description || '--' || b.id AS business, s.*,
+		b.description || '--' || b.id AS business,
+		d.description || '--' || d.id AS dispatch,
+        s.*,
                 e.name || '--' || e.id AS employee,
 		g.pricegroup || '--' || g.id AS pricegroup,
 		m.description || '--' || m.id AS paymentmethod,
@@ -47,6 +49,7 @@ sub create_links {
                 FROM $form->{db} ct
 		LEFT JOIN address ad ON (ct.id = ad.trans_id)
 		LEFT JOIN business b ON (ct.business_id = b.id)
+		LEFT JOIN dispatch d ON (ct.dispatch_id = d.id)
 		LEFT JOIN shipto s ON (ct.id = s.trans_id)
 		LEFT JOIN employee e ON (ct.employee_id = e.id)
 		LEFT JOIN pricegroup g ON (g.id = ct.pricegroup_id)
@@ -186,6 +189,18 @@ sub create_links {
   
   while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
     push @{ $form->{all_business} }, $ref;
+  }
+  $sth->finish;
+
+  # get dispatch types
+  $query = qq|SELECT *
+              FROM dispatch
+	      ORDER BY 1|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_dispatch} }, $ref;
   }
   $sth->finish;
 
@@ -397,7 +412,7 @@ sub save {
   $form->{"$form->{db}number"} = $form->update_defaults($myconfig, "$form->{db}number", $dbh) if ! $form->{"$form->{db}number"};
  
   my %rec;
-  for (qw(employee pricegroup business paymentmethod)) {
+  for (qw(employee pricegroup business dispatch paymentmethod)) {
     ($null, $rec{"${_}_id"}) = split /--/, $form->{$_};
     $rec{"${_}_id"} *= 1;
   }
@@ -430,6 +445,7 @@ sub save {
 	      taxincluded = '$form->{taxincluded}',
 	      $gifi
 	      business_id = $rec{business_id},
+	      dispatch_id = $rec{dispatch_id},
 	      taxnumber = |.$dbh->quote($form->{taxnumber}).qq|,
 	      sic_code = |.$dbh->quote($form->{sic_code}).qq|,
 	      employee_id = $rec{employee_id},
@@ -653,7 +669,7 @@ sub search {
      $department_where = qq|AND c.id IN (SELECT trans_id FROM dpt_trans WHERE department_id = $department_id)|;
   }
 
-  my $query = qq|SELECT c.*, b.description AS business,
+  my $query = qq|SELECT c.*, b.description AS business, d.description AS dispatch,
                  e.name AS employee, g.pricegroup, l.description AS language,
 		 m.name AS manager,
 		 ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
@@ -665,6 +681,7 @@ sub search {
 	      JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN address ad ON (ad.trans_id = c.id)
 	      LEFT JOIN business b ON (c.business_id = b.id)
+	      LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
 	      LEFT JOIN employee e ON (c.employee_id = e.id)
 	      LEFT JOIN employee m ON (m.id = e.managerid)
 	      LEFT JOIN pricegroup g ON (c.pricegroup_id = g.id)
@@ -700,7 +717,7 @@ sub search {
       $transwhere .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
       
    
-      $query = qq|SELECT c.*, b.description AS business,
+      $query = qq|SELECT c.*, b.description AS business, d.description dispatch,
                   a.invnumber, a.ordnumber, a.quonumber, a.id AS invid,
 		  '$ar' AS module, 'invoice' AS formtype,
 		  (a.amount = a.paid) AS closed, a.amount, a.netamount,
@@ -715,6 +732,7 @@ sub search {
 		JOIN address ad ON (ad.trans_id = c.id)
 		JOIN $ar a ON (a.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
+	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
 		LEFT JOIN employee e ON (a.employee_id = e.id)
 		LEFT JOIN employee m ON (m.id = e.managerid)
 		LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
@@ -738,7 +756,7 @@ sub search {
       $transwhere .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
     
       $query .= qq|$union
-		   SELECT c.*, b.description AS business,
+		   SELECT c.*, b.description AS business, d.description AS dispatch,
 		   a.invnumber, a.ordnumber, a.quonumber, a.id AS invid,
 		   '$module' AS module, 'invoice' AS formtype,
 		   (a.amount = a.paid) AS closed, a.amount, a.netamount,
@@ -753,6 +771,7 @@ sub search {
 		JOIN address ad ON (ad.trans_id = c.id)
 		JOIN $ar a ON (a.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
+	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
 		LEFT JOIN employee e ON (a.employee_id = e.id)
 		LEFT JOIN employee m ON (m.id = e.managerid)
 		LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
@@ -773,7 +792,7 @@ sub search {
       $transwhere .= " AND o.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
       $transwhere .= " AND o.transdate <= '$form->{transdateto}'" if $form->{transdateto};
       $query .= qq|$union
-		   SELECT c.*, b.description AS business,
+		   SELECT c.*, b.description AS business, d.description AS dispatch,
 		   ' ' AS invnumber, o.ordnumber, o.quonumber, o.id AS invid,
 		   'oe' AS module, 'order' AS formtype,
 		   o.closed, o.amount, o.netamount,
@@ -788,6 +807,7 @@ sub search {
 		JOIN address ad ON (ad.trans_id = c.id)
 		JOIN oe o ON (o.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
+	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
 		LEFT JOIN employee e ON (o.employee_id = e.id)
 		LEFT JOIN employee m ON (m.id = e.managerid)
 		LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
@@ -808,7 +828,7 @@ sub search {
       $transwhere .= " AND o.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
       $transwhere .= " AND o.transdate <= '$form->{transdateto}'" if $form->{transdateto};
       $query .= qq|$union
-		   SELECT c.*, b.description AS business,
+		   SELECT c.*, b.description AS business, d.description AS dispatch,
 		   ' ' AS invnumber, o.ordnumber, o.quonumber, o.id AS invid,
 		   'oe' AS module, 'quotation' AS formtype,
 		   o.closed, o.amount, o.netamount,
@@ -823,6 +843,7 @@ sub search {
 		JOIN address ad ON (ad.trans_id = c.id)
 		JOIN oe o ON (o.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
+	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
 		LEFT JOIN employee e ON (o.employee_id = e.id)
 		LEFT JOIN employee m ON (m.id = e.managerid)
 		LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
