@@ -646,6 +646,91 @@ sub delete_business {
 
 }
 
+sub dispatch {
+  my ($self, $myconfig, $form) = @_;
+  
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+
+  $form->sort_order();
+  my $query = qq|SELECT id, description
+                 FROM dispatch
+		 ORDER BY 1 $form->{direction}|;
+
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{ALL} }, $ref;
+  }
+  $sth->finish;
+
+  $dbh->disconnect;
+  
+}
+
+
+
+sub get_dispatch {
+  my ($self, $myconfig, $form) = @_;
+
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+  
+  $form->{id} *= 1;
+
+  my $query = qq|SELECT description
+                 FROM dispatch
+	         WHERE id = $form->{id}|;
+  ($form->{description}) = $dbh->selectrow_array($query);
+
+  $dbh->disconnect;
+
+}
+
+
+sub save_dispatch {
+  my ($self, $myconfig, $form) = @_;
+  
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+  
+  $form->{description} =~ s/-(-)+/-/g;
+  $form->{description} =~ s/ ( )+/ /g;
+  
+  if ($form->{id} *= 1) {
+    $query = qq|UPDATE dispatch SET
+		description = |.$dbh->quote($form->{description}).qq|
+		WHERE id = $form->{id}|;
+  } else {
+    $query = qq|INSERT INTO dispatch 
+                (description)
+		VALUES (|
+		.$dbh->quote($form->{description}).qq|)|;
+  }
+  $dbh->do($query) || $form->dberror($query);
+  
+  $dbh->disconnect;
+
+}
+
+
+sub delete_dispatch {
+  my ($self, $myconfig, $form) = @_;
+  
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+ 
+  $form->{id} *= 1;
+
+  $query = qq|DELETE FROM dispatch
+	      WHERE id = $form->{id}|;
+  $dbh->do($query) || $form->dberror($query);
+  
+  $dbh->disconnect;
+
+}
+
 
 sub paymentmethod {
   my ($self, $myconfig, $form) = @_;
