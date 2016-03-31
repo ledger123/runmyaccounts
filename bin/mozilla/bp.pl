@@ -156,6 +156,20 @@ sub search {
       $form->error($locale->text('Nothing in the Queue!'));
     }
   }
+
+  if (@{ $form->{all_dispatch} }) {
+    $form->{selectdispatch} = qq|\n|;
+    for (@{ $form->{all_dispatch} }) { $form->{selectdispatch} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectdispatch} = $form->escape($form->{selectdispatch},1);
+
+    $dispatchmethod = qq|
+ 	  <th align=right>|.$locale->text('Dispatch Method').qq|</th>
+	  <td><select name=dispatch>|
+	  .$form->select_option($form->{selectdispatch}, $form->{dispatch}, 1)
+	  .qq|</select>
+	  </td>
+|;
+  }
   
   if ($form->{vc}) {
     @{ $label{$form->{type}}{name} } = (ucfirst $form->{vc});
@@ -289,6 +303,7 @@ sub search {
         $form->{selectcustomer}
 	$form->{selectvendor}
 	$form->{selectemployee}
+    $dispatchmethod
 	$account
 	$label{$form->{type}}{invnumber}
 	$label{$form->{type}}{ordnumber}
@@ -585,7 +600,13 @@ sub list_spool {
     ($projectnumber) = split /--/, $form->{projectnumber};
     $option .= $locale->text('Project Number')." : $projectnumber";
   }
-
+  if ($form->{dispatch}) {
+    $callback .= "&dispatch=".$form->escape($form->{dispatch},1);
+    $href .= "&dispatch=".$form->escape($form->{dispatch});
+    $option .= "\n<br>" if ($option);
+    ($dispatch) = split /--/, $form->{dispatch};
+    $option .= $locale->text('Dispatch method')." : $dispatch";
+  }
   if ($form->{description}) {
     $callback .= "&description=".$form->escape($form->{description},1);
     $href .= "&description=".$form->escape($form->{description});
