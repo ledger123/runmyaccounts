@@ -1,0 +1,95 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Kreditorenlastschrift Buchung
+% Name: debit_note.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 10. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Rechnung}
+
+\newcommand{\AmountType}{Rechnungsbetrag}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+\vspace{1.5cm}
+
+\centerline{\textbf{K R E D I T O R E N L A S T S C H R I F T \hspace{0.3cm} B U C H U N G S B E L E G}}
+
+\vspace{1.5cm}
+
+\parbox[t]{.5\textwidth}{
+<%name%>
+
+<%address1%>
+
+<%address2%>
+
+<%city%>
+<%if state>
+\hspace{-0.1cm}, <%state%>
+<%end state%> <%zipcode%>
+
+<%country%>
+
+\vspace{0.3cm}
+
+<%if contact%>
+<%contact%>
+\vspace{0.2cm}
+<%end contact%>
+
+<%if vendorphone%>
+Tel: <%vendorphone%>
+<%end vendorphone%>
+
+<%if vendorfax%>
+Fax: <%vendorfax%>
+<%end vendorfax%>
+
+<%email%>
+
+<%if vendortaxnumber%>
+MWST Nr.: <%vendortaxnumber%>
+<%end vendortaxnumber%>
+}
+\hfill
+\begin{tabular}[t]{ll}
+  \textbf{Beleg Nr.:} & <%invnumber%> \\
+  \textbf{Datum:} & <%invdate%> \\
+  \textbf{Fällgikeitsdatum:} & <%duedate%> \\
+  <%if ponumber%>
+    \textbf{PO-Nummer:} & <%ponumber%> \\
+  <%end ponumber%>
+  <%if ordnumber%>
+    \textbf{Bestell-Nummer:} & <%ordnumber%> \\
+  <%end ordnumber%>
+  \textbf{Mitarbeiter:} & <%employee%> \\
+\end{tabular}
+
+\vspace{1.5cm}
+
+<%include content_bookings.tex%>
+
+<%include content_sum_bookings.tex%>
+
+<%include content_notes.tex%>
+
+<%include content_paymenttable.tex%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

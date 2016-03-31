@@ -1,0 +1,31 @@
+% Falls der Footer über das Hintergrund-Bild eingesetzt wird, muss dieser Footer gelöscht werden.
+
+\newcommand\Footer{
+
+\begin{textblock*}{17.4cm}(1.8cm,27.4cm)
+\parbox{\textwidth}{
+\begin{small}
+\vspace{0.2cm}
+\hline
+\vspace{0.2cm}
+\parbox[t]{.34\textwidth}{
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
+\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
+\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
+\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
+}
+\parbox[t]{.33\textwidth}{
+\ifthenelse{\equal{<%bankname%>}{}}{}{Bank: <%bankname%>\\}
+\ifthenelse{\equal{<%iban%>}{}}{}{IBAN: <%iban%>\\}
+\ifthenelse{\equal{<%bic%>}{}}{}{BIC: <%bic%>\\}
+}
+\end{small}
+}
+\end{textblock*}
+
+}

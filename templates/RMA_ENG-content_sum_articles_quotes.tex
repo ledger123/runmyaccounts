@@ -1,0 +1,82 @@
+\renewcommand{\arraystretch}{1.2}
+ 
+\ifthenelse{\equal{<%tax%>}{}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+ <%if quototal%>
+ \textbf{<%currency%> \AmountType}& \textbf{<%quototal%>}\\
+ <%end quototal%>
+
+\hline
+& \footnotesize{<%company%> is not subject to VAT.}\\
+
+ \end{tabularx}
+ }
+
+ }{
+
+\ifthenelse{\equal{<%taxincluded%>}{1}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if quototal%>
+\textbf{<%currency%> \AmountType \ifthenelse{\equal{<%tax%>}{}}{} {incl. VAT}}& \textbf{<%quototal%>}\\
+<%end quototal%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lrrr@{}}
+\textbf{VAT rate} & \textbf{Net} &  \textbf{VAT} & \textbf{Total}\\
+\hline
+<%foreach tax%>
+<%taxrate%> \%&<%taxbase%>  &<%tax%> & <%taxbaseinclusive%>\\
+<%end tax%>
+\end{tabular}
+
+\end{flushright}
+}
+
+}{
+
+\parbox{\textwidth}{
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+Sub-total <%currency%> & <%subtotal%> \\
+
+<%foreach tax%>
+VAT <%taxrate%> \% on <%taxbase%> & <%tax%> \\
+<%end tax%>
+
+\hline
+
+<%if quototal%>
+\textbf{<%currency%> \AmountType}& \textbf{<%quototal%>}
+<%end quototal%>
+
+\end{tabularx}
+
+\hline
+}
+}
+}
+
+ 
+ \renewcommand{\arraystretch}{1}

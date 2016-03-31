@@ -1,0 +1,7 @@
+\vspace{0.5cm}
+
+\newcommand{\TermsInvoice}{\ifthenelse{\equal{<%terms%>}{0}}{Nous vous remercions de remettre le paiement \textbf{immédiatement.}}{Nous vous remercions de bien vouloir effectuer un \textbf{virement dans les <%terms%> jours}, avant le <%duedate%>.}}
+
+\newcommand{\TermsOther}{\ifthenelse{\equal{<%terms%>}{0}}{Délai de paiement: immédiatement.}{Délai de paiement: <%terms%> jours.}}
+
+\ifthenelse{\equal{\DocType}{Facture}}{\TermsInvoice}{\TermsOther}

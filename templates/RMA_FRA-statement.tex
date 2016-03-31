@@ -1,0 +1,84 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Zahlungserinnerung
+% Name: statement.tex
+% Sprache: Français 
+% Erstellungsdatum: 28. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_address.tex%>
+
+\null\vspace{4.2cm}
+
+\parbox{\textwidth}{
+\textbf{\large{Relevé de compte}} \hfill \textbf{Date: <%statementdate%>}
+}
+
+\vspace{0.5cm}
+
+\parbox{\textwidth}{
+Chère Madame, cher Monsieur,\\
+\\
+Il nous est apparu que les montants ci-dessous pour un total de <%currency%> <%total%> restent dus. Nous vous prions de bien vouloir régler les arriérés de factures dans les plus brefs délais.
+
+}
+
+\vspace{0.5cm}
+
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+\textbf{No facture} & \textbf{Date} & \textbf{Échéance} & \textbf{Courant} & \textbf{30 jours} & \textbf{60 jours} & \textbf{90+ jours} \\
+\hline
+\end{tabularx}
+
+<%foreach invnumber%>
+\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+<%invnumber%> & <%invdate%> & <%duedate%> & <%c0%> & <%c30%> & <%c60%> & <%c90%> \\
+\end{tabularx}
+<%end invnumber%>
+
+\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+\hline
+Sous-total& & & <%c0total%>& <%c30total%> & <%c60total%> & <%c90total%>
+\end{tabularx}
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+\textbf{Total dû <%currency%>} & \textbf{<%total%>}\\
+\hline
+\end{tabularx}
+
+\vspace{0.5cm}
+
+\parbox{\textwidth}{
+Si vous avez entretemps réglé les factures impayées, nous vous prions de ne pas tenir compte de ce courrier.
+
+
+\vspace{0.5cm}
+
+Sincères salutations, 
+
+\vspace{0.5cm}
+
+<%company%>
+}
+}
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

@@ -1,0 +1,77 @@
+<body class="bill"> <!-- Test 2 -->
+
+<h2 align=center>
+<%company%>
+<br><%address%>
+
+<p>BILANZ
+<br>per <%this_period%>
+</h2>
+
+<%if department%>
+<h4>Abteilung: <%department%></h4>
+<%end department%>
+
+<table border=0>
+<tr>
+  <th>AKTIVEN<br></th>
+  <th><%this_period%></th>
+  <th><%last_period%></th>
+</tr>
+
+<%foreach asset_account%>
+<tr>
+  <td><%asset_account%></td>
+  <td align=right><%asset_this_period%></td>
+  <td align=right><%asset_last_period%></td>
+</tr>
+<%end asset_account%>
+
+<tr valign=top>
+  <th align=left>TOTAL AKTIVEN</th>
+  <th align=right><%total_assets_this_period%></th>
+  <th align=right><%total_assets_last_period%></th>
+</tr>
+
+<tr>
+  <th align=left colspan=3>FREMDKAPITAL<b></th>
+</tr>
+<%foreach liability_account%>
+<tr>
+  <td><%liability_account%></td>
+  <td align=right><%liability_this_period%></td>
+  <td align=right><%liability_last_period%></td>
+</tr>
+<%end liability_account%>
+
+<tr valign=top>
+  <th align=left>TOTAL FREMDKAPITAL</th>
+  <th align=right><%total_liabilities_this_period%><br></th>
+  <th align=right><%total_liabilities_last_period%><br></th>
+</tr>
+<tr>
+  <th align=left colspan=3>EIGENKAPITAL<br></th>
+</tr>
+
+<%foreach equity_account%>
+<tr>
+  <td><%equity_account%></td>
+  <td align=right><%equity_this_period%></td>
+  <td align=right><%equity_last_period%></td>
+</tr>
+<%end equity_account%>
+
+<tr valign=top>
+  <th align=left>TOTAL EIGENKAPITAL</th>
+  <th align=right><%total_equity_this_period%><br></th>
+  <th align=right><%total_equity_last_period%><br></th>
+</tr>
+<tr valign=top>
+  <th align=left>TOTAL PASSIVEN</th>
+  <th align=right><%total_this_period%><br></th>
+  <th align=right><%total_last_period%><br></th>
+</tr>
+</table>
+
+</body>
+</html>

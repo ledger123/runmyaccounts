@@ -1,0 +1,99 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Quittung / Debitorenzahlung
+% Name: receipt.tex
+% Sprache: English
+% Erstellungsdatum: 21. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Receipt}
+
+\newcommand{\AmountType}{receipt total}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_pagebreak_withamount_withfooter.tex%>
+
+\parbox[t]{12cm}{
+
+Recipient:\\
+\\
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\}
+
+\vspace{1cm}
+
+\textbf{\large{Receipt no. <%source%>}}
+
+
+\vspace{0.5cm}
+
+In the amount of: <%currency%> <%amount%> {\hfill Paid date: <%datepaid%> }
+
+
+\vspace{0.5cm}
+
+Paid by:\\
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+%Firmenanschrift
+
+<%name%>
+
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
+
+}{
+
+%Privatanschrift
+
+<%salutation%>
+
+<%firstname%> <%lastname%>
+
+} 
+
+\ifthenelse{\equal{address1}{}}{}{<%address1%>}
+
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+
+\vspace{0.5cm}
+
+\ifthenelse{\equal{<%memo%>}{}}{}{<%memo%>
+
+\vspace{0.5cm}
+}
+
+\textbf{\large{Paid invoices:}}
+
+\vspace{0.5cm}
+
+\begin{tabularx}{\textwidth}{@{}lXrr@{}}
+\textbf{Invoice no.:} & \textbf{Invoice date:}
+  & \textbf{Amount <%currency%>} & \textbf{Paid <%currency%>} \\
+<%foreach invnumber%>
+<%invnumber%> & <%invdate%>  & <%due%> & <%paid%> \\
+<%end invnumber%>
+\end{tabularx}
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}
