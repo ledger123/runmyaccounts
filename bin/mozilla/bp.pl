@@ -924,17 +924,25 @@ function CheckAll() {
     $media = "" unless %printer;
   }
 
+  $form->all_languages(\%myconfig);
+  if ( @{ $form->{all_language} } ) {
+     $form->{selectlanguage} = "\n";
+     for ( @{ $form->{all_language} } ) { $form->{selectlanguage} .= qq|$_->{code}--$_->{description}\n| }
+     $lang = qq|<td><select name="language_code">|.$form->select_option($form->{selectlanguage}, $form->{language_code}, undef, 1).qq|</select></td>|;
+  }
+
   print qq|
 <table>
   $message
   <tr>
     <td>
-      <table>
+      <table><tr>
+    $lang
 	$format
 	$sendmode
 	$media
 	$copies
-      </table>
+      </tr></table>
     </td>
   </tr>
 </table>
