@@ -2095,7 +2095,7 @@ sub save {
 sub print_and_save {
 
   $form->error($locale->text('Select postscript or PDF!')) if $form->{format} !~ /(postscript|pdf)/;
-  $form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
+  #$form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
 
   $old_form = new Form;
   $form->{display_form} = "save";

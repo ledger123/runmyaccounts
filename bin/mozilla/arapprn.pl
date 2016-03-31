@@ -626,7 +626,7 @@ sub print_options {
 sub print_and_post {
 
   $form->error($locale->text('Select postscript or PDF!')) if $form->{format} !~ /(postscript|pdf)/;
-  $form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
+  #$form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
 
   $form->{printandpost} = 1;
   $form->{display_form} = "post";
