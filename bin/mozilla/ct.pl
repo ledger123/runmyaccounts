@@ -95,12 +95,6 @@ sub create_links {
     for (@{ $form->{all_dispatch} }) { $form->{selectdispatch} .= qq|$_->{description}--$_->{id}\n| }
     $form->{selectdispatch} = $form->escape($form->{selectdispatch},1);
   }
-
-  if (@{ $form->{all_dispatch} }) {
-    $form->{selectdispatch} = qq|\n|;
-    for (@{ $form->{all_dispatch} }) { $form->{selectdispatch} .= qq|$_->{description}--$_->{id}\n| }
-    $form->{selectdispatch} = $form->escape($form->{selectdispatch},1);
-  }
   
   if (@{ $form->{all_paymentmethod} }) {
     $form->{selectpaymentmethod} = qq|\n|;
@@ -1727,11 +1721,13 @@ sub form_header {
   if ($form->{selectdispatch}) {
 
     $dispatchmethod = qq|
+      <tr>
  	  <th align=right>|.$locale->text('Dispatch Method').qq|</th>
 	  <td><select name=dispatch>|
 	  .$form->select_option($form->{selectdispatch}, $form->{dispatch}, 1)
 	  .qq|</select>
 	  </td>
+      </tr>
 |;
 
   }

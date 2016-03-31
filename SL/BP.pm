@@ -146,6 +146,18 @@ sub get_vc {
    
   }
 
+  # get dispatch types
+  $query = qq|SELECT *
+              FROM dispatch
+	      ORDER BY 1|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_dispatch} }, $ref;
+  }
+  $sth->finish;
+
   $form->all_years($myconfig, $dbh);
 
   if ($form->{type} =~ /(timecard|storescard)/) {
@@ -292,6 +304,12 @@ sub get_spoolfiles {
       if ($form->{"print$arap{$form->{type}}{$item}"} ne 'Y') {
 	$form->{$arap{$form->{type}}{$item}} = "\r";
 	$form->{"$arap{$form->{type}}{$item}_id"} = 0;
+      }
+
+      if ($form->{dispatch}){
+         my ($null, $dispatch_id) = split /--/, $form->{dispatch};
+         $dispatch_id *= 1;
+         $where .= qq| AND vc.dispatch_id = $dispatch_id|;
       }
 
       if ($form->{type} eq 'remittance_voucher') {
