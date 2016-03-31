@@ -226,8 +226,8 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6930','Interest Cost Pension Fund','A','E','AP_amount','690',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6940','Bank Expenses','A','E','AR_paid:AP_paid','690',false,true,'drittspesen');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6942','Exchange Loss','A','E','','690',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6943','Credit Card Costs','A','E','AP_amount','690',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6944','Bank Expenses','A','E','AP_paid','690',false,true,'kreditordifferenz');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6943','Credit card fees','A','E','AP_amount','690',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6944','Bank charges for payment transactions, rounding differences','A','E','AP_paid','690',false,true,'kreditordifferenz');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('695','FINANCIAL INCOME','H','E','','695',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6950','Financial Income','A','E','','695',false,true,'guthabenzins');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6952','Exchange Profit','A','E','','695',false,true,'');
