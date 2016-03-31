@@ -672,7 +672,7 @@ sub form_header {
   </tr>
 |;
 
-  $form->hide_form(qw(shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact shiptophone shiptofax shiptoemail message email subject cc bcc taxaccounts aa_id));
+  $form->hide_form(qw(shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact shiptophone shiptofax shiptoemail message email subject cc bcc taxaccounts aa_id inventory_items));
 
   foreach $accno (split / /, $form->{taxaccounts}) { $form->hide_form(map { "${accno}_$_" } qw(rate description taxnumber)) }
 
@@ -874,7 +874,7 @@ sub form_footer {
 	}
       }
 
-      if ($form->{aa_id}) {
+      if ($form->{aa_id} and $form->{inventory_items}) {
 	for ("Update", "Save", "Ship to", "Ship all", "Print and Save", "Sales Invoice", "Vendor Invoice", "Delete") { delete $a{$_} }
       }
     }

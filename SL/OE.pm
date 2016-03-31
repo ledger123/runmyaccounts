@@ -735,6 +735,15 @@ sub retrieve {
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
     $sth->finish;
 
+    # check if this order contains any inventory items? If not, we can delete it even after creating invoice
+    $query = qq|SELECT COUNT(*) 
+                FROM orderitems oi
+                JOIN parts p ON (p.id = oi.parts_id)
+                WHERE oi.trans_id = $form->{id}
+                AND p.inventory_accno_id IS NOT NULL
+                |;
+    ($form->{inventory_items}) = $dbh->selectrow_array($query);
+
     $query = qq|SELECT * FROM shipto
                 WHERE trans_id = $form->{id}|;
     $sth = $dbh->prepare($query);
