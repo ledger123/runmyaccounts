@@ -1,6 +1,41 @@
 $self{charset} = 'ISO-8859-1';
 
-$self{texts} = {};
+$self{texts} = {
+  'General Ledger'      => 'Grand-livre',
+  'From'                 => 'De',
+  'To'                   => 'À',
+  'Period'               => 'Période',
+  'Current'               => 'En cours',
+  'Month'               => 'Mois',
+  'Quarter'               => 'Trimestre',
+  'Year'               => 'Année',
+  'From Account'               => 'Compte de',
+  'To Account'               => 'Compte à',
+  'No.'               => 'N°',
+  'Date'               => 'Date',
+  'Reference'               => 'Référence',
+  'Description'               => 'Description',
+  'Company Name'               => 'Désignation Entité',
+  'Source'               => 'Source',
+  'Debit'               => 'Débit',
+  'Credit'               => 'Crédit',
+  'Balance'               => 'Balance',
+  'No Transactions'               => 'Sans Transactions',
+  'Group'               => 'Famille',
+  'CSV'               => 'CSV',
+  'Include Exchange Rate Difference'               => 'Inclure taux de change différence',
+  'Include in Report'               => 'Inclure dans le rapport',
+  'Continue'                    => 'Continuer',  
+  'Reminders'			=> 'Rappels',
+  'Customer'			=> 'Clients',
+  'Customer Number'		=> 'Numéro de client',
+  'Invoice Number'		=> 'Numéro de facture',
+  'Order Number'		=> 'Numéro de commande',
+  'Due Date'			=> 'Échéance',
+  'Due'					=> 'Dû',
+  'List Reminders'		=> 'Liste des rappels',
+  
+};
 
 $self{subs} = {
   'aa_qty_list'                 => 'aa_qty_list',
@@ -17,6 +52,7 @@ $self{subs} = {
   'build_list'                  => 'build_list',
   'build_search'                => 'build_search',
   'continue'                    => 'continue',
+  'continuer'                    => 'continue',
   'end_form'                    => 'end_form',
   'end_row'                     => 'end_row',
   'end_table'                   => 'end_table',
