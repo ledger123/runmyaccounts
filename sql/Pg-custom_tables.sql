@@ -137,3 +137,6 @@ CREATE TABLE dispatch (
   description text
 );
 
+ALTER TABLE customer ADD dispatch_id INTEGER;
+ALTER TABLE vendor ADD dispatch_id INTEGER;
+
