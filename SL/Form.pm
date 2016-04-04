@@ -241,10 +241,6 @@ sub error {
     
     <p><b>$self->{msg}</b>|;
 
-    print qq|<h2 class=dberror>DB Error!</h2>
-
-    <p><b class=dberror>$self->{dbmsg}</b>|;
-
     exit;
 
   }
