@@ -82,7 +82,7 @@ $myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
 map { $form->{$_} = $myconfig{$_} } qw(stylesheet timeout) unless ($form->{type} eq 'preferences');
 
 $form->{path} =~ s/\.\.//g;
-if ($form->{path} !~ /^bin\//) {
+if ($form->{path} ne "bin/mozilla" && $form->{path} ne "bin/lynx") {
   $form->error($locale->text('Invalid path!')."\n");
 }
 
