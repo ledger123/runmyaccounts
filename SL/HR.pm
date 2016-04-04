@@ -133,6 +133,7 @@ sub save_employee {
 	      enddate = |.$form->dbquote($form->{enddate}, SQL_DATE).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      role = '$form->{role}',
+	      login = '$form->{employeelogin}',
 	      sales = '$form->{sales}',
 	      email = |.$dbh->quote($form->{email}).qq|,
 	      ssn = '$form->{ssn}',

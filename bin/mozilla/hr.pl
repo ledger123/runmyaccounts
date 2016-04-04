@@ -387,6 +387,33 @@ sub employee_links {
 #$form->{deductions} = 1;
   HR->get_employee(\%myconfig, \%$form);
 
+  if ( $form->{id} ) {
+        if ( $form->{employeelogin} ) {
+            open FH, $memberfile;
+            @member = <FH>;
+            close FH;
+
+            while (@member) {
+                $_ = shift @member;
+                next if !/\[$form->{employeelogin}(\@|\])??/;
+                do {
+                    if (/password/) {
+                        ( $null, $form->{employeepassword} ) = split /=/, $_, 2;
+                        chomp $form->{employeepassword};
+                        $form->{oldemployeepassword} = $form->{employeepassword};
+                    }
+                    if (/acs/) {
+                        ( $null, $form->{acs} ) = split /=/, $_, 2;
+                        chomp $form->{employeepassword};
+                    }
+                    $_ = shift @member;
+                } until /^\s/;
+            }
+        }
+  }
+
+  $form->{oldemployeelogin} = $form->{employeelogin};
+
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
   if (@{ $form->{all_deduction} }) {
@@ -484,8 +511,19 @@ sub employee_header {
 <form method=post action=$form->{script}>
 |;
 
-  $form->hide_form(qw(deduction_rows status title));
+  $form->hide_form(qw(deduction_rows status title acs));
   $form->hide_form(map { "select$_" } qw(deduction manager role));
+
+  $employeelogin .= qq|
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Login').qq|</th>
+		<td><input name=employeelogin size=20 value="$form->{employeelogin}"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Password').qq|</th>
+		<td><input name=employeepassword size=20 value="$form->{employeepassword}"></td>
+	      </tr>
+|;
 
   print qq|
 
@@ -538,6 +576,7 @@ sub employee_header {
 	      </tr>
 	      <tr>
 	      $sales
+          $employeelogin
 	    </table>
 	  </td>
 	  <td>
@@ -646,18 +685,19 @@ sub employee_header {
 
 sub employee_footer {
 
-  $form->hide_form(qw(id db employeelogin path login callback));
+  $form->hide_form(qw(id db path login callback oldemployeelogin oldemployeepassword));
 
   if (! $form->{readonly}) {
     %button = ('Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
 	       'Save' => { ndx => 2, key => 'S', value => $locale->text('Save') },
 	       'Save as new' => { ndx => 5, key => 'N', value => $locale->text('Save as new') },
+           'Access Control' => { ndx => 6,  key => 'A', value => $locale->text('Access Control') },
 	       'New Number' => { ndx => 15, key => 'M', value => $locale->text('New Number') },
 	       'Delete' => { ndx => 16, key => 'D', value => $locale->text('Delete') },
 	      );
 	     
     %a = ();
-    for ("Update", "Save", "New Number") { $a{$_} = 1 }
+    for ("Update", "Save", "Access Control", "New Number") { $a{$_} = 1 }
     
     if ($form->{id}) {
       if ($form->{status} eq 'orphaned') {
@@ -686,6 +726,152 @@ sub employee_footer {
 
 }
 
+sub access_control {
+
+    $menufile = "menu.ini";
+
+    $form->helpref( "access_control", $myconfig{countrycode} );
+
+    $form->header;
+
+    print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop colspan=2>$form->{name}</a></th>
+  </tr>
+  <tr height="5"></tr>
+|;
+
+    # access control
+    open( FH, $menufile ) or $form->error("$menufile : $!");
+
+    # scan for first menu level
+    @f = <FH>;
+    close(FH);
+
+    if ( open( FH, "custom_$menufile" ) ) {
+        push @f, <FH>;
+    }
+    close(FH);
+
+    foreach $item (@f) {
+        next unless $item =~ /\[\w+/;
+        next if $item =~ /\#/;
+
+        $item =~ s/(\[|\])//g;
+        chop $item;
+
+        if ( $item =~ /--/ ) {
+            ( $level, $menuitem ) = split /--/, $item, 2;
+        }
+        else {
+            $level    = $item;
+            $menuitem = $item;
+            push @acsorder, $item;
+        }
+
+        push @{ $acs{$level} }, $menuitem;
+
+    }
+
+    foreach $item ( split /;/, $form->{acs} ) {
+        ( $key, $value ) = split /--/, $item, 2;
+        $excl{$key}{$value} = 1;
+    }
+
+    foreach $key (@acsorder) {
+
+        $checked = ( $excl{$key}{$key} ) ? "" : "checked";
+
+        # can't have variable names with & and spaces
+        $item = $form->escape( "${key}--$key", 1 );
+
+        $acsheading = $key;
+        $acsheading =~ s/ /&nbsp;/g;
+
+        $acsheading = qq|
+    <th align=left nowrap><input name="$item" class=checkbox type=checkbox value=1 $checked>&nbsp;$acsheading</th>\n|;
+        $menuitems .= "$item;";
+
+        $acsdata = qq|
+    <td>|;
+
+        foreach $item ( @{ $acs{$key} } ) {
+            next if ( $key eq $item );
+
+            $checked = ( $excl{$key}{$item} ) ? "" : "checked";
+
+            $acsitem = $form->escape( "${key}--$item", 1 );
+
+            $acsdata .= qq|
+      <br><input name="$acsitem" class=checkbox type=checkbox value=1 $checked>&nbsp;$item|;
+            $menuitems .= "$acsitem;";
+        }
+        $acsdata .= qq|
+    </td>|;
+
+        print qq|
+    <tr valign=top>$acsheading $acsdata
+    </tr>
+|;
+    }
+
+    $form->{access} = "$menuitems";
+
+    print qq|
+  <tr>
+    <td colspan=2><hr size=3 noshade></td>
+  </tr>
+</table>
+|;
+
+    delete $form->{action};
+
+    $form->{nextsub} = "save_acs";
+
+    $form->hide_form;
+
+    %button = ( 'Continue' => { ndx => 1, key => 'C', value => $locale->text('Continue') } );
+
+    for ( sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button ) {
+        $form->print_button( \%button, $_ );
+    }
+
+    print qq|
+ 
+  </form>
+
+</body>
+</html>
+|;
+
+}
+
+sub save_acs {
+
+    $form->{acs} = "";
+    for ( split /;/, $form->{access} ) {
+        $item = $form->escape( $_, 1 );
+
+        if ( !$form->{$item} ) {
+            $item = $form->unescape($_);
+            $form->{acs} .= "${item};";
+        }
+    }
+
+    &display_form;
+
+}
+
+sub display_form {
+    &{"$form->{db}_header"};
+    &{"$form->{db}_footer"};
+}
+
 
 sub save { &{ "save_$form->{db}" } };
 
@@ -697,23 +883,134 @@ sub save_employee {
 
   # if it is a login change memberfile and .conf
   if ($form->{employeelogin}) {
-    $user = new User $memberfile, $form->{employeelogin};
-
-    for (qw(name email role)) { $user->{$_} = $form->{$_} }
-
-    # assign $myconfig for db
-    for (qw(dbconnect dbhost dbport dbpasswd)) { $user->{$_} = $myconfig{$_} }
-    
-    for (qw(dbpasswd password)) { $user->{"old_$_"} = $user->{$_} }
-    $user->{packpw} = 1;
-    $user->{encrypted} = 1;
-
-    $user->save_member($memberfile, $userspath) if $user->{login};
+      &save_memberfile;
   }
   
   $form->redirect($locale->text('Employee saved!'));
   
 }
+
+sub save_memberfile {
+  
+  # change memberfile
+  open(FH, ">${memberfile}.LCK") or $form->error("${memberfile}.LCK : $!");
+  close(FH);
+
+  if (! open(FH, "+<$memberfile")) {
+    unlink "${memberfile}.LCK";
+    $form->error("$memberfile : $!");
+  }
+  
+  $login = "";
+  while (<FH>) {
+    if (/^\[/) {
+      s/(\[|\])//g;
+      chomp;
+      $login = $_;
+      next;
+    }
+    
+    if ($login) {
+      push @{ $member{$login} }, $_;
+    } else {
+      push @member, $_;
+    }
+  }
+
+  if ($form->{employeelogin}) {
+    $employeelogin = $form->{employeelogin};
+    $employeelogin .= "\@$myconfig{dbname}";  # new format
+    
+    # assign values from old entries
+    $oldlogin = $form->{oldemployeelogin};
+    $oldlogin .= "\@$myconfig{dbname}";
+
+    srand( time() ^ ($$ + ($$ << 15)) );
+    
+    if (@{ $member{$oldlogin} }) {
+      @memberlogin = grep !/password=/, @{ $member{$oldlogin} };
+      pop @memberlogin;
+
+      if ($form->{employeepassword} ne $form->{oldemployeepassword}) {
+	if ($form->{employeepassword}) {
+	  $password = crypt $form->{employeepassword}, substr($form->{employeelogin}, 0, 2);
+	  push @memberlogin, "password=$password\n";
+	}
+      } else {
+	if ($form->{oldemployeepassword}) {
+	  push @memberlogin, "password=$form->{oldemployeepassword}\n";
+	}
+      }
+      
+      @{ $member{$employeelogin} } = ();
+      
+      for (@memberlogin) {
+	push @{ $member{$employeelogin} }, $_;
+      }
+      
+    } else {
+      for (qw(company dateformat dbconnect dbdriver dbname dbhost dboptions dbpasswd dbuser numberformat)) {
+	$m{$_} = $myconfig{$_};
+      }
+      $m{dbpasswd} = pack 'u', $myconfig{dbpasswd};
+      chop $m{dbpasswd};
+      $m{stylesheet} = 'sql-ledger.css';
+      $m{timeout} = 86400;
+
+      if ($form->{employeepassword}) {
+	$m{password} = crypt $form->{employeepassword}, substr($form->{employeelogin}, 0, 2);
+      }
+
+      @{ $member{$employeelogin} } = ();
+      
+      for (sort keys %m) {
+	push @{ $member{$employeelogin} }, "$_=$m{$_}\n" if $m{$_};
+      }
+    }
+    push @{ $member{$employeelogin} }, "\n";
+  }
+
+  @{ $member{$employeelogin} }, "acs=$form->{acs}";
+  
+  if ($form->{employeelogin} ne $form->{oldemployeelogin}) {
+    delete $member{$form->{oldemployeelogin}};   # old format
+    delete $member{"$form->{oldemployeelogin}\@$myconfig{dbname}"};
+  }
+ 
+  seek(FH, 0, 0);
+  truncate(FH, 0);
+
+  #push @{ member{$employeelogin} }, "acs=$form->{acs}";
+
+  # create header
+  for (@member) {
+    print FH $_;
+  }
+
+
+  for (sort keys %member) {
+    print FH "\[$_\]\n";
+    for $line (@{ $member{$_} }) {
+      print FH $line;
+    }
+  }
+  close(FH);
+
+  if ($form->{employeelogin} ne $form->{oldemployeelogin}) {
+    if ($form->{oldemployeelogin}) {
+      for ("$form->{oldemployeelogin}.conf", "$form->{oldemployeelogin}\@$myconfig{dbname}.conf") {
+	$filename = "$userspath/$_";
+	if (-f $filename) {
+	  unlink "$filename";
+	}
+      }
+    }
+  }
+
+  unlink "${memberfile}.LCK";
+
+}
+
 
 
 sub delete { &{ "delete_$form->{db}" } };
