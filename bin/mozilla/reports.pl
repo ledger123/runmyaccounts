@@ -4229,7 +4229,6 @@ sub list_reminders {
         </tr>
 |;
 
-
   $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 

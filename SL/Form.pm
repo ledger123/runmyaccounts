@@ -237,9 +237,7 @@ sub error {
       $self->header(0,1);
     }
 
-    print qq|<body><h2 class=error>Error!</h2>
-    
-    <p><b>$self->{msg}</b>|;
+    print qq|<body><h2 class=error>An unexpected error occured!</h2>|;
 
     exit;
 
@@ -1681,6 +1679,7 @@ sub dbconnect {
 
   # connect to database
   my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}) or $self->dberror;
+  $dbh->{PrintError} = 0;
 
   # set db options
   if ($myconfig->{dboptions}) {
