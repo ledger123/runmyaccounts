@@ -1472,7 +1472,10 @@ sub search {
 
 
 sub transactions {
-  
+
+  $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
   # split vendor / customer
   ($form->{$form->{vc}}, $form->{"$form->{vc}_id"}) = split(/--/, $form->{$form->{vc}});
 
@@ -2434,7 +2437,8 @@ sub ship_receive {
 
 
 sub display_ship_receive {
-  
+    $form->error;
+
   $form->{rowcount}++;
 #$form->error( join '', map { "$_:\t$form->{$_}\n" } sort keys %{$form} );
 

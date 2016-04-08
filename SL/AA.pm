@@ -1067,7 +1067,7 @@ sub get_name {
   my ($self, $myconfig, $form, $dbh) = @_;
   
   my $disconnect = ($dbh) ? 0 : 1;
-  
+
   # connect to database
   $dbh = $form->dbconnect($myconfig) unless $dbh;
   

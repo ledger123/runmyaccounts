@@ -1910,6 +1910,10 @@ sub search {
 }
 
 sub transactions {
+
+    $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+    $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
     if ( $form->{l_csv} eq 'Y' ) {
         &transactions_to_csv;
         exit;

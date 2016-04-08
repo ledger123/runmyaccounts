@@ -1552,6 +1552,45 @@ sub datetonum {
   
 }
 
+sub isvaldate {
+  my ($self, $myconfig, $date, $text) = @_;
+
+  if ($date){
+      my $spc = $myconfig->{dateformat};
+      $spc =~ s/\w//g;
+      $spc = substr($spc, 0, 1);
+
+      if ($myconfig->{dateformat} =~ /^yy/) {
+        ($yy, $mm, $dd) = split /\D/, $date;
+      }
+      if ($myconfig->{dateformat} =~ /^mm/) {
+        ($mm, $dd, $yy) = split /\D/, $date;
+      }
+      if ($myconfig->{dateformat} =~ /^dd/) {
+        ($dd, $mm, $yy) = split /\D/, $date;
+      }
+
+      $dd *= 1;
+      $mm *= 1;
+      $yy *= 1;
+
+      $dd = substr("0$dd", -2);
+      $mm = substr("0$mm", -2);
+
+      if ($myconfig->{dateformat} =~ /^yy/) {
+        $date = "$yy$spc$mm$spc$dd";
+      }
+      if ($myconfig->{dateformat} =~ /^mm/) {
+        $date = "$mm$spc$dd$spc$yy";
+      }
+      if ($myconfig->{dateformat} =~ /^dd/) {
+        $date = "$dd$spc$mm$spc$yy";
+      }
+      $self->error($text) if $date eq '00/00/0';
+  }
+  $date;
+}
+
 
 sub add_date {
   my ($self, $myconfig, $date, $repeat, $unit) = @_;

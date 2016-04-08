@@ -1181,6 +1181,9 @@ sub search {
 
 sub generate_report {
 
+  $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
   # setup $form->{sort}
   unless ($form->{sort}) {
     if ($form->{description} && !($form->{partnumber})) {
@@ -2469,6 +2472,9 @@ sub so_requirements {
 
 
 sub so_requirements_report {
+
+  $form->isvaldate(\%myconfig, $form->{reqdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{reqdateto}, $locale->text('Invalid to date ...'));
 
   if ($form->{$form->{vc}}) {
     ($form->{$form->{vc}}, $form->{"$form->{vc}_id"}) = split(/--/, $form->{$form->{vc}});

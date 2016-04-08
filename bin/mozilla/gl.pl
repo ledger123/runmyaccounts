@@ -536,6 +536,9 @@ sub search {
 
 sub transactions {
 
+    $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
+    $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
+
     ( $form->{reportdescription}, $form->{reportid} ) = split /--/, $form->{report};
     $form->{sort} ||= "transdate";
     $form->{reportcode} = 'gl';

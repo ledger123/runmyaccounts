@@ -236,6 +236,9 @@ sub list {
 
 sub list_transactions {
 
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid to date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
+
   CA->all_transactions(\%myconfig, \%$form);
   
   $department = $form->escape($form->{department});

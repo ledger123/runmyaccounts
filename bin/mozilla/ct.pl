@@ -630,6 +630,11 @@ sub search_name {
 
 sub list_names {
 
+  $form->isvaldate(\%myconfig, $form->{startdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{startdateto}, $locale->text('Invalid to date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
   CT->search(\%myconfig, \%$form);
   
   $href = "$form->{script}?action=list_names";
@@ -1233,6 +1238,9 @@ sub list_subtotal {
 
 
 sub list_history {
+
+  $form->isvaldate(\%myconfig, $form->{startdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{startdateto}, $locale->text('Invalid to date ...'));
   
   CT->get_history(\%myconfig, \%$form);
   
