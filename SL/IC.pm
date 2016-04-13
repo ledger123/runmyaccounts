@@ -368,17 +368,16 @@ sub save {
 	      expense_accno_id = (SELECT id FROM chart
 				  WHERE accno = '$form->{expense_accno}'),
               obsolete = '$form->{obsolete}',
-	      image = '$form->{image}',
-	      drawing = '$form->{drawing}',
-	      microfiche = '$form->{microfiche}',
+	      image = |.$dbh->quote($form->{image}).qq|,
+	      drawing = |.$dbh->quote($form->{drawing}).qq|,
+	      microfiche = |.$dbh->quote($form->{microfiche}).qq|,
 	      partsgroup_id = $partsgroup_id,
-	      toolnumber = '$form->{toolnumber}',
-	      countryorigin = '$form->{countryorigin}',
-	      tariff_hscode = '$form->{tariff_hscode}',
-	      barcode = '$form->{barcode}'
+	      toolnumber = |.$dbh->quote($form->{toolnumber}).qq|,
+	      countryorigin = |.$dbh->quote($form->{countryorigin}).qq|,
+	      tariff_hscode = |.$dbh->quote($form->{tariff_hscode}).qq|,
+	      barcode = |.$dbh->quote($form->{barcode}).qq|
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
-
  
   # insert makemodel records
   if ($form->{item} =~ /(part|assembly)/) {

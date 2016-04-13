@@ -70,7 +70,7 @@ sub overpayment {
 	      netamount = 0,
 	      amount = 0,
 	      paid = $fxamount,
-	      curr = '$form->{currency}',
+	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      department_id = $department_id,
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno')
 	      WHERE id = $uid|;

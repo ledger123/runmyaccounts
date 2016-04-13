@@ -592,7 +592,7 @@ sub save_job {
 	      listprice = |.$form->parse_amount($myconfig, $form->{listprice}).qq|,
 	      sellprice = |.$form->parse_amount($myconfig, $form->{sellprice}).qq|,
 	      weight = |.$form->parse_amount($myconfig, $form->{weight}).qq|,
-	      bin = '$form->{bin}',
+	      bin = |.dbh->quote($form->{bin}).qq|,
 	      unit = |.$dbh->quote($form->{unit}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      income_accno_id = (SELECT id FROM chart

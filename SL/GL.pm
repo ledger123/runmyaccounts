@@ -174,7 +174,7 @@ sub post_transaction {
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      transdate = '$form->{transdate}',
 	      department_id = $department_id,
-	      curr = '$form->{currency}',
+	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      exchangerate = $exchangerate
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
@@ -399,11 +399,11 @@ sub transactions {
                 l.description AS translation
 		FROM chart c
 		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		WHERE c.accno = '$form->{accnofrom}'|;
+		WHERE c.accno = |.$dbh->quote($form->{accnofrom});
     ($form->{accnofrom_description}, $form->{accnofrom_translation}) = $dbh->selectrow_array($query);
       $form->{accnofrom_description} = $form->{accnofrom_translation} if $form->{accnofrom_translation};
  
-    $where = " AND c.accno >= '$form->{accnofrom}'";
+    $where = " AND c.accno >= ".$dbh->quote($form->{accnofrom});
     $glwhere .= $where;
     $arwhere .= $where;
     $apwhere .= $where;
@@ -415,11 +415,11 @@ sub transactions {
                 l.description AS translation
 		FROM chart c
 		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		WHERE c.accno = '$form->{accnoto}'|;
+		WHERE c.accno = |.$dbh->quote($form->{accnoto});
     ($form->{accnoto_description}, $form->{accnoto_translation}) = $dbh->selectrow_array($query);
       $form->{accnoto_description} = $form->{accnoto_translation} if $form->{accnoto_translation};
  
-    $where = " AND c.accno <= '$form->{accnoto}'";
+    $where = " AND c.accno <= ".$dbh->quote($form->{accnoto});
     $glwhere .= $where;
     $arwhere .= $where;
     $apwhere .= $where;
@@ -468,19 +468,19 @@ sub transactions {
     $apwhere .= " AND lower(a.intnotes) LIKE '$var'";
   }
   if ($form->{accno}) {
-    $glwhere .= " AND c.accno = '$form->{accno}'";
-    $arwhere .= " AND c.accno = '$form->{accno}'";
-    $apwhere .= " AND c.accno = '$form->{accno}'";
+    $glwhere .= " AND c.accno = ".$dbh->quote($form->{accno});
+    $arwhere .= " AND c.accno = ".$dbh->quote($form->{accno});
+    $apwhere .= " AND c.accno = ".$dbh->quote($form->{accno});
   }
   if ($form->{gifi_accno}) {
-    $glwhere .= " AND c.gifi_accno = '$form->{gifi_accno}'";
-    $arwhere .= " AND c.gifi_accno = '$form->{gifi_accno}'";
-    $apwhere .= " AND c.gifi_accno = '$form->{gifi_accno}'";
+    $glwhere .= " AND c.gifi_accno = ".$dbh->quote($form->{gifi_accno});
+    $arwhere .= " AND c.gifi_accno = ".$dbh->quote($form->{gifi_accno});
+    $apwhere .= " AND c.gifi_accno = ".$dbh->quote($form->{gifi_accno});
   }
   if ($form->{category} ne 'X') {
-    $glwhere .= " AND c.category = '$form->{category}'";
-    $arwhere .= " AND c.category = '$form->{category}'";
-    $apwhere .= " AND c.category = '$form->{category}'";
+    $glwhere .= " AND c.category = ".$dbh->quote($form->{category});
+    $arwhere .= " AND c.category = ".$dbh->quote($form->{category});
+    $apwhere .= " AND c.category = ".$dbh->quote($form->{category});
   }
 
   if ($form->{accno} || $form->{gifi_accno}) {
@@ -491,7 +491,7 @@ sub transactions {
                   l.description AS translation
 		  FROM chart c
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		  WHERE c.accno = '$form->{accno}'|;
+		  WHERE c.accno = |.$dbh->quote($form->{accno});
       ($form->{category}, $form->{link}, $form->{contra}, $form->{account_description}, $form->{account_translation}) = $dbh->selectrow_array($query);
       $form->{account_description} = $form->{account_translation} if $form->{account_translation};
     }
@@ -500,7 +500,7 @@ sub transactions {
       $query = qq|SELECT c.category, c.link, c.contra, g.description
 		  FROM chart c
 		  LEFT JOIN gifi g ON (g.accno = c.gifi_accno)
-		  WHERE c.gifi_accno = '$form->{gifi_accno}'|;
+		  WHERE c.gifi_accno = |.$dbh->quote($form->{gifi_accno});
       ($form->{category}, $form->{link}, $form->{contra}, $form->{gifi_account_description}) = $dbh->selectrow_array($query);
     }
  

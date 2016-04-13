@@ -1795,7 +1795,7 @@ sub update_exchangerate {
   return if (!$curr || $self->{currency} eq $self->{defaultcurrency});
 
   my $query = qq|SELECT curr FROM exchangerate
-                 WHERE curr = '$curr'
+                 WHERE curr = |.$dbh->quote($curr).qq|
 	         AND transdate = '$transdate'
 		 FOR UPDATE|;
   my $sth = $dbh->prepare($query);
@@ -1879,7 +1879,7 @@ sub check_exchangerate {
   
   $fld ||= 'buy';
   $query = qq|SELECT $fld, buy, sell FROM exchangerate
-	      WHERE curr = '$currency'
+	      WHERE curr = |.$dbh->quote($currency).qq|
 	      AND transdate = |.$self->dbquote($transdate, SQL_DATE);
   ($exchangerate, $self->{fxbuy}, $self->{fxsell}) = $dbh->selectrow_array($query);
   
@@ -1916,9 +1916,10 @@ sub add_shipto {
 		   .$dbh->quote($self->{shiptostate}).qq|, |
 		   .$dbh->quote($self->{shiptozipcode}).qq|, |
 		   .$dbh->quote($self->{shiptocountry}).qq|, |
-		   .$dbh->quote($self->{shiptocontact}).qq|,
-		   '$self->{shiptophone}', '$self->{shiptofax}',
-		   '$self->{shiptoemail}')|;
+		   .$dbh->quote($self->{shiptocontact}).qq|, |
+		   .$dbh->quote($self->{shiptophone}).qq|, |
+           .$dbh->quote($self->{shiptofax}).qq|, |
+		   .$dbh->quote($self->{shiptoemail}).qq|;
     $dbh->do($query) || $self->dberror($query);
   }
 
@@ -2320,7 +2321,7 @@ sub all_projects {
     $query = qq|SELECT pr.*, t.description AS translation
                 FROM project pr
 		LEFT JOIN translation t ON (t.trans_id = pr.id)
-		WHERE t.language_code = '$form->{language_code}'|;
+		WHERE t.language_code = |.$dbh->quote($form->{language_code});
   }
 
   # SQLI protection: transdate validation needs to be checked

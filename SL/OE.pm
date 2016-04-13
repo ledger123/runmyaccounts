@@ -139,7 +139,8 @@ sub transactions {
     $form->{closed} = 1;
   }
   if ($form->{ponumber} ne "") {
-    $query .= " AND lower(ponumber) LIKE '$form->{ponumber}'";
+    $ponumber = $form->like(lc $form->{ponumber});
+    $query .= " AND lower(ponumber) LIKE '$ponumber'";
   }
 
   if (!$form->{open} && !$form->{closed}) {
@@ -536,12 +537,12 @@ sub save {
 	      waybill = |.$dbh->quote($form->{waybill}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
-	      curr = '$form->{currency}',
+	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      closed = '$form->{closed}',
 	      quotation = '$quotation',
 	      department_id = $form->{department_id},
 	      employee_id = $form->{employee_id},
-	      language_code = '$form->{language_code}',
+	      language_code = |.$dbh->quote($form->{language_code}).qq|,
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
 	      terms = $form->{terms},
 	      warehouse_id = $form->{warehouse_id},

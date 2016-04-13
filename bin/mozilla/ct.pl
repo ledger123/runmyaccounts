@@ -2980,6 +2980,8 @@ sub item_selected {
     
 sub save_pricelist {
  
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
+
   CT->save(\%myconfig, \%$form);
 
   $callback = $form->{callback};
@@ -3126,6 +3128,8 @@ sub save {
 # $locale->text('Customer saved!')
 # $locale->text('Vendor saved!')
 
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
+
   $msg = ucfirst $form->{db};
   $msg .= " saved!";
 
@@ -3183,6 +3187,8 @@ sub delete {
 # $locale->text('Cannot delete customer!')
 # $locale->text('Vendor deleted!')
 # $locale->text('Cannot delete vendor!')
+
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
 
   CT->delete(\%myconfig, \%$form);
   

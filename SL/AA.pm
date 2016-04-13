@@ -308,7 +308,7 @@ sub post_transaction {
 	      fxamount = |.( ($form->{oldinvtotal}) ? $form->{oldinvtotal}*1 : 0 ).qq|,
 	      fxpaid = |.( ($form->{oldtotalpaid}) ? $form->{oldtotalpaid}*1 : 0 ).qq|,
 	      terms = $form->{terms},
-	      curr = '$form->{currency}',
+	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
 	      department_id = $form->{department_id},

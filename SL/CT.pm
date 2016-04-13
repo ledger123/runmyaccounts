@@ -416,11 +416,11 @@ sub save {
               $form->{db}number = |.$dbh->quote($form->{"$form->{db}number"}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,
 	      contact = |.$dbh->quote($form->{contact}).qq|,
-	      phone = '$form->{phone}',
-	      fax = '$form->{fax}',
-	      email = '$form->{email}',
-	      cc = '$form->{cc}',
-	      bcc = '$form->{bcc}',
+	      phone = |.$dbh->quote($form->{phone}).qq|,
+	      fax = |.$dbh->quote($form->{fax}).qq|,
+	      email = |.$dbh->quote($form->{email}).qq|,
+	      cc = |.$dbh->quote($form->{cc}).qq|,
+	      bcc = |.$dbh->quote($form->{bcc}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      terms = $form->{terms},
 	      discount = $form->{discount},
@@ -431,11 +431,11 @@ sub save {
 	      $gifi
 	      business_id = $rec{business_id},
 	      taxnumber = |.$dbh->quote($form->{taxnumber}).qq|,
-	      sic_code = '$form->{sic_code}',
+	      sic_code = |.$dbh->quote($form->{sic_code}).qq|,
 	      employee_id = $rec{employee_id},
-	      language_code = '$form->{language_code}',
+	      language_code = |.$dbh->quote($form->{language_code}).qq|,
 	      pricegroup_id = $rec{pricegroup_id},
-	      curr = '$form->{curr}',
+	      curr = |.$dbh->quote($form->{curr}).qq|,
 	      startdate = |.$form->dbquote($form->{startdate}, SQL_DATE).qq|,
 	      enddate = |.$form->dbquote($form->{enddate}, SQL_DATE).qq|,
 	      arap_accno_id = (SELECT id FROM chart WHERE accno = '$rec{arap_accno}'),
@@ -1173,7 +1173,7 @@ sub save_pricelist {
 	$query = qq|INSERT INTO parts$form->{db} (parts_id, vendor_id,
 		    partnumber, lastcost, leadtime, curr)
 		    VALUES ($form->{"id_$i"}, $form->{id},
-		    '$form->{"partnumber_$i"}', $form->{"lastcost_$i"},
+		    |.$dbh->quote($form->{"partnumber_$i"}).qq|, $form->{"lastcost_$i"},
 		    $form->{"leadtime_$i"}, '$form->{"curr_$i"}')|;
 
       }
