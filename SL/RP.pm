@@ -1448,6 +1448,7 @@ sub aging {
   }
   
   $form->{sort} =~ s/;//g;
+  $form->{sort} = $form->dbclean($form->{sort});
   my $sortorder = ($form->{sort}) ? "ct.$form->{sort}" : "ct.name";
   
   # select outstanding vendors or customers, depends on $ct
@@ -1663,6 +1664,7 @@ sub reminder {
   }
   
   $form->{sort} =~ s/;//g;
+  $form->{sort} = $form->dbclean($form->{sort});
   my $sortorder = ($form->{sort}) ? "vc.$form->{sort}" : "vc.name";
   
   # select outstanding customers

@@ -36,9 +36,7 @@ sub new {
   		$maxlength = length($value);
   	}
   }
-  
-  print STDERR "params: $countofparams, max_length: $maxlength\n";
-  
+    
   
   my $esc = 1;
   
@@ -477,11 +475,22 @@ sub sort_order {
   }
 
   $sortorder = join ',', @a;
-
+  $sortorder = $self->dbclean($sortorder);
   $sortorder;
 
 }
 
+sub dbescape {
+  my ($self, $value) = @_;
+  $value =~ s/'/''/g;
+  return $value;
+}
+
+sub dbclean {
+  my ($self, $value) = @_;
+  $value =~ s/'//g;
+  return $value;
+}
 
 sub format_amount {
   my ($self, $myconfig, $amount, $places, $dash) = @_;

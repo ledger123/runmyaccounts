@@ -907,6 +907,7 @@ sub get_history {
   my $where = "1 = 1";
   $form->{sort} = "partnumber" unless $form->{sort};
   $form->{sort} =~ s/;//g;
+  $form->{sort} = $form->dbclean($form->{sort});
   my $sortorder = $form->{sort};
   my %ordinal = ();
   my $var;
