@@ -524,6 +524,9 @@ sub e_mail { &print }
 
 sub list_spool {
 
+  $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
   BP->get_spoolfiles(\%myconfig, \%$form);
 
   @a = qw(direction oldsort path login type printcustomer printvendor batch allbox);

@@ -924,6 +924,9 @@ sub ship_all {
       
 sub update {
 
+  $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
+  $form->isvaldate(\%myconfig, $form->{reqdate}, $locale->text('Invalid required date ...'));
+
   if ($form->{type} eq 'generate_purchase_order') {
     
     for (1 .. $form->{rowcount}) {
@@ -2028,6 +2031,8 @@ sub save {
   }
   
   $form->isblank("transdate", $msg);
+  $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
+  $form->isvaldate(\%myconfig, $form->{reqdate}, $locale->text('Invalid required date ...'));
 
   $msg = ucfirst $form->{vc};
   $form->isblank($form->{vc}, $locale->text($msg . " missing!"));

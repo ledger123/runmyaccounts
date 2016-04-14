@@ -1100,7 +1100,7 @@ sub get_name {
 
   my $arap = "ar";
   my $buysell = "buy";
-  $form->{vc} = 'customer' if $form->{vc} eq 'vendor';
+  $form->{vc} = 'customer' if $form->{vc} ne 'vendor';
 
   if ($form->{vc} eq 'vendor') {
     $arap = "ap";

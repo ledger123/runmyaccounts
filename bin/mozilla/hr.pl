@@ -696,6 +696,9 @@ sub save { &{ "save_$form->{db}" } };
 sub save_employee {
 
   $form->isblank("name", $locale->text("Name missing!"));
+  $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
+  $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
+
   HR->save_employee(\%myconfig, \%$form);
 
   # if it is a login change memberfile and .conf
