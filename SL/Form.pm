@@ -1564,6 +1564,15 @@ sub datetonum {
 sub isvaldate {
   my ($self, $myconfig, $date, $text) = @_;
 
+  $date =~ s/[ \-\.T:\/]//g;
+  $date *= 1;
+  $self->error($text) if !$date;
+}
+
+
+sub isvaldateold {
+  my ($self, $myconfig, $date, $text) = @_;
+
   if ($date){
       my $spc = $myconfig->{dateformat};
       $spc =~ s/\w//g;
