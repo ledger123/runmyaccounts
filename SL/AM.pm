@@ -535,7 +535,7 @@ sub save_department {
     $query = qq|INSERT INTO department 
                 (description, role)
                 VALUES (|
-		.$dbh->quote($form->{description}).qq|, |.$dbh->quote($form->{role}.qq|)|;
+		.$dbh->quote($form->{description}).qq|, |.$dbh->quote($form->{role}).qq|)|;
   }
   $dbh->do($query) || $form->dberror($query);
   
@@ -1280,11 +1280,11 @@ sub save_preferences {
   my $dbh = $form->dbconnect($myconfig);
   
   # update name
-  my $query = qq|UPDATE employee
-                 SET name = |.$dbh->quote($form->{name}).qq|,
-	         role = |.$dbh->quote($form->{role})|.qq|,
-		 workphone = |.$dbh->quote($form->{tel})|.qq|
-	         WHERE login = $form->{login}'|;
+  my $query = qq|UPDATE employee SET 
+                    name = |.$dbh->quote($form->{name}).qq|,
+	                role = |.$dbh->quote($form->{role}).qq|,
+		            workphone = |.$dbh->quote($form->{tel}).qq|
+	            WHERE login = '$form->{login}'|;
   $dbh->do($query) || $form->dberror($query);
 
   my %defaults = $form->get_defaults($dbh, \@{['company']});
