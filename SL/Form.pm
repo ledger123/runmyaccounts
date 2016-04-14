@@ -1555,9 +1555,11 @@ sub datetonum {
 sub isvaldate {
   my ($self, $myconfig, $date, $text) = @_;
 
-  $date =~ s/[ \-\.T:\/]//g;
-  $date *= 1;
-  $self->error($text) if !$date;
+  if ($date){
+    $date =~ s/[ \-\.T:\/]//g;
+    $date *= 1;
+    $self->error($text) if !$date;
+  }
 }
 
 
@@ -1781,8 +1783,6 @@ sub dbquote {
 sub update_balance {
   my ($self, $dbh, $table, $field, $where, $value) = @_;
 
-  # SQLI protection. $table, $field, $where need to be validated against allowed range or may be replaced with inline UPDATE
- 
   # if we have a value, go do it
   if ($value) {
     # retrieve balance from table

@@ -3270,6 +3270,8 @@ sub save {
 # $locale->text('Inventory quantity must be zero before you can set this part obsolete!')
 # $locale->text('Inventory quantity must be zero before you can set this assembly obsolete!')
 
+  $form->isvaldate(\%myconfig, $form->{priceupdate}, $locale->text('Invalid date ...'));
+
   $msg = "Inventory quantity must be zero before you can set this $form->{item} obsolete!";
 
   if ($form->{obsolete}) {

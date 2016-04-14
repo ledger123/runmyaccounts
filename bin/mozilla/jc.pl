@@ -876,6 +876,8 @@ sub update {
 
   ($null, $form->{project_id}) = split /--/, $form->{projectnumber};
 
+  $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
+
   for (qw(transdate project_id)) {
     if ($form->{"old$_"} ne $form->{$_}) {
       JC->jcitems_links(\%myconfig, \%$form);
@@ -1018,6 +1020,7 @@ sub update {
 sub save {
 
   $form->isblank("transdate", $locale->text('Date missing!'));
+  $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
 
   if ($form->{project} eq 'project') {
     $form->isblank("projectnumber", $locale->text('Project Number missing!'));
@@ -1196,6 +1199,9 @@ sub yes_delete_timecard {
 
 
 sub list_cards {
+
+  $form->isvaldate(\%myconfig, $form->{startdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{startdateto}, $locale->text('Invalid to date ...'));
   
   if (! exists $form->{title}) {
     $form->{title} = $locale->text('Time and Stores Cards');

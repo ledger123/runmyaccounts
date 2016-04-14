@@ -2931,6 +2931,8 @@ sub generate_yearend {
 
   $form->isblank("todate", $locale->text('Yearend date missing!'));
 
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid date ...'));
+
   RP->yearend_statement(\%myconfig, \%$form);
   
   $form->{transdate} = $form->{todate};

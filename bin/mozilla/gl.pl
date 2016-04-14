@@ -539,6 +539,9 @@ sub transactions {
     $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
     $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
 
+    $form->{amountfrom} *= 1;
+    $form->{amountto} *= 1;
+
     ( $form->{reportdescription}, $form->{reportid} ) = split /--/, $form->{report};
     $form->{sort} ||= "transdate";
     $form->{reportcode} = 'gl';
@@ -728,6 +731,7 @@ sub transactions {
         }
         $option .= "$form->{accnoto} $form->{accnoto_description}";
     }
+
     if ( $form->{amountfrom} ) {
         $href     .= "&amountfrom=$form->{amountfrom}";
         $callback .= "&amountfrom=$form->{amountfrom}";
@@ -1611,6 +1615,8 @@ sub gl_subtotal_to_csv {
 
 sub update {
 
+    $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
+
     if ( $form->{currency} ne $form->{defaultcurrency} ) {
         $form->{exchangerate} = $form->parse_amount( \%myconfig, $form->{exchangerate} );
     }
@@ -2113,6 +2119,8 @@ sub yes {
 sub post {
 
     $form->isblank( "transdate", $locale->text('Transaction Date missing!') );
+
+    $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
 
     $transdate = $form->datetonum( \%myconfig, $form->{transdate} );
 

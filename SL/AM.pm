@@ -2344,7 +2344,7 @@ sub save_currency {
     $rn++;
     
     $query = qq|INSERT INTO curr (rn, curr)
-                VALUES ($rn, '$form->{curr}')|;
+                VALUES ($rn, |.$dbh->quote($form->{curr}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
   }
 
@@ -2395,8 +2395,14 @@ sub move {
   my $dbh = $form->dbconnect_noauto($myconfig);
   
   my $id;
+
+  my @dballowed = qw(paymentmethod curr);
+  my @fldallowed = qw(id curr);
+
+  # This error will appear only to someone who is trying to break code.
+  $form->error('Invalid table name...') if !grep( /^$form->{db}$/, @dballowed);
+  $form->error('Invalid column name...') if !grep( /^$form->{fld}$/, @fldallowed);
   
-  #TODO: SQLI
   my $query = qq|SELECT rn FROM $form->{db}
                  WHERE $form->{fld} = |.$dbh->quote($form->{id});
   my ($rn) = $dbh->selectrow_array($query);

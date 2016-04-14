@@ -3129,6 +3129,8 @@ sub save {
 # $locale->text('Vendor saved!')
 
   $form->{db} = 'vendor' if $form->{db} ne 'customer';
+  $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
+  $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
 
   $msg = ucfirst $form->{db};
   $msg .= " saved!";
