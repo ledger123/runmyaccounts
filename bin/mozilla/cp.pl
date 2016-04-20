@@ -847,6 +847,8 @@ sub deselect_all {
 sub update {
   my ($new_name_selected) = @_;
 
+  $form->isvaldate(\%myconfig, $form->{datepaid}, $locale->text('Invalid date ...'));
+
   &{"update_$form->{payment}"}($new_name_selected);
   
 }

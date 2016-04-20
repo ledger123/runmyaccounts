@@ -1088,6 +1088,9 @@ sub project_footer {
 
 sub save {
   
+  $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid date ...'));
+  $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid date ...'));
+
   if ($form->{translation}) {
     PE->save_translation(\%myconfig, \%$form);
     $form->redirect($locale->text('Translations saved!'));
@@ -1938,6 +1941,9 @@ sub translation_footer {
 
 
 sub update {
+
+  $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid date ...'));
+  $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid date ...'));
 
   if ($form->{translation}) {
     @flds = qw(language translation);

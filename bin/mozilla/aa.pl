@@ -1425,6 +1425,8 @@ sub post {
     $form->isblank( $form->{vc},  $label );
     $form->isblank( "department", $locale->text('Department missing!') ) if $form->{selectdepartment};
 
+    $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid transdate...'));
+
     $transdate = $form->datetonum( \%myconfig, $form->{transdate} );
 
     $form->error( $locale->text('Cannot post transaction for a closed period!') ) if ( $transdate <= $form->{closedto} );
@@ -1910,6 +1912,10 @@ sub search {
 }
 
 sub transactions {
+
+    $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+    $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
     if ( $form->{l_csv} eq 'Y' ) {
         &transactions_to_csv;
         exit;

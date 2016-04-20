@@ -235,6 +235,8 @@ sub save {
   
   if ($form->{id}) {
 
+	$form->{id} *= 1;
+
     # get old price
     $query = qq|SELECT id, listprice, sellprice, lastcost, weight, project_id
                 FROM parts
@@ -288,8 +290,8 @@ sub save {
 	    for (qw(bom adj)) { $form->{"${_}_$i"} *= 1 }
 
 	    $query = qq|UPDATE assembly SET
-	                bom = '$form->{"bom_$i"}',
-			adj = '$form->{"adj_$i"}'
+	                bom = |.$dbh->quote($form->{"bom_$i"}).qq|,
+			adj = |.$dbh->quote($form->{"adj_$i"}).qq|
 			WHERE aid = $form->{id}
 			AND parts_id = $form->{"id_$i"}|;
 	    $dbh->do($query) || $form->dberror($query);
@@ -324,11 +326,11 @@ sub save {
     $uid .= $$;
 
     $query = qq|INSERT INTO parts (partnumber)
-                VALUES ('$uid')|;
+                VALUES (|.$dbh->quote($uid).qq|)|;
     $dbh->do($query) || $form->dberror($query);
 
     $query = qq|SELECT id FROM parts
-                WHERE partnumber = '$uid'|;
+                WHERE partnumber = |.$dbh->quote($uid).qq||;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
     ($form->{id}) = $sth->fetchrow_array;
@@ -349,36 +351,35 @@ sub save {
   $query = qq|UPDATE parts SET
 	      partnumber = |.$dbh->quote($form->{partnumber}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
-	      makemodel = '$form->{makemodel}',
-	      alternate = '$form->{alternate}',
-	      assembly = '$form->{assembly}',
+	      makemodel = |.$dbh->quote($form->{makemodel}).qq|,
+	      alternate = |.$dbh->quote($form->{alternate}).qq|,
+	      assembly = |.$dbh->quote($form->{assembly}).qq|,
 	      listprice = $form->{listprice},
 	      sellprice = $form->{sellprice},
 	      lastcost = $form->{lastcost},
 	      weight = $form->{weight},
-	      priceupdate = |.$form->dbquote($form->{priceupdate}, SQL_DATE).qq|,
+	      priceupdate = |.$form->dbquote($form->dbclean($form->{priceupdate}), SQL_DATE).qq|,
 	      unit = |.$dbh->quote($form->{unit}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      rop = $form->{rop},
 	      bin = |.$dbh->quote($form->{bin}).qq|,
 	      inventory_accno_id = (SELECT id FROM chart
-				    WHERE accno = '$form->{inventory_accno}'),
+				    WHERE accno = |.$dbh->quote($form->{inventory_accno}).qq|),
 	      income_accno_id = (SELECT id FROM chart
-				 WHERE accno = '$form->{income_accno}'),
+				 WHERE accno = |.$dbh->quote($form->{income_accno}).qq|),
 	      expense_accno_id = (SELECT id FROM chart
-				  WHERE accno = '$form->{expense_accno}'),
-              obsolete = '$form->{obsolete}',
-	      image = '$form->{image}',
-	      drawing = '$form->{drawing}',
-	      microfiche = '$form->{microfiche}',
+				  WHERE accno = |.$dbh->quote($form->{expense_accno}).qq|),
+              obsolete = |.$dbh->quote($form->{obsolete}).qq|,
+	      image = |.$dbh->quote($form->{image}).qq|,
+	      drawing = |.$dbh->quote($form->{drawing}).qq|,
+	      microfiche = |.$dbh->quote($form->{microfiche}).qq|,
 	      partsgroup_id = $partsgroup_id,
-	      toolnumber = '$form->{toolnumber}',
-	      countryorigin = '$form->{countryorigin}',
-	      tariff_hscode = '$form->{tariff_hscode}',
-	      barcode = '$form->{barcode}'
+	      toolnumber = |.$dbh->quote($form->{toolnumber}).qq|,
+	      countryorigin = |.$dbh->quote($form->{countryorigin}).qq|,
+	      tariff_hscode = |.$dbh->quote($form->{tariff_hscode}).qq|,
+	      barcode = |.$dbh->quote($form->{barcode}).qq|
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
-
  
   # insert makemodel records
   if ($form->{item} =~ /(part|assembly)/) {
@@ -401,7 +402,7 @@ sub save {
                   VALUES ($form->{id}, 
 		          (SELECT id
 			   FROM chart
-			   WHERE accno = '$_'))|;
+			   WHERE accno = |.$dbh->quote($_).qq|))|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
@@ -427,8 +428,8 @@ sub save {
 	  for (qw(bom adj)) { $form->{"${_}_$i"} *= 1 }
 	  $query = qq|INSERT INTO assembly (aid, parts_id, qty, bom, adj)
 		      VALUES ($form->{id}, $form->{"id_$i"},
-		      $form->{"qty_$i"}, '$form->{"bom_$i"}',
-		      '$form->{"adj_$i"}')|;
+		      $form->{"qty_$i"}, |.$dbh->quote($form->{"bom_$i"}).qq|,
+		      |.$dbh->quote($form->{"adj_$i"}).qq|)|;
 	  $dbh->do($query) || $form->dberror($query);
 	}
       }
@@ -456,7 +457,7 @@ sub save {
 		    VALUES ($vendor_id, $form->{id},|
 		    .$dbh->quote($form->{"partnumber_$i"}).qq|,
 		    $form->{"lastcost_$i"},
-		    $form->{"leadtime_$i"}, '$form->{"vendorcurr_$i"}')|;
+		    $form->{"leadtime_$i"}, |.$dbh->quote($form->{"vendorcurr_$i"}).qq|)|;
 	$dbh->do($query) || $form->dberror($query);
       }
     }
@@ -481,9 +482,9 @@ sub save {
 		  validfrom, validto)
 		  VALUES ($form->{id}, $customer_id,
 		  $pricegroup_id, $form->{"pricebreak_$i"},
-		  $form->{"customerprice_$i"}, '$form->{"customercurr_$i"}',|
-		  .$form->dbquote($form->{"validfrom_$i"}, SQL_DATE).qq|, |
-		  .$form->dbquote($form->{"validto_$i"}, SQL_DATE).qq|)|;
+		  $form->{"customerprice_$i"}, |.$dbh->quote($form->{"customercurr_$i"}).qq|,|
+		  .$form->dbquote($form->dbclean($form->{"validfrom_$i"}), SQL_DATE).qq|, |
+		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE).qq|)|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
@@ -503,7 +504,7 @@ sub update_assembly {
 
   my $formlistprice = $form->{listprice};
   my $formsellprice = $form->{sellprice};
-  
+    
   if (!$adj) {
     $formlistprice = $listprice;
     $formsellprice = $sellprice;
@@ -677,11 +678,11 @@ sub restock_assemblies {
   $uid .= $$;
   if (! $form->{id}) {
     $query = qq|INSERT INTO build (reference, employee_id)
-                VALUES ('$uid', $form->{employee_id})|;
+                VALUES (|.$dbh->quote($uid).qq|, $form->{employee_id})|;
     $dbh->do($query) || $form->dberror($query);
 
     $query = qq|SELECT id FROM build
-                WHERE reference = '$uid'|;
+                WHERE reference = |.$dbh->quote($uid).qq||;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
 
@@ -690,7 +691,7 @@ sub restock_assemblies {
   }
   $query = qq|UPDATE build SET
 		reference = |.$dbh->quote($form->{reference}).qq|,
-		transdate = |.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+		transdate = |.$form->dbquote($form->dbclean($form->{transdate}), SQL_DATE).qq|,
 		department_id = $form->{department_id},
 		warehouse_id = $form->{warehouse_id}
 	      WHERE id = $form->{id}|;
@@ -746,7 +747,7 @@ sub adjust_inventory {
 			employee_id, department_id, linetype)
 		VALUES ($form->{warehouse_id}, $ref->{id},
 			$form->{id}, $qty * $ref->{qty} * -1, 
-			|.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+			|.$form->dbquote($form->dbclean($form->{transdate}), SQL_DATE).qq|,
 			$form->{employee_id}, $form->{department_id}, '4'
 		)|;
     $dbh->do($query) || $form->dberror($query);
@@ -769,7 +770,7 @@ sub adjust_inventory {
 			employee_id, department_id, linetype)
 		VALUES ($form->{warehouse_id}, $id,
 			$form->{id}, $qty,
-			|.$form->dbquote($form->{transdate}, SQL_DATE).qq|,
+			|.$form->dbquote($form->dbclean($form->{transdate}), SQL_DATE).qq|,
 			$form->{employee_id}, $form->{department_id}, '5'
 		)|;
   $dbh->do($query) || $form->dberror($query);
@@ -1060,7 +1061,7 @@ sub all_parts {
     
     $flds =~ s/p.onhand/a.qty AS onhand/;
     
-    $query = qq|SELECT $flds
+    $query = qq|SELECT |.$form->dbclean($flds).qq|
 		FROM assembly a
 		JOIN parts p ON (a.parts_id = p.id)
 		JOIN parts p1 ON (a.aid = p1.id)
@@ -1113,8 +1114,8 @@ sub all_parts {
       my $transdate = ($form->{method} eq 'accrual') ? "transdate" : "datepaid";
       
       $invwhere .= " AND i.assemblyitem = '0'";
-      $invwhere .= " AND a.$transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
-      $invwhere .= " AND a.$transdate <= '$form->{transdateto}'" if $form->{transdateto};
+      $invwhere .= " AND a.$transdate >= ".$dbh->quote($form->{transdatefrom})."" if $form->{transdatefrom};
+      $invwhere .= " AND a.$transdate <= ".$dbh->quote($form->{transdateto})."" if $form->{transdateto};
 
       if ($form->{description} ne "") {
 	$var = $form->like(lc $form->{description});
@@ -1200,8 +1201,8 @@ sub all_parts {
     if ($form->{onorder} || $form->{ordered}) {
       my $ordwhere = "$where
 		     AND a.quotation = '0'";
-      $ordwhere .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
-      $ordwhere .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
+      $ordwhere .= " AND a.transdate >= ".$dbh->quote($form->{transdatefrom})."" if $form->{transdatefrom};
+      $ordwhere .= " AND a.transdate <= ".$dbh->quote($form->{transdateto})."" if $form->{transdateto};
       $ordwhere .= " AND a.warehouse_id = $form->{warehouse_id}" if $form->{warehouse};
 
       if ($form->{description} ne "") {
@@ -1297,8 +1298,8 @@ sub all_parts {
     if ($form->{rfq} || $form->{quoted}) {
       my $quowhere = "$where
 		     AND a.quotation = '1'";
-      $quowhere .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
-      $quowhere .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
+      $quowhere .= " AND a.transdate >= ".$dbh->quote($form->{transdatefrom})."" if $form->{transdatefrom};
+      $quowhere .= " AND a.transdate <= ".$dbh->quote($form->{transdateto})."" if $form->{transdateto};
 
       if ($form->{description} ne "") {
 	$var = $form->like(lc $form->{description});
@@ -1566,7 +1567,7 @@ sub requirements {
   
   if ($form->{partsgroup} ne "") {
     ($null, $var) = split /--/, $form->{partsgroup};
-    $where .= qq| AND p.partsgroup_id = $var|;
+    $where .= qq| AND p.partsgroup_id = |.$form->dbclean($var).qq||;
   }
 
   # connect to database
@@ -1576,8 +1577,8 @@ sub requirements {
   if ($form->{year}) {
     ($transdatefrom, $transdateto) = $form->from_to($form->{year}, '01', 12);
     
-    $dwhere = qq| AND a.transdate >= '$transdatefrom'
- 		  AND a.transdate <= '$transdateto'|;
+    $dwhere = qq| AND a.transdate >= |.$dbh->quote($transdatefrom).qq|
+ 		  AND a.transdate <= |.$dbh->quote($transdateto).qq||;
   }
     
   $query = qq|SELECT p.id, p.partnumber, p.description,
@@ -1667,6 +1668,8 @@ sub requirements {
 
 sub requirements_assembly {
   my ($dbh, $form, $parts, $id, $qty, $where) = @_;
+
+  $qty *= 1;
 
   # assemblies
   my $query = qq|SELECT p.id, p.partnumber, p.description,
@@ -1916,8 +1919,8 @@ sub so_requirements {
   }
 
   ($form->{reqdatefrom}, $form->{reqdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
-  $where .= " AND o.reqdate >= '$form->{reqdatefrom}'" if $form->{reqdatefrom};
-  $where .= " AND o.reqdate <= '$form->{reqdateto}'" if $form->{reqdateto};
+  $where .= " AND o.reqdate >= ".$dbh->quote($form->{reqdatefrom})."" if $form->{reqdatefrom};
+  $where .= " AND o.reqdate <= ".$dbh->quote($form->{reqdateto})."" if $form->{reqdateto};
   
   my @a = qw(partnumber ordnumber reqdate);
   my %ordinal = ( 'partnumber' => 1,

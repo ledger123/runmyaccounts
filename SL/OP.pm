@@ -38,13 +38,13 @@ sub overpayment {
   $uid .= $$;
 
   # add AR/AP header transaction with a payment
-  $query = qq|INSERT INTO $form->{arap} (invnumber, employee_id, approved)
-	      VALUES ('$uid', (SELECT id FROM employee
-			     WHERE login = '$form->{login}'), '$approved')|;
+  $query = qq|INSERT INTO |.$form->dbclean($form->{arap}).qq| (invnumber, employee_id, approved)
+	      VALUES (|.$dbh->quote($uid).qq|, (SELECT id FROM employee
+			     WHERE login = |.$dbh->quote($form->{login}).qq|), '$approved')|;
   $dbh->do($query) || $form->dberror($query);
 
-  $query = qq|SELECT id FROM $form->{arap}
-	    WHERE invnumber = '$uid'|;
+  $query = qq|SELECT id FROM |.$form->dbclean($form->{arap}).qq|
+	    WHERE invnumber = |.$dbh->quote($uid).qq||;
   ($uid) = $dbh->selectrow_array($query);
   
   my $voucherid = 'NULL';
@@ -61,7 +61,7 @@ sub overpayment {
   my $invnumber = $form->{invnumber};
   $invnumber = $form->update_defaults($myconfig, ($form->{arap} eq 'ar') ? "sinumber" : "vinumber", $dbh) unless $invnumber;
 
-  $query = qq|UPDATE $form->{arap} set
+  $query = qq|UPDATE |.$form->dbclean($form->{arap}).qq| set
 	      invnumber = |.$dbh->quote($invnumber).qq|,
 	      $form->{vc}_id = $form->{"$form->{vc}_id"},
 	      transdate = '$form->{datepaid}',
@@ -70,10 +70,10 @@ sub overpayment {
 	      netamount = 0,
 	      amount = 0,
 	      paid = $fxamount,
-	      curr = '$form->{currency}',
+	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      department_id = $department_id,
-	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno')
-	      WHERE id = $uid|;
+	      bank_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($paymentaccno).qq|)
+	      WHERE id = |.$form->dbclean($uid).qq||;
   $dbh->do($query) || $form->dberror($query);
 
   # add AR/AP
@@ -81,16 +81,16 @@ sub overpayment {
   
   $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount,
               approved, vr_id)
-	      VALUES ($uid, (SELECT id FROM chart
-			     WHERE accno = '$accno'),
+	      VALUES (|.$form->dbclean($uid).qq|, (SELECT id FROM chart
+			     WHERE accno = |.$dbh->quote($accno).qq|),
 	      '$form->{datepaid}', $fxamount * $ml, '$approved', $voucherid)|;
   $dbh->do($query) || $form->dberror($query);
 
   # add payment
   $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
 	      amount, source, memo, approved, vr_id)
-	      VALUES ($uid, (SELECT id FROM chart
-			     WHERE accno = '$paymentaccno'),
+	      VALUES (|.$form->dbclean($uid).qq|, (SELECT id FROM chart
+			     WHERE accno = |.$dbh->quote($paymentaccno).qq|),
 		'$form->{datepaid}', $amount * $ml * -1, |
 		.$dbh->quote($form->{source}).qq|, |
 		.$dbh->quote($form->{memo}).qq|, '$approved', $voucherid)|;
@@ -100,8 +100,8 @@ sub overpayment {
   if ($fxamount != $amount) {
     $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
 		amount, cleared, fx_transaction, source, approved, vr_id)
-		VALUES ($uid, (SELECT id FROM chart
-			       WHERE accno = '$paymentaccno'),
+		VALUES (|.$form->dbclean($uid).qq|, (SELECT id FROM chart
+			       WHERE accno = |.$dbh->quote($paymentaccno).qq|),
 	        '$form->{datepaid}', ($fxamount - $amount) * $ml * -1,
 	        '$form->{datepaid}', '1', |
 		.$dbh->quote($form->{source}).qq|, '$approved', $voucherid)|;

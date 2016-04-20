@@ -924,6 +924,9 @@ sub ship_all {
       
 sub update {
 
+  $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
+  $form->isvaldate(\%myconfig, $form->{reqdate}, $locale->text('Invalid required date ...'));
+
   if ($form->{type} eq 'generate_purchase_order') {
     
     for (1 .. $form->{rowcount}) {
@@ -978,6 +981,7 @@ sub update {
   } else {
 
     $retrieve_item = "";
+    $form->{type} = $form->dbclean($form->{type});
     if ($form->{type} eq 'purchase_order' || $form->{type} eq 'request_quotation') {
       $retrieve_item = "IR::retrieve_item";
     }
@@ -1472,7 +1476,10 @@ sub search {
 
 
 sub transactions {
-  
+
+  $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
   # split vendor / customer
   ($form->{$form->{vc}}, $form->{"$form->{vc}_id"}) = split(/--/, $form->{$form->{vc}});
 
@@ -2025,6 +2032,8 @@ sub save {
   }
   
   $form->isblank("transdate", $msg);
+  $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
+  $form->isvaldate(\%myconfig, $form->{reqdate}, $locale->text('Invalid required date ...'));
 
   $msg = ucfirst $form->{vc};
   $form->isblank($form->{vc}, $locale->text($msg . " missing!"));
@@ -2434,7 +2443,8 @@ sub ship_receive {
 
 
 sub display_ship_receive {
-  
+    $form->error;
+
   $form->{rowcount}++;
 #$form->error( join '', map { "$_:\t$form->{$_}\n" } sort keys %{$form} );
 

@@ -159,6 +159,9 @@ sub search_employee {
 
 sub list_employees {
 
+  $form->isvaldate(\%myconfig, $form->{startdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{startdateto}, $locale->text('Invalid to date ...'));
+
   HR->employees(\%myconfig, \%$form);
   
   $href = "$form->{script}?action=list_employees&direction=$form->{direction}&oldsort=$form->{oldsort}&db=$form->{db}&path=$form->{path}&login=$form->{login}&status=$form->{status}";
@@ -693,6 +696,9 @@ sub save { &{ "save_$form->{db}" } };
 sub save_employee {
 
   $form->isblank("name", $locale->text("Name missing!"));
+  $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
+  $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
+
   HR->save_employee(\%myconfig, \%$form);
 
   # if it is a login change memberfile and .conf

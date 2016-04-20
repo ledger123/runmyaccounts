@@ -93,10 +93,10 @@ sub all_transactions {
 
   # get chart_id
   my $query = qq|SELECT id FROM chart
-                 WHERE accno = '$form->{accno}'|;
+                 WHERE accno = |.$dbh->quote($form->{accno}).qq||;
   if ($form->{accounttype} eq 'gifi') {
     $query = qq|SELECT id FROM chart
-                WHERE gifi_accno = '$form->{gifi_accno}'|;
+                WHERE gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq||;
   }
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -186,11 +186,11 @@ sub all_transactions {
                 l.description AS translation
                 FROM chart c
 		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		WHERE c.accno = '$form->{accno}'|;
+		WHERE c.accno = |.$dbh->quote($form->{accno}).qq||;
     if ($form->{accounttype} eq 'gifi') {
       $query = qq|SELECT description, category, link, contra
                 FROM chart
-		WHERE gifi_accno = '$form->{gifi_accno}'
+		WHERE gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|
 		AND charttype = 'A'|;
     }
 
@@ -214,10 +214,10 @@ sub all_transactions {
 			FROM acc_trans ac
 			JOIN $_ a ON (a.id = ac.trans_id)
 			JOIN chart c ON (ac.chart_id = c.id)
-			WHERE c.gifi_accno = '$form->{gifi_accno}'
+			WHERE c.gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|
 			AND ac.approved = '1'
 			AND ac.transdate < '$form->{fromdate}'
-			AND a.department_id = $department_id
+			AND a.department_id = |.$form->dbclean($department_id).qq|
 			$project
             $fx_transaction
 			$subquery
@@ -231,10 +231,10 @@ sub all_transactions {
 			FROM acc_trans ac
 			JOIN $_ a ON (a.id = ac.trans_id)
 			JOIN chart c ON (ac.chart_id = c.id)
-			WHERE c.accno = '$form->{accno}'
+			WHERE c.accno = |.$dbh->quote($form->{accno}).qq|
 			AND ac.approved = '1'
 			AND ac.transdate < '$form->{fromdate}'
-			AND a.department_id = $department_id
+			AND a.department_id = |.$form->dbclean($department_id).qq|
 			$project
             $fx_transaction
 			$subquery
@@ -249,7 +249,7 @@ sub all_transactions {
 	  $query = qq|SELECT SUM(ac.amount)
 		    FROM acc_trans ac
 		    JOIN chart c ON (ac.chart_id = c.id)
-		    WHERE c.gifi_accno = '$form->{gifi_accno}'
+		    WHERE c.gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|
 		    AND ac.approved = '1'
 		    AND ac.transdate < '$form->{fromdate}'
 		    $project
@@ -260,7 +260,7 @@ sub all_transactions {
 	  $query = qq|SELECT SUM(ac.amount)
 		      FROM acc_trans ac
 		      JOIN chart c ON (ac.chart_id = c.id)
-		      WHERE c.accno = '$form->{accno}'
+		      WHERE c.accno = |.$dbh->quote($form->{accno}).qq|
 		      AND ac.approved = '1'
 		      AND ac.transdate < '$form->{fromdate}'
 		      $project

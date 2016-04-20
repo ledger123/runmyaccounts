@@ -454,13 +454,16 @@ sub gl_list {
    my $callback = qq|$form->{script}?action=gl_list|;
    for (qw(path login)) { $callback .= "&$_=$form->{$_}" }
 
+   $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
+   $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
+
    ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
    ($fromaccount, $null) = split(/--/, $form->{fromaccount});
    ($toaccount, $null) = split(/--/, $form->{toaccount});
 
    my $glwhere = qq| (1 = 1)|;
-   $glwhere .= qq| AND c.accno >= '$fromaccount'| if $form->{fromaccount};
-   $glwhere .= qq| AND c.accno <= '$toaccount'| if $form->{toaccount};
+   $glwhere .= qq| AND c.accno >= '|.$form->dbclean($fromaccount).qq|'| if $form->{fromaccount};
+   $glwhere .= qq| AND c.accno <= '|.$form->dbclean($toaccount).qq|'| if $form->{toaccount};
    $glwhere .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
    $glwhere .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};
    $glwhere .= qq| AND ac.amount <> 0|;
@@ -950,6 +953,8 @@ sub audit_search {
 #-------------------------------
 sub audit_list {
   # callback to report list
+
+   my $dbh = $form->dbconnect(\%myconfig);
    my $callback = qq|$form->{script}?action=audit_list|;
    for (qw(path login sessionid)) { $callback .= "&$_=$form->{$_}" }
 
@@ -959,13 +964,18 @@ sub audit_list {
    $reference = $form->like(lc $form->{reference});
    $formname = lc $form->{formname};
    $formaction = lc $form->{formaction};
-   
+
+   $form->isvaldate(\%myconfig, $form->{fromtransdate}, $locale->text('Invalid from date ...'));
+   $form->isvaldate(\%myconfig, $form->{totransdate}, $locale->text('Invalid to date ...'));
+
+   for (qw(trans_id employee_id)) { $form->{$_} *= 1 }
+
    my $where = qq| (1 = 1)|;
    $where .= qq| AND (a.trans_id = $form->{trans_id})| if $form->{trans_id};
-   $where .= qq| AND (a.tablename = '$tablename')| if $form->{tablename};
-   $where .= qq| AND (a.LOWER(reference) LIKE '$reference')| if $form->{reference};
-   $where .= qq| AND (a.formname = '$formname')| if $form->{formname};
-   $where .= qq| AND (a.action = '$formaction')| if $form->{formaction};
+   $where .= qq| AND (a.tablename = |.$dbh->quote($tablename).qq|)| if $form->{tablename};
+   $where .= qq| AND (a.LOWER(reference) LIKE |.$dbh->quote($reference).qq|)| if $form->{reference};
+   $where .= qq| AND (a.formname = |.$dbh->quote($formname).qq|)| if $form->{formname};
+   $where .= qq| AND (a.action = |.$dbh->quote($formaction).qq|)| if $form->{formaction};
    $where .= qq| AND (a.transdate >= '$form->{fromtransdate}')| if $form->{fromtransdate};
    $where .= qq| AND (a.transdate <= '$form->{totransdate}')| if $form->{totransdate};
    $where .= qq| AND (a.employee_id = $form->{employee_id})| if $form->{employee};
@@ -1030,7 +1040,6 @@ sub audit_list {
    $column_header{name}  		= rpt_hdr('name', $locale->text('Employee'), $href);
 
    $form->error($query) if $form->{l_sql};
-   $dbh = $form->dbconnect(\%myconfig);
    my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
@@ -4145,6 +4154,10 @@ sub list_reminders {
     $options = $locale->text('Department')." : $department<br/>";
     $where = " AND ar.department_id = $form->{department_id}";
   }
+
+# FIXME fromdate and todate
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   if ($form->{fromdate}) {

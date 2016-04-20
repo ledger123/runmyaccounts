@@ -147,13 +147,13 @@ sub post_transaction {
     $uid .= $$;
 
     $query = qq|INSERT INTO gl (reference, employee_id, approved)
-                VALUES ('$uid', (SELECT id FROM employee
+                VALUES (|.$dbh->quote($uid).qq|, (SELECT id FROM employee
 		                 WHERE login = '$form->{login}'),
 		'$approved')|;
     $dbh->do($query) || $form->dberror($query);
     
     $query = qq|SELECT id FROM gl
-                WHERE reference = '$uid'|;
+                WHERE reference = |.$dbh->quote($uid).qq||;
     ($form->{id}) = $dbh->selectrow_array($query);
   }
   
@@ -174,7 +174,7 @@ sub post_transaction {
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      transdate = '$form->{transdate}',
 	      department_id = $department_id,
-	      curr = '$form->{currency}',
+	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      exchangerate = $exchangerate
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
@@ -218,11 +218,11 @@ sub post_transaction {
     $project_id ||= 'NULL';
     
     if ($keepcleared) {
-      $cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
+      $cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
     }
 
     if ($form->{"fx_transaction_$i"} *= 1) {
-      $cleared = $form->dbquote($form->{transdate}, SQL_DATE);
+      $cleared = $form->dbquote($form->dbclean($form->{transdate}), SQL_DATE);
     }
     
     if ($amount || $form->{"source_$i"} || $form->{"memo_$i"} || ($project_id ne 'NULL')) {
@@ -231,7 +231,7 @@ sub post_transaction {
 		  VALUES
 		  ($form->{id}, (SELECT id
 				 FROM chart
-				 WHERE accno = '$accno'),
+				 WHERE accno = |.$dbh->quote($accno).qq|),
 		   $amount, '$form->{transdate}', |.
 		   $dbh->quote($form->{"source_$i"}) .qq|,
 		  '$form->{"fx_transaction_$i"}',
@@ -249,7 +249,7 @@ sub post_transaction {
 		      VALUES
 		      ($form->{id}, (SELECT id
 				     FROM chart
-				     WHERE accno = '$accno'),
+				     WHERE accno = |.$dbh->quote($accno).qq|),
 		       $amount, '$form->{transdate}', |.
 		       $dbh->quote($form->{"source_$i"}) .qq|,
 		      $project_id, '1', |.$dbh->quote($form->{"memo_$i"}).qq|,
@@ -317,6 +317,14 @@ sub transactions {
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   my ($glwhere, $arwhere, $apwhere) = ("g.approved = '1'", "a.approved = '1'", "a.approved = '1'");
+  
+  $form->{reference} = $form->dbclean($form->{reference});
+  $form->{description} = $form->dbclean($form->{description});
+  $form->{projectnumber} = $form->dbclean($form->{projectnumber});
+  $form->{name} = $form->dbclean($form->{name});
+  $form->{vcnumber} = $form->dbclean($form->{vcnumber});
+  $form->{department} = $form->dbclean($form->{department});
+  $form->{fx_transaction} = $form->dbclean($form->{fx_transaction});
   
   if ($form->{reference}) {
     $var = $form->like(lc $form->{reference});
@@ -399,11 +407,11 @@ sub transactions {
                 l.description AS translation
 		FROM chart c
 		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		WHERE c.accno = '$form->{accnofrom}'|;
+		WHERE c.accno = |.$dbh->quote($form->{accnofrom});
     ($form->{accnofrom_description}, $form->{accnofrom_translation}) = $dbh->selectrow_array($query);
       $form->{accnofrom_description} = $form->{accnofrom_translation} if $form->{accnofrom_translation};
  
-    $where = " AND c.accno >= '$form->{accnofrom}'";
+    $where = " AND c.accno >= ".$dbh->quote($form->{accnofrom});
     $glwhere .= $where;
     $arwhere .= $where;
     $apwhere .= $where;
@@ -415,11 +423,11 @@ sub transactions {
                 l.description AS translation
 		FROM chart c
 		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		WHERE c.accno = '$form->{accnoto}'|;
+		WHERE c.accno = |.$dbh->quote($form->{accnoto});
     ($form->{accnoto_description}, $form->{accnoto_translation}) = $dbh->selectrow_array($query);
       $form->{accnoto_description} = $form->{accnoto_translation} if $form->{accnoto_translation};
  
-    $where = " AND c.accno <= '$form->{accnoto}'";
+    $where = " AND c.accno <= ".$dbh->quote($form->{accnoto});
     $glwhere .= $where;
     $arwhere .= $where;
     $apwhere .= $where;
@@ -468,19 +476,19 @@ sub transactions {
     $apwhere .= " AND lower(a.intnotes) LIKE '$var'";
   }
   if ($form->{accno}) {
-    $glwhere .= " AND c.accno = '$form->{accno}'";
-    $arwhere .= " AND c.accno = '$form->{accno}'";
-    $apwhere .= " AND c.accno = '$form->{accno}'";
+    $glwhere .= " AND c.accno = ".$dbh->quote($form->{accno});
+    $arwhere .= " AND c.accno = ".$dbh->quote($form->{accno});
+    $apwhere .= " AND c.accno = ".$dbh->quote($form->{accno});
   }
   if ($form->{gifi_accno}) {
-    $glwhere .= " AND c.gifi_accno = '$form->{gifi_accno}'";
-    $arwhere .= " AND c.gifi_accno = '$form->{gifi_accno}'";
-    $apwhere .= " AND c.gifi_accno = '$form->{gifi_accno}'";
+    $glwhere .= " AND c.gifi_accno = ".$dbh->quote($form->{gifi_accno});
+    $arwhere .= " AND c.gifi_accno = ".$dbh->quote($form->{gifi_accno});
+    $apwhere .= " AND c.gifi_accno = ".$dbh->quote($form->{gifi_accno});
   }
   if ($form->{category} ne 'X') {
-    $glwhere .= " AND c.category = '$form->{category}'";
-    $arwhere .= " AND c.category = '$form->{category}'";
-    $apwhere .= " AND c.category = '$form->{category}'";
+    $glwhere .= " AND c.category = ".$dbh->quote($form->{category});
+    $arwhere .= " AND c.category = ".$dbh->quote($form->{category});
+    $apwhere .= " AND c.category = ".$dbh->quote($form->{category});
   }
 
   if ($form->{accno} || $form->{gifi_accno}) {
@@ -491,7 +499,7 @@ sub transactions {
                   l.description AS translation
 		  FROM chart c
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		  WHERE c.accno = '$form->{accno}'|;
+		  WHERE c.accno = |.$dbh->quote($form->{accno});
       ($form->{category}, $form->{link}, $form->{contra}, $form->{account_description}, $form->{account_translation}) = $dbh->selectrow_array($query);
       $form->{account_description} = $form->{account_translation} if $form->{account_translation};
     }
@@ -500,7 +508,7 @@ sub transactions {
       $query = qq|SELECT c.category, c.link, c.contra, g.description
 		  FROM chart c
 		  LEFT JOIN gifi g ON (g.accno = c.gifi_accno)
-		  WHERE c.gifi_accno = '$form->{gifi_accno}'|;
+		  WHERE c.gifi_accno = |.$dbh->quote($form->{gifi_accno});
       ($form->{category}, $form->{link}, $form->{contra}, $form->{gifi_account_description}) = $dbh->selectrow_array($query);
     }
  

@@ -22,7 +22,7 @@ sub yearend_statement {
 
   # if todate < existing yearends, delete GL and yearends
   my $query = qq|SELECT trans_id FROM yearend
-                 WHERE transdate >= '$form->{todate}'|;
+                 WHERE transdate >= |.$dbh->quote($form->{todate}).qq||;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
   
@@ -285,6 +285,9 @@ sub balance_sheet {
 
   my $null;
   
+  $form->{asofdate} = $form->dbclean($form->{asofdate});
+  $form->{compareasofdate} = $form->dbclean($form->{compareasofdate});
+  
   if ($form->{asofdate}) {
     if ($form->{asofyear} && $form->{asofmonth}) {
       if ($form->{asofdate} !~ /\W/) {
@@ -504,7 +507,7 @@ sub get_accounts {
  
   my $category = "AND (";
   foreach $item (@{ $categories }) {
-    $category .= qq|c.category = '$item' OR |;
+    $category .= qq|c.category = |.$dbh->quote($item).qq| OR |;
   }
   $category =~ s/OR $/\)/;
 
@@ -513,7 +516,7 @@ sub get_accounts {
   $query = qq|SELECT c.accno, c.description, c.category,
               l.description AS translation
 	      FROM chart c
-	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$form->{language_code}')
+	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{language_code}).qq|)
 	      WHERE c.charttype = 'H'
 	      $category
 	      ORDER by c.accno|;
@@ -551,19 +554,19 @@ sub get_accounts {
 
   if ($fromdate) {
     if ($form->{method} eq 'cash') {
-      $subwhere .= " AND ac.transdate >= '$fromdate'";
-      $subwhere2 .= " AND datepaid >= '$fromdate'";
-      $glwhere = " AND ac.transdate >= '$fromdate'";
+      $subwhere .= " AND ac.transdate >= '".$form->dbclean($fromdate)."'";
+      $subwhere2 .= " AND datepaid >= '".$form->dbclean($fromdate)."'";
+      $glwhere = " AND ac.transdate >= '".$form->dbclean($fromdate)."'";
     } else {
-      $where .= " AND ac.transdate >= '$fromdate'";
+      $where .= " AND ac.transdate >= '".$form->dbclean($fromdate)."'";
     }
   }
 
   if ($todate) {
-    $where .= " AND ac.transdate <= '$todate'";
-    $subwhere .= " AND ac.transdate <= '$todate'";
-    $subwhere2 .= " AND datepaid <= '$todate'";
-    $yearendwhere = "ac.transdate < '$todate'";
+    $where .= " AND ac.transdate <= '".$form->dbclean($todate)."'";
+    $subwhere .= " AND ac.transdate <= '".$form->dbclean($todate)."'";
+    $subwhere2 .= " AND datepaid <= '".$form->dbclean($todate)."'";
+    $yearendwhere = "ac.transdate < '".$form->dbclean($todate)."'";
   }
 
   if ($excludeyearend) {
@@ -573,18 +576,18 @@ sub get_accounts {
    if ($todate) {
       $ywhere = " AND ac.trans_id NOT IN
 		 (SELECT trans_id FROM yearend
-		  WHERE transdate <= '$todate')";
+		  WHERE transdate <= '".$form->dbclean($todate)."')";
     }
        
     if ($fromdate) {
       $ywhere = " AND ac.trans_id NOT IN
 		 (SELECT trans_id FROM yearend
-		  WHERE transdate >= '$fromdate')";
+		  WHERE transdate >= '".$form->dbclean($fromdate)."')";
       if ($todate) {
 	$ywhere = " AND ac.trans_id NOT IN
 		   (SELECT trans_id FROM yearend
-		    WHERE transdate >= '$fromdate'
-		    AND transdate <= '$todate')";
+		    WHERE transdate >= '".$form->dbclean($fromdate)."'
+		    AND transdate <= '".$form->dbclean($todate)."')";
       }
     }
   }
@@ -594,13 +597,13 @@ sub get_accounts {
                JOIN department t ON (a.department_id = t.id)
 		  |;
     $dpt_where = qq|
-               AND t.id = $department_id
+               AND t.id = |.$form->dbclean($department_id).qq|
 	           |;
   }
 
   if ($project_id) {
     $project = qq|
-                 AND ac.project_id = $project_id
+                 AND ac.project_id = |.$form->dbclean($project_id).qq|
 		 |;
   }
 
@@ -966,7 +969,7 @@ sub get_accounts {
 	      JOIN dpt_trans t ON (t.trans_id = ac.trans_id)
 	      |;
 	$dpt_where = qq|
-               AND t.department_id = $department_id
+               AND t.department_id = |.$form->dbclean($department_id).qq|
 	      |;
       }
 
@@ -978,7 +981,7 @@ sub get_accounts {
 		 l.description AS translation
 		 FROM acc_trans ac
 		 JOIN chart c ON (c.id = ac.chart_id)
-		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$form->{language_code}')
+		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{language_code}).qq|)
 		 $dpt_join
 		 WHERE $where
 		 AND ac.approved = '1'
@@ -1004,7 +1007,7 @@ sub get_accounts {
 		 JOIN gl a ON (a.id = y.trans_id)
 		 JOIN acc_trans ac ON (ac.trans_id = y.trans_id)
 		 JOIN chart c ON (c.id = ac.chart_id)
-		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$form->{language_code}')
+		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{language_code}).qq|)
 	         $dpt_join
 		 WHERE $yearendwhere
 		 AND c.category = 'Q'
@@ -1103,14 +1106,14 @@ sub trial_balance {
                 JOIN dpt_trans t ON (ac.trans_id = t.trans_id)
 		  |;
     $dpt_where = qq|
-                AND t.department_id = $department_id
+                AND t.department_id = |.$form->dbclean($department_id).qq|
 		|;
   }
   
   
   if ($project_id) {
     $project = qq|
-                AND ac.project_id = $project_id
+                AND ac.project_id = |.$form->dbclean($project_id).qq|
 		|;
   }
 
@@ -1133,7 +1136,7 @@ sub trial_balance {
 		  JOIN chart c ON (ac.chart_id = c.id)
 		  JOIN gifi g ON (c.gifi_accno = g.accno)
 		  $dpt_join
-		  WHERE ac.transdate < '$form->{fromdate}'
+		  WHERE ac.transdate < |.$dbh->quote($form->{fromdate}).qq|
 		  AND ac.approved = '1'
 		  $dpt_where
 		  $project
@@ -1148,9 +1151,9 @@ sub trial_balance {
 		  l.description AS translation
 		  FROM acc_trans ac
 		  JOIN chart c ON (ac.chart_id = c.id)
-		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$form->{language_code}')
+		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{language_code}).qq|)
 		  $dpt_join
-		  WHERE ac.transdate < '$form->{fromdate}'
+		  WHERE ac.transdate < |.$dbh->quote($form->{fromdate}).qq|
 		  AND ac.approved = '1'
 		  $dpt_where
 		  $project
@@ -1186,7 +1189,7 @@ sub trial_balance {
   $query = qq|SELECT c.accno, c.description, c.category,
               l.description AS translation
 	      FROM chart c
-	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$form->{language_code}')
+	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{language_code}).qq|)
 	      WHERE c.charttype = 'H'
 	      ORDER by c.accno|;
 
@@ -1219,12 +1222,12 @@ sub trial_balance {
 
   if ($form->{fromdate} || $form->{todate}) {
     if ($form->{fromdate}) {
-      $where .= " AND ac.transdate >= '$form->{fromdate}'";
-      $invwhere .= " AND a.transdate >= '$form->{fromdate}'";
+      $where .= " AND ac.transdate >= '".$form->dbclean($form->{fromdate})."'";
+      $invwhere .= " AND a.transdate >= '".$form->dbclean($form->{fromdate})."'";
     }
     if ($form->{todate}) {
-      $where .= " AND ac.transdate <= '$form->{todate}'";
-      $invwhere .= " AND a.transdate <= '$form->{todate}'";
+      $where .= " AND ac.transdate <= '".$form->dbclean($form->{todate})."'";
+      $invwhere .= " AND a.transdate <= '".$form->dbclean($form->{todate})."'";
     }
   }
 
@@ -1251,7 +1254,7 @@ sub trial_balance {
 		l.description AS translation
 		FROM acc_trans ac
 		JOIN chart c ON (c.id = ac.chart_id)
-		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$form->{countrycode}')
+		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{countrycode}).qq|)
 		$dpt_join
 		WHERE $where
 		$dpt_where
@@ -1444,10 +1447,11 @@ sub aging {
 
   if ($form->{department}) {
     ($null, $department_id) = split /--/, $form->{department};
-    $where .= qq| AND a.department_id = $department_id|;
+    $where .= qq| AND a.department_id = |.$form->dbclean($department_id).qq||;
   }
   
   $form->{sort} =~ s/;//g;
+  $form->{sort} = $form->dbclean($form->{sort});
   my $sortorder = ($form->{sort}) ? "ct.$form->{sort}" : "ct.name";
   
   # select outstanding vendors or customers, depends on $ct
@@ -1457,7 +1461,7 @@ sub aging {
 	      JOIN $form->{arap} a ON (a.$form->{vc}_id = ct.id)
 	      WHERE $where
               AND a.paid != a.amount
-              AND (a.$transdate <= '$form->{todate}')
+              AND (a.$transdate <= |.$dbh->quote($form->{todate}).qq|)
               ORDER BY $sortorder|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror;
@@ -1471,21 +1475,21 @@ sub aging {
   my $buysell = ($form->{arap} eq 'ar') ? 'buy' : 'sell';
   
   my %interval = ( 'Pg' => {
-                        'c0' => "(date '$form->{todate}' - interval '0 days')",
-			'c15' => "(date '$form->{todate}' - interval '15 days')",
-			'c30' => "(date '$form->{todate}' - interval '30 days')",
-			'c45' => "(date '$form->{todate}' - interval '45 days')",
-			'c60' => "(date '$form->{todate}' - interval '60 days')",
-			'c75' => "(date '$form->{todate}' - interval '75 days')",
-			'c90' => "(date '$form->{todate}' - interval '90 days')" },
+                        'c0' => "(date '".$form->dbclean($form->{todate})."' - interval '0 days')",
+			'c15' => "(date '".$form->dbclean($form->{todate})."' - interval '15 days')",
+			'c30' => "(date '".$form->dbclean($form->{todate})."' - interval '30 days')",
+			'c45' => "(date '".$form->dbclean($form->{todate})."' - interval '45 days')",
+			'c60' => "(date '".$form->dbclean($form->{todate})."' - interval '60 days')",
+			'c75' => "(date '".$form->dbclean($form->{todate})."' - interval '75 days')",
+			'c90' => "(date '".$form->dbclean($form->{todate})."' - interval '90 days')" },
 		  'DB2' => {
-		        'c0' => "(date ('$form->{todate}') - 0 days)",
-			'c15' => "(date ('$form->{todate}') - 15 days)",
-			'c30' => "(date ('$form->{todate}') - 30 days)",
-			'c45' => "(date ('$form->{todate}') - 45 days)",
-			'c60' => "(date ('$form->{todate}') - 60 days)",
-			'c75' => "(date ('$form->{todate}') - 75 days)",
-			'c90' => "(date ('$form->{todate}') - 90 days)" }
+		        'c0' => "(date ('".$form->dbclean($form->{todate})."') - 0 days)",
+			'c15' => "(date ('".$form->dbclean($form->{todate})."') - 15 days)",
+			'c30' => "(date ('".$form->dbclean($form->{todate})."') - 30 days)",
+			'c45' => "(date ('".$form->dbclean($form->{todate})."') - 45 days)",
+			'c60' => "(date ('".$form->dbclean($form->{todate})."') - 60 days)",
+			'c75' => "(date ('".$form->dbclean($form->{todate})."') - 75 days)",
+			'c90' => "(date ('".$form->dbclean($form->{todate})."') - 90 days)" }
 		);
 
   $interval{Oracle} = $interval{PgPP} = $interval{Pg};
@@ -1500,7 +1504,7 @@ sub aging {
 	AND a.curr = ?|;
 	
   if ($department_id) {
-    $where .= qq| AND a.department_id = $department_id|;
+    $where .= qq| AND a.department_id = |.$form->dbclean($department_id).qq||;
   }
 
   $query = "";
@@ -1559,7 +1563,7 @@ sub aging {
        AND e.transdate = a.transdate) AS exchangerate,
     ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
     s.*
-    FROM $form->{arap} a
+    FROM |.$form->dbclean($form->{arap}).qq| a
     JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
     JOIN address ad ON (ad.trans_id = c.id)
     LEFT JOIN contact ct ON (ct.trans_id = c.id)
@@ -1644,7 +1648,7 @@ sub reminder {
 
   $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
 
-  if ($form->{"$form->{vc}_id"}) {
+  if ($form->{"$form->{vc}_id"}*=1) {
     $where .= qq| AND vc.id = $form->{"$form->{vc}_id"}|;
   } else {
     if ($form->{$form->{vc}} ne "") {
@@ -1659,10 +1663,11 @@ sub reminder {
   
   if ($form->{department}) {
     ($null, $department_id) = split /--/, $form->{department};
-    $where .= qq| AND a.department_id = $department_id|;
+    $where .= qq| AND a.department_id = |.$form->dbclean($department_id).qq||;
   }
   
   $form->{sort} =~ s/;//g;
+  $form->{sort} = $form->dbclean($form->{sort});
   my $sortorder = ($form->{sort}) ? "vc.$form->{sort}" : "vc.name";
   
   # select outstanding customers
@@ -1702,7 +1707,7 @@ sub reminder {
 	AND a.curr = ?|;
 	
   if ($department_id) {
-    $where .= qq| AND a.department_id = $department_id|;
+    $where .= qq| AND a.department_id = |.$form->dbclean($department_id).qq||;
   }
   
   if ($form->{overpaid} ne "on") {
@@ -1814,7 +1819,7 @@ sub save_level {
 		formname, action, employee_id)
 	      VALUES (
 		?, 'ar', ?, 
-		'reminder', 'level-change', $form->{employee_id}
+		'reminder', 'level-change', |.$form->dbclean($form->{employee_id}).qq|
 	      )|;
   my $tth = $dbh->prepare($query) || $form->dberror($query);
 
@@ -1848,9 +1853,11 @@ sub get_customer {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   my $query = qq|SELECT name, email, cc, bcc
                  FROM $form->{vc} ct
-		 WHERE ct.id = $form->{"$form->{vc}_id"}|;
+		 WHERE ct.id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
   ($form->{$form->{vc}}, $form->{email}, $form->{cc}, $form->{bcc}) = $dbh->selectrow_array($query);
   
   $dbh->disconnect;
@@ -1871,7 +1878,7 @@ sub get_taxaccounts {
                  FROM chart c
 		 JOIN tax t ON (c.id = t.chart_id)
 		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		 WHERE c.link LIKE '%${ARAP}_tax%'
+		 WHERE c.link LIKE '%|.$form->dbclean(${ARAP}).qq|_tax%'
                  ORDER BY c.accno|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror;
@@ -1887,7 +1894,7 @@ sub get_taxaccounts {
                  FROM gifi g
 		 JOIN chart c ON (c.gifi_accno= g.accno)
 		 JOIN tax t ON (c.id = t.chart_id)
-		 WHERE c.link LIKE '%${ARAP}_tax%'
+		 WHERE c.link LIKE '%|.$form->dbclean(${ARAP}).qq|_tax%'
                  ORDER BY accno|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror;
@@ -1920,7 +1927,7 @@ sub tax_report {
  
   if ($department_id) {
     $where .= qq|
-                 AND a.department_id = $department_id
+                 AND a.department_id = |.$form->dbclean($department_id).qq|
 		|;
   }
   
@@ -1931,10 +1938,10 @@ sub tax_report {
   if ($form->{accno}) {
     if ($form->{accno} =~ /^gifi_/) {
       ($null, $accno) = split /_/, $form->{accno};
-      $accno = qq| AND ch.gifi_accno = '$accno'|;
+      $accno = qq| AND ch.gifi_accno = |.$dbh->quote($accno).qq||;
     } else {
       $accno = $form->{accno};
-      $accno = qq| AND ch.accno = '$accno'|;
+      $accno = qq| AND ch.accno = |.$dbh->quote($accno).qq||;
     }
   }
 
@@ -1942,7 +1949,7 @@ sub tax_report {
   my $ARAP;
   
   # SQLI protection: $form->{db} needs to be validated.
-
+  $form->{db} = $form->dbclean($form->{db});
   if ($form->{db} eq 'ar') {
     $vc = "customer";
     $ARAP = "AR";
@@ -1959,10 +1966,10 @@ sub tax_report {
   # if there are any dates construct a where
   if ($form->{fromdate} || $form->{todate}) {
     if ($form->{fromdate}) {
-      $where .= " AND $transdate >= '$form->{fromdate}'";
+      $where .= " AND $transdate >= '".$form->dbclean($form->{fromdate})."'";
     }
     if ($form->{todate}) {
-      $where .= " AND $transdate <= '$form->{todate}'";
+      $where .= " AND $transdate <= '".$form->dbclean($form->{todate})."'";
     }
   }
 
@@ -1983,7 +1990,7 @@ sub tax_report {
 		     JOIN chart ON (chart_id = chart.id)
 		     WHERE link LIKE '%${ARAP}_paid%'
 		     AND a.approved = '1'
-		     AND $transdate <= '$todate'
+		     AND $transdate <= |.$dbh->quote($todate).qq|
 		     AND a.paid = a.amount
 		   )
 		  |;
@@ -2036,7 +2043,7 @@ sub tax_report {
 	      JOIN $form->{db} a ON (a.id = ac.trans_id)
 	      JOIN chart ch ON (ch.id = ac.chart_id)
 	      JOIN $vc n ON (n.id = a.${vc}_id)
-		WHERE a.datepaid >= '$form->{fromdate}'
+		WHERE a.datepaid >= |.$dbh->quote($form->{fromdate}).qq|
 		$accno
 		$cashwhere
 	GROUP BY a.id, a.invoice, $transdate, a.invnumber, n.name,
@@ -2121,7 +2128,7 @@ sub tax_report {
 	      JOIN ${vc}tax t ON (t.${vc}_id = n.id AND t.chart_id = ch.id)
 	      JOIN invoice i ON (i.trans_id = a.id)
 	      JOIN partstax pt ON (pt.parts_id = i.parts_id AND pt.chart_id = ch.id)
-		WHERE a.datepaid >= '$form->{fromdate}'
+		WHERE a.datepaid >= |.$dbh->quote($form->{fromdate}).qq|
 		$accno
 		AND a.invoice = '1'
 		$cashwhere
@@ -2159,7 +2166,7 @@ sub tax_report {
 		  FROM acc_trans ac
 		JOIN $form->{db} a ON (a.id = ac.trans_id)
 		JOIN $vc n ON (n.id = a.${vc}_id)
-		WHERE a.datepaid >= '$form->{fromdate}'
+		WHERE a.datepaid >= |.$dbh->quote($form->{fromdate}).qq|
 		  AND a.netamount = a.amount
 		  $cashwhere
 		  |;
@@ -2224,7 +2231,7 @@ sub tax_report {
 		JOIN $form->{db} a ON (a.id = ac.trans_id)
 		JOIN $vc n ON (n.id = a.${vc}_id)
 		JOIN chart ch ON (ch.id = ac.chart_id)
-		  WHERE a.datepaid >= '$form->{fromdate}'
+		  WHERE a.datepaid >= |.$dbh->quote($form->{fromdate}).qq|
 		  AND a.invoice = '0'
 		  AND a.netamount = a.amount
 		  AND NOT (ch.link LIKE '%_paid' OR ch.link = '$ARAP')
@@ -2242,7 +2249,7 @@ sub tax_report {
 		  FROM invoice ac
 		JOIN $form->{db} a ON (a.id = ac.trans_id)
 		JOIN $vc n ON (n.id = a.${vc}_id)
-		  WHERE a.datepaid >= '$form->{fromdate}'
+		  WHERE a.datepaid >= |.$dbh->quote($form->{fromdate}).qq|
 		  AND a.invoice = '1'
 		  AND (
 		    a.${vc}_id NOT IN (
@@ -2267,6 +2274,7 @@ sub tax_report {
 	      ORDER by $sortorder|;
 
   $sth = $dbh->prepare($query);
+  print STDERR "$query\n";
   $sth->execute || $form->dberror($query);
 
   while ( my $ref = $sth->fetchrow_hashref(NAME_lc)) {
@@ -2297,7 +2305,7 @@ sub paymentaccounts {
                  l.description AS translation
                  FROM chart c
 		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-                 WHERE c.link LIKE '%${ARAP}_paid%'
+                 WHERE c.link LIKE '%|.$form->dbclean(${ARAP}).qq|_paid%'
 		 ORDER BY c.accno|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -2339,17 +2347,17 @@ sub payments {
 		 |;
 
     $where .= qq|
-		 AND t.department_id = $form->{department_id}
+		 AND t.department_id = |.$form->dbclean($form->{department_id}).qq|
 		|;
   }
 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   
   if ($form->{fromdate}) {
-    $where .= " AND ac.transdate >= '$form->{fromdate}'";
+    $where .= " AND ac.transdate >= '".$form->dbclean($form->{fromdate})."'";
   }
   if ($form->{todate}) {
-    $where .= " AND ac.transdate <= '$form->{todate}'";
+    $where .= " AND ac.transdate <= '".$form->dbclean($form->{todate})."'";
   }
   if (!$form->{fx_transaction}) {
     $where .= " AND ac.fx_transaction = '0'";

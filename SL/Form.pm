@@ -36,9 +36,7 @@ sub new {
   		$maxlength = length($value);
   	}
   }
-  
-  print STDERR "params: $countofparams, max_length: $maxlength\n";
-  
+    
   
   my $esc = 1;
   
@@ -471,11 +469,22 @@ sub sort_order {
   }
 
   $sortorder = join ',', @a;
-
+  $sortorder = $self->dbclean($sortorder);
   $sortorder;
 
 }
 
+sub dbescape {
+  my ($self, $value) = @_;
+  $value =~ s/'/''/g;
+  return $value;
+}
+
+sub dbclean {
+  my ($self, $value) = @_;
+  $value =~ s/'//g;
+  return $value;
+}
 
 sub format_amount {
   my ($self, $myconfig, $amount, $places, $dash) = @_;
@@ -1546,6 +1555,56 @@ sub datetonum {
   
 }
 
+sub isvaldate {
+  my ($self, $myconfig, $date, $text) = @_;
+  if ($date){
+    my $cleandate = $self->dbclean($date);
+	if ($date ne $cleandate) {
+	  $self->error($text);
+	}
+  }
+}
+
+
+sub isvaldateold {
+  my ($self, $myconfig, $date, $text) = @_;
+
+  if ($date){
+      my $spc = $myconfig->{dateformat};
+      $spc =~ s/\w//g;
+      $spc = substr($spc, 0, 1);
+
+      if ($myconfig->{dateformat} =~ /^yy/) {
+        ($yy, $mm, $dd) = split /\D/, $date;
+      }
+      if ($myconfig->{dateformat} =~ /^mm/) {
+        ($mm, $dd, $yy) = split /\D/, $date;
+      }
+      if ($myconfig->{dateformat} =~ /^dd/) {
+        ($dd, $mm, $yy) = split /\D/, $date;
+      }
+
+      $dd *= 1;
+      $mm *= 1;
+      $yy *= 1;
+
+      $dd = substr("0$dd", -2);
+      $mm = substr("0$mm", -2);
+
+      if ($myconfig->{dateformat} =~ /^yy/) {
+        $date = "$yy$spc$mm$spc$dd";
+      }
+      if ($myconfig->{dateformat} =~ /^mm/) {
+        $date = "$mm$spc$dd$spc$yy";
+      }
+      if ($myconfig->{dateformat} =~ /^dd/) {
+        $date = "$dd$spc$mm$spc$yy";
+      }
+      $self->error($text) if $date eq '00/00/0';
+  }
+  $date;
+}
+
 
 sub add_date {
   my ($self, $myconfig, $date, $repeat, $unit) = @_;
@@ -1714,7 +1773,7 @@ sub dbquote {
   
   # DBI does not return NULL for SQL_DATE if the date is empty
   if ($type eq 'SQL_DATE') {
-    $_ = ($var) ? "'$var'" : "NULL";
+    $_ = ($var) ? "'".$self->dbclean($var)."'" : "NULL";
   }
   if ($type eq 'SQL_INT') {
     $_ = $var * 1;
@@ -1728,8 +1787,6 @@ sub dbquote {
 sub update_balance {
   my ($self, $dbh, $table, $field, $where, $value) = @_;
 
-  # SQLI protection. $table, $field, $where need to be validated against allowed range or may be replaced with inline UPDATE
- 
   # if we have a value, go do it
   if ($value) {
     # retrieve balance from table
@@ -1751,7 +1808,7 @@ sub update_exchangerate {
   return if (!$curr || $self->{currency} eq $self->{defaultcurrency});
 
   my $query = qq|SELECT curr FROM exchangerate
-                 WHERE curr = '$curr'
+                 WHERE curr = |.$dbh->quote($curr).qq|
 	         AND transdate = '$transdate'
 		 FOR UPDATE|;
   my $sth = $dbh->prepare($query);
@@ -1835,7 +1892,7 @@ sub check_exchangerate {
   
   $fld ||= 'buy';
   $query = qq|SELECT $fld, buy, sell FROM exchangerate
-	      WHERE curr = '$currency'
+	      WHERE curr = |.$dbh->quote($currency).qq|
 	      AND transdate = |.$self->dbquote($transdate, SQL_DATE);
   ($exchangerate, $self->{fxbuy}, $self->{fxsell}) = $dbh->selectrow_array($query);
   
@@ -1872,9 +1929,10 @@ sub add_shipto {
 		   .$dbh->quote($self->{shiptostate}).qq|, |
 		   .$dbh->quote($self->{shiptozipcode}).qq|, |
 		   .$dbh->quote($self->{shiptocountry}).qq|, |
-		   .$dbh->quote($self->{shiptocontact}).qq|,
-		   '$self->{shiptophone}', '$self->{shiptofax}',
-		   '$self->{shiptoemail}')|;
+		   .$dbh->quote($self->{shiptocontact}).qq|, |
+		   .$dbh->quote($self->{shiptophone}).qq|, |
+           .$dbh->quote($self->{shiptofax}).qq|, |
+		   .$dbh->quote($self->{shiptoemail}).qq|;
     $dbh->do($query) || $self->dberror($query);
   }
 
@@ -2276,7 +2334,7 @@ sub all_projects {
     $query = qq|SELECT pr.*, t.description AS translation
                 FROM project pr
 		LEFT JOIN translation t ON (t.trans_id = pr.id)
-		WHERE t.language_code = '$form->{language_code}'|;
+		WHERE t.language_code = |.$dbh->quote($form->{language_code});
   }
 
   # SQLI protection: transdate validation needs to be checked
@@ -2973,7 +3031,7 @@ sub save_status {
     $emailed = ($emailforms =~ /$self->{formname}/) ? "1" : "0";
     
     $query = qq|INSERT INTO status (trans_id, printed, emailed, formname)
-		VALUES ($self->{id}, '$printed', '$emailed', '$formname')|;
+		VALUES ($self->{id}, |.$dbh->quote($printed).qq|, |.$dbh->quote($emailed).qq|, |.$dbh->quote($formname).qq|)|;
     $dbh->do($query) || $self->dberror($query);
   }
 
@@ -3759,18 +3817,19 @@ sub audittrail {
       if ($audittrail->{transdate}) {
 	$query = qq|INSERT INTO audittrail (trans_id, tablename, reference,
 		    formname, action, employee_id, transdate) VALUES (
-		    $audittrail->{id}, '$audittrail->{tablename}', |
+		    $audittrail->{id}, |.$dbh->quote($audittrail->{tablename}).qq|, |
 		    .$dbh->quote($audittrail->{reference}).qq|',
-		    '$audittrail->{formname}', '$audittrail->{action}',
-		    $employee_id, '$audittrail->{transdate}')|;
+		    |.$dbh->quote($audittrail->{formname}).qq|, |.$dbh->quote($audittrail->{action}).qq|,
+		    |.$self->dbclean($employee_id).qq|, '$audittrail->{transdate}')|;
       } else {
 	$query = qq|INSERT INTO audittrail (trans_id, tablename, reference,
 		    formname, action, employee_id) VALUES ($audittrail->{id},
-		    '$audittrail->{tablename}', |
+		    |.$dbh->quote($audittrail->{tablename}).qq|, |
 		    .$dbh->quote($audittrail->{reference}).qq|,
-		    '$audittrail->{formname}', '$audittrail->{action}',
-		    $employee_id)|;
+		    |.$dbh->quote($audittrail->{formname}).qq|, |.$dbh->quote($audittrail->{action}).qq|,
+		    |.$self->dbclean($employee_id).qq|)|;
       }
+      print STDERR "$query\n";
       $dbh->do($query);
     }
   } else {

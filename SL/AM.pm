@@ -102,12 +102,12 @@ sub save_account {
     $query = qq|UPDATE chart SET
                 accno = '$form->{accno}',
 		description = |.$dbh->quote($form->{description}).qq|,
-		charttype = '$form->{charttype}',
+		charttype = |.$dbh->quote($form->{charttype}).qq|,
 		gifi_accno = '$form->{gifi_accno}',
-		category = '$form->{category}',
-		link = '$form->{link}',
-		contra = '$form->{contra}',
-		allow_gl = '$form->{allow_gl}'
+		category = |.$dbh->quote($form->{category}).qq|,
+		link = |.$dbh->quote($form->{link}).qq|,
+		contra = |.$dbh->quote($form->{contra}).qq|,
+		allow_gl = |.$dbh->quote($form->{allow_gl}).qq|
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO chart 
@@ -115,9 +115,9 @@ sub save_account {
 		contra, allow_gl)
                 VALUES ('$form->{accno}',|
 		.$dbh->quote($form->{description}).qq|,
-		'$form->{charttype}', |
+		|.$dbh->quote($form->{charttype}).qq|, |
 		.$dbh->quote($form->{gifi_accno}).qq|,
-		'$form->{category}', '$form->{link}', '$form->{contra}', '$form->{allow_gl}')|;
+		|.$dbh->quote($form->{category}).qq|, |.$dbh->quote($form->{link}).qq|, |.$dbh->quote($form->{contra}).qq|, |.$dbh->quote($form->{allow_gl}).qq|)|;
   }
   $dbh->do($query) || $form->dberror($query);
 
@@ -529,13 +529,13 @@ sub save_department {
   if ($form->{id} *= 1) {
     $query = qq|UPDATE department SET
 		description = |.$dbh->quote($form->{description}).qq|,
-		role = '$form->{role}'
+		role = |.$dbh->quote($form->{role}).qq|
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO department 
                 (description, role)
                 VALUES (|
-		.$dbh->quote($form->{description}).qq|, '$form->{role}')|;
+		.$dbh->quote($form->{description}).qq|, |.$dbh->quote($form->{role}).qq|)|;
   }
   $dbh->do($query) || $form->dberror($query);
   
@@ -824,7 +824,7 @@ sub save_sic {
   if ($form->{id}) {
     $query = qq|UPDATE sic SET
                 code = |.$dbh->quote($form->{code}).qq|,
-		sictype = '$form->{sictype}',
+		sictype = |.$dbh->quote($form->{sictype}).qq|,
 		description = |.$dbh->quote($form->{description}).qq|
 		WHERE code = |.$dbh->quote($form->{id});
   } else {
@@ -832,7 +832,7 @@ sub save_sic {
                 (code, sictype, description)
                 VALUES (|
 		.$dbh->quote($form->{code}).qq|,
-		'$form->{sictype}',|
+		|.$dbh->quote($form->{sictype}).qq|,|
 		.$dbh->quote($form->{description}).qq|)|;
   }
   $dbh->do($query) || $form->dberror($query);
@@ -1280,11 +1280,11 @@ sub save_preferences {
   my $dbh = $form->dbconnect($myconfig);
   
   # update name
-  my $query = qq|UPDATE employee
-                 SET name = |.$dbh->quote($form->{name}).qq|,
-	         role = '$form->{role}',
-		 workphone = '$form->{tel}'
-	         WHERE login = '$form->{login}'|;
+  my $query = qq|UPDATE employee SET 
+                    name = |.$dbh->quote($form->{name}).qq|,
+	                role = |.$dbh->quote($form->{role}).qq|,
+		            workphone = |.$dbh->quote($form->{tel}).qq|
+	            WHERE login = '$form->{login}'|;
   $dbh->do($query) || $form->dberror($query);
 
   my %defaults = $form->get_defaults($dbh, \@{['company']});
@@ -1483,7 +1483,7 @@ sub save_taxes {
     $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto)
                 VALUES ($chart_id, $rate, |
 		.$dbh->quote($form->{"taxnumber_$i"}).qq|, |
-		.$form->dbquote($form->{"validto_$i"}, SQL_DATE)
+		.$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE)
 		.qq|)|;
     $dbh->do($query) || $form->dberror($query);
   }
@@ -2344,7 +2344,7 @@ sub save_currency {
     $rn++;
     
     $query = qq|INSERT INTO curr (rn, curr)
-                VALUES ($rn, '$form->{curr}')|;
+                VALUES ($rn, |.$dbh->quote($form->{curr}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
   }
 
@@ -2395,6 +2395,13 @@ sub move {
   my $dbh = $form->dbconnect_noauto($myconfig);
   
   my $id;
+
+  my @dballowed = qw(paymentmethod curr);
+  my @fldallowed = qw(id curr);
+
+  # This error will appear only to someone who is trying to break code.
+  $form->error('Invalid table name...') if !grep( /^$form->{db}$/, @dballowed);
+  $form->error('Invalid column name...') if !grep( /^$form->{fld}$/, @fldallowed);
   
   my $query = qq|SELECT rn FROM $form->{db}
                  WHERE $form->{fld} = |.$dbh->quote($form->{id});

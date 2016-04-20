@@ -630,6 +630,11 @@ sub search_name {
 
 sub list_names {
 
+  $form->isvaldate(\%myconfig, $form->{startdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{startdateto}, $locale->text('Invalid to date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
+
   CT->search(\%myconfig, \%$form);
   
   $href = "$form->{script}?action=list_names";
@@ -1233,6 +1238,9 @@ sub list_subtotal {
 
 
 sub list_history {
+
+  $form->isvaldate(\%myconfig, $form->{startdatefrom}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{startdateto}, $locale->text('Invalid to date ...'));
   
   CT->get_history(\%myconfig, \%$form);
   
@@ -2972,6 +2980,8 @@ sub item_selected {
     
 sub save_pricelist {
  
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
+
   CT->save(\%myconfig, \%$form);
 
   $callback = $form->{callback};
@@ -3118,6 +3128,10 @@ sub save {
 # $locale->text('Customer saved!')
 # $locale->text('Vendor saved!')
 
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
+  $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
+  $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
+
   $msg = ucfirst $form->{db};
   $msg .= " saved!";
 
@@ -3175,6 +3189,8 @@ sub delete {
 # $locale->text('Cannot delete customer!')
 # $locale->text('Vendor deleted!')
 # $locale->text('Cannot delete vendor!')
+
+  $form->{db} = 'vendor' if $form->{db} ne 'customer';
 
   CT->delete(\%myconfig, \%$form);
   
