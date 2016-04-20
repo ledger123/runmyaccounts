@@ -56,10 +56,10 @@ sub projects {
   ($form->{startdatefrom}, $form->{startdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   
   if ($form->{startdatefrom}) {
-    $where .= " AND (pr.startdate IS NULL OR pr.startdate >= '$form->{startdatefrom}')";
+    $where .= " AND (pr.startdate IS NULL OR pr.startdate >= '".$form->dbclean($form->{startdatefrom})."')";
   }
   if ($form->{startdateto}) {
-    $where .= " AND (pr.startdate IS NULL OR pr.startdate <= '$form->{startdateto}')";
+    $where .= " AND (pr.startdate IS NULL OR pr.startdate <= '".$form->dbclean($form->{startdateto})."')";
   }
   
   if ($form->{status} eq 'orphaned') {
@@ -190,9 +190,9 @@ sub save_project {
     $query = qq|UPDATE project SET
                 projectnumber = |.$dbh->quote($form->{projectnumber}).qq|,
 		description = |.$dbh->quote($form->{description}).qq|,
-		startdate = |.$form->dbquote($form->{startdate}, SQL_DATE).qq|,
-		enddate = |.$form->dbquote($form->{enddate}, SQL_DATE).qq|,
-		customer_id = $form->{customer_id}
+		startdate = |.$form->dbquote($form->dbclean($form->{startdate}), SQL_DATE).qq|,
+		enddate = |.$form->dbquote($form->dbclean($form->{enddate}), SQL_DATE).qq|,
+		customer_id = |.$form->dbclean($form->{customer_id}).qq|
 		WHERE id = $form->{id}|;
   } else {
    
@@ -201,9 +201,9 @@ sub save_project {
                 VALUES (|
 		.$dbh->quote($form->{projectnumber}).qq|, |
 		.$dbh->quote($form->{description}).qq|, |
-		.$form->dbquote($form->{startdate}, SQL_DATE).qq|, |
-		.$form->dbquote($form->{enddate}, SQL_DATE).qq|,
-		$form->{customer_id}
+		.$form->dbquote($form->dbclean($form->{startdate}), SQL_DATE).qq|, |
+		.$form->dbquote($form->dbclean($form->{enddate}), SQL_DATE).qq|,
+		|.$form->dbclean($form->{customer_id}).qq|
 		)|;
   }
   $dbh->do($query) || $form->dberror($query);
@@ -301,10 +301,10 @@ sub jobs {
   ($form->{startdatefrom}, $form->{startdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   
   if ($form->{startdatefrom}) {
-    $query .= " AND pr.startdate >= '$form->{startdatefrom}'";
+    $query .= " AND pr.startdate >= '".$form->dbclean($form->{startdatefrom})."'";
   }
   if ($form->{startdateto}) {
-    $query .= " AND pr.startdate <= '$form->{startdateto}'";
+    $query .= " AND pr.startdate <= '".$form->dbclean($form->{startdateto})."'";
   }
 
   if ($form->{status} eq 'active') { 
@@ -480,10 +480,10 @@ sub get_customer {
     $form->{startdate} = $form->current_date($myconfig);
   }
   
-  my $where = qq|(startdate >= '$form->{startdate}' OR startdate IS NULL OR enddate IS NULL)|;
+  my $where = qq|(startdate >= |.$dbh->quote($form->{startdate}).qq| OR startdate IS NULL OR enddate IS NULL)|;
   
   if ($form->{enddate}) {
-    $where .= qq| AND (enddate >= '$form->{enddate}' OR enddate IS NULL)|;
+    $where .= qq| AND (enddate >= |.$dbh->quote($form->{enddate}).qq| OR enddate IS NULL)|;
   } else {
     $where .= qq| AND (enddate >= current_date OR enddate IS NULL)|;
   }
@@ -506,7 +506,7 @@ sub get_customer {
 		FROM customer c
 		LEFT JOIN contact ct ON (c.id = ct.trans_id)
 		LEFT JOIN address ad ON (c.id = ad.trans_id)
-		WHERE c.id = $form->{customer_id}|;
+		WHERE c.id = |.$form->dbclean($form->{customer_id}).qq||;
     }
 
     $query .= qq|
@@ -549,11 +549,11 @@ sub save_job {
     $uid .= $$;
     
     $query = qq|INSERT INTO project (projectnumber)
-                VALUES ('$uid')|;
+                VALUES (|.$dbh->quote($uid).qq|)|;
     $dbh->do($query) || $form->dberror($query);
 
     $query = qq|SELECT id FROM project
-                WHERE projectnumber = '$uid'|;
+                WHERE projectnumber = |.$dbh->quote($uid).qq||;
     ($form->{id}) = $dbh->selectrow_array($query);
   }
 
@@ -562,11 +562,11 @@ sub save_job {
   $query = qq|UPDATE project SET
 	      projectnumber = |.$dbh->quote($form->{projectnumber}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
-	      startdate = |.$form->dbquote($form->{startdate}, SQL_DATE).qq|,
-	      enddate = |.$form->dbquote($form->{enddate}, SQL_DATE).qq|,
+	      startdate = |.$form->dbquote($form->dbclean($form->{startdate}), SQL_DATE).qq|,
+	      enddate = |.$form->dbquote($form->dbclean($form->{enddate}), SQL_DATE).qq|,
 	      parts_id = $form->{id},
-              production = |.$form->parse_amount($myconfig, $form->{production}).qq|,
-	      customer_id = $form->{customer_id}
+          production = |.$form->parse_amount($myconfig, $form->{production}).qq|,
+	      customer_id = |.$form->dbclean($form->{customer_id}).qq|
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
@@ -588,7 +588,7 @@ sub save_job {
   $query = qq|UPDATE parts SET
               partnumber = |.$dbh->quote($partnumber).qq|,
 	      description = |.$dbh->quote($form->{partdescription}).qq|,
-	      priceupdate = |.$form->dbquote($form->{priceupdate}, SQL_DATE).qq|,
+	      priceupdate = |.$form->dbquote($form->dbclean($form->{priceupdate}), SQL_DATE).qq|,
 	      listprice = |.$form->parse_amount($myconfig, $form->{listprice}).qq|,
 	      sellprice = |.$form->parse_amount($myconfig, $form->{sellprice}).qq|,
 	      weight = |.$form->parse_amount($myconfig, $form->{weight}).qq|,
@@ -615,7 +615,7 @@ sub save_job {
                   VALUES ($form->{id},
 		          (SELECT id
 			   FROM chart
-			   WHERE accno = '$_'))|;
+			   WHERE accno = |.$dbh->quote($_).qq|))|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
@@ -657,7 +657,7 @@ sub stock_assembly {
               FROM jcitems j
               JOIN parts p ON (p.id = j.parts_id)
               WHERE j.project_id = ?
-	      AND j.checkedin <= '$form->{stockingdate}'
+	      AND j.checkedin <= |.$dbh->quote($form->{stockingdate}).qq|
 	      ORDER BY parts_id|;
   my $jth = $dbh->prepare($query) || $form->dberror($query);
 
@@ -710,12 +710,12 @@ sub stock_assembly {
       $uid .= $$;
       
       $query = qq|INSERT INTO parts (partnumber)
-                  VALUES ('$uid')|;
+                  VALUES (|.$dbh->quote($uid).qq|)|;
       $dbh->do($query) || $form->dberror($query);
 
       $query = qq|SELECT id
                   FROM parts
-                  WHERE partnumber = '$uid'|;
+                  WHERE partnumber = |.$dbh->quote($uid).qq||;
       ($uid) = $dbh->selectrow_array($query);
 
       $lastcost = $form->round_amount($lastcost / $stock, $form->{precision});
@@ -726,10 +726,12 @@ sub stock_assembly {
       my ($rev) = $rvh->fetchrow_array;
       $rvh->finish;
       
+      $uid *= 1;
+      
       $query = qq|UPDATE parts SET
                   partnumber = '$pref->{partnumber}-$rev',
 		  description = '$pref->{partdescription}',
-		  priceupdate = '$form->{stockingdate}',
+		  priceupdate = |.$dbh->quote($form->{stockingdate}).qq|,
 		  unit = '$pref->{unit}',
 		  listprice = $listprice,
 		  sellprice = $sellprice,
@@ -740,12 +742,12 @@ sub stock_assembly {
 		  assembly = '1',
 		  income_accno_id = $pref->{income_accno_id},
 		  bin = '$pref->{bin}',
-		  project_id = $form->{"id_$i"}
+		  project_id = |.$form->dbclean($form->{"id_$i"}).qq|
 		  WHERE id = $uid|;
       $dbh->do($query) || $form->dberror($query);
 
       $query = qq|INSERT INTO partstax (parts_id, chart_id)
-                  SELECT '$uid', chart_id FROM partstax
+                  SELECT |.$dbh->quote($uid).qq|, chart_id FROM partstax
 		  WHERE parts_id = $pref->{id}|;
       $dbh->do($query) || $form->dberror($query);
 		  
@@ -767,8 +769,8 @@ sub stock_assembly {
       $query = qq|UPDATE jcitems SET
                   allocated = qty
 	          WHERE allocated != qty
-	          AND checkedin <= '$form->{stockingdate}'
-		  AND project_id = $form->{"id_$i"}|;
+	          AND checkedin <= |.$dbh->quote($form->{stockingdate}).qq|
+		  AND project_id = |.$form->dbclean($form->{"id_$i"}).qq||;
       $dbh->do($query) || $form->dberror($query);
 
       $sth->finish;
@@ -838,6 +840,8 @@ sub delete_pricegroup {
   
   # connect to database
   my $dbh = $form->dbconnect_noauto($myconfig);
+  
+  $form->{id} *= 1;
   
   $query = qq|DELETE FROM pricegroup
 	      WHERE id = $form->{id}|;
@@ -964,7 +968,7 @@ sub save_partsgroup {
   if ($form->{id} *= 1) {
     $query = qq|UPDATE partsgroup SET
                 partsgroup = |.$dbh->quote($form->{partsgroup}).qq|,
-		pos = '$form->{pos}'
+		pos = |.$dbh->quote($form->{pos}).qq|
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO partsgroup
@@ -1077,7 +1081,7 @@ sub save_pricegroup {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
   
-  if ($form->{id}) {
+  if ($form->{id} *= 1) {
     $query = qq|UPDATE pricegroup SET
                 pricegroup = |.$dbh->quote($form->{pricegroup}).qq|
 		WHERE id = $form->{id}|;
@@ -1136,6 +1140,8 @@ sub description_translations {
   my $where = "1 = 1";
   my $var;
   my $ref;
+  
+  $form->{id} *= 1;
   
   for (qw(partnumber description)) {
     if ($form->{$_}) {
@@ -1204,6 +1210,8 @@ sub partsgroup_translations {
   my $where = "1 = 1";
   my $ref;
   my $var;
+
+  $form->{id} *= 1;
 
   if ($form->{description}) {
     $var = $form->like(lc $form->{description});
@@ -1476,21 +1484,21 @@ sub get_jcitems {
   
   if ($form->{projectnumber}) {
     ($null, $var) = split /--/, $form->{projectnumber};
-    $where .= " AND j.project_id = $var";
+    $where .= " AND j.project_id = ".$form->dbclean($var)."";
   }
   
   if ($form->{employee}) {
     ($null, $var) = split /--/, $form->{employee};
-    $where .= " AND j.employee_id = $var";
+    $where .= " AND j.employee_id = ".$form->dbclean($var)."";
   }
 
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   
   if ($form->{transdatefrom}) {
-    $where .= " AND j.checkedin >= '$form->{transdatefrom}'";
+    $where .= " AND j.checkedin >= '".$form->dbclean($form->{transdatefrom})."'";
   }
   if ($form->{transdateto}) {
-    $where .= " AND j.checkedout <= (date '$form->{transdateto}' + interval '1 days')";
+    $where .= " AND j.checkedout <= (date '".$form->dbclean($form->{transdateto})."' + interval '1 days')";
   }
 
   my $query;
@@ -1551,7 +1559,7 @@ sub get_jcitems {
 
   $where = "";
   if ($form->{transdateto}) {
-    $where = "WHERE t.validto >= '$form->{transdateto}' OR t.validto IS NULL";
+    $where = "WHERE t.validto >= '".$form->dbclean($form->{transdateto})."' OR t.validto IS NULL";
   }
     
   $query = qq|SELECT c.accno, t.rate

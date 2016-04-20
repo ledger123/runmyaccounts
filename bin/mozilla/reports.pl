@@ -462,8 +462,8 @@ sub gl_list {
    ($toaccount, $null) = split(/--/, $form->{toaccount});
 
    my $glwhere = qq| (1 = 1)|;
-   $glwhere .= qq| AND c.accno >= |.$dbh->quote($fromaccount) if $form->{fromaccount};
-   $glwhere .= qq| AND c.accno <= |.$dbh->quote($toaccount) if $form->{toaccount};
+   $glwhere .= qq| AND c.accno >= '|.$form->dbclean($fromaccount).qq|'| if $form->{fromaccount};
+   $glwhere .= qq| AND c.accno <= '|.$form->dbclean($toaccount).qq|'| if $form->{toaccount};
    $glwhere .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
    $glwhere .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};
    $glwhere .= qq| AND ac.amount <> 0|;
@@ -4154,6 +4154,10 @@ sub list_reminders {
     $options = $locale->text('Department')." : $department<br/>";
     $where = " AND ar.department_id = $form->{department_id}";
   }
+
+# FIXME fromdate and todate
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
   if ($form->{fromdate}) {

@@ -53,7 +53,7 @@ sub create_links {
 		LEFT JOIN paymentmethod m ON (m.id = ct.paymentmethod_id)
 		LEFT JOIN bank bk ON (bk.id = ct.id)
 		LEFT JOIN address ad1 ON (bk.address_id = ad1.id)
-                WHERE ct.id = $form->{id}/;
+                WHERE ct.id = /.$form->dbclean($form->{id}).qq//;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
   
@@ -62,7 +62,7 @@ sub create_links {
     $sth->finish;
     
     $query = qq|SELECT * FROM contact
-                WHERE trans_id = $form->{id}
+                WHERE trans_id = |.$form->dbclean($form->{id}).qq|
 		ORDER BY id|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
@@ -76,20 +76,20 @@ sub create_links {
         SELECT id, description 
         FROM department 
         WHERE id IN (
-            SELECT department_id FROM dpt_trans WHERE trans_id = $form->{id}
+            SELECT department_id FROM dpt_trans WHERE trans_id = |.$form->dbclean($form->{id}).qq|
         )
     |);
 
     # check if it is orphaned
     $query = qq|SELECT a.id
-              FROM $arap a
-	      JOIN $form->{db} ct ON (a.$form->{db}_id = ct.id)
+              FROM |.$form->dbclean($arap).qq| a
+	      JOIN $form->{db} ct ON (a.|.$form->dbclean($form->{db}).qq|_id = ct.id)
 	      WHERE ct.id = $form->{id}
 	    UNION
 	      SELECT a.id
 	      FROM oe a
-	      JOIN $form->{db} ct ON (a.$form->{db}_id = ct.id)
-	      WHERE ct.id = $form->{id}|;
+	      JOIN |.$form->dbclean($form->{db}).qq| ct ON (a.|.$form->dbclean($form->{db}).qq|_id = ct.id)
+	      WHERE ct.id = |.$form->dbclean($form->{id}).qq||;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
   
@@ -101,8 +101,8 @@ sub create_links {
     # get taxes for customer/vendor
     $query = qq|SELECT c.accno
 		FROM chart c
-		JOIN $form->{db}tax t ON (t.chart_id = c.id)
-		WHERE t.$form->{db}_id = $form->{id}|;
+		JOIN |.$form->dbclean($form->{db}).qq|tax t ON (t.chart_id = c.id)
+		WHERE t.|.$form->dbclean($form->{db}).qq|_id = |.$form->dbclean($form->{id}).qq||;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
 
@@ -117,7 +117,7 @@ sub create_links {
                   l.description AS translation
 		  FROM chart c
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-		  WHERE id = $form->{"${_}_accno_id"}|;
+		  WHERE id = |.$form->dbclean($form->{"${_}_accno_id"}).qq||;
       ($accno, $description, $translation) = $dbh->selectrow_array($query);
 
       $description = $translation if $translation;
@@ -137,7 +137,7 @@ sub create_links {
               l.description AS translation
               FROM chart c
 	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-	      WHERE c.link LIKE '%$form->{ARAP}%'
+	      WHERE c.link LIKE '%|.$form->dbclean($form->{ARAP}).qq|%'
 	      ORDER BY c.accno|;
   $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -163,7 +163,7 @@ sub create_links {
               FROM chart c
 	      JOIN tax t ON (t.chart_id = c.id)
 	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-	      WHERE c.link LIKE '%$form->{ARAP}_tax%'
+	      WHERE c.link LIKE '%|.$form->dbclean($form->{ARAP}).qq|_tax%'
 	      ORDER BY c.accno|;
   $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -259,7 +259,7 @@ sub save {
   my $bank_address_id;
   
   if ($form->{id}) {
-    $query = qq|DELETE FROM $form->{db}tax
+    $query = qq|DELETE FROM |.$form->dbclean($form->{db}).qq|tax
                 WHERE $form->{db}_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
 
@@ -314,11 +314,11 @@ sub save {
     $uid .= $$;
     
     $query = qq|INSERT INTO $form->{db} (name)
-                VALUES ('$uid')|;
+                VALUES (|.$dbh->quote($uid).qq|)|;
     $dbh->do($query) || $form->dberror($query);
    
     $query = qq|SELECT id FROM $form->{db}
-                WHERE name = '$uid'|;
+                WHERE name = |.$dbh->quote($uid).qq||;
     ($form->{id}) = $dbh->selectrow_array($query);
 
     delete $form->{addressid};
@@ -409,7 +409,7 @@ sub save {
     
   my $gifi;
   $gifi = qq|
-	      gifi_accno = '$form->{gifi_accno}',| if $form->{db} eq 'vendor';
+	      gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|,| if $form->{db} eq 'vendor';
 
   # SQLI: use of dbh->quote for all columns
   $query = qq|UPDATE $form->{db} SET
@@ -436,11 +436,11 @@ sub save {
 	      language_code = |.$dbh->quote($form->{language_code}).qq|,
 	      pricegroup_id = $rec{pricegroup_id},
 	      curr = |.$dbh->quote($form->{curr}).qq|,
-	      startdate = |.$form->dbquote($form->{startdate}, SQL_DATE).qq|,
-	      enddate = |.$form->dbquote($form->{enddate}, SQL_DATE).qq|,
-	      arap_accno_id = (SELECT id FROM chart WHERE accno = '$rec{arap_accno}'),
-	      payment_accno_id = (SELECT id FROM chart WHERE accno = '$rec{payment_accno}'),
-	      discount_accno_id = (SELECT id FROM chart WHERE accno = '$rec{discount_accno}'),
+	      startdate = |.$form->dbquote($form->dbclean($form->{startdate}), SQL_DATE).qq|,
+	      enddate = |.$form->dbquote($form->dbclean($form->{enddate}), SQL_DATE).qq|,
+	      arap_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{arap_accno}).qq|),
+	      payment_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_accno}).qq|),
+	      discount_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{discount_accno}).qq|),
 	      cashdiscount = $form->{cashdiscount},
 	      threshold = $form->{threshold},
 	      discountterms = $form->{discountterms},
@@ -567,6 +567,7 @@ sub delete {
 
 sub search {
   my ($self, $myconfig, $form) = @_;
+
 
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
@@ -845,7 +846,7 @@ sub search {
   # accounts
   my %accno;
   $query = qq|SELECT id, accno FROM chart
-              WHERE link LIKE '%$form->{ARAP}%'|;
+              WHERE link LIKE '%|.$form->dbclean($form->{ARAP}).qq|%'|;
   my $tth = $dbh->prepare($query);
   $tth->execute || $form->dberror($query);
   while ($ref = $tth->fetchrow_hashref(NAME_lc)) {
@@ -913,6 +914,8 @@ sub get_history {
   my $var;
   my $table;
 
+  $form->{db} = $form->dbclean($form->{db});
+
   # setup ASC or DESC
   $form->sort_order();
   
@@ -944,6 +947,10 @@ sub get_history {
     $var = $form->like(lc $form->{employee});
     $where .= " AND lower(e.name) LIKE '$var'";
   }
+  
+  $form->{transdatefrom} = $form->dbclean($form->{transdatefrom});
+  $form->{transdateto} = $form->dbclean($form->{transdateto});
+  $form->{type} = $form->dbclean($form->{type});
 
   $where .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
   $where .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
@@ -1047,6 +1054,7 @@ sub get_history {
 	      ORDER BY $sortorder|;
 
   my $sth = $dbh->prepare($query);
+  print STDERR "$query\n";
   $sth->execute || $form->dberror($query);
 
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
@@ -1149,6 +1157,8 @@ sub save_pricelist {
   my $dbh = $form->dbconnect_noauto($myconfig);
   
   $form->{id} *= 1;
+  
+  $form->{db} = 'vendor' if $form->{db} ne 'customer'; # SQLI protection
 
   my $query = qq|DELETE FROM parts$form->{db}
                  WHERE $form->{db}_id = $form->{id}|;
@@ -1163,19 +1173,19 @@ sub save_pricelist {
 	
 	$query = qq|INSERT INTO parts$form->{db} (parts_id, customer_id,
 		    pricebreak, sellprice, validfrom, validto, curr)
-		    VALUES ($form->{"id_$i"}, $form->{id},
-		    $form->{"pricebreak_$i"}, $form->{"sellprice_$i"},|
-		    .$form->dbquote($form->{"validfrom_$i"}, SQL_DATE) .qq|,|
-		    .$form->dbquote($form->{"validto_$i"}, SQL_DATE) .qq|,
-		    '$form->{"curr_$i"}')|;
+		    VALUES (|.$form->dbclean($form->{"id_$i"}).qq|, $form->{id},
+		    |.$form->dbclean($form->{"pricebreak_$i"}).qq|, |.$form->dbclean($form->{"sellprice_$i"}).qq|,|
+		    .$form->dbquote($form->dbclean($form->{"validfrom_$i"}), SQL_DATE) .qq|,|
+		    .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE) .qq|,
+		    |.$dbh->quote($form->{"curr_$i"}).qq|)|;
       } else {
 	for (qw(leadtime lastcost)) { $form->{"${_}_$i"} = $form->parse_amount($myconfig, $form->{"${_}_$i"}) }
 	
 	$query = qq|INSERT INTO parts$form->{db} (parts_id, vendor_id,
 		    partnumber, lastcost, leadtime, curr)
-		    VALUES ($form->{"id_$i"}, $form->{id},
+		    VALUES (|.$form->dbclean($form->{"id_$i"}).qq|, $form->{id},
 		    |.$dbh->quote($form->{"partnumber_$i"}).qq|, $form->{"lastcost_$i"},
-		    $form->{"leadtime_$i"}, '$form->{"curr_$i"}')|;
+		    $form->{"leadtime_$i"}, |.$dbh->quote($form->{"curr_$i"}).qq|)|;
 
       }
       $dbh->do($query) || $form->dberror($query);
@@ -1265,7 +1275,7 @@ sub ship_to {
 		s.shiptofax, s.shiptoemail
 	        FROM shipto s
 		JOIN oe o ON (o.id = s.trans_id)
-		WHERE o.$form->{db}_id = $form->{id}
+		WHERE o.$form->{db}_id = |.$form->dbclean($form->{id}).qq|
 		UNION
 		SELECT
                 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
@@ -1274,7 +1284,7 @@ sub ship_to {
 		s.shiptofax, s.shiptoemail
 		FROM shipto s
 		JOIN $table a ON (a.id = s.trans_id)
-	        WHERE a.$form->{db}_id = $form->{id}
+	        WHERE a.$form->{db}_id = |.$form->dbclean($form->{id}).qq|
 		EXCEPT
 		SELECT
 	        s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
@@ -1282,7 +1292,7 @@ sub ship_to {
 		s.shiptocountry, s.shiptocontact, s.shiptophone,
 		s.shiptofax, s.shiptoemail
 		FROM shipto s
-		WHERE s.trans_id = '$form->{id}'|;
+		WHERE s.trans_id = |.$form->dbclean($form->{id}).qq||;
 	 
     my $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);

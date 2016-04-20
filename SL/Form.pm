@@ -1563,11 +1563,11 @@ sub datetonum {
 
 sub isvaldate {
   my ($self, $myconfig, $date, $text) = @_;
-
   if ($date){
-    $date =~ s/[ \-\.T:\/]//g;
-    $date *= 1;
-    $self->error($text) if !$date;
+    my $cleandate = $self->dbclean($date);
+	if ($date ne $cleandate) {
+	  $self->error($text);
+	}
   }
 }
 
@@ -1778,7 +1778,7 @@ sub dbquote {
   
   # DBI does not return NULL for SQL_DATE if the date is empty
   if ($type eq 'SQL_DATE') {
-    $_ = ($var) ? "'$var'" : "NULL";
+    $_ = ($var) ? "'".$self->dbclean($var)."'" : "NULL";
   }
   if ($type eq 'SQL_INT') {
     $_ = $var * 1;
@@ -3036,7 +3036,7 @@ sub save_status {
     $emailed = ($emailforms =~ /$self->{formname}/) ? "1" : "0";
     
     $query = qq|INSERT INTO status (trans_id, printed, emailed, formname)
-		VALUES ($self->{id}, '$printed', '$emailed', '$formname')|;
+		VALUES ($self->{id}, |.$dbh->quote($printed).qq|, |.$dbh->quote($emailed).qq|, |.$dbh->quote($formname).qq|)|;
     $dbh->do($query) || $self->dberror($query);
   }
 
@@ -3822,18 +3822,19 @@ sub audittrail {
       if ($audittrail->{transdate}) {
 	$query = qq|INSERT INTO audittrail (trans_id, tablename, reference,
 		    formname, action, employee_id, transdate) VALUES (
-		    $audittrail->{id}, '$audittrail->{tablename}', |
+		    $audittrail->{id}, |.$dbh->quote($audittrail->{tablename}).qq|, |
 		    .$dbh->quote($audittrail->{reference}).qq|',
-		    '$audittrail->{formname}', '$audittrail->{action}',
-		    $employee_id, '$audittrail->{transdate}')|;
+		    |.$dbh->quote($audittrail->{formname}).qq|, |.$dbh->quote($audittrail->{action}).qq|,
+		    |.$self->dbclean($employee_id).qq|, '$audittrail->{transdate}')|;
       } else {
 	$query = qq|INSERT INTO audittrail (trans_id, tablename, reference,
 		    formname, action, employee_id) VALUES ($audittrail->{id},
-		    '$audittrail->{tablename}', |
+		    |.$dbh->quote($audittrail->{tablename}).qq|, |
 		    .$dbh->quote($audittrail->{reference}).qq|,
-		    '$audittrail->{formname}', '$audittrail->{action}',
-		    $employee_id)|;
+		    |.$dbh->quote($audittrail->{formname}).qq|, |.$dbh->quote($audittrail->{action}).qq|,
+		    |.$self->dbclean($employee_id).qq|)|;
       }
+      print STDERR "$query\n";
       $dbh->do($query);
     }
   } else {

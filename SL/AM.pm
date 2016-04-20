@@ -1483,7 +1483,7 @@ sub save_taxes {
     $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto)
                 VALUES ($chart_id, $rate, |
 		.$dbh->quote($form->{"taxnumber_$i"}).qq|, |
-		.$form->dbquote($form->{"validto_$i"}, SQL_DATE)
+		.$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE)
 		.qq|)|;
     $dbh->do($query) || $form->dberror($query);
   }

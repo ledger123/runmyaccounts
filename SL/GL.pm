@@ -147,13 +147,13 @@ sub post_transaction {
     $uid .= $$;
 
     $query = qq|INSERT INTO gl (reference, employee_id, approved)
-                VALUES ('$uid', (SELECT id FROM employee
+                VALUES (|.$dbh->quote($uid).qq|, (SELECT id FROM employee
 		                 WHERE login = '$form->{login}'),
 		'$approved')|;
     $dbh->do($query) || $form->dberror($query);
     
     $query = qq|SELECT id FROM gl
-                WHERE reference = '$uid'|;
+                WHERE reference = |.$dbh->quote($uid).qq||;
     ($form->{id}) = $dbh->selectrow_array($query);
   }
   
@@ -218,11 +218,11 @@ sub post_transaction {
     $project_id ||= 'NULL';
     
     if ($keepcleared) {
-      $cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
+      $cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
     }
 
     if ($form->{"fx_transaction_$i"} *= 1) {
-      $cleared = $form->dbquote($form->{transdate}, SQL_DATE);
+      $cleared = $form->dbquote($form->dbclean($form->{transdate}), SQL_DATE);
     }
     
     if ($amount || $form->{"source_$i"} || $form->{"memo_$i"} || ($project_id ne 'NULL')) {
@@ -231,7 +231,7 @@ sub post_transaction {
 		  VALUES
 		  ($form->{id}, (SELECT id
 				 FROM chart
-				 WHERE accno = '$accno'),
+				 WHERE accno = |.$dbh->quote($accno).qq|),
 		   $amount, '$form->{transdate}', |.
 		   $dbh->quote($form->{"source_$i"}) .qq|,
 		  '$form->{"fx_transaction_$i"}',
@@ -249,7 +249,7 @@ sub post_transaction {
 		      VALUES
 		      ($form->{id}, (SELECT id
 				     FROM chart
-				     WHERE accno = '$accno'),
+				     WHERE accno = |.$dbh->quote($accno).qq|),
 		       $amount, '$form->{transdate}', |.
 		       $dbh->quote($form->{"source_$i"}) .qq|,
 		      $project_id, '1', |.$dbh->quote($form->{"memo_$i"}).qq|,
@@ -317,6 +317,14 @@ sub transactions {
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   my ($glwhere, $arwhere, $apwhere) = ("g.approved = '1'", "a.approved = '1'", "a.approved = '1'");
+  
+  $form->{reference} = $form->dbclean($form->{reference});
+  $form->{description} = $form->dbclean($form->{description});
+  $form->{projectnumber} = $form->dbclean($form->{projectnumber});
+  $form->{name} = $form->dbclean($form->{name});
+  $form->{vcnumber} = $form->dbclean($form->{vcnumber});
+  $form->{department} = $form->dbclean($form->{department});
+  $form->{fx_transaction} = $form->dbclean($form->{fx_transaction});
   
   if ($form->{reference}) {
     $var = $form->like(lc $form->{reference});

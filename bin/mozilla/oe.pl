@@ -981,6 +981,7 @@ sub update {
   } else {
 
     $retrieve_item = "";
+    $form->{type} = $form->dbclean($form->{type});
     if ($form->{type} eq 'purchase_order' || $form->{type} eq 'request_quotation') {
       $retrieve_item = "IR::retrieve_item";
     }

@@ -1425,6 +1425,8 @@ sub post {
     $form->isblank( $form->{vc},  $label );
     $form->isblank( "department", $locale->text('Department missing!') ) if $form->{selectdepartment};
 
+    $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid transdate...'));
+
     $transdate = $form->datetonum( \%myconfig, $form->{transdate} );
 
     $form->error( $locale->text('Cannot post transaction for a closed period!') ) if ( $transdate <= $form->{closedto} );
