@@ -236,7 +236,7 @@ sub error {
     }
 
     print qq|<body><h2 class=error>An unexpected error occured!</h2>|;
-
+	print STDERR "Error: $msg\n$dbmsg\n";
     exit;
 
   }
@@ -287,7 +287,7 @@ sub numtextrows {
 sub dberror {
   my ($self, $msg) = @_;
 
-  $self->error($DBI::errstr, $msg);
+  $self->error($msg, $DBI::errstr);
   
 }
 
@@ -1737,7 +1737,7 @@ sub dbconnect {
   my ($self, $myconfig) = @_;
 
   # connect to database
-  my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}) or $self->dberror;
+  my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}, {PrintError => 0}) or $self->dberror;
   $dbh->{PrintError} = 0;
 
   # set db options
@@ -1754,7 +1754,7 @@ sub dbconnect_noauto {
   my ($self, $myconfig) = @_;
 
   # connect to database
-  $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}, {AutoCommit => 0}) or $self->dberror;
+  $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}, {PrintError => 0, AutoCommit => 0}) or $self->dberror;
 
   # set db options
   if ($myconfig->{dboptions}) {
@@ -3829,7 +3829,6 @@ sub audittrail {
 		    |.$dbh->quote($audittrail->{formname}).qq|, |.$dbh->quote($audittrail->{action}).qq|,
 		    |.$self->dbclean($employee_id).qq|)|;
       }
-      print STDERR "$query\n";
       $dbh->do($query);
     }
   } else {

@@ -1054,7 +1054,6 @@ sub get_history {
 	      ORDER BY $sortorder|;
 
   my $sth = $dbh->prepare($query);
-  print STDERR "$query\n";
   $sth->execute || $form->dberror($query);
 
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {

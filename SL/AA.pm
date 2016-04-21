@@ -1011,7 +1011,6 @@ sub transactions {
   $form->{query} = $query;  
         
   my $sth = $dbh->prepare($query);
-  print STDERR "$query\n";
   $sth->execute || $form->dberror($query);
 
   my $i = -1;

@@ -255,9 +255,7 @@ sub lookup_order {
 
 sub save {
   my ($self, $myconfig, $form) = @_;
-  
-  print STDERR "save order\n";
-  
+    
   # connect to database, turn off autocommit
   my $dbh = $form->dbconnect_noauto($myconfig);
 
