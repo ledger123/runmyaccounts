@@ -21,6 +21,27 @@ $(document).ready(function() {
 	         "https://service.runmyaccounts.com/api/latest/clients/$1/dms/content?t=iframe&path=/$2");
 	   });
 	
+	$("form").filter(function(){
+		if($(this).attr('action').match(/[a-z]+.pl/)){
+			$(this).closest("form").append('<input type="hidden" name="FRONTEND_HEADER" value="'+getCookie("FRONTEND_COOKIE")+'" />');
+		}
+	});
+	
+	function getCookie(cname) {
+	    var name = cname + "=";
+	    var ca = document.cookie.split(';');
+	    for(var i = 0; i <ca.length; i++) {
+	        var c = ca[i];
+	        while (c.charAt(0)==' ') {
+	            c = c.substring(1);
+	        }
+	        if (c.indexOf(name) == 0) {
+	            return c.substring(name.length,c.length);
+	        }
+	    }
+	    return "";
+	}
+	
 	$(document).mousemove( function(e) {
 		window.parent.parent.postMessage('mousemoved' ,'*');
 	});
