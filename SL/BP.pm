@@ -336,7 +336,8 @@ sub get_spoolfiles {
 		  JOIN address ad ON (ad.trans_id = vc.id)
 		  JOIN status s ON (s.trans_id = a.id)
 		  WHERE s.spoolfile IS NOT NULL
-		  AND s.formname LIKE '$wildcard$form->{type}'|;
+		  AND s.formname LIKE '$wildcard$form->{type}'
+          AND $where|;
       } else {
 	
 	if ($item ne 'oe' && $form->{onhold}) {
