@@ -165,6 +165,9 @@ sub continue { &{ $form->{nextsub} } };
 
 sub get_payments {
 
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
+
   ($form->{accno}, $form->{account}) = split /--/, $form->{accno};
 
   RC->payment_transactions(\%myconfig, \%$form);

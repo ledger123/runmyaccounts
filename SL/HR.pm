@@ -115,6 +115,7 @@ sub save_employee {
 
   $form->{employeenumber} = $form->update_defaults($myconfig, "employeenumber", $dbh) if ! $form->{employeenumber};
 
+  # SQLI protection: all text/varchar columns need to be quoted
   $query = qq|UPDATE employee SET
               employeenumber = |.$dbh->quote($form->{employeenumber}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,
@@ -124,21 +125,21 @@ sub save_employee {
 	      state = |.$dbh->quote($form->{state}).qq|,
 	      zipcode = |.$dbh->quote($form->{zipcode}).qq|,
 	      country = |.$dbh->quote($form->{country}).qq|,
-	      workphone = '$form->{workphone}',
-	      workfax = '$form->{workfax}',
-	      workmobile = '$form->{workmobile}',
-	      homephone = '$form->{homephone}',
-	      startdate = |.$form->dbquote($form->{startdate}, SQL_DATE).qq|,
-	      enddate = |.$form->dbquote($form->{enddate}, SQL_DATE).qq|,
+	      workphone = |.$dbh->quote($form->{workphone}).qq|,
+	      workfax = |.$dbh->quote($form->{workfax}).qq|,
+	      workmobile = |.$dbh->quote($form->{workmobile}).qq|,
+	      homephone = |.$dbh->quote($form->{homephone}).qq|,
+	      startdate = |.$form->dbquote($form->dbclean($form->{startdate}), SQL_DATE).qq|,
+	      enddate = |.$form->dbquote($form->dbclean($form->{enddate}), SQL_DATE).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
-	      role = '$form->{role}',
-	      sales = '$form->{sales}',
+	      role = |.$dbh->quote($form->{role}).qq|,
+	      sales = |.$dbh->quote($form->{sales}).qq|,
 	      email = |.$dbh->quote($form->{email}).qq|,
-	      ssn = '$form->{ssn}',
-	      dob = |.$form->dbquote($form->{dob}, SQL_DATE).qq|,
-	      iban = '$form->{iban}',
-	      bic = '$form->{bic}',
-              managerid = $managerid
+	      ssn = |.$dbh->quote($form->{ssn}).qq|,
+	      dob = |.$form->dbquote($form->dbclean($form->{dob}), SQL_DATE).qq|,
+	      iban = |.$dbh->quote($form->{iban}).qq|,
+	      bic = |.$dbh->quote($form->{bic}).qq|,
+          managerid = $managerid
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 

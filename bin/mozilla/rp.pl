@@ -944,6 +944,11 @@ sub continue { &{$form->{nextsub}} };
 
 sub generate_income_statement {
 
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
+  $form->isvaldate(\%myconfig, $form->{comparefromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{comparetodate}, $locale->text('Invalid to date ...'));
+
     $form->{padding} = "&nbsp;&nbsp;";
     $form->{bold} = "<strong>";
     $form->{endbold} = "</strong>";
@@ -1000,6 +1005,11 @@ sub generate_income_statement {
 
 sub generate_balance_sheet {
 
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
+  $form->isvaldate(\%myconfig, $form->{comparefromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{comparetodate}, $locale->text('Invalid to date ...'));
+
     $form->{padding} = "&nbsp;&nbsp;";
     $form->{bold} = "<strong>";
     $form->{endbold} = "</strong>";
@@ -1034,6 +1044,9 @@ sub generate_balance_sheet {
 
 sub generate_projects {
 
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid to date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
+
   $form->{nextsub} = "generate_projects";
   $form->{title} = $locale->text('Project Transactions');
 
@@ -1051,6 +1064,9 @@ sub generate_projects {
 # added headers and subtotals
 #
 sub generate_trial_balance {
+
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   # get for each account initial balance, debits and credits
   RP->trial_balance(\%myconfig, \%$form);
@@ -1318,6 +1334,8 @@ sub list_accounts {
 
 sub generate_ar_aging {
 
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
+
   # split customer
   my @values = split(/--/, $form->{customer});
   $form->{customer_id} = $values[1];
@@ -1341,6 +1359,8 @@ sub generate_ar_aging {
 
 
 sub generate_ap_aging {
+
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
   
   # split vendor
   ($form->{vendor}) = split(/--/, $form->{vendor});
@@ -1361,6 +1381,9 @@ sub generate_ap_aging {
 
 
 sub aging {
+
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   $form->{callback} = $form->{initcallback};
   for (qw(path login type format summary)) { $form->{callback} .= "&$_=$form->{$_}" }
@@ -1928,6 +1951,7 @@ sub reminder {
   $column_header{ordnumber} = qq|<th class=listheading>|.$locale->text('Order').qq|</th>|;
   $column_header{transdate} = qq|<th class=listheading nowrap>|.$locale->text('Date').qq|</th>|;
   $column_header{duedate} = qq|<th class=listheading nowrap>|.$locale->text('Due Date').qq|</th>|;
+  $column_header{duedays} = qq|<th class=listheading nowrap>|.$locale->text('Due Days').qq|</th>|;
   $column_header{due} = qq|<th class=listheading nowrap>|.$locale->text('Due').qq|</th>|;
   
   @column_index = qw(ndx vc);
@@ -1944,7 +1968,7 @@ sub reminder {
     for (@{ $form->{all_language} }) { $form->{selectlanguage} .= qq|$_->{code}--$_->{description}\n| }
   }
   
-  push @column_index, qw(invnumber invdescription ordnumber transdate duedate due);
+  push @column_index, qw(invnumber invdescription ordnumber transdate duedate duedays due);
   
   if ($form->{department}) {
       $option .= "\n<br>" if $option;
@@ -2071,6 +2095,7 @@ function CheckAll() {
     $column_data{ordnumber} = qq|<td nowrap>$ref->{ordnumber}</td>|;
     $column_data{invdescription} = qq|<td nowrap>$ref->{invdescription}</td>|;
     for (qw(transdate duedate)) { $column_data{$_} = qq|<td nowrap>$ref->{$_}</td>| }
+    for (qw(duedays)) { $column_data{$_} = qq|<td nowrap align="right">$ref->{$_}</td>| }
     
     $column_data{due} = qq|<td align=right nowrap>|.$form->format_amount(\%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision}).qq|</td>|;
 
@@ -2590,36 +2615,6 @@ sub print_reminder {
     $form->{OUT} = qq~| $printer{$form->{media}}~;
   }
 
-  if ($form->{media} eq 'queue') {
-    $form->{formname} = 'reminder';
-
-    %queued = split / /, $form->{queued};
-
-    if ($filename = $queued{$form->{formname}}) {
-      $form->{queued} =~ s/$form->{formname} $filename//;
-      unlink "$spool/$filename";
-      $filename =~ s/\..*$//g;
-    } else {
-      $filename = time;
-      $filename .= int rand 10000;
-    }
-
-    $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
-    $form->{OUT} = ">$spool/$filename";
-
-    $form->{queued} .= " $form->{formname} $filename";
-    $form->{queued} =~ s/^ //;
-
-    # save status
-    $form->update_status(\%myconfig);
-
-    %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
-		    reference   => $form->{"${inv}number"},
-		    formname    => $form->{formname},
-		    action      => 'queued',
-		    id          => $form->{id} );
-  }
-
   &do_print_reminder;
   
   if ($form->{callback}) {
@@ -2649,11 +2644,13 @@ sub do_print_reminder {
   # setup variables for the form
   $form->format_string(qw(companyemail companywebsite company address businessnumber username useremail tel fax));
   
-  @a = qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
+  @a = qw(id name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
   push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country bic);
+
+  my $dbh = $form->dbconnect(\%myconfig);
 
   while (@{ $form->{AG} }) {
 
@@ -2693,6 +2690,32 @@ sub do_print_reminder {
       $form->{integer_out_amount} = $ref->{integer_out_amount};
       $form->{out_decimal} = $ref->{out_decimal};
 
+      $form->{formname} = 'reminder';
+
+      if ($form->{media} eq 'queue'){
+         ($filename) = $dbh->selectrow_array("SELECT spoolfile FROM status WHERE trans_id = $form->{id}");
+
+         if ($filename) {
+            unlink "$spool/$filename";
+            $filename =~ s/\..*$//g;
+         } else {
+            $filename = time;
+            $filename .= int rand 10000;
+         }
+
+         $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
+         $form->{OUT} = ">$spool/$filename";
+
+         # save status
+         $form->update_status(\%myconfig);
+
+         %audittrail = ( tablename   => ($order) ? 'oe' : lc $ARAP,
+                    reference   => $form->{"${inv}number"},
+                    formname    => $form->{formname},
+                    action      => 'queued',
+                    id          => $form->{id} );
+         $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
+      }
       $form->parse_template(\%myconfig, $userspath);
 
     }
@@ -2806,6 +2829,9 @@ sub statement_details {
  
 sub generate_tax_report_all {
 
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
+
   my $dbh = $form->dbconnect(\%myconfig);
 
   my $query = qq|SELECT accno, description FROM chart WHERE link LIKE '%AR_tax%' ORDER BY accno|;
@@ -2887,6 +2913,10 @@ sub generate_tax_report_all {
 }
 
 sub generate_tax_report {
+
+
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   RP->tax_report(\%myconfig, \%$form);
 
@@ -3291,6 +3321,8 @@ sub tax_subtotal {
 
 sub list_payments {
 
+  $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   if ($form->{account}) {
     ($form->{paymentaccounts}) = split /--/, $form->{account};

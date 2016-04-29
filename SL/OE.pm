@@ -46,6 +46,8 @@ sub transactions {
     $orderitems_join = qq|JOIN orderitems oi ON (oi.trans_id = o.id)| unless $orderitems_join;
   }
 
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   my $rate = ($form->{vc} eq 'customer') ? 'buy' : 'sell';
 
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
@@ -59,6 +61,7 @@ sub transactions {
   my $name = $form->like(lc $form->{$form->{vc}});
   
   for (qw(department warehouse employee)) {
+    $form->{$_} = $form->dbclean($form->{$_});
     if ($form->{$_}) {
       ($null, $var) = split /--/, $form->{$_};
       $where .= " AND o.${_}_id = $var";
@@ -120,6 +123,7 @@ sub transactions {
   }
 
   if ($form->{"$form->{vc}_id"}) {
+    $form->{"$form->{vc}_id"} *= 1;
     $query .= qq| AND o.$form->{vc}_id = $form->{"$form->{vc}_id"}|;
   } else {
     if ($form->{$form->{vc}} ne "") {
@@ -137,7 +141,8 @@ sub transactions {
     $form->{closed} = 1;
   }
   if ($form->{ponumber} ne "") {
-    $query .= " AND lower(ponumber) LIKE '$form->{ponumber}'";
+    $ponumber = $form->like(lc $form->{ponumber});
+    $query .= " AND lower(ponumber) LIKE '$ponumber'";
   }
 
   if (!$form->{open} && !$form->{closed}) {
@@ -169,10 +174,10 @@ sub transactions {
 			     WHERE lower(description) LIKE '$var')";
   }
   if ($form->{transdatefrom}) {
-    $query .= " AND o.transdate >= '$form->{transdatefrom}'";
+    $query .= " AND o.transdate >= '".$form->dbclean($form->{transdatefrom})."'";
   }
   if ($form->{transdateto}) {
-    $query .= " AND o.transdate <= '$form->{transdateto}'";
+    $query .= " AND o.transdate <= '".$form->dbclean($form->{transdateto})."'";
   }
 
   $query .= " ORDER by $sortorder";
@@ -250,7 +255,7 @@ sub lookup_order {
 
 sub save {
   my ($self, $myconfig, $form) = @_;
-  
+    
   # connect to database, turn off autocommit
   my $dbh = $form->dbconnect_noauto($myconfig);
 
@@ -310,13 +315,12 @@ sub save {
     my $uid = localtime;
     $uid .= $$;
 
-   
     $query = qq|INSERT INTO oe (ordnumber, employee_id)
-		VALUES ('$uid', $form->{employee_id})|;
+		VALUES (|.$dbh->quote($uid).qq|, |.$form->dbclean($form->{employee_id}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
    
     $query = qq|SELECT id FROM oe
-                WHERE ordnumber = '$uid'|;
+                WHERE ordnumber = |.$dbh->quote($uid).qq||;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
     ($form->{id}) = $sth->fetchrow_array;
@@ -341,6 +345,8 @@ sub save {
   $uid .= $$;
  
   for $i (1 .. $form->{rowcount}) {
+
+	$form->{"id_$i"} *= 1;
 
     for (qw(qty ship)) { $form->{"${_}_$i"} = $form->parse_amount($myconfig, $form->{"${_}_$i"}) }
      
@@ -403,6 +409,7 @@ sub save {
       $netamount += $form->{"sellprice_$i"} * $form->{"qty_$i"};
       
       $project_id = 'NULL';
+      $form->{"projectnumber_$i"} = $form->dbclean($form->{"projectnumber_$i"});
       if ($form->{"projectnumber_$i"} ne "") {
 	($null, $project_id) = split /--/, $form->{"projectnumber_$i"};
       }
@@ -410,31 +417,31 @@ sub save {
       
       # add/save detail record in orderitems table
       $query = qq|INSERT INTO orderitems (description, trans_id, parts_id)
-		  VALUES ('$uid', $form->{id}, $form->{"id_$i"})|;
+		  VALUES (|.$dbh->quote($uid).qq|, $form->{id}, |.$form->dbclean($form->{"id_$i"}).qq|)|;
       $dbh->do($query) || $form->dberror($query);
 
       $query = qq|SELECT id
 		  FROM orderitems
-		  WHERE description = '$uid'|;
+		  WHERE description = |.$dbh->quote($uid).qq||;
       ($form->{"orderitems_id_$i"}) = $dbh->selectrow_array($query);
 
       $lineitemdetail = ($form->{"lineitemdetail_$i"}) ? 1 : 0;
       
       $query = qq|UPDATE orderitems SET
 		  description = |.$dbh->quote($form->{"description_$i"}).qq|,
-		  qty = $form->{"qty_$i"},
+		  qty = |.$form->dbclean($form->{"qty_$i"}).qq|,
 		  sellprice = $fxsellprice,
 		  discount = $form->{"discount_$i"},
 		  unit = |.$dbh->quote($form->{"unit_$i"}).qq|,
-		  reqdate = |.$form->dbquote($form->{"reqdate_$i"}, SQL_DATE).qq|,
-		  project_id = $project_id,
-		  ship = $form->{"ship_$i"},
+		  reqdate = |.$form->dbquote($form->dbclean($form->{"reqdate_$i"}), SQL_DATE).qq|,
+		  project_id = |.$form->dbclean($project_id).qq|,
+		  ship = |.$form->dbclean($form->{"ship_$i"}).qq|,
 		  serialnumber = |.$dbh->quote($form->{"serialnumber_$i"}).qq|,
 		  ordernumber = |.$dbh->quote($form->{"ordernumber_$i"}).qq|,
 		  ponumber = |.$dbh->quote($form->{"customerponumber_$i"}).qq|,
 		  itemnotes = |.$dbh->quote($form->{"itemnotes_$i"}).qq|,
 		  lineitemdetail = '$lineitemdetail'
-		  WHERE id = $form->{"orderitems_id_$i"}
+		  WHERE id = |.$form->dbclean($form->{"orderitems_id_$i"}).qq|
 		  AND trans_id = $form->{id}|;
       $dbh->do($query) || $form->dberror($query);
 
@@ -442,10 +449,10 @@ sub save {
       if ($form->{add_shipping}) {
          $query = qq|INSERT INTO inventory (parts_id, warehouse_id, department_id,
                   qty, trans_id, orderitems_id, shippingdate, employee_id)
-                  VALUES ($form->{"id_$i"}, $form->{warehouse_id}, $form->{department_id},
+                  VALUES (|.$form->dbclean($form->{"id_$i"}).qq|, |.$form->dbclean($form->{warehouse_id}).qq|, |.$form->dbclean($form->{department_id}).qq|,
 		  $form->{"ship_$i"} * $sw * -1, $form->{id},
-		  $form->{"orderitems_id_$i"}, '$form->{transdate}',
-		  $form->{employee_id})|;
+		  |.$form->dbclean($form->{"orderitems_id_$i"}).qq|, |.$dbh->quote($form->{transdate}).qq|,
+		  |.$form->dbclean($form->{employee_id}).qq|)|;
          $dbh->do($query) || $form->dberror($query);
       }
 
@@ -459,18 +466,18 @@ sub save {
       }
       if ($ok) {
 	$query = qq|INSERT INTO cargo (id, trans_id, package, netweight,
-	            grossweight, volume) VALUES ( $form->{"orderitems_id_$i"},
+	            grossweight, volume) VALUES ( |.$form->dbclean($form->{"orderitems_id_$i"}).qq|,
 		    $form->{id}, |
 		    .$dbh->quote($form->{"package_$i"}).qq|,
-		    $form->{"netweight_$i"}, $form->{"grossweight_$i"},
-		    $form->{"volume_$i"})|;
+		    |.$form->dbclean($form->{"netweight_$i"}).qq|, |.$form->dbclean($form->{"grossweight_$i"}).qq|,
+		    |.$form->dbclean($form->{"volume_$i"}).qq|)|;
         $dbh->do($query) || $form->dberror($query);
       }
       
       if ($form->{type} =~ /_order/) {
 	if ($form->{"netweight_$i"}) {
 	  $query = qq|UPDATE parts SET
-	              weight = abs($form->{"netweight_$i"} / $form->{"qty_$i"} * 1.0)
+	              weight = abs(|.$form->dbclean($form->{"netweight_$i"}).qq| / |.$form->dbclean($form->{"qty_$i"}).qq| * 1.0)
 		      WHERE id = $form->{"id_$i"}|;
 	  #$dbh->do($query) || $form->dberror($query);
 	}
@@ -522,28 +529,28 @@ sub save {
 	      ordnumber = |.$dbh->quote($form->{ordnumber}).qq|,
 	      quonumber = |.$dbh->quote($form->{quonumber}).qq|,
               description = |.$dbh->quote($form->{description}).qq|,
-              transdate = '$form->{transdate}',
-              vendor_id = $form->{vendor_id},
-	      customer_id = $form->{customer_id},
+              transdate = |.$dbh->quote($form->{transdate}).qq|,
+              vendor_id = |.$form->dbclean($form->{vendor_id}).qq|,
+	      customer_id = |.$form->dbclean($form->{customer_id}).qq|,
               amount = $amount,
               netamount = $netamount,
-	      reqdate = |.$form->dbquote($form->{reqdate}, SQL_DATE).qq|,
-	      taxincluded = '$form->{taxincluded}',
+	      reqdate = |.$form->dbquote($form->dbclean($form->{reqdate}), SQL_DATE).qq|,
+	      taxincluded = |.$dbh->quote($form->{taxincluded}).qq|,
 	      shippingpoint = |.$dbh->quote($form->{shippingpoint}).qq|,
 	      shipvia = |.$dbh->quote($form->{shipvia}).qq|,
 	      waybill = |.$dbh->quote($form->{waybill}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
-	      curr = '$form->{currency}',
-	      closed = '$form->{closed}',
+	      curr = |.$dbh->quote($form->{currency}).qq|,
+	      closed = |.$dbh->quote($form->{closed}).qq|,
 	      quotation = '$quotation',
-	      department_id = $form->{department_id},
-	      employee_id = $form->{employee_id},
-	      language_code = '$form->{language_code}',
+	      department_id = |.$form->dbclean($form->{department_id}).qq|,
+	      employee_id = |.$form->dbclean($form->{employee_id}).qq|,
+	      language_code = |.$dbh->quote($form->{language_code}).qq|,
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
-	      terms = $form->{terms},
-	      warehouse_id = $form->{warehouse_id},
-	      exchangerate = $form->{exchangerate}
+	      terms = |.$form->dbclean($form->{terms}).qq|,
+	      warehouse_id = |.$form->dbclean($form->{warehouse_id}).qq|,
+	      exchangerate = |.$form->dbclean($form->{exchangerate}).qq|
               WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
@@ -566,9 +573,9 @@ sub save {
     }
   }
   
-  if ($form->{department_id}) {
+  if ($form->{department_id} *= 1) {
     $query = qq|INSERT INTO dpt_trans (trans_id, department_id)
-                VALUES ($form->{id}, $form->{department_id})|;
+                VALUES ($form->{id}, |.$form->dbclean($form->{department_id}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
   }
       
@@ -710,6 +717,8 @@ sub retrieve {
   
   $form->remove_locks($myconfig, $dbh, 'oe') unless $form->{readonly};
 
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   if ($form->{id} *= 1) {
     
     # retrieve order
@@ -776,7 +785,7 @@ sub retrieve {
 		JOIN parts p ON (o.parts_id = p.id)
 		LEFT JOIN project pr ON (o.project_id = pr.id)
 		LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
-		LEFT JOIN translation t ON (t.trans_id = p.partsgroup_id AND t.language_code = '$form->{language_code}')
+		LEFT JOIN translation t ON (t.trans_id = p.partsgroup_id AND t.language_code = |.$dbh->quote($form->{language_code}).qq|)
 		LEFT JOIN cargo c ON (c.id = o.id AND c.trans_id = o.trans_id)
 		WHERE o.trans_id = $form->{id}
                 ORDER BY o.id|;
@@ -866,7 +875,7 @@ sub price_matrix_query {
   if ($form->{customer_id}) {
     $query = qq|SELECT p.id AS parts_id, 0 AS customer_id, 0 AS pricegroup_id,
              0 AS pricebreak, p.sellprice, NULL AS validfrom, NULL AS validto,
-	     '$form->{defaultcurrency}' AS curr, '' AS pricegroup
+	     |.$dbh->quote($form->{defaultcurrency}).qq| AS curr, '' AS pricegroup
 	     FROM parts p
 	     WHERE p.id = ?
 
@@ -876,7 +885,7 @@ sub price_matrix_query {
              FROM partscustomer p
 	     LEFT JOIN pricegroup g ON (g.id = p.pricegroup_id)
 	     WHERE p.parts_id = ?
-	     AND p.customer_id = $form->{customer_id}
+	     AND p.customer_id = |.$form->dbclean($form->{customer_id}).qq|
 
 	     UNION
 
@@ -885,7 +894,7 @@ sub price_matrix_query {
 	     LEFT JOIN pricegroup g ON (g.id = p.pricegroup_id)
 	     JOIN customer c ON (c.pricegroup_id = g.id)
 	     WHERE p.parts_id = ?
-	     AND c.id = $form->{customer_id}
+	     AND c.id = |.$form->dbclean($form->{customer_id}).qq|
 
 	     UNION
 
@@ -905,7 +914,7 @@ sub price_matrix_query {
     $query = qq|SELECT partnumber
 		FROM partsvendor
 		WHERE parts_id = ?
-		AND vendor_id = $form->{vendor_id}|;
+		AND vendor_id = |.$form->dbclean($form->{vendor_id}).qq||;
     $sth = $dbh->prepare($query) || $form->dberror($query);
   }
   
@@ -1010,6 +1019,9 @@ sub exchangerate_defaults {
 
   my $var;
   my $query;
+
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   my $buysell = ($form->{vc} eq "customer") ? "buy" : "sell";
   
   # get default currencies
@@ -1074,7 +1086,7 @@ sub order_details {
 
   $query = qq|SELECT p.description, t.description
               FROM project p
-	       LEFT JOIN translation t ON (t.trans_id = p.id AND t.language_code = '$form->{language_code}')
+	       LEFT JOIN translation t ON (t.trans_id = p.id AND t.language_code = |.$dbh->quote($form->{language_code}).qq|)
 	       WHERE id = ?|;
   my $prh = $dbh->prepare($query) || $form->dberror($query);
 
@@ -1523,7 +1535,7 @@ sub assembly_details {
 	         JOIN parts p ON (a.parts_id = p.id)
 	         LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 	         WHERE $where
-	         AND a.aid = '$id'
+	         AND a.aid = |.$dbh->quote($id).qq|
 	         $sortorder|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -1582,6 +1594,8 @@ sub assembly_details {
 sub project_description {
   my ($self, $dbh, $id) = @_;
 
+  $id *= 1;
+
   my $query = qq|SELECT description
                  FROM project
 		 WHERE id = $id|;
@@ -1611,7 +1625,6 @@ sub get_warehouses {
   $dbh->disconnect;
 
 }
-
 
 sub save_inventory {
   my ($self, $myconfig, $form) = @_;
@@ -1659,15 +1672,16 @@ sub save_inventory {
     $ship = $form->{"ship_$i"};
     
     if ($ship) {
+      $form->{"id"} *= 1;
       #bp 2010-03-11 add serialnumber
       $ship *= $ml;
       $query = qq|INSERT INTO inventory (parts_id, warehouse_id,
                   qty, trans_id, orderitems_id, shippingdate,
 		  employee_id, serialnumber)
-                  VALUES ($form->{"id_$i"}, $warehouse_id,
+                  VALUES (|.$form->dbclean($form->{"id_$i"}).qq|, $warehouse_id,
 		  $ship, $form->{"id"},
-		  $form->{"orderitems_id_$i"}, '$form->{shippingdate}',
-		  $employee_id,|.$dbh->quote($form->{"serialnumber_$i"}).qq|)|;
+		  |.$form->dbclean($form->{"orderitems_id_$i"}).qq|, |.$dbh->quote($form->{shippingdate}).qq|,
+		  |.$form->dbclean($employee_id).qq|,|.$dbh->quote($form->{"serialnumber_$i"}).qq|)|;
       $dbh->do($query) || $form->dberror($query);
      
       # add serialnumber, ship to orderitems
@@ -1679,12 +1693,14 @@ sub save_inventory {
       $serialnumber .= qq|$form->{"serialnumber_$i"}|;
       $ship += $form->{"ship_$i"};
 
+      # SQLI protection: $serialnumber needs to be quoted
+
       $query = qq|UPDATE orderitems SET
                   serialnumber = '$serialnumber',
 		  ship = $ship,
-		  reqdate = '$form->{shippingdate}'
+		  reqdate = |.$dbh->quote($form->{shippingdate}).qq|
 		  WHERE trans_id = $form->{id}
-		  AND id = $form->{"orderitems_id_$i"}|;
+		  AND id = |.$form->dbclean($form->{"orderitems_id_$i"}).qq||;
       $dbh->do($query) || $form->dberror($query);
 
       for (qw(netweight grossweight volume)) {
@@ -1698,18 +1714,18 @@ sub save_inventory {
       if ($cargobjid) {
 	$query = qq|UPDATE cargo SET
 	            package = |.$dbh->quote($form->{"package_$i"}).qq|,
-		    netweight = $form->{"netweight_$i"},
-		    grossweight = $form->{"grossweight_$i"},
-		    volume = $form->{"volume_$i"}
-		    WHERE id = $form->{"orderitems_id_$i"}
+		    netweight = |.$form->dbclean($form->{"netweight_$i"}).qq|,
+		    grossweight = |.$form->dbclean($form->{"grossweight_$i"}).qq|,
+		    volume = |.$form->dbclean($form->{"volume_$i"}).qq|
+		    WHERE id = |.$form->dbclean($form->{"orderitems_id_$i"}).qq|
 		    AND trans_id = $form->{id}|;
       } else {
 	$query = qq|INSERT INTO cargo (id, trans_id, package, netweight,
 	            grossweight, volume) VALUES (
-		    $form->{"orderitems_id_$i"}, $form->{id}, |
+		    |.$form->dbclean($form->{"orderitems_id_$i"}).qq|, $form->{id}, |
 		    .$dbh->quote($form->{"package_$i"}).qq|,
-		    $form->{"netweight_$i"}, $form->{"grossweight_$i"},
-		    $form->{"volume_$i"})|;
+		    |.$form->dbclean($form->{"netweight_$i"}).qq|, |.$form->dbclean($form->{"grossweight_$i"}).qq|,
+		    |.$form->dbclean($form->{"volume_$i"}).qq|)|;
       }
       $dbh->do($query) || $form->dberror($query);
       
@@ -1749,6 +1765,8 @@ sub save_inventory {
 
 sub adj_onhand {
   my ($dbh, $form, $ml) = @_;
+  
+  $form->{id} *= 1;
 
   my $query = qq|SELECT oi.parts_id, oi.ship, p.inventory_accno_id, p.assembly
                  FROM orderitems oi
@@ -1797,6 +1815,8 @@ sub adj_onhand {
 
 sub adj_inventory {
   my ($dbh, $myconfig, $form) = @_;
+
+  $form->{id} *= 1;
 
   # increase/reduce qty in inventory table
   my $query = qq|SELECT oi.id, oi.parts_id, oi.ship
@@ -1967,7 +1987,7 @@ sub transfer {
 
   my $query = qq|INSERT INTO inventory
                  (warehouse_id, parts_id, qty, shippingdate, employee_id)
-		 VALUES (?, ?, ?, '$shippingdate', $form->{employee_id})|;
+		 VALUES (?, ?, ?, |.$dbh->quote($shippingdate).qq|, |.$form->dbclean($form->{employee_id}).qq|)|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
 
   my $qty;
@@ -2328,14 +2348,14 @@ sub generate_orders {
     $query = qq|UPDATE oe SET
 		ordnumber = |.$dbh->quote($ordnumber).qq|,
 		transdate = current_date,
-		vendor_id = $vendor_id,
+		vendor_id = |.$form->dbclean($vendor_id).qq|,
 		customer_id = 0,
 		amount = $amount,
 		netamount = $netamount,
-		taxincluded = '$taxincluded',
-		curr = '$curr',
-		employee_id = $employee_id,
-		department_id = '$department_id',
+		taxincluded = |.$dbh->quote($taxincluded).qq|,
+		curr = |.$dbh->quote($curr).qq|,
+		employee_id = |.$form->dbclean($employee_id).qq|,
+		department_id = |.$dbh->quote($department_id).qq|,
 		ponumber = |.$dbh->quote($form->{ponumber}).qq|
 		WHERE id = $id|;
     $dbh->do($query) || $form->dberror($query);
@@ -2471,22 +2491,22 @@ sub consolidate_orders {
       $query = qq|UPDATE oe SET
 		  ordnumber = |.$dbh->quote($ordnumber).qq|,
 		  transdate = current_date,
-		  vendor_id = $form->{vendor_id},
-		  customer_id = $form->{customer_id},
+		  vendor_id = |.$form->dbclean($form->{vendor_id}).qq|,
+		  customer_id = |.$form->dbclean($form->{customer_id}).qq|,
 		  amount = $amount,
 		  netamount = $netamount,
-		  reqdate = |.$form->dbquote($ref->{reqdate}, SQL_DATE).qq|,
-		  taxincluded = '$ref->{taxincluded}',
+		  reqdate = |.$form->dbquote($form->dbclean($ref->{reqdate}), SQL_DATE).qq|,
+		  taxincluded = |.$dbh->quote($ref->{taxincluded}).qq|,
 		  shippingpoint = |.$dbh->quote($ref->{shippingpoint}).qq|,
 		  notes = |.$dbh->quote($ref->{notes}).qq|,
 		  curr = '$curr',
-		  employee_id = $ref->{employee_id},
+		  employee_id = |.$form->dbclean($ref->{employee_id}).qq|,
 		  intnotes = |.$dbh->quote($ref->{intnotes}).qq|,
 		  shipvia = |.$dbh->quote($ref->{shipvia}).qq|,
 		  waybill = |.$dbh->quote($ref->{waybill}).qq|,
-		  language_code = '$ref->{language_code}',
+		  language_code = |.$dbh->quote($ref->{language_code}).qq|,
 		  ponumber = |.$dbh->quote($form->{ponumber}).qq|,
-		  department_id = $department_id
+		  department_id = |.$form->dbclean($department_id).qq|
 		  WHERE id = $id|;
       $dbh->do($query) || $form->dberror($query);
 	  
@@ -2504,7 +2524,7 @@ sub consolidate_orders {
 		    .$dbh->quote($item->{description})
 		    .qq|, $item->{qty}, $item->{sellprice}, $item->{discount}, |
 		    .$dbh->quote($item->{unit}).qq|, |
-		    .$form->dbquote($item->{reqdate}, SQL_DATE)
+		    .$form->dbquote($form->dbclean($item->{reqdate}), SQL_DATE)
 		    .qq|, $item->{project_id}, $item->{ship}, |
 		    .$dbh->quote($item->{serialnumber}) .qq|, |
 		    .$dbh->quote($item->{ordernumber}).qq|, |

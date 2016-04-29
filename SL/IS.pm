@@ -11,6 +11,8 @@
 #
 #======================================================================
 
+# SQLI protection. This file looks clean
+
 package IS;
 
 
@@ -611,7 +613,7 @@ sub invoice_details {
   $query = qq|SELECT bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc
 	      FROM bank bk
 	      JOIN chart c ON (c.id = bk.id)
-	      WHERE c.accno = '$paymentaccno'|;
+	      WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
   ($form->{iban}, $form->{bic}, $form->{membernumber}, $form->{dcn}, $form->{rvc}) = $dbh->selectrow_array($query);
 
   for my $dcn (qw(dcn rvc)) { $form->{$dcn} = $form->format_dcn($form->{$dcn}) }
@@ -619,7 +621,7 @@ sub invoice_details {
   # save dcn
   if ($form->{id}) {
     $query = qq|UPDATE ar SET
-		dcn = '$form->{dcn}',
+		dcn = |.$dbh->quote($form->{dcn}).qq|,
 		bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno')
 		WHERE id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
@@ -729,7 +731,7 @@ sub assembly_details {
 	         JOIN parts p ON (a.parts_id = p.id)
 	         LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 	         WHERE a.bom = '1'
-	         AND a.aid = '$id'
+	         AND a.aid = |.$dbh->quote($id).qq|
 	         $sortorder|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -782,6 +784,8 @@ sub assembly_details {
 
 sub project_description {
   my ($self, $dbh, $id) = @_;
+
+  $id *= 1;
 
   my $query = qq|SELECT description
                  FROM project
@@ -846,6 +850,7 @@ sub post_invoice {
       $query = qq|SELECT id FROM oe WHERE aa_id = $form->{id}|;
       $form->{oe_id} = $dbh->selectrow_array($query);
       if ($form->{oe_id}){
+         $form->{oe_id} *= 1;
          $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{oe_id}"); # Delete any 'inventory' transactions saved from order. For existing invoices.
       }
 
@@ -856,6 +861,7 @@ sub post_invoice {
       $dbh->do($query) || $form->dberror($query);
 
       if ($form->{order_id}){
+         $form->{order_id} *= 1;
          $dbh->do("DELETE FROM inventory WHERE trans_id = $form->{order_id}"); # Delete any 'inventory' transactions saved from order.
       }
     }
@@ -868,7 +874,7 @@ sub post_invoice {
   if (! $form->{id}) {
    
     $query = qq|INSERT INTO ar (invnumber, employee_id)
-                VALUES ('$uid', $form->{employee_id})|;
+                VALUES (|.$dbh->quote($uid).qq|, |.$form->dbclean($form->{employee_id}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
 
     $query = qq|SELECT id FROM ar
@@ -882,7 +888,7 @@ sub post_invoice {
 
   if ($form->{department_id}) {
     $query = qq|INSERT INTO dpt_trans (trans_id, department_id)
-                VALUES ($form->{id}, $form->{department_id})|;
+                VALUES ($form->{id}, |.$form->dbclean($form->{department_id}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
   }
 
@@ -918,7 +924,7 @@ sub post_invoice {
     $form->{"qty_$i"} = $form->parse_amount($myconfig, $form->{"qty_$i"}) * $sw;
     
     if ($form->{"qty_$i"}) {
-      
+      $form->{"id_$i"} *= 1;
       $pth->execute($form->{"id_$i"});
       $ref = $pth->fetchrow_hashref(NAME_lc);
       for (keys %$ref) { $form->{"${_}_$i"} = $ref->{$_} }
@@ -1022,7 +1028,7 @@ sub post_invoice {
 	  $query = qq|SELECT sum(p.inventory_accno_id), p.assembly
 	              FROM parts p
 		      JOIN assembly a ON (a.parts_id = p.id)
-		      WHERE a.aid = $form->{"id_$i"}
+		      WHERE a.aid = |.$form->dbclean($form->{"id_$i"}).qq|
 		      GROUP BY p.assembly|;
           $sth = $dbh->prepare($query);
 	  $sth->execute || $form->dberror($query);
@@ -1066,33 +1072,33 @@ sub post_invoice {
 
       # save detail record in invoice table
       $query = qq|INSERT INTO invoice (description, trans_id, parts_id)
-                  VALUES ('$uid', $form->{id}, $form->{"id_$i"})|;
+                  VALUES (|.$dbh->quote($uid).qq|, $form->{id}, |.$form->dbclean($form->{"id_$i"}).qq|)|;
       $dbh->do($query) || $form->dberror($query);
 
       $query = qq|SELECT id
                   FROM invoice
-                  WHERE description = '$uid'|;
+                  WHERE description = |.$dbh->quote($uid).qq||;
       ($id) = $dbh->selectrow_array($query);
       
       $lineitemdetail = ($form->{"lineitemdetail_$i"}) ? 1 : 0;
       
       $query = qq|UPDATE invoice SET
 		  description = |.$dbh->quote($form->{"description_$i"}).qq|,
-		  qty = $form->{"qty_$i"},
-                  sellprice = $form->{"sellprice_$i"},
+		  qty = |.$form->dbclean($form->{"qty_$i"}).qq|,
+                  sellprice = |.$form->dbclean($form->{"sellprice_$i"}).qq|,
 		  fxsellprice = $fxsellprice,
 		  discount = $form->{"discount_$i"},
 		  allocated = $allocated,
 		  unit = |.$dbh->quote($form->{"unit_$i"}).qq|,
-		  transdate = |.$form->dbquote($form->{"transdate"}, SQL_DATE).qq|,
-		  deliverydate = |.$form->dbquote($form->{"deliverydate_$i"}, SQL_DATE).qq|,
-		  project_id = $project_id,
+		  transdate = |.$form->dbquote($form->dbclean($form->{"transdate"}), SQL_DATE).qq|,
+		  deliverydate = |.$form->dbquote($form->dbclean($form->{"deliverydate_$i"}), SQL_DATE).qq|,
+		  project_id = |.$form->dbclean($project_id).qq|,
 		  warehouse_id = $form->{warehouse_id},
 		  serialnumber = |.$dbh->quote($form->{"serialnumber_$i"}).qq|,
 		  ordernumber = |.$dbh->quote($form->{"ordernumber_$i"}).qq|,
 		  ponumber = |.$dbh->quote($form->{"customerponumber_$i"}).qq|,
 		  itemnotes = |.$dbh->quote($form->{"itemnotes_$i"}).qq|,
-		  lineitemdetail = '$lineitemdetail'
+		  lineitemdetail = |.$dbh->quote($lineitemdetail).qq|
 		  WHERE id = $id|;
       $dbh->do($query) || $form->dberror($query);
 
@@ -1102,7 +1108,7 @@ sub post_invoice {
 	$taxamount = $linetotal * $form->{"${_}_rate"} if $form->{"${_}_rate"} != 0; 
         if ($taxamount != 0){
 	  my $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, taxamount)
-			VALUES ($form->{id}, $id, (SELECT id FROM chart WHERE accno='$_'), $taxamount)|;
+			VALUES ($form->{id}, $id, (SELECT id FROM chart WHERE accno=|.$dbh->quote($_).qq|), $taxamount)|;
 	  $dbh->do($query) || $form->dberror($query);
 	}
       }
@@ -1115,10 +1121,10 @@ sub post_invoice {
                         shippingdate,
                         employee_id, department_id, serialnumber, 
 			itemnotes, description, invoice_id)
-                VALUES ($form->{warehouse_id}, $form->{"id_$i"}, $form->{id},
-                        1, 0 - ($form->{"qty_$i"}), | .
-                        $form->dbquote($form->{"transdate"}, SQL_DATE) .
-                        qq|, $form->{employee_id}, $form->{department_id}, | .
+                VALUES (|.$form->dbclean($form->{warehouse_id}).qq|, |.$form->dbclean($form->{"id_$i"}).qq|, $form->{id},
+                        1, 0 - (|.$form->dbclean($form->{"qty_$i"}).qq|), | .
+                        $form->dbquote($form->dbclean($form->{"transdate"}), SQL_DATE) .
+                        qq|, |.$form->dbclean($form->{employee_id}).qq|, $form->{department_id}, | .
                         $dbh->quote($form->{"serialnumber_$i"}) . qq|, | .
                         $dbh->quote($form->{"itemnotes_$i"}) . qq|, | .
 			$dbh->quote($form->{"description_$i"}) . qq|, $id)|;
@@ -1204,7 +1210,7 @@ sub post_invoice {
     $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		transdate, project_id, id)
 		VALUES ($form->{id}, $ref->{chart_id}, $amount,
-	      '$form->{transdate}', $ref->{project_id}, $ref->{id})|;
+	      |.$dbh->quote($form->{transdate}).qq|, $ref->{project_id}, $ref->{id})|;
     $dbh->do($query) || $form->dberror($query);
     $diff = 0;
     $fxdiff = 0;
@@ -1227,8 +1233,8 @@ sub post_invoice {
                 transdate)
                 VALUES ($form->{id},
 		       (SELECT id FROM chart
-		        WHERE accno = '$araccno'),
-                $form->{receivables}, '$form->{transdate}')|;
+		        WHERE accno = |.$dbh->quote($araccno).qq|),
+                $form->{receivables}, |.$dbh->quote($form->{transdate}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
   }
  
@@ -1309,8 +1315,8 @@ sub post_invoice {
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		    transdate)
 		    VALUES ($trans_id, (SELECT id FROM chart
-					WHERE accno = '$accno'),
-		    $amount, '$form->{transdate}')|;
+					WHERE accno = |.$dbh->quote($accno).qq|),
+		    $amount, |.$dbh->quote($form->{transdate}).qq|)|;
 	$dbh->do($query) || $form->dberror($query);
     }
   }
@@ -1380,7 +1386,7 @@ sub post_invoice {
 	            transdate, approved, vr_id)
 		    VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$araccno'),
-		    $amount, '$form->{"datepaid_$i"}',
+		    $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|,
 		    '$approved', $voucherid)|;
 	$dbh->do($query) || $form->dberror($query);
       }
@@ -1394,14 +1400,14 @@ sub post_invoice {
       my $paymentadjust2 = $amount;
 
       if ($keepcleared) {
-	$cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
+	$cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
       }
       
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
                   source, memo, cleared, approved, vr_id, id)
                   VALUES ($form->{id}, (SELECT id FROM chart
 		                      WHERE accno = '$accno'),
-		  $amount, '$form->{"datepaid_$i"}', |
+		  $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|, |
 		  .$dbh->quote($form->{"source_$i"}).qq|, |
 		  .$dbh->quote($form->{"memo_$i"}).qq|, $cleared,
 		  '$approved', $voucherid, $paymentid)|;
@@ -1446,8 +1452,8 @@ sub post_invoice {
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 	            transdate, source, fx_transaction, cleared, approved, vr_id)
 		    VALUES ($form->{id}, (SELECT id FROM chart
-					WHERE accno = '$accno'),
-		    $amount, '$form->{"datepaid_$i"}', |
+					WHERE accno = |.$dbh->quote($accno).qq|),
+		    $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|, |
 		    .$dbh->quote($form->{"source_$i"}).qq|, '1', $cleared,
 		    '$approved', $voucherid)|;
 	$dbh->do($query) || $form->dberror($query);
@@ -1481,7 +1487,7 @@ sub post_invoice {
   $query = qq|SELECT bk.membernumber, bk.dcn
 	      FROM bank bk
 	      JOIN chart c ON (c.id = bk.id)
-	      WHERE c.accno = '$paymentaccno'|;
+	      WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
 
   if (!$form->{importing}){ # We are not coming from data import script im.pl
   ($form->{membernumber}, $form->{dcn}) = $dbh->selectrow_array($query);
@@ -1507,7 +1513,7 @@ sub post_invoice {
          and amount > 0 
          and entry_id = (
                select entry_id from acc_trans where trans_id = $form->{id}
-               and chart_id in (select id from chart where accno = '$araccno') and amount > 0 limit 1
+               and chart_id in (select id from chart where accno = |.$dbh->quote($araccno).qq|) and amount > 0 limit 1
                )
      |;
      $dbh->do($query) or $form->error($query);
@@ -1531,7 +1537,7 @@ sub post_invoice {
           $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		            transdate, fx_transaction, cleared, approved, vr_id)
 		            VALUES ($form->{id}, $defaults{fxloss_accno_id},
-			    $correction, '$form->{"datepaid_1"}', '1', $cleared,
+			    $correction, |.$dbh->quote($form->{"datepaid_1"}).qq|, '1', $cleared,
 			    '$approved', $voucherid)|;
 		  $dbh->do($query) || $form->dberror($query);
 		}
@@ -1546,37 +1552,37 @@ sub post_invoice {
               description = |.$dbh->quote($form->{description}).qq|,
 	      ordnumber = |.$dbh->quote($form->{ordnumber}).qq|,
 	      quonumber = |.$dbh->quote($form->{quonumber}).qq|,
-              transdate = '$form->{transdate}',
-              customer_id = $form->{customer_id},
+              transdate = |.$dbh->quote($form->{transdate}).qq|,
+              customer_id = |.$form->dbclean($form->{customer_id}).qq|,
               amount = $invamount,
               netamount = $invnetamount,
               paid = $form->{paid},
               fxamount = $form->{oldinvtotal},
               fxpaid = $form->{oldtotalpaid},
-	      datepaid = |.$form->dbquote($form->{datepaid}, SQL_DATE).qq|,
-	      duedate = |.$form->dbquote($form->{duedate}, SQL_DATE).qq|,
+	      datepaid = |.$form->dbquote($form->dbclean($form->{datepaid}), SQL_DATE).qq|,
+	      duedate = |.$form->dbquote($form->dbclean($form->{duedate}), SQL_DATE).qq|,
 	      invoice = '1',
 	      shippingpoint = |.$dbh->quote($form->{shippingpoint}).qq|,
 	      shipvia = |.$dbh->quote($form->{shipvia}).qq|,
 	      waybill = |.$dbh->quote($form->{waybill}).qq|,
-	      terms = $form->{terms},
+	      terms = |.$form->dbclean($form->{terms}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
 	      taxincluded = '$form->{taxincluded}',
-	      curr = '$form->{currency}',
-	      department_id = $form->{department_id},
-	      employee_id = $form->{employee_id},
+	      curr = |.$dbh->quote($form->{currency}).qq|,
+	      department_id = |.$form->dbclean($form->{department_id}).qq|,
+	      employee_id = |.$form->dbclean($form->{employee_id}).qq|,
 	      till = $till,
-	      language_code = '$form->{language_code}',
+	      language_code = |.$dbh->quote($form->{language_code}).qq|,
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
 	      cashdiscount = $form->{cashdiscount},
 	      discountterms = $form->{discountterms},
-	      onhold = '$form->{onhold}',
-	      warehouse_id = $form->{warehouse_id},
+	      onhold = |.$dbh->quote($form->{onhold}).qq|,
+	      warehouse_id = |.$form->dbclean($form->{warehouse_id}).qq|,
 	      exchangerate = $form->{exchangerate}
-	      | . (($form->{dcn}=='') ? '' : qq|,dcn = '$form->{dcn}'| ) . qq|,
-	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
-          paymentmethod_id = $paymentmethod_id
+	      | . (($form->{dcn}=='') ? '' : qq|,dcn = |.$dbh->quote($form->{dcn}).qq|| ) . qq|,
+	      bank_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($paymentaccno).qq|),
+          paymentmethod_id = |.$form->dbclean($paymentmethod_id).qq|
               WHERE id = $form->{id}
              |;
   $dbh->do($query) || $form->dberror($query);
@@ -1616,6 +1622,7 @@ sub post_invoice {
 
   # add link for order
   if ($form->{order_id}) {
+	$form->{order_id} *= 1;
     $query = qq|UPDATE oe SET aa_id = $form->{id}
                 WHERE id = $form->{order_id}|;
     $dbh->do($query) || $form->dberror($query);
@@ -1803,14 +1810,14 @@ sub cogs_returns {
     $query = qq|INSERT INTO acc_trans (trans_id, chart_id,
                 amount, transdate, project_id)
                 VALUES ($ref->{trans_id}, $ref->{expense_accno_id},
-		$linetotal * -1, '$form->{transdate}', $project_id)|;
+		$linetotal * -1, |.$dbh->quote($form->{transdate}).qq|, $project_id)|;
     $dbh->do($query) || $form->dberror($query);
 
     # credit inventory
     $query = qq|INSERT INTO acc_trans (trans_id, chart_id,
                 amount, transdate, project_id)
                 VALUES ($ref->{trans_id}, $ref->{inventory_accno_id},
-		$linetotal, '$form->{transdate}', $project_id)|;
+		$linetotal, |.$dbh->quote($form->{transdate}).qq|, $project_id)|;
     $dbh->do($query) || $form->dberror($query);
 
     $allocated += $qty;
@@ -1851,6 +1858,8 @@ sub reverse_invoice {
   my $pth;
   my $pref;
   my $totalqty;
+  
+  $form->{id} *= 1;
   
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
     
@@ -1943,14 +1952,14 @@ sub reverse_invoice {
 	  $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 	              transdate, project_id)
 	              VALUES ($pref->{trans_id}, $ref->{expense_accno_id},
-		      $amount, '$form->{transdate}', $ref->{project_id})|;
+		      $amount, |.$dbh->quote($form->{transdate}).qq|, $ref->{project_id})|;
           $dbh->do($query) || $form->dberror($query);
 
           # debit inventory
 	  $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 	              transdate, project_id)
 	              VALUES ($pref->{trans_id}, $ref->{inventory_accno_id},
-		      $amount * -1, '$form->{transdate}', $ref->{project_id})|;
+		      $amount * -1, |.$dbh->quote($form->{transdate}).qq|, $ref->{project_id})|;
           $dbh->do($query) || $form->dberror($query);
 
 	  last if (($totalqty -= $qty) <= 0);
@@ -2106,7 +2115,7 @@ sub retrieve_invoice {
 	        JOIN parts p ON (i.parts_id = p.id)
 	        LEFT JOIN project pr ON (i.project_id = pr.id)
 	        LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
-		LEFT JOIN translation t ON (t.trans_id = p.partsgroup_id AND t.language_code = '$form->{language_code}')
+		LEFT JOIN translation t ON (t.trans_id = p.partsgroup_id AND t.language_code = |.$dbh->quote($form->{language_code}).qq|)
 		LEFT JOIN cargo c ON (c.id = i.id AND c.trans_id = i.trans_id)
 		WHERE i.trans_id = $form->{id}
 		AND NOT i.assemblyitem = '1'
@@ -2235,8 +2244,8 @@ sub retrieve_item {
 		 t2.description AS grouptranslation
                  FROM parts p
 		 LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
-		 LEFT JOIN translation t1 ON (t1.trans_id = p.id AND t1.language_code = '$form->{language_code}')
-		 LEFT JOIN translation t2 ON (t2.trans_id = p.partsgroup_id AND t2.language_code = '$form->{language_code}')
+		 LEFT JOIN translation t1 ON (t1.trans_id = p.id AND t1.language_code = |.$dbh->quote($form->{language_code}).qq|)
+		 LEFT JOIN translation t2 ON (t2.trans_id = p.partsgroup_id AND t2.language_code = |.$dbh->quote($form->{language_code}).qq|)
 	         $where|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -2294,6 +2303,8 @@ sub retrieve_item {
 
 sub price_matrix_query {
   my ($dbh, $form) = @_;
+  
+  $form->{customer_id} *= 1;
   
   my $query = qq|SELECT p.id AS parts_id, 0 AS customer_id, 0 AS pricegroup_id,
               0 AS pricebreak, p.sellprice, NULL AS validfrom, NULL AS validto,

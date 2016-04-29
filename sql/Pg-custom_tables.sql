@@ -131,3 +131,12 @@ CREATE TABLE partsattr (
 ALTER TABLE acc_trans ADD tax TEXT;
 ALTER TABLE acc_trans ADD taxamount float;
 
+-- dispatch methods table
+CREATE TABLE dispatch (
+  id int DEFAULT nextval('id'),
+  description text
+);
+
+ALTER TABLE customer ADD dispatch_id INTEGER;
+ALTER TABLE vendor ADD dispatch_id INTEGER;
+

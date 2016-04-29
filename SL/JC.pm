@@ -64,7 +64,7 @@ sub retrieve_card {
 
     $query = qq|SELECT s.printed, s.spoolfile, s.formname
                 FROM status s
-		WHERE s.formname = '$form->{type}'
+		WHERE s.formname = |.$dbh->quote($form->{type}).qq|
 		AND s.trans_id = $form->{id}|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
@@ -274,6 +274,8 @@ sub retrieve_item {
 sub delete_timecard {
   my ($self, $myconfig, $form) = @_;
 
+  # SQLI protection: $form->{type} needs to be validated
+
   # connect to database
   my $dbh = $form->dbconnect_noauto($myconfig);
  
@@ -293,7 +295,7 @@ sub delete_timecard {
 
   # delete spool files
   $query = qq|SELECT spoolfile FROM status
-              WHERE formname = '$form->{type}'
+              WHERE formname = |.$dbh->quote($form->{type}).qq|
 	      AND trans_id = $form->{id}
 	      AND spoolfile IS NOT NULL|;
   my $sth = $dbh->prepare($query);
@@ -309,7 +311,7 @@ sub delete_timecard {
 
   # delete status entries
   $query = qq|DELETE FROM status
-              WHERE formname = '$form->{type}'
+              WHERE formname = |.$dbh->quote($form->{type}).qq|
 	      AND trans_id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 

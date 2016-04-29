@@ -5,9 +5,9 @@
     src: url("../fonts/12d6929b-8b96-4898-b413-6bd6d0e2d0fb.eot?#iefix") format("eot"), url("../fonts/a2afa464-03b1-4a6c-b5cb-3521a1cf94ba.woff") format("woff"), url("../fonts/9aa255d9-7d3d-420a-bb79-2f91c4aed10f.ttf") format("truetype"), url("../fonts/b755ea1d-fab9-4588-b7a8-31350efb38f9.svg#b755ea1d-fab9-4588-b7a8-31350efb38f9") format("svg");
 }
 /* general stuff */
-a:link { color: #937fbb; text-decoration: none; }
-a:visited { color: #937fbb; text-decoration: none; }
-a:active { color: #937fbb; text-decoration: underline; border: 1px #645091;   }
+a:link { color: #624c96; text-decoration: none; }
+a:visited { color: #624c96; text-decoration: none; }
+a:active { color: #624c96; text-decoration: underline; border: 1px #8673ae;   }
 /*A:hover { color: white;
   background-color: #bbbbbb;
   text-decoration: none;
@@ -278,7 +278,7 @@ A.listheading:link, A.listheading:active, A.listheading:visited {
 }
 
 .listrow1 td a, .listrow0 td a {
-	color: #937fbb;
+	color: #624c96;
 }
 
 .listsubtotal { 
@@ -319,7 +319,7 @@ select {
 }
 
 .submit, .login input submit {
-    background: #937fbb;
+    background: #624c96;
 	font-size: 13px;
 	color: white;
     padding: 2px 8px 2px 8px;
@@ -331,7 +331,7 @@ select {
 }
 
 .submit:HOVER {
-	background-color: 645091;
+	background-color: #8673ae;
 	cursor: pointer;
 }
 

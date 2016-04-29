@@ -144,7 +144,7 @@ sub post_transaction {
       ($accno) = split /--/, $form->{"${ARAP}_amount_$i"};
 
       if ($keepcleared) {
-	$cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
+	$cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
       }
 
       push @{ $form->{acc_trans}{lineitems} }, {
@@ -284,7 +284,7 @@ sub post_transaction {
     $query = qq|SELECT bk.membernumber, bk.dcn, bk.rvc
 		FROM bank bk
 		JOIN chart c ON (c.id = bk.id)
-		WHERE c.accno = '$paymentaccno'|;
+		WHERE c.accno = |.$dbh->quote($paymentaccno);
     ($form->{membernumber}, $form->{dcn}, $form->{rvc}) = $dbh->selectrow_array($query);
     
     for my $dcn (qw(dcn rvc)) { 
@@ -297,30 +297,30 @@ sub post_transaction {
 	      invnumber = |.$dbh->quote($form->{invnumber}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
 	      ordnumber = |.$dbh->quote($form->{ordnumber}).qq|,
-	      transdate = '$form->{transdate}',
+	      transdate = |.$dbh->quote($form->{transdate}).qq|,
 	      $form->{vc}_id = $form->{"$form->{vc}_id"},
 	      taxincluded = '$form->{taxincluded}',
 	      amount = $invamount * $arapml,
-	      duedate = '$form->{duedate}',
+	      duedate = '|.$form->dbclean($form->{duedate}).qq|',
 	      paid = $paid * $arapml,
 	      datepaid = $datepaid,
 	      netamount = $invnetamount * $arapml,
 	      fxamount = |.( ($form->{oldinvtotal}) ? $form->{oldinvtotal}*1 : 0 ).qq|,
 	      fxpaid = |.( ($form->{oldtotalpaid}) ? $form->{oldtotalpaid}*1 : 0 ).qq|,
-	      terms = $form->{terms},
-	      curr = '$form->{currency}',
+	      terms = |.$form->dbclean($form->{terms}).qq|,
+	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
-	      department_id = $form->{department_id},
-	      employee_id = $form->{employee_id},
+	      department_id = |.$form->dbclean($form->{department_id}).qq|,
+	      employee_id = |.$form->dbclean($form->{employee_id}).qq|,
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
-	      cashdiscount = $form->{cashdiscount},
-	      discountterms = $form->{discountterms},
-	      onhold = '$form->{onhold}',
-	      exchangerate = $form->{exchangerate}
-	      | . (($form->{dcn}=='') ? '' : qq|,dcn = '$form->{dcn}'| ) . qq|,
+	      cashdiscount = |.$form->dbclean($form->{cashdiscount}).qq|,
+	      discountterms = |.$form->dbclean($form->{discountterms}).qq|,
+	      onhold = |.$dbh->quote($form->{onhold}).qq|,
+	      exchangerate = |.$form->dbclean($form->{exchangerate}).qq|
+	      | . (($form->{dcn}=='') ? '' : qq|,dcn = |.$dbh->quote($form->{dcn}).qq|| ) . qq|,
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
-	      paymentmethod_id = $paymentmethod_id
+	      paymentmethod_id = |.$form->dbclean($paymentmethod_id).qq|
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
@@ -480,7 +480,7 @@ sub post_transaction {
       $paymentmethod_id *= 1;
      
       if ($keepcleared) {
-	$cleared = $form->dbquote($form->{"cleared_$i"}, SQL_DATE);
+	$cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
       }
       
       $amount = $paid{fxamount}{$i};
@@ -782,6 +782,8 @@ sub transactions {
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
   
+  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+
   if ($form->{vc} eq 'vendor') {
     $ml = -1;
     $ARAP = 'AP';
@@ -894,41 +896,42 @@ sub transactions {
 
   my $where = "a.approved = '1'";
   if ($form->{"$form->{vc}_id"}) {
-    $where .= qq| AND a.$form->{vc}_id = $form->{"$form->{vc}_id"}|;
+    $where .= qq| AND a.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
   } else {
     if ($form->{$form->{vc}}) {
       $var = $form->like(lc $form->{$form->{vc}});
-      $where .= " AND lower(vc.name) LIKE '$var'";
+      $where .= " AND lower(vc.name) LIKE ".$dbh->quote($var)."";
     }
     if ($form->{"$form->{vc}number"}) {
       $var = $form->like(lc $form->{"$form->{vc}number"});
-      $where .= " AND lower(vc.$form->{vc}number) LIKE '$var'";
+      $where .= " AND lower(vc.$form->{vc}number) LIKE ".$dbh->quote($var)."";
     }
   }
   for (qw(warehouse department employee)) {
+  	$form->{$_} = $form->dbclean($form->{$_});
     if ($form->{$_}) {
       ($null, $var) = split /--/, $form->{$_};
-      $where .= " AND a.${_}_id = $var";
+      $where .= " AND a.${_}_id = ".$form->dbclean($var);
     }
   }
 
   for (qw(invnumber ordnumber)) {
     if ($form->{$_}) {
       $var = $form->like(lc $form->{$_});
-      $where .= " AND lower(a.$_) LIKE '$var'";
+      $where .= " AND lower(a.$_) LIKE ".$dbh->quote($var)."";
     }
   }
   for (qw(ponumber shipvia shippingpoint waybill notes description)) {
     if ($form->{$_}) {
       $var = $form->like(lc $form->{$_});
-      $where .= " AND lower(a.$_) LIKE '$var'";
+      $where .= " AND lower(a.$_) LIKE ".$dbh->quote($var)."";
     }
   }
   if ($form->{memo}) {
     if ($acc_trans_flds) {
       $var = $form->like(lc $form->{memo});
-      $where .= " AND lower(ac.memo) LIKE '$var'
-		  OR lower(i.description) LIKE '$var'";
+      $where .= " AND lower(ac.memo) LIKE ".$dbh->quote($var)."
+		  OR lower(i.description) LIKE ".$dbh->quote($var)."";
     } else {
       $where .= " AND a.id = 0";
     }
@@ -936,12 +939,14 @@ sub transactions {
   if ($form->{source}) {
     if ($acc_trans_flds) {
       $var = $form->like(lc $form->{source});
-      $where .= " AND lower(ac.source) LIKE '$var'";
+      $where .= " AND lower(ac.source) LIKE ".$dbh->quote($var)."";
     } else {
       $where .= " AND a.id = 0";
     }
   }
 
+  $form->{transdatefrom} = $form->dbclean($form->{transdatefrom});
+  $form->{transdateto} = $form->dbclean($form->{transdateto});
   $where .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
   $where .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
 
@@ -975,7 +980,7 @@ sub transactions {
     if ($myconfig->{role} eq 'user') {
       my $user = $form->{login};
       $user =~ s/@.*//;
-      $where .= " AND e.login = '$user'";
+      $where .= " AND e.login = ".$dbh->quote($user);
     }
   }
 
@@ -986,7 +991,7 @@ sub transactions {
 		             FROM acc_trans ac
 			     JOIN chart c ON (c.id = ac.chart_id)
 			     WHERE a.id = ac.trans_id
-			     AND c.accno = '$accno')
+			     AND c.accno = |.$dbh->quote($accno).qq|)
 		|;
   }
   
@@ -1003,7 +1008,6 @@ sub transactions {
   $query .= "
              WHERE $where
              ORDER by $sortorder";
-
   $form->{query} = $query;  
         
   my $sth = $dbh->prepare($query);
@@ -1065,7 +1069,7 @@ sub get_name {
   my ($self, $myconfig, $form, $dbh) = @_;
   
   my $disconnect = ($dbh) ? 0 : 1;
-  
+
   # connect to database
   $dbh = $form->dbconnect($myconfig) unless $dbh;
   
@@ -1098,6 +1102,8 @@ sub get_name {
 
   my $arap = "ar";
   my $buysell = "buy";
+  $form->{vc} = 'customer' if $form->{vc} ne 'vendor';
+
   if ($form->{vc} eq 'vendor') {
     $arap = "ap";
     $buysell = "sell";
@@ -1139,7 +1145,7 @@ sub get_name {
 		 LEFT JOIN translation t3 ON (t3.trans_id = c3.id AND t3.language_code = '$myconfig->{countrycode}')
 		 LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
 		 $shiptojoin
-	         WHERE c.id = $form->{"$form->{vc}_id"}|;
+	         WHERE c.id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
@@ -1182,7 +1188,7 @@ sub get_name {
   $query = qq|SELECT SUM(a.amount - a.paid)
 	      FROM $arap a
 	      WHERE a.amount != a.paid
-	      AND $form->{vc}_id = $form->{"$form->{vc}_id"}|;
+	      AND $form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
   my ($amount) = $dbh->selectrow_array($query);
   $form->{creditremaining} -= $amount;
 	      
@@ -1190,7 +1196,7 @@ sub get_name {
 	      FROM oe a
 	      WHERE a.quotation = '0'
 	      AND a.closed = '0'
-	      AND a.$form->{vc}_id = $form->{"$form->{vc}_id"}|;
+	      AND a.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
   ($amount) = $dbh->selectrow_array($query);
   $form->{creditremaining} -= $amount;
 
@@ -1198,7 +1204,7 @@ sub get_name {
   $query = qq|SELECT c.accno
               FROM chart c
 	      JOIN $form->{vc}tax ct ON (ct.chart_id = c.id)
-	      WHERE ct.$form->{vc}_id = $form->{"$form->{vc}_id"}|;
+	      WHERE ct.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
   $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
@@ -1253,7 +1259,7 @@ sub get_name {
 		  FROM oe o
 		  LEFT JOIN department d ON (d.id = o.department_id)
 		  LEFT JOIN warehouse w ON (w.id = o.warehouse_id)
-		  WHERE o.$form->{vc}_id = $form->{"$form->{vc}_id"}
+		  WHERE o.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
 		  GROUP BY o.department_id, department,
 		  o.warehouse_id, warehouse
 |;
@@ -1270,7 +1276,7 @@ sub get_name {
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		  WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
 		  AND a.id IN (SELECT max(id) FROM $arap
-			       WHERE $form->{vc}_id = $form->{"$form->{vc}_id"})|;
+			       WHERE $form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|)|;
     } else {
       $query = qq|SELECT c.accno, c.description, c.link, c.category,
 		  ac.project_id, p.projectnumber, a.department_id,
@@ -1284,7 +1290,7 @@ sub get_name {
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		  WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
 		  AND a.id IN (SELECT max(id) FROM $arap
-			       WHERE $form->{vc}_id = $form->{"$form->{vc}_id"})|;
+			       WHERE $form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|)|;
     }
 
     $sth = $dbh->prepare($query);
@@ -1346,7 +1352,7 @@ sub company_details {
 	         FROM $form->{vc} ct
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN paymentmethod pm ON (pm.id = ct.paymentmethod_id)
-	         WHERE ct.id = $form->{"$form->{vc}_id"}|;
+	         WHERE ct.id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
@@ -1368,7 +1374,7 @@ sub company_details {
   $id *= 1;
   $query = qq|SELECT workphone, workfax, workmobile
               FROM employee
-              WHERE id = $id|;
+              WHERE id = |.$form->dbclean($id).qq||;
   ($form->{workphone}, $form->{workfax}, $form->{workmobile}) = $dbh->selectrow_array($query);
 
   my @a = qw(weightunit cdt company companyemail companywebsite address tel fax businessnumber);
@@ -1378,7 +1384,7 @@ sub company_details {
   if ($form->{warehouse_id} *= 1) {
     $query = qq|SELECT address1, address2, city, state, zipcode, country
 		FROM address
-		WHERE trans_id = $form->{warehouse_id}|;
+		WHERE trans_id = |.$form->dbclean($form->{warehouse_id}).qq||;
     $sth = $dbh->prepare($query) || $form->dberror($query);
     $sth->execute;
     $ref = $sth->fetchrow_hashref(NAME_lc);
@@ -1394,7 +1400,7 @@ sub company_details {
 		FROM chart c
 		JOIN bank bk ON (c.id = bk.id)
 		JOIN address ad ON (c.id = ad.trans_id)
-		WHERE c.accno = '$paymentaccno'|;
+		WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
     $sth = $dbh->prepare($query) || $form->dberror($query);
     $sth->execute;
     $ref = $sth->fetchrow_hashref(NAME_lc);
@@ -1428,7 +1434,7 @@ sub ship_to {
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
-		 WHERE trans_id = $form->{"$form->{vc}_id"}
+		 WHERE trans_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
 		 UNION
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
@@ -1437,7 +1443,7 @@ sub ship_to {
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
 		 JOIN oe o ON (o.id = s.trans_id)
-		 WHERE o.$form->{vc}_id = $form->{"$form->{vc}_id"}
+		 WHERE o.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
 		 UNION
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
@@ -1446,7 +1452,7 @@ sub ship_to {
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
 		 JOIN $table a ON (a.id = s.trans_id)
-		 WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}|;
+		 WHERE a.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
 
   if ($form->{id} *= 1) {
     $query .= qq|
@@ -1457,7 +1463,7 @@ sub ship_to {
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
-		 WHERE s.trans_id = $form->{id}|;
+		 WHERE s.trans_id = |.$form->dbclean($form->{id}).qq||;
   }
 
   my $sth = $dbh->prepare($query);

@@ -11,6 +11,8 @@
 #
 #======================================================================
 
+# SQLI protection. This file looks clean
+
 package RC;
 
 
@@ -49,7 +51,7 @@ sub payment_transactions {
   my $dbh = $form->dbconnect_noauto($myconfig);
   
   my $query = qq|SELECT category FROM chart
-                 WHERE accno = '$form->{accno}'|;
+                 WHERE accno = |.$dbh->quote($form->{accno}).qq||;	# FIXME
   ($form->{category}) = $dbh->selectrow_array($query);
 
   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
@@ -69,7 +71,7 @@ sub payment_transactions {
      $query = qq|SELECT sum(ac.amount)
               FROM acc_trans ac
               JOIN chart ch ON (ch.id = ac.chart_id)
-              WHERE ch.accno = '$form->{accno}'
+              WHERE ch.accno = |.$dbh->quote($form->{accno}).qq|
               AND ac.approved = '1'
               $transdate
               $cleared
@@ -83,7 +85,7 @@ sub payment_transactions {
   $query = qq|SELECT sum(ac.amount)
 	      FROM acc_trans ac
 	      JOIN chart ch ON (ch.id = ac.chart_id)
-	      WHERE ch.accno = '$form->{accno}'
+	      WHERE ch.accno = |.$dbh->quote($form->{accno}).qq|
 	      AND ac.approved = '1'
 	      AND ac.fx_transaction = '1'
 	      $transdate
@@ -95,14 +97,14 @@ sub payment_transactions {
   $transdate = "";
   $cleared = "";
   if ($form->{todate}) {
-    $transdate = qq| AND ac.transdate <= date '$form->{todate}'|;
+    $transdate = qq| AND ac.transdate <= date '|.$form->dbclean($form->{todate}).qq|'|;
   }
  
   # get statement balance
   $query = qq|SELECT sum(ac.amount)
 	      FROM acc_trans ac
 	      JOIN chart ch ON (ch.id = ac.chart_id)
-	      WHERE ch.accno = '$form->{accno}'
+	      WHERE ch.accno = |.$dbh->quote($form->{accno}).qq|
 	      AND ac.approved = '1'
 	      $transdate
 	      $cleared
@@ -114,7 +116,7 @@ sub payment_transactions {
   $query = qq|SELECT sum(ac.amount)
 	      FROM acc_trans ac
 	      JOIN chart ch ON (ch.id = ac.chart_id)
-	      WHERE ch.accno = '$form->{accno}'
+	      WHERE ch.accno = |.$dbh->quote($form->{accno}).qq|
 	      AND ac.approved = '1'
 	      AND ac.fx_transaction = '1'
 	      $transdate
@@ -143,10 +145,10 @@ sub payment_transactions {
   $cleared = "";
 
   if ($form->{fromdate}) {
-    $transdate .= qq| AND ac.transdate >= '$form->{fromdate}'|;
+    $transdate .= qq| AND ac.transdate >= |.$dbh->quote($form->{fromdate}).qq||;
   }
   if ($form->{todate}) {
-    $transdate .= qq| AND ac.transdate <= '$form->{todate}'|;
+    $transdate .= qq| AND ac.transdate <= |.$dbh->quote($form->{todate}).qq||;
   }
  
   if ($form->{report}) {
@@ -162,10 +164,10 @@ sub payment_transactions {
     if ($form->{fromdate} || $form->{todate}) {
       $cleared = "";
       if ($form->{fromdate}) {
-	$cleared = qq| AND ac.cleared >= '$form->{fromdate}'|;
+	$cleared = qq| AND ac.cleared >= |.$dbh->quote($form->{fromdate}).qq||;
       }
       if ($form->{todate}) {
-	$cleared .= qq| AND ac.cleared <= '$form->{todate}'|;
+	$cleared .= qq| AND ac.cleared <= |.$dbh->quote($form->{todate}).qq||;
       }
     }
   }
@@ -181,7 +183,7 @@ sub payment_transactions {
 		FROM acc_trans ac
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN gl g ON (g.id = ac.trans_id)
-		WHERE ch.accno = '$form->{accno}'
+		WHERE ch.accno = |.$dbh->quote($form->{accno}).qq|
 		AND ac.approved = '1'
 		$fx_transaction
 		$transdate
@@ -193,7 +195,7 @@ sub payment_transactions {
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN ar a ON (a.id = ac.trans_id)
 		JOIN customer n ON (n.id = a.customer_id)
-		WHERE ch.accno = '$form->{accno}'
+		WHERE ch.accno = |.$dbh->quote($form->{accno}).qq|
 		AND ac.approved = '1'
 		$fx_transaction
 		$transdate
@@ -205,7 +207,7 @@ sub payment_transactions {
 		JOIN chart ch ON (ac.chart_id = ch.id)
 		JOIN ap a ON (a.id = ac.trans_id)
 		JOIN vendor n ON (n.id = a.vendor_id)
-		WHERE ch.accno = '$form->{accno}'
+		WHERE ch.accno = |.$dbh->quote($form->{accno}).qq|
 		AND ac.approved = '1'
 		$fx_transaction
 		$transdate
@@ -217,10 +219,10 @@ sub payment_transactions {
     
     $transdate = "";
     if ($form->{fromdate}) {
-      $transdate = qq| AND ac.transdate < '$form->{fromdate}'|;
+      $transdate = qq| AND ac.transdate < |.$dbh->quote($form->{fromdate}).qq||;
     }
     if ($form->{todate}) {
-      $transdate .= qq| AND ac.transdate < '$form->{todate}'|;
+      $transdate .= qq| AND ac.transdate < |.$dbh->quote($form->{todate}).qq||;
     }
    
     $cleared = qq| AND ac.cleared IS NULL|;
@@ -293,7 +295,7 @@ sub reconcile {
   my $dbh = $form->dbconnect($myconfig);
 
   my $query = qq|SELECT id FROM chart
-                 WHERE accno = '$form->{accno}'|;
+                 WHERE accno = |.$dbh->quote($form->{accno}).qq||;
   my ($chart_id) = $dbh->selectrow_array($query);
   $chart_id *= 1;
   
@@ -308,9 +310,9 @@ sub reconcile {
       $cleared = ($form->{"cleared_$i"}) ? $form->{recdate} : '';
       foreach $payment_id (split / /, $form->{"payment_id_$i"}){
 	 $query = qq|UPDATE acc_trans SET
-	            cleared = |.$form->dbquote($cleared, SQL_DATE).qq|
+	            cleared = |.$form->dbquote($form->dbclean($cleared), SQL_DATE).qq|
                     WHERE entry_id = $payment_id
-	            AND transdate = '$form->{"transdate_$i"}'
+	            AND transdate = |.$dbh->quote($form->{"transdate_$i"}).qq|
 	            AND chart_id = $chart_id|;
          $dbh->do($query) || $form->dberror($query);
       }

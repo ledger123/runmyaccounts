@@ -1013,6 +1013,186 @@ sub delete_business {
 }
 
 
+# dispatch methods
+
+sub add_dispatch {
+
+  $form->{title} = "Add";
+  
+  $form->{callback} = "$form->{script}?action=add_dispatch&path=$form->{path}&login=$form->{login}" unless $form->{callback};
+
+  &dispatch_header;
+  &form_footer;
+
+}
+
+
+sub edit_dispatch {
+
+  $form->{title} = $locale->text('Dispatch Method');
+
+  AM->get_dispatch(\%myconfig, \%$form);
+
+  &dispatch_header;
+
+  $form->{orphaned} = 1;
+  &form_footer;
+
+}
+
+
+sub list_dispatch {
+
+  AM->dispatch(\%myconfig, \%$form);
+
+  my $href = "$form->{script}?action=list_dispatch&direction=$form->{direction}&path=$form->{path}&login=$form->{login}";
+
+  $form->sort_order();
+  
+  $form->{callback} = "$form->{script}?action=list_dispatch&direction=$form->{direction}&path=$form->{path}&login=$form->{login}";
+  
+  my $callback = $form->escape($form->{callback});
+  
+  $form->{title} = $locale->text('Type of Dispatch');
+
+  my @column_index = qw(description);
+
+  my %column_data;
+  
+  $column_data{description} = qq|<th width=90%><a class=listheading href=$href>|.$locale->text('Description').qq|</a></th>|;
+
+  $form->header;
+
+  print qq|
+<body>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+  for (@column_index) { print "$column_data{$_}\n" }
+
+  print qq|
+        </tr>
+|;
+
+  my $i;
+  
+  foreach my $ref (@{ $form->{ALL} }) {
+    
+    $i++; $i %= 2;
+    
+    print qq|
+        <tr valign=top class=listrow$i>
+|;
+
+   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_dispatch&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</td>|;
+   
+   for (@column_index) { print "$column_data{$_}\n" }
+
+   print qq|
+	</tr>
+|;
+  }
+
+  print qq|
+      </table>
+    </td>
+  </tr>
+  <tr>
+  <td><hr size=3 noshade></td>
+  </tr>
+</table>
+
+<br>
+<form method=post action=$form->{script}>
+|;
+
+  $form->{type} = "dispatch";
+  
+  $form->hide_form(qw(type callback path login));
+
+  print qq|
+<input class=submit type=submit name=action value="|.$locale->text('Add Dispatch').qq|">|;
+
+  if ($form->{menubar}) {
+    require "$form->{path}/menu.pl";
+    &menubar;
+  }
+
+  print qq|
+</form>
+  
+</body>
+</html> 
+|;
+  
+}
+
+
+sub dispatch_header {
+
+  $form->{description} = $form->quote($form->{description});
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<input type=hidden name=id value=$form->{id}>
+<input type=hidden name=type value=dispatch>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table>
+	<tr>
+	  <th align=right>|.$locale->text('Dispatch Method').qq|</th>
+	  <td><input name=description size=30 value="|.$form->quote($form->{description}).qq|"></td>
+	<tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+</table>
+|;
+
+}
+
+
+sub save_dispatch {
+
+  $form->isblank("description", $locale->text('Description missing!'));
+  AM->save_dispatch(\%myconfig, \%$form);
+  $form->redirect($locale->text('Dispatch method saved!'));
+
+}
+
+
+sub delete_dispatch {
+
+  AM->delete_dispatch(\%myconfig, \%$form);
+  $form->redirect($locale->text('Dispatch method deleted!'));
+
+}
+
+
+
 
 sub add_payment_method {
 
@@ -2930,6 +3110,8 @@ sub yearend {
 sub generate_yearend {
 
   $form->isblank("todate", $locale->text('Yearend date missing!'));
+
+  $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid date ...'));
 
   RP->yearend_statement(\%myconfig, \%$form);
   

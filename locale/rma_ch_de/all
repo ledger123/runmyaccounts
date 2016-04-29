@@ -485,6 +485,7 @@ $self{texts} = {
   'Foreign Exchange Loss'       => 'Wechselkursverluste',
   'Friday'                      => 'Freitag',
   'From'                        => 'Von',
+  'General Error'				=> 'Ein unerwarteter Fehler ist aufgetreten.',
   'G.W.'                        => 'G.W.',
   'GIFI'                        => 'GIFI',
   'GIFI deleted!'               => 'GIFI gelöscht!',

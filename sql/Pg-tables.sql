@@ -66,11 +66,11 @@ CREATE TABLE defaults (
   fldvalue text
 );
 --
-INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.10');
+INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.11');
 --
 CREATE TABLE acc_trans (
   trans_id int,
-  chart_id int,
+  chart_id int not null,
   amount float,
   transdate date DEFAULT current_date,
   source text,
@@ -689,4 +689,13 @@ CREATE TABLE reportvars (
   reportvariable text,
   reportvalue text
 );
+
+-- dispatch methods table
+CREATE TABLE dispatch (
+  id int DEFAULT nextval('id'),
+  description text
+);
+
+ALTER TABLE customer ADD dispatch_id INTEGER;
+ALTER TABLE vendor ADD dispatch_id INTEGER;
 
