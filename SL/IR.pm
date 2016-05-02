@@ -629,6 +629,8 @@ sub post_invoice {
   my $id;
   my $keepcleared;
   my $ok;
+  my $fxamount_total;
+  my $fxpaid_total;
   
   ($null, $form->{employee_id}) = split /--/, $form->{employee};
   unless ($form->{employee_id}) {
@@ -768,6 +770,7 @@ sub post_invoice {
 
       # linetotal
       my $fxlinetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"}, $form->{precision});
+      $fxamount_total += $fxlinetotal;
 
       $amount = $fxlinetotal * $form->{exchangerate};
       my $linetotal = $form->round_amount($amount, $form->{precision});
@@ -805,6 +808,7 @@ sub post_invoice {
 	
 	$ml = -1;
       }
+      $fxamount_total += $fxtax;
 
       $grossamount = $form->round_amount($linetotal, $form->{precision});
 
@@ -1344,6 +1348,9 @@ sub post_invoice {
   $fxamount = $form->round_amount($invamount / $form->{exchangerate} , $form->{precision});
   $fxamount *= 1;
 
+  $fxamount_total *= 1;
+  $fxpaid_total *= 1;
+
   # save AP record
   $query = qq|UPDATE ap set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
@@ -1355,8 +1362,8 @@ sub post_invoice {
               amount = $invamount,
               netamount = $invnetamount,
           paid = |.$form->dbclean($form->{paid}).qq|,
-	      fxamount = $fxamount,
-	      fxpaid = $fxpaid,
+          fxamount = $fxamount_total,
+          fxpaid = $fxpaid_total,
 	      datepaid = |.$form->dbquote($form->dbclean($form->{datepaid}), SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->dbclean($form->{duedate}), SQL_DATE).qq|,
 	      invoice = '1',
