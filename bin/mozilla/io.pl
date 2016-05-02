@@ -900,7 +900,7 @@ sub check_form {
     }
   }
 
-  &display_form if !$form->{prevent_display};
+  &display_form;
 
 }
 

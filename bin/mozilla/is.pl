@@ -1119,7 +1119,7 @@ sub update {
 
       $focus = "description_$i";
       
-      &display_form if !$form->{prevent_display};
+      &display_form;
 
     } else {
       # ok, so this is a new part
@@ -1127,7 +1127,7 @@ sub update {
 
       if ($form->{"partsgroup_$i"} && ($form->{"partsnumber_$i"} eq "") && ($form->{"description_$i"} eq "")) {
 	$form->{rowcount}--;
-    &display_form if !$form->{prevent_display};
+	&display_form;
       } else {
 	
 	$form->{"id_$i"}          = 0;
@@ -1143,9 +1143,6 @@ sub update {
 
 
 sub post {
-
-  $form->{prevent_display} = 1;
-  &update;
 
   $form->isblank("transdate", $locale->text('Invoice Date missing!'));
   $form->isblank("customer", $locale->text('Customer missing!'));
