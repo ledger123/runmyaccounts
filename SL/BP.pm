@@ -146,6 +146,18 @@ sub get_vc {
    
   }
 
+  # get dispatch types
+  $query = qq|SELECT *
+              FROM dispatch
+	      ORDER BY 1|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_dispatch} }, $ref;
+  }
+  $sth->finish;
+
   $form->all_years($myconfig, $dbh);
 
   if ($form->{type} =~ /(timecard|storescard)/) {
@@ -294,6 +306,12 @@ sub get_spoolfiles {
 	$form->{"$arap{$form->{type}}{$item}_id"} = 0;
       }
 
+      if ($form->{dispatch}){
+         my ($null, $dispatch_id) = split /--/, $form->{dispatch};
+         $dispatch_id *= 1;
+         $where .= qq| AND vc.dispatch_id = $dispatch_id|;
+      }
+
       if ($form->{type} eq 'remittance_voucher') {
 	$where .= qq| AND vc.remittancevoucher = '1'|;
 
@@ -318,7 +336,8 @@ sub get_spoolfiles {
 		  JOIN address ad ON (ad.trans_id = vc.id)
 		  JOIN status s ON (s.trans_id = a.id)
 		  WHERE s.spoolfile IS NOT NULL
-		  AND s.formname LIKE '$wildcard$form->{type}'|;
+		  AND s.formname LIKE '$wildcard$form->{type}'
+          AND $where|;
       } else {
 	
 	if ($item ne 'oe' && $form->{onhold}) {
