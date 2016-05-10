@@ -235,7 +235,17 @@ sub error {
       $self->header(0,1);
     }
 
-    print qq|<body><h2 class=error>An unexpected error occured!</h2>|;
+	if ( $dbmsg ) {
+	   print qq|<body><h2 class=error>Error!</h2>|;
+	}else {
+	   print qq|<body><h2 class=error>Error!</h2>
+	   <p><b>$self->{msg}</b>|;
+
+       print qq|<h2 class=dberror>DB Error!</h2>
+
+       <p><b class=dberror>$self->{dbmsg}</b>|;
+    
+	}
 	print STDERR "Error: $msg\n$dbmsg\n";
     exit;
 
