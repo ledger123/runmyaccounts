@@ -770,7 +770,7 @@ sub print_form {
   $form->{pre} = "<body bgcolor=#ffffff>\n<pre>";
   delete $form->{stylesheet};
   
-  $form->parse_template(\%myconfig, $userspath);
+  $form->parse_template(\%myconfig, $userspath, $debuglatex);
 
   if ($form->{printed} !~ /$form->{formname}/) {
     $form->{printed} .= " $form->{formname}";

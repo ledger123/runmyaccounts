@@ -2716,7 +2716,7 @@ sub do_print_reminder {
                     id          => $form->{id} );
          $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
       }
-      $form->parse_template(\%myconfig, $userspath);
+      $form->parse_template(\%myconfig, $userspath, $debuglatex);
 
     }
   }
@@ -2799,7 +2799,7 @@ sub do_print_statement {
 	
 	for ("c0", "c15", "c30", "c45", "c60", "c75", "c90", "") { $form->{"${_}total"} = $form->format_amount(\%myconfig, $form->{"${_}total"}, $form->{precision}) }
 
-	$form->parse_template(\%myconfig, $userspath);
+	$form->parse_template(\%myconfig, $userspath, $debuglatex);
 	
       }
     }

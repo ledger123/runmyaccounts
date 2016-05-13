@@ -614,7 +614,7 @@ sub round_amount {
 
 
 sub parse_template {
-  my ($self, $myconfig, $userspath) = @_;
+  my ($self, $myconfig, $userspath, $debuglatex) = @_;
   
   my ($chars_per_line, $lines_on_first_page, $lines_on_second_page) = (0, 0, 0);
   my ($current_page, $current_line) = (1, 1);
@@ -626,6 +626,8 @@ sub parse_template {
 
   my %include = ();
   my $ok;
+
+  $self->{debuglatex} = $debuglatex;
 
   if (-f "$self->{templates}/$self->{language_code}/$self->{IN}") {
     open(IN, "$self->{templates}/$self->{language_code}/$self->{IN}") or $self->error("$self->{templates}/$self->{language_code}/$self->{IN} : $!");
@@ -1416,27 +1418,28 @@ sub format_dcn {
 
 sub cleanup {
   my $self = shift;
-
-  chdir("$self->{tmpdir}");
-
-  my @err = ();
-  if (-f "$self->{errfile}") {
-    open(FH, "$self->{errfile}");
-    @err = <FH>;
-    close(FH);
-  }
   
-  if ($self->{tmpfile}) {
-    # strip extension
-    $self->{tmpfile} =~ s/\.\w+$//g;
-    my $tmpfile = $self->{tmpfile};
-    unlink(<$tmpfile.*>);
-  }
+  if ( !$self->{debuglatex} ) {
+    chdir("$self->{tmpdir}");
 
-  chdir("$self->{cwd}");
+    my @err = ();
+    if (-f "$self->{errfile}") {
+      open(FH, "$self->{errfile}");
+      @err = <FH>;
+      close(FH);
+    }
   
-  "@err";
+    if ($self->{tmpfile}) {
+      # strip extension
+      $self->{tmpfile} =~ s/\.\w+$//g;
+      my $tmpfile = $self->{tmpfile};
+      unlink(<$tmpfile.*>);
+    }
+
+    chdir("$self->{cwd}");
   
+    "@err";
+  }  
 }
 
 
