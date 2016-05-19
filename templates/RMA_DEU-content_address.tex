@@ -1,0 +1,9 @@
+\ifthenelse{\equal{\Addressblock}{right}}{\begin{textblock*}{6.5cm}(11.85cm,6.10cm)}{}
+\ifthenelse{\equal{\Addressblock}{left}}{\begin{textblock*}{6.5cm}(1.8cm,6.10cm)}{}
+\ifthenelse{\equal{\Addressblock}{pingenleft}}{\begin{textblock*}{6.5cm}(2.25cm,6.10cm)}{}
+
+%\underline{\tiny{<%company%>, \BeforeSubString{ --}{<%address%>}, \BehindSubString{-- }{<%address%>}}}
+
+\ifthenelse{\equal{\DocType}{Lieferschein}}{\ShiptoAddress}{\Address}
+
+\end{textblock*}

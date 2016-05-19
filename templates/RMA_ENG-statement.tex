@@ -1,0 +1,83 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Zahlungserinnerung
+% Name: statement.tex
+% Sprache: English
+% Erstellungsdatum: 21. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_address.tex%>
+
+\null\vspace{4.2cm}
+
+\parbox{\textwidth}{
+\textbf{\large{Statement}} \hfill \textbf{Date: <%statementdate%>}
+}
+
+\vspace{0.5cm}
+
+\parbox{\textwidth}{
+Ladies and gentlemen,\\
+\\
+We have found that the amounts below, totalling <%currency%> <%total%> remain unpaid. Please remit payment as quickly as possible.
+}
+
+\vspace{0.5cm}
+
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+\textbf{Invoice no.} & \textbf{Date} & \textbf{Date due} & \textbf{Current} & \textbf{30 Days} & \textbf{60 Days} & \textbf{90+ Days} \\
+\hline
+\end{tabularx}
+
+<%foreach invnumber%>
+\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+<%invnumber%> & <%invdate%> & <%duedate%> & <%c0%> & <%c30%> & <%c60%> & <%c90%> \\
+\end{tabularx}
+<%end invnumber%>
+
+\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+\hline
+Sub-total& & & <%c0total%>& <%c30total%> & <%c60total%> & <%c90total%>
+\end{tabularx}
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+\textbf{<%currency%> remaining} & \textbf{<%total%>}\\
+\hline
+\end{tabularx}
+
+\vspace{0.5cm}
+
+\parbox{\textwidth}{
+Should you have already remitted payment, please ignore this letter.
+
+
+\vspace{0.5cm}
+
+Sincerely,
+
+\vspace{0.5cm}
+
+<%company%>
+}
+}
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

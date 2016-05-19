@@ -1,0 +1,69 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Rechnung mit Einzahlungsschein
+% Name: invoice.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 8. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Rechnung}
+
+\newcommand{\AmountType}{Rechnungsbetrag}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_pagebreak_withamount_withfooter.tex%>
+
+<%include content_address.tex%>
+
+<%include content_header.tex%>
+
+<%include content_articles_withamount.tex%>
+
+<%include content_sum_articles_invoices.tex%>
+
+<%include content_terms.tex%>
+
+<%include content_shiptoaddresstext.tex%>
+
+<%include content_notes.tex%>
+
+%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%membernumber%>}{}}{
+
+%Hier könnte man IBAN Infos anfügen
+
+}{
+
+\ifthenelse{\equal{<%currency%>}{CHF}}{
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{
+\end{document}
+
+}{
+
+\pagebreak
+
+<%include content_einzahlungsschein.tex%>
+
+}
+}
+{} }
+  
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

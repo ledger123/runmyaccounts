@@ -1,0 +1,74 @@
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+
+% Typ: 2. Mahnung
+% Name: reminder2.tex
+% Sprache: Français 
+% Erstellungsdatum: 28. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_address.tex%>
+
+\null\vspace{7.2cm}
+
+\parbox{\textwidth}{
+\textbf{\large{2e rappel}\hfill \today}
+}
+
+\vspace{0.5cm}
+\parbox{\textwidth}{
+Chère Madame, cher Monsieur,\\
+\\
+Malgré notre rappel précédent, la \textbf{facture No <%invnumber%>}\ifthenelse{\equal{<%invdescription%>}{}}{}{ intitulée \glqq <%invdescription%>\grqq} en date du <%invdate%> d'un montant de <%currency%> <%due%> n'a pas encore été réglée. Les paiements ont été pris en compte jusqu'au {\today}.\\
+
+Si nous ne recevons pas rapidement de nouvelles de votre part, nous considérerons que vous ne contestez pas cet en-cours. Nous vous enjoignons à nouveau de virer cette somme due sur notre compte bancaire dans les 5 jours. 
+
+\vspace{0.5cm}
+
+Sincères salutations,  
+
+\vspace{0.5cm}
+
+<%company%>
+}
+
+%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%membernumber%>}{}}{
+
+%Hier könnte man IBAN Infos anfügen
+
+}{
+
+\ifthenelse{\equal{<%currency%>}{CHF}}{
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{
+\end{document}
+
+}{
+
+\pagebreak
+
+<%include content_einzahlungsschein.tex%>
+
+}
+}
+{} }
+  
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}
