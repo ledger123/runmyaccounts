@@ -501,10 +501,10 @@ sub get_department {
 
   $form->{id} *= 1;
 
-  my $query = qq|SELECT description, role
+  my $query = qq|SELECT id, description, role
                  FROM department
 	         WHERE id = $form->{id}|;
-  ($form->{description}, $form->{role}) = $dbh->selectrow_array($query);
+  ($form->{id}, $form->{description}, $form->{role}) = $dbh->selectrow_array($query);
   
   # see if it is in use
   $query = qq|SELECT * FROM dpt_trans
