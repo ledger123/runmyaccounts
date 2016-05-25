@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customers>
+    <customer>
+        <customernumber>K-001</customernumber>
+        <name>Muster AG</name>
+        <created>2012-02-21T00:00:00+01:00</created>
+        <salutation>Herr</salutation>
+        <firstname>Hans</firstname>
+        <lastname>Muster</lastname>
+        <address1>Rössliweg 1</address1>
+        <address2></address2>
+        <zipcode></zipcode>
+        <city>Tenna</city>
+        <state></state>
+        <country></country>
+        <phone></phone>
+        <fax></fax>
+        <mobile></mobile>
+        <email>hmuster@muster.ch</email>
+        <taxnumber></taxnumber>
+        <bank_name>CREDIT SUISSE</bank_name>
+        <bank_address1></bank_address1>
+        <bank_address2></bank_address2>
+        <bank_zipcode>8070</bank_zipcode>
+        <bank_city>ZÜRICH</bank_city>
+        <bank_country>SCHWEIZ</bank_country>
+        <bank_iban>CH3304835172037151000</bank_iban>
+        <bank_bic>CRESCHZZ80L</bank_bic>
+    </customer>
+</customers>
+
