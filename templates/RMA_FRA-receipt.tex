@@ -1,0 +1,99 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Quittung / Debitorenzahlung
+% Name: receipt.tex
+% Sprache: Français 
+% Erstellungsdatum: 28. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Quittance}
+
+\newcommand{\AmountType}{quittance total}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_pagebreak_withamount_withfooter.tex%>
+
+\parbox[t]{12cm}{
+
+Quittance:\\
+\\
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\}
+
+\vspace{1cm}
+
+\textbf{\large{Quittance No <%source%>}}
+
+
+\vspace{0.5cm}
+
+Dans le montant de: <%currency%> <%amount%> {\hfill Date de paiement: <%datepaid%> }
+
+
+\vspace{0.5cm}
+
+A charge de:\\
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+%Firmenanschrift
+
+<%name%>
+
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%> <%firstname%> <%lastname%>}
+
+}{
+
+%Privatanschrift
+
+<%salutation%>
+
+<%firstname%> <%lastname%>
+
+} 
+
+\ifthenelse{\equal{address1}{}}{}{<%address1%>}
+
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+
+\vspace{0.5cm}
+
+\ifthenelse{\equal{<%memo%>}{}}{}{<%memo%>
+
+\vspace{0.5cm}
+}
+
+\textbf{\large{Les factures payées:}}
+
+\vspace{0.5cm}
+
+\begin{tabularx}{\textwidth}{@{}lXrr@{}}
+\textbf{Facture No:} & \textbf{Facture date:}
+  & \textbf{Montant <%currency%>} & \textbf{Payé <%currency%>} \\
+<%foreach invnumber%>
+<%invnumber%> & <%invdate%>  & <%due%> & <%paid%> \\
+<%end invnumber%>
+\end{tabularx}
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

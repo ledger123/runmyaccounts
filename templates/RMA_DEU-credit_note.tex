@@ -1,0 +1,41 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Gutschriftsbuchung
+% Name: credit_note.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 8. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Gutschrift}
+
+\newcommand{\AmountType}{Gutschriftsbetrag}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_address.tex%>
+
+<%include content_header.tex%>
+
+<%include content_bookings.tex%>
+
+<%include content_sum_bookings.tex%>
+
+<%include content_notes.tex%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

@@ -1,0 +1,58 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Einkaufsbestellung
+% Name:  purchase_order.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 14. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Einkaufsbestellung}
+
+\newcommand{\AmountType}{Betrag}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_pagebreak_withamount_withfooter.tex%>
+
+<%include content_address.tex%>
+
+<%include content_header.tex%>
+
+<%include content_articles_withamount.tex%>
+
+<%include content_sum_articles_quotes.tex%>
+
+\vspace{0.5cm}
+
+\textbf{Lieferung an:}\\
+\\
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+
+\vspace{0.5cm}
+
+\parbox{\textwidth}{
+Wir bedanken uns für Ihre Lieferung bis zum \textbf{<%reqdate%>}.
+}
+\vspace{0.5cm}
+
+<%include content_notes.tex%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

@@ -1945,7 +1945,7 @@ sub add_shipto {
 		   .$dbh->quote($self->{shiptocontact}).qq|, |
 		   .$dbh->quote($self->{shiptophone}).qq|, |
            .$dbh->quote($self->{shiptofax}).qq|, |
-		   .$dbh->quote($self->{shiptoemail}).qq|;
+		   .$dbh->quote($self->{shiptoemail}).qq|)|;
     $dbh->do($query) || $self->dberror($query);
   }
 

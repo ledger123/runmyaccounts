@@ -408,9 +408,10 @@ sub get_spoolfiles {
       }
 
       if ($form->{$arap{$form->{type}}{$item}}) {
-	if ($form->{"$arap{$form->{type}}{$item}_id"} ne "") {
+	if ($form->{"$arap{$form->{type}}{$item}_id"}) {
 	  $query .= qq| AND a.$arap{$form->{type}}{$item}_id = $form->{"$arap{$form->{type}}{$item}_id"}|;
 	} else {
+      $form->{$arap{$form->{type}}{$item}} =~ s/^\s+|\s+$//g; # remove leading/trailing white space
 	  $var = $form->like(lc $form->{$arap{$form->{type}}{$item}});
 	  $query .= " AND lower(vc.name) LIKE '$var'";
 	}

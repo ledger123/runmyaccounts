@@ -1,0 +1,74 @@
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+
+% Typ: 2. Mahnung
+% Name: reminder2.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 14. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_address.tex%>
+
+\null\vspace{7.2cm}
+
+\parbox{\textwidth}{
+\textbf{\large{2. Mahnung}\hfill \today}
+}
+
+\vspace{0.5cm}
+\parbox{\textwidth}{
+Sehr geehrte Damen und Herren\\
+\\
+Trotz unserer früheren Mahnungen ist die \textbf{Rechnung Nr. <%invnumber%>}\ifthenelse{\equal{<%invdescription%>}{}}{}{ mit dem Titel \glqq <%invdescription%>\grqq} vom <%invdate%> über <%currency%> <%due%>  noch nicht beglichen. Zahlungen bis zum {\today} wurden berücksichtigt.\\
+
+Ohne Ihren sofortigen gegenteiligen Bericht gehen wir davon aus, dass Sie mit diesem Saldo einverstanden sind. Wir fordern Sie nochmals auf, unser Guthaben innert 5 Tagen auf unser Bankkonto zu überweisen.
+
+\vspace{0.5cm}
+
+Freundliche Grüsse
+
+\vspace{0.5cm}
+
+<%company%>
+}
+
+%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%membernumber%>}{}}{
+
+%Hier könnte man IBAN Infos anfügen
+
+}{
+
+\ifthenelse{\equal{<%currency%>}{CHF}}{
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{
+\end{document}
+
+}{
+
+\pagebreak
+
+<%include content_einzahlungsschein.tex%>
+
+}
+}
+{} }
+  
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

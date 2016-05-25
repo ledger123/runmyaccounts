@@ -1,0 +1,21 @@
+% Pagebreak ohne Betrag
+
+<%pagebreak 58 27 38%>
+
+%Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
+\hline
+\end{tabularx} 
+
+%Eine neue Seite wird initialisiert.
+\newpage
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%Die Artikeltabelle auf der neuen Seite wird initialisiert.
+\begin{tabularx}{\textwidth}{@{}llXrr@{}}
+\hline
+\textbf{Pos.} & \textbf{Artikel} & \textbf{Beschreibung} & \textbf{Menge} & \textbf{Einheit} \\
+\hline
+
+<%end pagebreak%>

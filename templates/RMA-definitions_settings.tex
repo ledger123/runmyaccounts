@@ -61,8 +61,8 @@
 
 %Definiert die Lieferadresse:
 \newcommand{\ShiptoAddress}{
-\ifthenelse{\equal{<%shiptoname%>}{}}{}{<%shiptoname%>\\}
-\ifthenelse{\equal{<%shiptocontact%>}{}}{}{<%shiptocontact%>\\}
+\ifthenelse{\equal{<%shiptoname%>}{}}{}{\ifthenelse{\equal{<%typeofcontact%>}{company}}{<%shiptoname%>\\}{}}
+\ifthenelse{\equal{<%shiptocontact%>}{}}{}{\ifthenelse{\equal{<%salutation%>}{}}{}{<%salutation%> }<%shiptocontact%>\\}
 \ifthenelse{\equal{<%shiptoaddress1%>}{}}{}{<%shiptoaddress1%>\\}
 \ifthenelse{\equal{<%shiptoaddress2%>}{}}{}{<%shiptoaddress2%>\\}
 \ifthenelse{\equal{<%shiptocity%>}{}}{}{<%shiptozipcode%> <%shiptocity%>\\}
