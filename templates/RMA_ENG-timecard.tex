@@ -1,0 +1,56 @@
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+
+% Typ: Timecard
+% Name: timecard.tex
+% Sprache: English
+% Erstellungsdatum: 21. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+\parbox{\textwidth}{
+\textbf{\large{Activity No. <%id%>}}
+}
+
+\vspace*{0.5cm}
+
+\begin{tabular}[t]{@{}ll}
+  \textbf{Employee:} & <%employee%> \\
+  \textbf{Employee no.:} & <%employee_id%> \\
+& \\
+  \textbf{Date of activity:} & <%transdate%> \\
+  \textbf{Start time:} & <%checkedin%> \\
+  \textbf{Activity stop:} & <%checkedout%> \\
+  \textbf{Amount of hours:} & <%qty%> \\
+& \\
+  \textbf{Project no.:} & <%projectnumber%> \\
+  \textbf{Project description:} & <%projectdescription%> \\
+  \textbf{Art. no.:} & <%partnumber%> \\
+  \textbf{Description:} & <%description%> \\
+& \\
+  \textbf{Price per unit:} & <%sellprice%> \\
+  \textbf{Total:} & <%total%> \\
+\end{tabular}
+  
+\vspace{1cm}
+
+<%notes%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

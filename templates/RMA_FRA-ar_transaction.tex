@@ -1,0 +1,70 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Debitorenbuchung
+% Name: ar_transaction.tex
+% Sprache: Français 
+% Erstellungsdatum: 28. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Facture}
+
+\newcommand{\AmountType}{Montant de la facture}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+% No pagebreak
+
+<%include content_address.tex%>
+
+<%include content_header.tex%>
+
+<%include content_bookings.tex%>
+
+<%include content_sum_bookings.tex%>
+
+<%include content_terms.tex%>
+
+<%include content_notes.tex%>
+ 
+%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%membernumber%>}{}}{
+
+%Hier könnte man IBAN Infos anfügen
+
+}{
+
+\ifthenelse{\equal{<%currency%>}{CHF}}{
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{
+\end{document}
+
+}{
+
+\pagebreak
+
+%\AddToShipoutPicture{\BackgroundPicEZ} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+
+<%include content_einzahlungsschein.tex%>
+
+
+}
+}
+{} }
+  
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

@@ -202,7 +202,7 @@ sub order_links {
 
 
 sub prepare_order {
-
+	
   $form->{formname} ||= $form->{type};
   $form->{sortby} ||= "runningnumber";
   $form->{format} ||= $myconfig{outputformat};
@@ -924,6 +924,7 @@ sub ship_all {
       
 sub update {
 
+  
   $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
   $form->isvaldate(\%myconfig, $form->{reqdate}, $locale->text('Invalid required date ...'));
 

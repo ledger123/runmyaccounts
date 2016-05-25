@@ -1,0 +1,7 @@
+\vspace{0.5cm}
+
+\newcommand{\TermsInvoice}{\ifthenelse{\equal{<%terms%>}{0}}{Thank you for \textbf{remitting the payment immediately.}}{Thank you for \textbf{remitting the payment within <%terms%> days} on or before <%duedate%>.}}
+
+\newcommand{\TermsOther}{\ifthenelse{\equal{<%terms%>}{0}}{Terms: immediately}{Terms: <%terms%> days}}
+
+\ifthenelse{\equal{\DocType}{Invoice}}{\TermsInvoice}{\TermsOther}

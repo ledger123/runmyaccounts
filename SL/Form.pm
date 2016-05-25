@@ -90,7 +90,7 @@ sub new {
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
   $self->{version} = "2.8.33";
-  $self->{dbversion} = "2.8.10";
+  $self->{dbversion} = "2.8.11";
 
   bless $self, $type;
   
@@ -235,7 +235,17 @@ sub error {
       $self->header(0,1);
     }
 
-    print qq|<body><h2 class=error>An unexpected error occured!</h2>|;
+	if ( $dbmsg ) {
+	   print qq|<body><h2 class=error>Error!</h2>|;
+	}else {
+	   print qq|<body><h2 class=error>Error!</h2>
+	   <p><b>$self->{msg}</b>|;
+
+       print qq|<h2 class=dberror>DB Error!</h2>
+
+       <p><b class=dberror>$self->{dbmsg}</b>|;
+    
+	}
 	print STDERR "Error: $msg\n$dbmsg\n";
     exit;
 
@@ -1932,7 +1942,7 @@ sub add_shipto {
 		   .$dbh->quote($self->{shiptocontact}).qq|, |
 		   .$dbh->quote($self->{shiptophone}).qq|, |
            .$dbh->quote($self->{shiptofax}).qq|, |
-		   .$dbh->quote($self->{shiptoemail}).qq|;
+		   .$dbh->quote($self->{shiptoemail}).qq|)|;
     $dbh->do($query) || $self->dberror($query);
   }
 

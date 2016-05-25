@@ -1,0 +1,111 @@
+%%%%%%%%%%%%%  TITEL  %%%%%%%%%%%%%
+
+% Typ: Letterhead
+% Name: letterhead.tex
+% Sprache: English
+% Erstellungsdatum: 21. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  INITIALISIERUNG  %%%%%%%%%%%%%
+
+%Sprache dieses Template-Sets
+%\usepackage[ngerman]{babel} % Deutsch
+\usepackage[english]{babel} % Englisch
+%\usepackage[francais]{babel} % Französisch
+%\usepackage[italian]{babel} % Italienisch
+
+%Abstände Rand (Anpassung auf die PDF Hintergrund-Vorlage!)
+\usepackage[a4paper,top=5cm,bottom=2.5cm,left=1.8cm,right=1.8cm]{geometry} 
+
+%Schrift
+\usepackage[scaled=1]{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+%Tabellendefinitionen
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcolumntype{Z}{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}X}
+
+%Hintergrund für erste Standard-Seite
+\usepackage{eso-pic}
+\newcommand\BackgroundPic{
+\put(-2.35,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/background_with_footer.pdf} 
+}}}
+
+%Hintergrund für Einzahlungsschein (ohne Footer)
+\usepackage{eso-pic}
+\newcommand\BackgroundPicEZ{
+\put(-2.35,0){
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\includegraphics{../<%templates%>/background_without_footer.pdf} % Für Logo-Hintergrund
+%\includegraphics{../<%templates%>/background_ESR.pdf} % Für elektronischen ESR-Einzahlungsschein
+}}}
+
+\begin{document}
+\AddToShipoutPicture{\BackgroundPic} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+\shorthandoff{"}
+\pagestyle{empty}
+
+% Bei rechter Positionierung des Adresskopfs:
+\newcommand{\Addressblock}{right}
+%\newcommand{\Addressblock}{left}
+%\newcommand{\Addressblock}{pingenleft}
+
+%Definiert die Lieferadresse:
+\newcommand{\ShiptoAddress}{
+\ifthenelse{\equal{<%shiptoname%>}{}}{}{\ifthenelse{\equal{<%typeofcontact%>}{company}}{<%shiptoname%>\\}{}}
+\ifthenelse{\equal{<%shiptocontact%>}{}}{}{\ifthenelse{\equal{<%salutation%>}{}}{}{<%salutation%> }<%shiptocontact%>\\}
+\ifthenelse{\equal{<%shiptoaddress1%>}{}}{}{<%shiptoaddress1%>\\}
+\ifthenelse{\equal{<%shiptoaddress2%>}{}}{}{<%shiptoaddress2%>\\}
+\ifthenelse{\equal{<%shiptocity%>}{}}{}{<%shiptozipcode%> <%shiptocity%>\\}
+\ifthenelse{\equal{<%shiptocountry%>}{}}{}{<%shiptocountry%>\\}
+}
+
+%Definiert die Rechnungsadresse:
+
+\newcommand{\Address}{
+\ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+%Firmenanschrift
+
+<%name%>
+
+\ifthenelse{\equal{<%contact%>}{}}{}{<%salutation%>
+\ifthenelse{\equal{<%contacttitle%>}{}}{}{<%contacttitle%>
+}<%firstname%> <%lastname%>}
+
+}{
+
+%Privatanschrift
+
+<%salutation%>
+
+\ifthenelse{\equal{<%contacttitle%>}{}}{}{<%contacttitle%>
+}<%firstname%> <%lastname%>
+
+}
+
+\ifthenelse{\equal{address1}{}}{}{<%address1%>}
+
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+}
+
+% Setzt die generelle Position der Seite. Der bedruckbare bereich kann horizontal / vertikal verschoben werden.
+\textblockorigin{0.00cm}{0.00cm} % - nach links / + nach unten
+
+%Schriftwahl
+\normalfont
+
+%%%%%%%%%%%%%  ENDE INITIALISERUNG  %%%%%%%%%%%%%

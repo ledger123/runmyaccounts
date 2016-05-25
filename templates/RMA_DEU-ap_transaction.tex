@@ -1,0 +1,130 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Kreditorenbuchung
+% Name: ap_transaction.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 9. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\AmountType}{Rechnungsbetrag}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+\vspace{1.5cm}
+
+\centerline{\textbf{K R E D I T O R E N B U C H U N G S B E L E G}}
+
+\vspace{1.5cm}
+
+\parbox[t]{.5\textwidth}{
+<%name%>
+
+<%address1%>
+
+<%address2%>
+
+<%city%>
+<%if state>
+\hspace{-0.1cm}, <%state%>
+<%end state%> <%zipcode%>
+
+<%country%>
+
+\vspace{0.3cm}
+
+<%if contact%>
+<%contact%>
+\vspace{0.2cm}
+<%end contact%>
+
+<%if vendorphone%>
+Tel: <%vendorphone%>
+<%end vendorphone%>
+
+<%if vendorfax%>
+Fax: <%vendorfax%>
+<%end vendorfax%>
+
+<%email%>
+
+<%if vendortaxnumber%>
+MWST Nr.: <%vendortaxnumber%>
+<%end vendortaxnumber%>
+}
+\hfill
+\begin{tabular}[t]{ll}
+  \textbf{Beleg Nr.:} & <%invnumber%> \\
+  \textbf{Datum:} & <%invdate%> \\
+  \textbf{Fällgikeitsdatum:} & <%duedate%> \\
+  <%if ponumber%>
+    \textbf{PO-Nummer:} & <%ponumber%> \\
+  <%end ponumber%>
+  <%if ordnumber%>
+    \textbf{Bestell-Nummer:} & <%ordnumber%> \\
+  <%end ordnumber%>
+  \textbf{Mitarbeiter:} & <%employee%> \\
+\end{tabular}
+
+\vspace{1.5cm}
+
+\renewcommand{\arraystretch}{1.3} %Abstand zwischen den Zeilen
+
+\begin{tabularx}{\textwidth}{@{}L{1.9cm}L{4.3cm}L{5.07cm}L{1.3cm}R{3.15cm}@{}}
+
+\hline
+ \textbf{Konto Nr.} & \textbf{Konto} & \textbf{Beschreibung} &\textbf{Projekt} & \textbf{Betrag <%currency%>} \\
+\hline
+\end{tabularx}
+\hline
+
+<%foreach amount%>
+\begin{tabularx}{\textwidth}{@{}L{1.9cm}L{4.3cm}L{5.07cm}L{1.3cm}R{3.15cm}@{}}
+<%accno%> & <%account%> & <%description%> & <%projectnumber%> &<%amount%>\\
+\end{tabularx}
+\par
+\begingroup
+\rightskip=7.4cm % Parameter anpassen
+\noindent <%itemnotes%>
+\par
+\endgroup
+<%end amount%>
+
+<%include content_sum_bookings.tex%>
+
+\vspace{1cm}
+
+\ifthenelse{\equal{<%notes%>}{}}{}{
+<%notes%>
+\vspace{1cm}
+}
+
+
+<%if paid_1%>
+\begin{tabular}{@{}llllr@{}}
+  \multicolumn{5}{c}{\textbf{Zahlungen}} \\
+  \hline
+  \textbf{Datum} & & \textbf{Beleg} & \textbf{Notiz} & \textbf{Betrag <%currency%>} \\
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%paymentmemo%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\end{tabular}
+<%end paid_1%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

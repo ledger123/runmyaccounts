@@ -1,0 +1,16 @@
+ \vspace{0.5cm}
+ 
+ <%if paid_1%>
+\begin{tabular}{@{}llllr@{}}
+  \multicolumn{5}{c}{\textbf{Zahlungen}} \\
+  \hline
+  \textbf{Datum} & & \textbf{Beleg} & \textbf{Notiz} & \textbf{Betrag <%currency%>} \\
+  \hline
+<%end paid_1%>
+<%foreach payment%>
+  <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%paymentmemo%> & <%payment%> \\
+<%end payment%>
+<%if paid_1%>
+\hline
+\end{tabular}
+<%end paid_1%>

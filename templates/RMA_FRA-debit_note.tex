@@ -1,0 +1,95 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Kreditorenlastschrift Buchung
+% Name: debit_note.tex
+% Sprache: Français 
+% Erstellungsdatum: 28. März 2016
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Debit}
+
+\newcommand{\AmountType}{debit montant}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+\vspace{1.5cm}
+
+\centerline{\textbf{D E B I T}}
+
+\vspace{1.5cm}
+
+\parbox[t]{.5\textwidth}{
+<%name%>
+
+<%address1%>
+
+<%address2%>
+
+<%city%>
+<%if state>
+\hspace{-0.1cm}, <%state%>
+<%end state%> <%zipcode%>
+
+<%country%>
+
+\vspace{0.3cm}
+
+<%if contact%>
+<%contact%>
+\vspace{0.2cm}
+<%end contact%>
+
+<%if vendorphone%>
+Tel: <%vendorphone%>
+<%end vendorphone%>
+
+<%if vendorfax%>
+Fax: <%vendorfax%>
+<%end vendorfax%>
+
+<%email%>
+
+<%if vendortaxnumber%>
+VAT no.: <%vendortaxnumber%>
+<%end vendortaxnumber%>
+}
+\hfill
+\begin{tabular}[t]{ll}
+  \textbf{Facture No:} & <%invnumber%> \\
+  \textbf{Date:} & <%invdate%> \\
+  \textbf{Échéance:} & <%duedate%> \\
+  <%if ponumber%>
+    \textbf{PO No:} & <%ponumber%> \\
+  <%end ponumber%>
+  <%if ordnumber%>
+    \textbf{Commande No:} & <%ordnumber%> \\
+  <%end ordnumber%>
+  \textbf{Collaborateur:} & <%employee%> \\
+\end{tabular}
+
+\vspace{1.5cm}
+
+<%include content_bookings.tex%>
+
+<%include content_sum_bookings.tex%>
+
+<%include content_notes.tex%>
+
+<%include content_paymenttable.tex%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

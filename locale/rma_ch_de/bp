@@ -25,6 +25,7 @@ $self{texts} = {
   'Description'                 => 'Beschreibung',
   'Deselect all'                => 'Alle abwählen',
   'Download zip file'			=> 'Als ZIP herunterladen',
+  'Dispatch Method'				=> 'Auslieferungsart',
   'E-Mail'                      => 'E-Mail',
   'E-mail'                      => 'E-Mail',
   'E-mailed'                    => 'E-Mail gesendet',
