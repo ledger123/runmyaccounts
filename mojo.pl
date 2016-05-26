@@ -24,10 +24,9 @@ my %myconfig = (
   numberformat => '1,000.00',
 );
 
-my $form = new Form;
-my $dbh = $form->dbconnect(\%myconfig);
+my $globalform = new Form; # should not be needed except connecting to db so get rid of it
+my $dbh = $globalform->dbconnect(\%myconfig);
 
-helper slform => sub { $form };
 helper slconfig => sub { \%myconfig };
 helper dbh => sub { $dbh };
 
@@ -40,69 +39,70 @@ any '/customer' => sub {
     my $c = shift;
     my $params = $c->req->params->to_hash;
     my $errormsg;
-    $c->slform->{db} = 'customer';
-    $c->slform->{ARAP} = 'ar';
+    my $form = new Form;
+    $form->{db} = 'customer';
+    $form->{ARAP} = 'ar';
     if ($params->{action} eq 'Save'){
         if ($params->{name}){
-            for (qw(id customernumber name firstname lastname)){ $c->slform->{$_} = $params->{$_} };
-            CT->save($c->slconfig, $c->slform);
-            for (qw(id customernumber name firstname lastname)){ delete $c->slform->{$_} }
+            for (qw(id customernumber name firstname lastname contactid addressid)){ $form->{$_} = $params->{$_} };
+            CT->save($c->slconfig, $form);
             $c->redirect_to('/customers');
         } else {
             $errormsg = 'Blank name not allowed. Please correct.'
         }
     } else {
-        $c->slform->{id} = $params->{id};
-        CT->create_links($c->slconfig, $c->slform);
-        for (qw(email phone fax mobile salutation firstname lastname gender contacttitle occupation)) { $c->slform->{$_} = $c->slform->{all_contact}->[0]->{$_} }
-        $c->slform->{contactid} = $c->slform->{all_contact}->[0]->{id};
+        $form->{id} = $params->{id};
+        CT->create_links($c->slconfig, $form);
+        for (qw(email phone fax mobile salutation firstname lastname gender contacttitle occupation)) { $form->{$_} = $form->{all_contact}->[0]->{$_} }
+        $form->{contactid} = $form->{all_contact}->[0]->{id};
     }
-    $c->render('customer', slform => $c->slform, errormsg => $errormsg);
+    $c->render('customer', form => $form, errormsg => $errormsg);
 };
 
 
 
 get '/customers' => sub {
    my $c = shift;
-   delete $c->slform->{CT};
-   $c->slform->{db} = 'customer';
-   for (qw(name customernumber address contact)) { $c->slform->{"l_$_"} = 'Y' }
-   CT->search($c->slconfig, $c->slform);
-   $c->render('customers', slform => $c->slform);
+   my $form = new Form;
+   $form->{db} = 'customer';
+   for (qw(name customernumber address contact)) { $form->{"l_$_"} = 'Y' }
+   CT->search($c->slconfig, $form);
+   $c->render('customers', form => $form);
 };
 
 
 
 any '/department' => sub {
     my $c = shift;
+    my $form = new Form;
     my $params = $c->req->params->to_hash;
     my $errormsg;
     if ($params->{action} eq 'Save'){
         if ($params->{description}){
-            for (qw(id description role)){ $c->slform->{$_} = $params->{$_} };
-            AM->save_department($c->slconfig, $c->slform);
-            for (qw(id description role)){ delete $c->slform->{$_} }
+            for (qw(id description role)){ $form->{$_} = $params->{$_} };
+            AM->save_department($c->slconfig, $form);
+            for (qw(id description role)){ delete $form->{$_} }
             $c->redirect_to('/departments');
         } else {
             $errormsg = 'Blank description not allowed. Please correct.'
         }
     } else {
-        $c->slform->{id} = $params->{id};
-        AM->get_department($c->slconfig, $c->slform);
+        $form->{id} = $params->{id};
+        AM->get_department($c->slconfig, $form);
     }
-    $c->render('department', slform => $c->slform, errormsg => $errormsg);
+    $c->render('department', form => $form, errormsg => $errormsg);
 };
 
 
 
 get '/departments' => sub {
     my $c = shift;
-    delete $c->slform->{ALL};
-    AM->departments($c->slconfig, $c->slform);
+    my $form = new Form;
+    AM->departments($c->slconfig, $form);
     if ($c->accepts('', 'json')){
-        $c->render(json => $c->slform->{ALL});
+        $c->render(json => $form->{ALL});
     } else {
-        $c->render('departments', slform => $c->slform);
+        $c->render('departments', form => $form);
     }
 };
 
@@ -110,9 +110,10 @@ get '/departments' => sub {
 
 helper insert => sub {
   my $c = shift;
-  ($c->slform->{description}, $c->slform->{role}, $c->slform->{id}) = @_;
-  AM->save_department($c->slconfig, $c->slform);
-  for (qw(id description role)){ delete $c->slform->{$_} }
+  my $form = new Form;
+  ($form->{description}, $form->{role}, $form->{id}) = @_;
+  AM->save_department($c->slconfig, $form);
+  for (qw(id description role)){ delete $form->{$_} }
 
   return 1;
 };
@@ -122,13 +123,14 @@ helper insert => sub {
 # setup websocket message handler
 websocket '/insert' => sub {
   my $c = shift;
+  my $form = new Form;
   $c->on( json => sub {
     my ($ws, $row) = @_;
     
     $c->insert(@$row);
-    $c->slform->{ALL} = ($row);
+    $form->{ALL} = ($row);
 
-    #my $html = $ws->render_to_string( 'departmentrow', slform => $c->slform );
+    #my $html = $ws->render_to_string( 'departmentrow', form => $form );
     my ($department_id) = $c->dbh->selectrow_array("SELECT MAX(id) FROM department WHERE description = '@$row[0]'");
     my $html = "<tr><td>$department_id</td><td>@$row[0]</td><td>@$row[1]</td></tr>";
     $ws->send({ json => {row => $html} });
@@ -136,22 +138,36 @@ websocket '/insert' => sub {
 };
 
 
-
 any '/jsontest' => sub {
-    # curl -X POST -H "Content-Type: application/json" -d @customer.json http://localhost:3000/jsontest
     my $c = shift;
+    my $form = new Form;
     my $data = $c->req->json;
-    $c->render(text => Dumper($data));
+    my @keys = keys $data->{customer};
+
+    $form->{db} = 'customer';
+    $form->{ARAP} = 'ar';
+    for (@keys) { $form->{$_} = $data->{customer}->{$_} }
+    CT->save($c->slconfig, $form);
+
+    $c->render(text => "Customer added successfully ...\n");
 };
 
 
 any '/xmltest' => sub {
-    # curl -X POST -d @customer.xml http://localhost:3000/xmltest
     my $c = shift;
+    my $form = new Form;
     my $xmldata = $c->req->body;
     my $xml = new XML::Simple;
-    my $perldata = $xml->XMLin($xmldata);
-    $c->render(text => Dumper($perldata));
+
+    my $data = $xml->XMLin($xmldata);
+    my @keys = keys $data->{customer};
+
+    $form->{db} = 'customer';
+    $form->{ARAP} = 'ar';
+    for (@keys) { $form->{$_} = $data->{customer}->{$_} if $data->{customer}->{$_} }
+    #$c->render(text => Dumper($form));
+    CT->save($c->slconfig, $form);
+    $c->render(text => "Customer added successfully ...\n");
 };
 
 
@@ -164,10 +180,84 @@ __DATA__
 % title 'Welcome';
 %= include 'menu';
 
+<div class="container">
+    <div class="row">
+        <p>NOTE: Resize browser window and see how form controls are stacked on smaller windows sizes. This makes it easy to develop one app for mobile or desktop.</p>
+    </div>
+    <div class="row">
+        <h3>Sample form</h3>
+        <div class="col-sm-4">
+            <div class="row">
+                <div class="form-group">
+                    <label for="customernumber" class="control-label col-sm-4">Number</label>
+                    <div class="col-sm-8">
+                        <input type=text id="customernumber" class="form-control" name=customernumber>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="customernumber" class="control-label col-sm-4">Name</label>
+                    <div class="col-sm-8">
+                        <input type=text id="customernumber" class="form-control" name=customernumber>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="customernumber" class="control-label col-sm-4">Address</label>
+                    <div class="col-sm-8">
+                        <input type=text id="customernumber" class="form-control" name=customernumber>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+            <div class="row">
+                <div class="form-group">
+                    <label for="customernumber" class="control-label col-sm-4">Tax Number</label>
+                    <div class="col-sm-8">
+                        <input type=text id="customernumber" class="form-control" name=customernumber>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+            <div class="row">
+                <div class="form-group">
+                    <label for="customernumber" class="control-label col-sm-4">First Name</label>
+                    <div class="col-sm-8">
+                        <input type=text id="customernumber" class="form-control" name=customernumber>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="customernumber" class="control-label col-sm-4">Last Name</label>
+                    <div class="col-sm-8">
+                        <input type=text id="customernumber" class="form-control" name=customernumber>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+
+
 @@ customers.html.ep
 % layout 'default';
 % title 'Customers';
 %= include 'menu';
+<h3>Adding a customer with JSON from command line</h3>
+<pre>curl -X POST -H "Content-Type: application/json" -d @customer.json http://localhost:3000/jsontest</pre>
+<h3>Adding a customer with XML from command line</h3>
+<pre>curl -X POST -d @customer.xml http://localhost:3000/xmltest</pre>
+
 <h1>List of customers</h1>
 <table class="table table-striped">
 <thead>
@@ -187,7 +277,7 @@ __DATA__
 
 
 @@ customerrow.html.ep
-% for my $row (@{$slform->{CT}}) {
+% for my $row (@{$form->{CT}}) {
 <tr>
   <td><a href="/customer?id=<%=$row->{id}%>"><%= $row->{id} %></a></td>
   <td><%= $row->{customernumber} %></td>
@@ -220,33 +310,33 @@ __DATA__
 <div class="form-group">
     <label for="customernumber" class="control-label col-xs-2">Customer Number</label>
     <div class="col-xs-10">
-        <input type=text id="customernumber" class="form-control" name=customernumber value="<%== $slform->{customernumber} %>">
+        <input type=text id="customernumber" class="form-control" name=customernumber value="<%== $form->{customernumber} %>">
     </div>
 </div>
 <div class="form-group">
     <label for="name" class="control-label col-xs-2">Name</label>
     <div class="col-xs-10">
-        <input type=text id="name" class="form-control" name=name value="<%== $slform->{name} %>">
+        <input type=text id="name" class="form-control" name=name value="<%== $form->{name} %>">
     </div>
 </div>
 <div class="form-group">
     <label for="firstname" class="control-label col-xs-2">First Name</label>
     <div class="col-xs-10">
-        <input type=text id="firstname" class="form-control" name=firstname value="<%== $slform->{firstname} %>">
+        <input type=text id="firstname" class="form-control" name=firstname value="<%== $form->{firstname} %>">
     </div>
 </div>
 <div class="form-group">
     <label for="lastname" class="control-label col-xs-2">Last Name</label>
     <div class="col-xs-10">
-        <input type=text id="lastname" class="form-control" name=lastname value="<%== $slform->{lastname} %>">
+        <input type=text id="lastname" class="form-control" name=lastname value="<%== $form->{lastname} %>">
     </div>
 </div>
 
 
 <input type=submit class="btn btn-primary" name=action value="Save">
-<input type=hidden name=id value="<%== $slform->{id} %>">
-<input type=hidden name=addressid value="<%== $slform->{addressid} %>">
-<input type=hidden name=contactid value="<%== $slform->{contactid} %>">
+<input type=hidden name=id value="<%== $form->{id} %>">
+<input type=hidden name=addressid value="<%== $form->{addressid} %>">
+<input type=hidden name=contactid value="<%== $form->{contactid} %>">
 </form>
 
 
@@ -295,7 +385,7 @@ __DATA__
 %= end
 
 @@ departmentrow.html.ep
-% for my $row (@{$slform->{ALL}}) {
+% for my $row (@{$form->{ALL}}) {
 <tr>
   <td><a href="/department?id=<%=$row->{id}%>"><%= $row->{id} %></a></td>
   <td><%= $row->{description} %></td>
@@ -306,7 +396,7 @@ __DATA__
 
 @@ departments.xml.ep
 <departments>
-% for my $row (@{$slform->{ALL}}) {
+% for my $row (@{$form->{ALL}}) {
 <department>
 <id><%= $row->{id} %></id>
 <description><%= $row->{description} %></description>
@@ -337,23 +427,27 @@ __DATA__
 <div class="form-group">
     <label for="description" class="control-label col-xs-2">Department</label>
     <div class="col-xs-10">
-        <input type=text id="description" class="form-control" name=description value="<%== $slform->{description} %>">
+        <input type=text id="description" class="form-control" name=description value="<%== $form->{description} %>">
     </div>
 </div>
 <div class="form-group">
     <label for="role" class="control-label col-xs-2">Role</label>
     <div class="col-xs-10">
-        <input type=text id="role" class="form-control" name=role value="<%== $slform->{role} %>">
+        <input type=text id="role" class="form-control" name=role value="<%== $form->{role} %>">
     </div>
 </div>
 <input type=submit class="btn btn-primary" name=action value="Save">
-<input type=hidden name=id value="<%== $slform->{id} %>">
+<input type=hidden name=id value="<%== $form->{id} %>">
 </form>
 
 
 
 @@ departmentform2.html.ep
 <h2>Department Form</h2>
+<div class="row">
+    <p>NOTE: This form uses websocket protocol to save new department to database and shows it on list below without refreshing page.
+</div>
+
 <div class="form-horizontal" role="form">
 <div class="form-group">
     <label for="description" class="control-label col-xs-2">Department</label>
@@ -373,16 +467,22 @@ __DATA__
 
 @@ department.json.ep
 {
-"id":"<%= $slform->{id} %>",
-"description":"<%= $slform->{description} %>",
+"id":"<%= $form->{id} %>",
+"description":"<%= $form->{description} %>",
 }
 
 
 
 @@ menu.html.ep
-<a href="/departments">Departments</a>,
-<a href="/customers">Customers</a>,
-
+<div class="row">
+<ul class="list-inline">
+    <li><a href="/">Home</a></li>
+    <li><a href="/departments">Departments</a></li>
+    <li><a href="/departments.xml">Departments XML</a></li>
+    <li><a href="/departments.json">Departments JSON</a></li>
+    <li><a href="/customers">Customers</a></li>
+</ul>
+</div>
 
 
 @@ layouts/default.html.ep
