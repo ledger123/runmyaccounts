@@ -3,26 +3,25 @@
     <customer>
         <customernumber>K-001</customernumber>
         <name>Muster AG</name>
-        <created>2012-02-21T00:00:00+01:00</created>
         <salutation>Herr</salutation>
         <firstname>Hans</firstname>
         <lastname>Muster</lastname>
-        <address1>Rössliweg 1</address1>
-        <address2></address2>
-        <zipcode></zipcode>
+        <address1>Rossliweg 1</address1>
+        <address2>na</address2>
+        <zipcode>na</zipcode>
         <city>Tenna</city>
-        <state></state>
-        <country></country>
-        <phone></phone>
-        <fax></fax>
-        <mobile></mobile>
+        <state>na</state>
+        <country>na</country>
+        <phone>na</phone>
+        <fax>na</fax>
+        <mobile>na</mobile>
         <email>hmuster@muster.ch</email>
-        <taxnumber></taxnumber>
+        <taxnumber>na</taxnumber>
         <bank_name>CREDIT SUISSE</bank_name>
-        <bank_address1></bank_address1>
-        <bank_address2></bank_address2>
+        <bank_address1>na</bank_address1>
+        <bank_address2>na</bank_address2>
         <bank_zipcode>8070</bank_zipcode>
-        <bank_city>ZÜRICH</bank_city>
+        <bank_city>ZURICH</bank_city>
         <bank_country>SCHWEIZ</bank_country>
         <bank_iban>CH3304835172037151000</bank_iban>
         <bank_bic>CRESCHZZ80L</bank_bic>
