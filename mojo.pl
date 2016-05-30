@@ -5,6 +5,7 @@ use DBI;
 use SL::Form;
 use SL::AM;
 use SL::CT;
+use SL::RP;
 use Data::Dumper;
 use XML::Simple;
 
@@ -59,6 +60,14 @@ any '/customer' => sub {
     $c->render('customer', form => $form, errormsg => $errormsg);
 };
 
+any '/trial' => sub {
+    my $c = shift;
+    my $form = new Form;
+    
+    RP->trial_balance($c->slconfig, $form);
+    
+    $c->render('trial', form => $form, slconfig => $c->slconfig );
+};
 
 
 get '/customers' => sub {
@@ -69,7 +78,6 @@ get '/customers' => sub {
    CT->search($c->slconfig, $form);
    $c->render('customers', form => $form);
 };
-
 
 
 any '/department' => sub {
@@ -249,6 +257,41 @@ __DATA__
 
 
 
+@@ trial.html.ep
+% layout 'default';
+% title 'Trial Balance';
+%= include 'menu';
+
+<h1>Trial Balance</h1>
+<table class="table table-striped">
+<thead>
+<tr>
+    <th>Account</th>
+    <th>Description</th>
+    <th>Beginning Balance</th>
+    <th>Debit</th>
+    <th>Credit</th>
+    <th>Ending Balance</th>
+</tr>
+</thead>
+<tbody id="trial">
+% for my $row ( sort { $a->{accno} cmp $b->{accno} } @{ $form->{TB} } ) {
+<tr>
+  <td><%= $row->{accno} %></td>
+  <td><%= $row->{description} %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{begbalance}, 2) %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{debit}, 2) %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{credit}, 2) %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{endbalance}, 2) %></td>
+</tr>
+% }
+</tbody>
+</table>
+<br/>
+
+
+
+
 @@ customers.html.ep
 % layout 'default';
 % title 'Customers';
@@ -383,6 +426,8 @@ __DATA__
       };
     }
 %= end
+<pre>
+%= dumper($form);
 
 @@ departmentrow.html.ep
 % for my $row (@{$form->{ALL}}) {
@@ -481,6 +526,7 @@ __DATA__
     <li><a href="/departments.xml">Departments XML</a></li>
     <li><a href="/departments.json">Departments JSON</a></li>
     <li><a href="/customers">Customers</a></li>
+    <li><a href="/trial">Trial Balance</a></li>
 </ul>
 </div>
 
