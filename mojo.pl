@@ -146,6 +146,19 @@ websocket '/insert' => sub {
 };
 
 
+# setup websocket to update trial for given dates
+websocket '/updatetrial' => sub {
+    my $c = shift;
+    $c->on( json => sub {
+        my ($ws, $row) = @_;
+
+        my $html = qq|<tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>|;
+
+        $ws->send({ json => {row => $html} });
+    });
+};
+
+
 any '/jsontest' => sub {
     my $c = shift;
     my $form = new Form;
