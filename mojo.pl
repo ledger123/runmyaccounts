@@ -127,7 +127,6 @@ helper insert => sub {
 };
 
 
-
 # setup websocket message handler
 websocket '/insert' => sub {
   my $c = shift;
@@ -138,9 +137,10 @@ websocket '/insert' => sub {
     $c->insert(@$row);
     $form->{ALL} = ($row);
 
-    #my $html = $ws->render_to_string( 'departmentrow', form => $form );
     my ($department_id) = $c->dbh->selectrow_array("SELECT MAX(id) FROM department WHERE description = '@$row[0]'");
-    my $html = "<tr><td>$department_id</td><td>@$row[0]</td><td>@$row[1]</td></tr>";
+    @{$form->{ALL}} = ( { id => $department_id, description => @$row[0], role => @$row[1] } );
+    my $html = $ws->render_to_string( 'departmentrow', form => $form );
+
     $ws->send({ json => {row => $html} });
   });
 };
