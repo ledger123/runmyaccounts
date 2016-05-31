@@ -60,12 +60,11 @@ any '/customer' => sub {
     $c->render('customer', form => $form, errormsg => $errormsg);
 };
 
+
 any '/trial' => sub {
     my $c = shift;
     my $form = new Form;
-    
-    RP->trial_balance($c->slconfig, $form);
-    
+    @{$form->{TB}} = ({ accno => 'NA', description => 'NA' });
     $c->render('trial', form => $form, slconfig => $c->slconfig );
 };
 
@@ -149,10 +148,16 @@ websocket '/insert' => sub {
 # setup websocket to update trial for given dates
 websocket '/updatetrial' => sub {
     my $c = shift;
+    my $form = new Form;
+
     $c->on( json => sub {
         my ($ws, $row) = @_;
 
-        my $html = qq|<tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th>|;
+        $form->{fromdate} = @$row[0];
+        $form->{todate} = @$row[1];
+
+        RP->trial_balance($c->slconfig, $form);
+        my $html = $ws->render_to_string('trialrow', form => $form, slconfig => $c->slconfig);
 
         $ws->send({ json => {row => $html} });
     });
@@ -263,11 +268,37 @@ __DATA__
                 </div>
             </div>
         </div>
-
-
     </div>
 </div>
 
+
+@@ trialform.html.ep
+<div class="row">
+    <p>NOTE: This form uses websocket protocol to update trial balance below without refreshing page.
+</div>
+
+<div class="col-sm-4">
+    <div class="row">
+        <div class="form-group">
+            <label for="fromdate" class="control-label col-sm-4">From</label>
+            <div class="col-sm-8">
+                <input type=text id="fromdate" class="form-control" name=fromdate>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <label for="todate" class="control-label col-sm-4">To</label>
+            <div class="col-sm-8">
+                <input type=text id="todate" class="form-control" name=todate>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+<input type=submit value="Update" onclick="updatetrial()">
+</div>
 
 
 @@ trial.html.ep
@@ -276,6 +307,9 @@ __DATA__
 %= include 'menu';
 
 <h1>Trial Balance</h1>
+
+%= include 'trialform';
+
 <table class="table table-striped">
 <thead>
 <tr>
@@ -288,6 +322,41 @@ __DATA__
 </tr>
 </thead>
 <tbody id="trial">
+%= include 'trialrow';
+</tbody>
+</table>
+%= javascript begin
+    function updatetrial () {
+      if (!("WebSocket" in window)) {
+        alert('WebSockets not supported!');
+        return;
+      }
+      var ws = new WebSocket("<%= url_for('updatetrial')->to_abs %>");
+      ws.onopen = function () {
+        var fromdate = $('#fromdate');
+        var todate = $('#todate');
+        ws.send(JSON.stringify([fromdate.val(), todate.val()]));
+        fromdate.val('');
+        todate.val('');
+      };
+      ws.onmessage = function (evt) {
+        var data = JSON.parse(evt.data);
+        $('#trial').replaceWith(data.row);
+      };
+    }
+%= end
+<br/>
+<pre>
+
+@@ trialrow.html.ep
+<tr>
+<td colspan=6>
+<pre>
+%= dumper(time());
+</pre>
+</td>
+</tr>
+</tr>
 % for my $row ( sort { $a->{accno} cmp $b->{accno} } @{ $form->{TB} } ) {
 <tr>
   <td><%= $row->{accno} %></td>
@@ -298,10 +367,6 @@ __DATA__
   <td align="right"><%= $form->format_amount($slconfig, $row->{endbalance}, 2) %></td>
 </tr>
 % }
-</tbody>
-</table>
-<br/>
-
 
 
 
@@ -566,7 +631,7 @@ __DATA__
   </div>
 
   </body>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 </html>
 
