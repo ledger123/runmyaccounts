@@ -6,8 +6,12 @@ use SL::Form;
 use SL::AM;
 use SL::CT;
 use SL::RP;
+use SL::AA;
+use SL::IS;
 use Data::Dumper;
 use XML::Simple;
+use DBIx::Simple;
+
 
 my %myconfig = (
   company => 'Maverick Solutions',
@@ -23,13 +27,16 @@ my %myconfig = (
   email => 'armaghan@system3software.com',
   name => 'Armaghan Saqib',
   numberformat => '1,000.00',
+  templates => 'templates/demo@ledger28',
 );
 
 my $globalform = new Form; # should not be needed except connecting to db so get rid of it
 my $dbh = $globalform->dbconnect(\%myconfig);
+my $dbs = DBIx::Simple->connect($dbh);
 
 helper slconfig => sub { \%myconfig };
 helper dbh => sub { $dbh };
+helper dbs => sub { $dbs };
 
 get '/' => sub {
     my $c = shift;
@@ -58,14 +65,6 @@ any '/customer' => sub {
         $form->{contactid} = $form->{all_contact}->[0]->{id};
     }
     $c->render('customer', form => $form, errormsg => $errormsg);
-};
-
-
-any '/trial' => sub {
-    my $c = shift;
-    my $form = new Form;
-    @{$form->{TB}} = ({ accno => 'NA', description => 'NA' });
-    $c->render('trial', form => $form, slconfig => $c->slconfig );
 };
 
 
@@ -145,6 +144,13 @@ websocket '/insert' => sub {
 };
 
 
+any '/trial' => sub {
+    my $c = shift;
+    my $form = new Form;
+    @{$form->{TB}} = ({ accno => 'NA', description => 'NA' });
+    $c->render('trial', form => $form, slconfig => $c->slconfig );
+};
+
 # setup websocket to update trial for given dates
 websocket '/updatetrial' => sub {
     my $c = shift;
@@ -161,6 +167,90 @@ websocket '/updatetrial' => sub {
 
         $ws->send({ json => {row => $html} });
     });
+};
+
+
+any '/printinvoice' => sub {
+    my $c = shift;
+    my $form = new Form;
+
+    # sql-ledger.conf
+    my $userspath = 'users';
+    my $spool = 'spool';
+    my $templates = 'templates';
+
+    $form->{id} = $c->param('id');
+    $form->{type} = 'invoice';
+    $form->{formname} = 'invoice';
+    $form->{format} = 'pdf';
+    $form->{media} = 'queue';
+    $form->{vc} = 'customer';
+    $form->{copies} = 1;
+    $form->{templates} = $c->slconfig->{templates};
+    $form->{IN} = "$form->{formname}.$form->{format}";
+    if ($form->{format} =~ /(postscript|pdf)/) {
+        $form->{IN} =~ s/$&$/tex/;
+    }
+ 
+    my $filename = time;
+    $filename .= int rand 10000;
+    $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
+    $form->{OUT} = ">$spool/$filename";
+
+    $form->create_links("AR", $c->slconfig, "customer", 1);
+    AA->get_name($c->slconfig, \%$form);
+    IS->retrieve_invoice($c->slconfig, \%$form);
+
+    for (qw(invnumber ordnumber ponumber quonumber shippingpoint shipvia waybill notes intnotes)) { $form->{$_} = $form->quote($form->{$_}) }
+
+    my $i = 1;
+    my $ml = 1;
+    foreach my $ref (@{ $form->{invoice_details} } ) {
+      for (keys %$ref) { $form->{"${_}_$i"} = $ref->{$_} }
+
+      $form->{"projectnumber_$i"} = qq|$ref->{projectnumber}--$ref->{project_id}| if $ref->{project_id};
+      $form->{"partsgroup_$i"} = qq|$ref->{partsgroup}--$ref->{partsgroup_id}| if $ref->{partsgroup_id};
+
+      $form->{"discount_$i"} = $form->format_amount($c->slconfig, $form->{"discount_$i"} * 100);
+
+      for (qw(netweight grossweight volume)) { $form->{"${_}_$i"} = $form->format_amount($c->slconfig, $form->{"${_}_$i"}) }
+
+      my ($dec) = ($form->{"sellprice_$i"} =~ /\.(\d+)/);
+      $dec = length $dec;
+      my $decimalplaces = ($dec > $form->{precision}) ? $dec : $form->{precision};
+
+      $form->{"sellprice_$i"} = $form->format_amount($c->slconfig, $form->{"sellprice_$i"}, $decimalplaces);
+      $form->{"qty_$i"} = $form->format_amount($c->slconfig, $form->{"qty_$i"} * $ml);
+      $form->{"oldqty_$i"} = $form->{"qty_$i"};
+      
+      for (qw(partnumber sku description unit)) { $form->{"${_}_$i"} = $form->quote($form->{"${_}_$i"}) }
+      $form->{rowcount} = $i;
+      $i++;
+    }
+    $form->{rowcount} = $i;
+
+    AA->company_details($c->slconfig, $form);
+    IS->invoice_details($c->slconfig, $form);
+
+    $form->parse_template($c->slconfig, $userspath) if $form->{copies};
+    $form->{filename} = "$spool/$filename";
+
+    $c->render('printinvoice', form => $form, slconfig => $c->slconfig);
+};
+
+
+any '/artrans' => sub {
+    my $c = shift;
+    my $form = new Form;
+    $form->{db} = 'customer';
+    $form->{ARAP} = 'ar';
+    @{ $form->{transactions} } = $c->dbs->query('
+        SELECT ar.id, ar.invnumber, c.name, ar.transdate, ar.amount, ar.paid, ar.invoice
+        FROM ar
+        JOIN customer c ON (c.id = ar.customer_id)
+        ORDER BY invnumber
+    ')->hashes;
+    $c->render('artrans', form => $form, slconfig => $c->slconfig );
 };
 
 
@@ -368,6 +458,62 @@ __DATA__
 </tr>
 % }
 
+
+@@ printinvoice.html.ep
+% layout 'default';
+% title 'AR Transactions';
+%= include 'menu';
+<h2>Invoice printed to queue</h2>
+<a href="<%= $form->{filename} %>" target="_blank">View invoice</a>
+
+@@ artrans.html.ep
+% layout 'default';
+% title 'AR Transactions';
+%= include 'menu';
+
+<h1>AR Transactions</h1>
+
+<table class="table table-striped">
+<thead>
+<tr>
+    <th>Invoice</th>
+    <th>Date</th>
+    <th>Customer</th>
+    <th>Amount</th>
+    <th>Paid</th>
+    <th>&nbsp;</th>
+</tr>
+</thead>
+<tbody id="artrans">
+%= include 'artransrow';
+</tbody>
+</table>
+<br/>
+<pre>
+
+@@ artransrow.html.ep
+<tr>
+<td colspan=6>
+<pre>
+%= dumper(time());
+</pre>
+</td>
+</tr>
+</tr>
+% for my $row ( @{ $form->{transactions} } ) {
+<tr>
+  <td><%= $row->{invnumber} %></td>
+  <td><%= $row->{transdate} %></td>
+  <td><%= $row->{name} %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{amount}, 2) %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{paid}, 2) %></td>
+% if ($row->{invoice}){
+  <td><a href="<%= url_for('printinvoice')->to_abs %>?id=<%= $row->{id} %>">Print</a></td>
+% } else {
+  <td>&nbsp;</td>
+% }
+</tr>
+% }
 
 
 @@ customers.html.ep
@@ -604,6 +750,7 @@ __DATA__
     <li><a href="/departments.xml">Departments XML</a></li>
     <li><a href="/departments.json">Departments JSON</a></li>
     <li><a href="/customers">Customers</a></li>
+    <li><a href="/artrans">AR Transactions</a></li>
     <li><a href="/trial">Trial Balance</a></li>
 </ul>
 </div>
