@@ -1720,7 +1720,7 @@ sub reminder {
 	      c.contact, c.email,
 	      c.phone as $form->{vc}phone, c.fax as $form->{vc}fax,
 	      c.$form->{vc}number, c.taxnumber as $form->{vc}taxnumber,
-	      a.description AS invdescription,
+	      a.description AS invdescription, a.shippingpoint, a.shipvia, a.waybill,
 	      a.invnumber, a.transdate, a.till, a.ordnumber, a.ponumber, a.notes,
 	      a.amount - a.paid AS due,
 	      a.duedate, a.invoice, a.id, a.curr,
