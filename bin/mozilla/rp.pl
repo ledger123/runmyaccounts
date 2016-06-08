@@ -2659,6 +2659,10 @@ sub do_print_reminder {
     
     if ($form->{"ndx_$ref->{id}"}) {
 
+      # default shipto to main address if shipto address is empty.
+      if (!$ref->{shiptoaddress1}){
+        for (qw(name address1 address2 city state zipcode country contact phone fax email)) { $ref->{"shipto$_"} = $ref->{$_} }
+      }
       for (@a) { $form->{$_} = $ref->{$_} }
 
       $form->{rvc} = $form->format_dcn($form->{rvc});
@@ -2682,6 +2686,7 @@ sub do_print_reminder {
       $ref->{invdate} = $ref->{transdate};
       my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill);
       for (@a) { $form->{"${_}_1"} = $ref->{$_} }
+
       $form->format_string(map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription shippingpoint shipvia waybill));
       for (@a) { $form->{$_} = $form->{"${_}_1"} }
     
