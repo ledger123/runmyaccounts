@@ -1254,7 +1254,7 @@ sub trial_balance {
 		l.description AS translation
 		FROM acc_trans ac
 		JOIN chart c ON (c.id = ac.chart_id)
-		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{countrycode}).qq|)
+		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{language_code}).qq|)
 		$dpt_join
 		WHERE $where
 		$dpt_where
