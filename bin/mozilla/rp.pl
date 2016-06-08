@@ -2677,12 +2677,12 @@ sub do_print_reminder {
       $form->{language_code} = $form->{"language_code_$ref->{id}"};
       $form->{currency} = $ref->{curr};
       
-      for (qw(invnumber ordnumber ponumber notes invdate duedate invdescription)) { $form->{$_} = () }
+      for (qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill)) { $form->{$_} = () }
      
       $ref->{invdate} = $ref->{transdate};
-      my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription);
+      my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill);
       for (@a) { $form->{"${_}_1"} = $ref->{$_} }
-      $form->format_string(map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription));
+      $form->format_string(map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription shippingpoint shipvia waybill));
       for (@a) { $form->{$_} = $form->{"${_}_1"} }
     
       $ref->{exchangerate} ||= 1;
