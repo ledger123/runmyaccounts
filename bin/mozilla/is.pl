@@ -1214,7 +1214,9 @@ sub post {
   }
   
   if (IS->post_invoice(\%myconfig, \%$form)) {
-    $form->redirect($locale->text('Invoice')." $form->{invnumber} ".$locale->text('posted!'));
+    if (!$form->{printandpost}){
+       $form->redirect($locale->text('Invoice')." $form->{invnumber} ".$locale->text('posted!'));
+    }
   } else {
     $form->error($locale->text('Cannot post invoice!'));
   }
@@ -1227,16 +1229,20 @@ sub print_and_post {
   $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
   $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
 
-  $form->error($locale->text('Select postscript or PDF!')) if $form->{format} !~ /(postscript|pdf)/;
-  $form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
+  #$form->error($locale->text('Select postscript or PDF!')) if $form->{format} !~ /(postscript|pdf)/;
+  #$form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
 
-  if (! $form->{repost}) {
-    if ($form->{id}) {
-      $form->{print_and_post} = 1;
-      &repost;
-      exit;
-    }
-  }
+  #if (! $form->{repost}) {
+  #  if ($form->{id}) {
+  #    $form->{print_and_post} = 1;
+  #    &repost;
+  #    exit;
+  #  }
+  #}
+
+  $form->{printandpost} = 1;
+  $form->{repost} = 1;
+  &post;
 
   $old_form = new Form;
   $form->{display_form} = "post";
@@ -1245,6 +1251,7 @@ sub print_and_post {
 
   &print_form($old_form);
 
+  $form->redirect($locale->text('Invoice')." $form->{invnumber} ".$locale->text('posted!'));
 }
 
 
