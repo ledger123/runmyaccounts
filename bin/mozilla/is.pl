@@ -457,6 +457,23 @@ sub form_header {
 <body onLoad="document.forms[0].$focus.focus()" />
 |;
 
+  print q|
+<script>
+$(document).ready(function(){
+
+$("form").submit(function(e){
+   var $input = $(this).find("input[name=invnumber]");
+   if (!$input.val()) {
+       $.ajax({url: "invnumber.txt", success: function(result){
+            $("#invnumber2").val(result);
+       }});
+   };
+});
+
+});
+</script>
+|;
+
   print qq|
 
 <div align="center" class="redirectmsg">$form->{redirectmsg}</div>
@@ -560,7 +577,11 @@ sub form_header {
 	      $employee
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Invoice Number').qq|</th>
-		<td><input name=invnumber id="invnumber" size=20 value="|.$form->quote($form->{invnumber}).qq|"></td>
+		<td>
+            <input name=invnumber size=20 value="|.$form->quote($form->{invnumber}).qq|">
+            <input name=invnumber2 id="invnumber2" size=20 value="">
+        
+        </td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Order Number').qq|</th>
@@ -1229,6 +1250,7 @@ sub post {
 
 sub print_and_post {
 
+  $form->error($form->{invnumber2});
   $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
   $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
 
