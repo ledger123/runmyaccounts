@@ -455,6 +455,9 @@ sub form_header {
 
   print qq|
 <body onLoad="document.forms[0].$focus.focus()" />
+|;
+
+  print qq|
 
 <div align="center" class="redirectmsg">$form->{redirectmsg}</div>
 
@@ -557,7 +560,7 @@ sub form_header {
 	      $employee
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Invoice Number').qq|</th>
-		<td><input name=invnumber size=20 value="|.$form->quote($form->{invnumber}).qq|"></td>
+		<td><input name=invnumber id="invnumber" size=20 value="|.$form->quote($form->{invnumber}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Order Number').qq|</th>
@@ -896,11 +899,11 @@ sub form_footer {
   } else {
     
     %button = ('Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
-	       'Print' => { ndx => 2, key => 'P', value => $locale->text('Print') },
+	       'Print' => { ndx => 2, key => 'P', value => $locale->text('Print'), id => 'print' },
 	       'Post' => { ndx => 3, key => 'O', value => $locale->text('Post') },
 	       'Ship to' => { ndx => 4, key => 'T', value => $locale->text('Ship to') },
 	       'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
-	       'Print and Post' => { ndx => 6, key => 'R', value => $locale->text('Print and Post') },
+	       'Print and Post' => { ndx => 6, key => 'R', value => $locale->text('Print and Post'), id => 'print_and_post' },
 	       'Post as new' => { ndx => 7, key => 'N', value => $locale->text('Post as new') },
 	       'Print and Post as new' => { ndx => 8, key => 'W', value => $locale->text('Print and Post as new') },
 	       'Sales Order' => { ndx => 9, key => 'L', value => $locale->text('Sales Order') },
@@ -1229,29 +1232,27 @@ sub print_and_post {
   $form->isblank("warehouse", $locale->text('Warehouse missing!')) if $form->{selectwarehouse};
   $form->isblank("department", $locale->text('Department missing!')) if $form->{selectdepartment};
 
-  #$form->error($locale->text('Select postscript or PDF!')) if $form->{format} !~ /(postscript|pdf)/;
-  #$form->error($locale->text('Select a Printer!')) if $form->{media} eq 'screen';
+  # if this goes to the printer pass through
+  if ($form->{media} !~ /(screen|email)/) {
+    $form->error($locale->text('Select txt, postscript or PDF!')) if ($form->{format} !~ /(txt|postscript|pdf)/);
 
-  #if (! $form->{repost}) {
-  #  if ($form->{id}) {
-  #    $form->{print_and_post} = 1;
-  #    &repost;
-  #    exit;
-  #  }
-  #}
+    $form->{printandpost} = 1;
+    $form->{repost} = 1;
+    &post;
 
-  $form->{printandpost} = 1;
-  $form->{repost} = 1;
-  &post;
+    $old_form = new Form;
+    for (keys %$form) { $old_form->{$_} = $form->{$_} }
+    
+  } else {
 
-  $old_form = new Form;
-  $form->{display_form} = "post";
-  for (keys %$form) { $old_form->{$_} = $form->{$_} }
-  $old_form->{rowcount}++;
+    $form->{printandpost} = 1;
+    $form->{repost} = 1;
+    &post;
 
+  }
+   
   &print_form($old_form);
 
-  $form->redirect($locale->text('Invoice')." $form->{invnumber} ".$locale->text('posted!'));
 }
 
 

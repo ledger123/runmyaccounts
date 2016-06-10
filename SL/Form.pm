@@ -351,7 +351,7 @@ sub header {
   $favicon
   $stylesheet
   $charset
-  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
   <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
   <script src="js/rma.js" type="text/javascript"></script>
 |;
@@ -1736,7 +1736,7 @@ sub format_date {
 sub print_button {
   my ($self, $button, $name) = @_;
 
-  print qq|<input class=submit type=submit name=action value="$button->{$name}{value}" accesskey="$button->{$name}{key}" title="$button->{$name}{value} [Alt-$button->{$name}{key}]">\n|;
+  print qq|<input class=submit type=submit name=action value="$button->{$name}{value}" id="$button->{$name}{id}" accesskey="$button->{$name}{key}" title="$button->{$name}{value} [Alt-$button->{$name}{key}]">\n|;
 
 }
   
