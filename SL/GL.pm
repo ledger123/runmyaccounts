@@ -260,6 +260,17 @@ sub post_transaction {
     }
   }
 
+  # Fix for rounding diff: https://github.com/ledger123/runmyaccounts/issues/67
+  if ($form->{currency} ne $form->{defaultcurrency}) {
+      $query = "SELECT SUM(amount) FROM acc_trans WHERE trans_id = $form->{id} AND fx_transaction";
+      my ($diff) = $dbh->selectrow_array($query);
+      $diff = abs($diff);
+      if ($diff){
+         my ($entry_id) = $dbh->selectrow_array("SELECT entry_id FROM acc_trans WHERE trans_id = $form->{id} AND fx_transaction AND amount > 0 LIMIT 1");
+         $dbh->do("UPDATE acc_trans SET amount = amount + $diff WHERE entry_id = $entry_id");
+      }
+  }
+
   if ($form->{batchid}) {
     # add voucher
     $form->{voucher}{transaction}{vouchernumber} = $form->update_defaults($myconfig, 'vouchernumber', $dbh) unless $form->{voucher}{transaction}{vouchernumber};
