@@ -1,6 +1,6 @@
 
 -- dispatch methods table
-CREATE TABLE dispatch (
+CREATE TABLE IF NOT EXISTS dispatch (
   id int DEFAULT nextval('id'),
   description text
 );
