@@ -1057,6 +1057,7 @@ sub post_invoice {
       $form->{datepaid} = $form->{"datepaid_$i"};
     }
   }
+  $fxpaid_total = $form->{paid};
 
   # add lineitems + tax
   $amount = 0;
