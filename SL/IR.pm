@@ -629,6 +629,8 @@ sub post_invoice {
   my $id;
   my $keepcleared;
   my $ok;
+  my $fxamount_total;
+  my $fxpaid_total;
   
   ($null, $form->{employee_id}) = split /--/, $form->{employee};
   unless ($form->{employee_id}) {
@@ -768,6 +770,7 @@ sub post_invoice {
 
       # linetotal
       my $fxlinetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"}, $form->{precision});
+      $fxamount_total += $fxlinetotal;
 
       $amount = $fxlinetotal * $form->{exchangerate};
       my $linetotal = $form->round_amount($amount, $form->{precision});
@@ -805,6 +808,7 @@ sub post_invoice {
 	
 	$ml = -1;
       }
+      $fxamount_total += $fxtax;
 
       $grossamount = $form->round_amount($linetotal, $form->{precision});
 
@@ -1053,6 +1057,7 @@ sub post_invoice {
       $form->{datepaid} = $form->{"datepaid_$i"};
     }
   }
+  $fxpaid_total = $form->{paid};
 
   # add lineitems + tax
   $amount = 0;
@@ -1215,10 +1220,14 @@ sub post_invoice {
   my $paymentaccno;
   my $paymentmethod_id;
   
+  my $fxpaid = 0;
   # record payments and offsetting AP
   for $i (1 .. $form->{paidaccounts}) {
 
     if ($form->{"paid_$i"}) {
+
+      $fxpaid += $form->{"paid_$i"} * 1;
+
       ($accno) = split /--/, $form->{"AP_paid_$i"};
 
       ($null, $paymentmethod_id) = split /--/, $form->{"paymentmethod_$i"};
@@ -1337,6 +1346,12 @@ sub post_invoice {
     $invamount -= $cd_tax if !$form->{taxincluded};
   }
   
+  $fxamount = $form->round_amount($invamount / $form->{exchangerate} , $form->{precision});
+  $fxamount *= 1;
+
+  $fxamount_total *= 1;
+  $fxpaid_total *= 1;
+
   # save AP record
   $query = qq|UPDATE ap set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
@@ -1347,9 +1362,9 @@ sub post_invoice {
               vendor_id = |.$form->dbclean($form->{vendor_id}).qq|,
               amount = $invamount,
               netamount = $invnetamount,
-              paid = |.$form->dbclean($form->{paid}).qq|,
-	      fxamount = |.( ($form->{oldinvtotal}) ? $form->{oldinvtotal}*1 : 0 ).qq|,
-	      fxpaid = |.( ($form->{oldtotalpaid}) ? $form->{oldtotalpaid}*1 : 0 ).qq|,
+          paid = |.$form->dbclean($form->{paid}).qq|,
+          fxamount = $fxamount_total,
+          fxpaid = $fxpaid_total,
 	      datepaid = |.$form->dbquote($form->dbclean($form->{datepaid}), SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->dbclean($form->{duedate}), SQL_DATE).qq|,
 	      invoice = '1',
