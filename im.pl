@@ -64,6 +64,8 @@ if ($@) {
   exit;
 }
 
+$form->db_init(\%myconfig);
+
 # locale messages
 $locale = new Locale "$myconfig{countrycode}", "$script";
 $form->{charset} = $locale->{charset};
