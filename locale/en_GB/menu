@@ -11,6 +11,7 @@ $self{texts} = {
   'Customers'                   => 'Debtors',
   'Vendor Invoice'              => 'Creditor Invoice',
   'Vendors'                     => 'Creditors',
+  'Kontenblatt'                 => 'Account form',
 };
 
 $self{subs} = {
