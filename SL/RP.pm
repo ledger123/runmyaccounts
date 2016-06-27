@@ -1702,7 +1702,7 @@ sub reminder {
   $where = qq|
 	a.paid != a.amount
 	AND a.approved = '1'
-	AND a.duedate <= current_date
+	AND a.duedate < current_date
 	AND c.id = ?
 	AND a.curr = ?|;
 	
