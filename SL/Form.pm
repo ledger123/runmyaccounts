@@ -105,11 +105,31 @@ sub debug {
     for (sort keys %$self) { print FH "$_ = $self->{$_}\n" }
     close(FH);
   } else {
-    print "\n";
+    if ($ENV{HTTP_USER_AGENT}) {
+      &header unless $self->{header};
+      print "<pre>";
+    }
     for (sort keys %$self) { print "$_ = $self->{$_}\n" }
+    print "</pre>" if $ENV{HTTP_USER_AGENT};
   }
   
 } 
+
+# Dump hash values for debugging
+sub dumper {
+   my ($self, $var) = @_;
+
+   use Data::Dumper;
+   $Data::Dumper::Indent = 3;
+   $Data::Dumper::Sortkeys = 1;
+
+   if ($ENV{HTTP_USER_AGENT}) {
+      &header unless $self->{header};
+      print "<pre>";
+   }
+   print Dumper($var);
+   print "</pre>" if $ENV{HTTP_USER_AGENT};
+}
 
   
 sub escape {
