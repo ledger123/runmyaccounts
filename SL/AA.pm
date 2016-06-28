@@ -188,7 +188,7 @@ sub post_transaction {
 
   $diff = 0;
   # add payments
-  my $fxpaid;
+  my $fxpaid = 0;
   for $i (1 .. $form->{paidaccounts}) {
     $fxamount = $form->parse_amount($myconfig, $form->{"paid_$i"});
     $fxpaid += $fxamount;
