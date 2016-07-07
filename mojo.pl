@@ -12,7 +12,6 @@ use Data::Dumper;
 use XML::Simple;
 use DBIx::Simple;
 
-
 my %myconfig = (
   company => 'Maverick Solutions',
   dateformat => 'mm/dd/yy',
@@ -74,8 +73,83 @@ get '/customers' => sub {
    $form->{db} = 'customer';
    for (qw(name customernumber address contact)) { $form->{"l_$_"} = 'Y' }
    CT->search($c->slconfig, $form);
-   $c->render('customers', form => $form);
+
+   $form->{ctype} = $c->req->headers->content_type;
+   if ($c->accepts('', 'json')){
+        $c->render(json => $form->{CT});
+   } else {
+        $c->render('customers', form => $form);
+   }
 };
+
+
+post '/customers' => sub {
+    my $c = shift;
+    my $form = new Form;
+
+    my $content_type = $c->req->headers->content_type;
+
+    $form->{db} = 'customer';
+    $form->{ARAP} = 'ar';
+
+    my $data = {};
+    my @keys;
+
+    if ($content_type eq 'application/json'){
+        $data = $c->req->json;
+    } elsif ($content_type eq 'application/xml'){
+        my $xmldata = $c->req->body;
+        my $xml = new XML::Simple;
+        $data = $xml->XMLin($xmldata);
+    } else {
+        $c->render(text => 'Invalid content type'); 
+    }
+    @keys = keys $data->{customer};
+    for (@keys) { $form->{$_} = $data->{customer}->{$_} if $data->{customer}->{$_} }
+
+    if ($form->{id}){
+        # if it existing customer and we are updating then find correct contactid and addressid
+        $form->{contactid} = $c->dbs->query('SELECT id FROM contact WHERE trans_id = ?', $form->{id})->list;
+        $form->{addressid} = $c->dbs->query('SELECT id FROM address WHERE trans_id = ?', $form->{id})->list;
+    }
+
+    CT->save($c->slconfig, $form);
+    $c->render(text => "Customer added successfully posted as $content_type ...\n");
+};
+
+
+any '/jsontest' => sub {
+    my $c = shift;
+    my $form = new Form;
+    my $data = $c->req->json;
+    my @keys = keys $data->{customer};
+
+    $form->{db} = 'customer';
+    $form->{ARAP} = 'ar';
+    for (@keys) { $form->{$_} = $data->{customer}->{$_} }
+    CT->save($c->slconfig, $form);
+
+    $c->render(text => "Customer added successfully ...\n");
+};
+
+
+any '/xmltest' => sub {
+    my $c = shift;
+    my $form = new Form;
+    my $xmldata = $c->req->body;
+    my $xml = new XML::Simple;
+
+    my $data = $xml->XMLin($xmldata);
+    my @keys = keys $data->{customer};
+
+    $form->{db} = 'customer';
+    $form->{ARAP} = 'ar';
+    for (@keys) { $form->{$_} = $data->{customer}->{$_} if $data->{customer}->{$_} }
+    #$c->render(text => Dumper($form));
+    CT->save($c->slconfig, $form);
+    $c->render(text => "Customer added successfully ...\n");
+};
+
 
 
 any '/department' => sub {
@@ -253,38 +327,6 @@ any '/artrans' => sub {
     $c->render('artrans', form => $form, slconfig => $c->slconfig );
 };
 
-
-any '/jsontest' => sub {
-    my $c = shift;
-    my $form = new Form;
-    my $data = $c->req->json;
-    my @keys = keys $data->{customer};
-
-    $form->{db} = 'customer';
-    $form->{ARAP} = 'ar';
-    for (@keys) { $form->{$_} = $data->{customer}->{$_} }
-    CT->save($c->slconfig, $form);
-
-    $c->render(text => "Customer added successfully ...\n");
-};
-
-
-any '/xmltest' => sub {
-    my $c = shift;
-    my $form = new Form;
-    my $xmldata = $c->req->body;
-    my $xml = new XML::Simple;
-
-    my $data = $xml->XMLin($xmldata);
-    my @keys = keys $data->{customer};
-
-    $form->{db} = 'customer';
-    $form->{ARAP} = 'ar';
-    for (@keys) { $form->{$_} = $data->{customer}->{$_} if $data->{customer}->{$_} }
-    #$c->render(text => Dumper($form));
-    CT->save($c->slconfig, $form);
-    $c->render(text => "Customer added successfully ...\n");
-};
 
 
 app->start;
@@ -516,15 +558,26 @@ __DATA__
 % }
 
 
+@@ customers.xml.ep
+<customers>
+% for my $row (@{$form->{CT}}) {
+<customer>
+% for my $k (keys ($row)){
+<<%= $k %>><%= $row->{$k} %></<%= $k %>>
+% }
+</customer>
+% }
+</customers>
+
+
 @@ customers.html.ep
 % layout 'default';
 % title 'Customers';
 %= include 'menu';
 <h3>Adding a customer with JSON from command line</h3>
-<pre>curl -X POST -H "Content-Type: application/json" -d @customer.json http://localhost:3000/jsontest</pre>
+<pre>curl -X POST -H "Content-Type: application/json" -d @customer.json http://localhost:3000/customers</pre>
 <h3>Adding a customer with XML from command line</h3>
-<pre>curl -X POST -d @customer.xml http://localhost:3000/xmltest</pre>
-
+<pre>curl -X POST -H "Content-Type: applicaiton/xml" -d @customer.xml http://localhost:3000/customers</pre>
 <h1>List of customers</h1>
 <table class="table table-striped">
 <thead>
@@ -741,11 +794,13 @@ __DATA__
 }
 
 
-
 @@ menu.html.ep
 <div class="row">
 <ul class="list-inline">
     <li><a href="/">Home</a></li>
+    <li><a href="/customers">Customers HTML</a></li>
+    <li><a href="/customers.xml">Customers XML</a></li>
+    <li><a href="/customers.json">Customers JSON</a></li>
     <li><a href="/departments">Departments</a></li>
     <li><a href="/departments.xml">Departments XML</a></li>
     <li><a href="/departments.json">Departments JSON</a></li>
