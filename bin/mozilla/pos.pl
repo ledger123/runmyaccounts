@@ -497,7 +497,6 @@ sub form_footer {
     %button = ('Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
 	       'Print' => { ndx => 2, key => 'P', value => $locale->text('Print') },
 	       'Post' => { ndx => 3, key => 'O', value => $locale->text('Post') },
-	       'Print and Post' => { ndx => 4, key => 'R', value => $locale->text('Print and Post') },
 	       'Delete' => { ndx => 6, key => 'D', value => $locale->text('Delete') },
 	      );
    
