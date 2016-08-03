@@ -6,6 +6,7 @@ $self{texts} = {
   'AR Aging'                    => 'Recettes exigibles',
   'AR Transaction'              => 'Écriture recettes',
   'Accounting Menu'             => 'Menu de comptabilité',
+  'Account Sheet'		=> 'Fiche de compte',
   'Add Account'                 => 'Ajouter compte',
   'Add Assembly'                => 'Ajouter produit',
   'Add Business'                => 'Ajouter type d\'affaire',

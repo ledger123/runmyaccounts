@@ -13,6 +13,7 @@ $self{texts} = {
   'AR Transaction'              => 'Debitorenbuchung',
   'AR Transactions'             => 'Debitorenbuchungen',
   'Accounting Menu'             => 'Kontoverwaltung',
+  'Account Sheet'		=> 'Kontenblatt',
   'Add Account'                 => 'Konto anlegen',
   'Add Assembly'                => 'Erzeugnis erfassen',
   'Add Business'                => 'Branche erfassen',

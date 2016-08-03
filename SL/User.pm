@@ -364,6 +364,8 @@ sub dbcreate {
   $dbcreate{Pg} .= " LC_CTYPE = '$form->{ctype}' LC_COLLATE = '$form->{ctype}' TEMPLATE = template0" if $form->{ctype};
   $dbcreate{Sybase} .= " CHARACTER SET $form->{encoding}" if $form->{encoding};
   
+  print STDERR "createdb: $dbcreate{Pg}";
+  
   $form->{sid} = $form->{dbdefault};
   &dbconnect_vars($form, $form->{dbdefault});
   my $dbh = DBI->connect($form->{dbconnect}, $form->{dbuser}, $form->{dbpasswd}) or $form->dberror;
