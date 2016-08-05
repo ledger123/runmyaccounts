@@ -914,6 +914,8 @@ sub post_invoice {
   my @taxaccounts;
   my $amount;
   my $fxamount;
+  my $fxamount_total;
+  my $fxpaid_total;
   my $roundamount;
   my $grossamount;
   my $invamount = 0;
@@ -970,6 +972,7 @@ sub post_invoice {
       
       # linetotal
       my $fxlinetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"} * (1 - $form->{"discount_$i"}), $form->{precision});
+      $fxamount_total += $fxlinetotal;
 
       $amount = $fxlinetotal * $form->{exchangerate};
       my $linetotal = $form->round_amount($amount, $form->{precision});
@@ -994,7 +997,7 @@ sub post_invoice {
 	  $tax += $amount = $linetotal * $taxrate;
 	  $fxtax += $fxamount = $fxlinetotal * $taxrate;
 	}
-
+    
         for (@taxaccounts) {
 	  if (($form->{"${_}_rate"} * $ml) > 0) {
 	    if ($taxrate != 0) {
@@ -1007,6 +1010,7 @@ sub post_invoice {
 	$ml = -1;
       }
       $fxtax_total += $fxtax;
+      $fxamount_total += $fxtax;
 
       $grossamount = $form->round_amount($linetotal, $form->{precision});
       
@@ -1206,6 +1210,7 @@ sub post_invoice {
       $form->{datepaid} = $form->{"datepaid_$i"};
     }
   }
+  $fxpaid_total = $form->{paid};
 
 
   if ($form->round_amount($form->{paid} - $fxamount + $fxtax_total, $form->{precision}) == 0) {
@@ -1555,6 +1560,9 @@ sub post_invoice {
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
+  $fxamount_total *= 1;
+  $fxpaid_total *= 1;
+
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
@@ -1566,8 +1574,8 @@ sub post_invoice {
               amount = $invamount,
               netamount = $invnetamount,
               paid = $form->{paid},
-              fxamount = $form->{oldinvtotal},
-              fxpaid = $form->{oldtotalpaid},
+              fxamount = $fxamount_total,
+              fxpaid = $fxpaid_total,
 	      datepaid = |.$form->dbquote($form->dbclean($form->{datepaid}), SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->dbclean($form->{duedate}), SQL_DATE).qq|,
 	      invoice = '1',

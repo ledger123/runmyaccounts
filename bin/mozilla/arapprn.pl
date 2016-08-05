@@ -186,7 +186,7 @@ sub print_check {
   $form->{fileid} = $invnumber;
   $form->{fileid} =~ s/(\s|\W)+//g;
 
-  $form->parse_template(\%myconfig, $userspath);
+  $form->parse_template(\%myconfig, $userspath, $debuglatex);
 
   if ($form->{previousform}) {
   
@@ -426,7 +426,7 @@ sub print_transaction {
   $form->{fileid} = $form->{invnumber};
   $form->{fileid} =~ s/(\s|\W)+//g;
 
-  $form->parse_template(\%myconfig, $userspath);
+  $form->parse_template(\%myconfig, $userspath, $debuglatex);
 
   if (%$old_form) {
     $old_form->{invnumber} = $form->{invnumber};

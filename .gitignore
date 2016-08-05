@@ -1,7 +1,6 @@
 users
 templates/*/
 locale/*.zip
-locales*.pl
 *.missing
 *~
 

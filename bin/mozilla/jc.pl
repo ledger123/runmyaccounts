@@ -1849,7 +1849,7 @@ sub print_form {
     $status{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
   }
 
-  $form->parse_template(\%myconfig, $userspath);
+  $form->parse_template(\%myconfig, $userspath, $debuglatex);
 
   if ($old_form) {
 

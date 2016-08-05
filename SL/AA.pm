@@ -188,9 +188,11 @@ sub post_transaction {
 
   $diff = 0;
   # add payments
+  my $fxpaid = 0;
   for $i (1 .. $form->{paidaccounts}) {
     $fxamount = $form->parse_amount($myconfig, $form->{"paid_$i"});
-    
+    $fxpaid += $fxamount;
+
     if ($fxamount) {
       $paid += $fxamount;
 
@@ -293,6 +295,11 @@ sub post_transaction {
     }
   }
 
+  #print qq|<pre>|; $form->info; print qq|FXAMOUNT: $fxinvamount\n|; $form->debug; $form->error;
+
+  $fxinvamount *= 1;
+  $fxinvpaid *= 1;
+
   $query = qq|UPDATE $table SET
 	      invnumber = |.$dbh->quote($form->{invnumber}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
@@ -305,8 +312,8 @@ sub post_transaction {
 	      paid = $paid * $arapml,
 	      datepaid = $datepaid,
 	      netamount = $invnetamount * $arapml,
-	      fxamount = |.( ($form->{oldinvtotal}) ? $form->{oldinvtotal}*1 : 0 ).qq|,
-	      fxpaid = |.( ($form->{oldtotalpaid}) ? $form->{oldtotalpaid}*1 : 0 ).qq|,
+	      fxamount = $fxinvamount,
+	      fxpaid = $fxpaid,
 	      terms = |.$form->dbclean($form->{terms}).qq|,
 	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,

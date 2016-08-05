@@ -1433,7 +1433,7 @@ sub transactions_to_csv {
     $l = $#column_index;
 
     for ( 0 .. $l ) {
-        print CSVFILE qq|$column_data{$column_index[$_]},|;
+        print CSVFILE qq|"$column_data{$column_index[$_]}",|;
     }
     print CSVFILE qq|\n|;
 
@@ -1459,7 +1459,7 @@ sub transactions_to_csv {
             $i %= 2;
         }
 
-        for (@column_index) { print CSVFILE "$column_data{$_}," }
+        for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
 
     }
 
@@ -1498,7 +1498,7 @@ sub transactions_to_csv {
         for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "$ref->{$_}" }
 
         for (qw(lineitem description source memo notes intnotes)) {
-            $column_data{$_} = '"' . &escape_csv( $ref->{$_} ) . '"';
+            $column_data{$_} = &escape_csv( $ref->{$_} );
         }
 
         if ( $ref->{vc_id} ) {
@@ -1522,14 +1522,14 @@ sub transactions_to_csv {
         }
         $column_data{gifi_contra} .= "";
 
-        $column_data{balance} = '"' . $form->format_amount( \%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0 ) . '"';
+        $column_data{balance} = $form->format_amount( \%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0 );
         $column_data{cleared} = ( $ref->{cleared} ) ? "*" : "";
 
         if ( $ref->{id} != $sameid ) {
             $i++;
             $i %= 2;
         }
-        for (@column_index) { print CSVFILE "$column_data{$_}," }
+        for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
         print CSVFILE "\n";
 
         $sameid = $ref->{id};
@@ -1543,7 +1543,7 @@ sub transactions_to_csv {
     $column_data{credit}  = $totalcredit;
     $column_data{balance} = $form->{balance} * $ml * $cml;
 
-    for (@column_index) { print CSVFILE "$column_data{$_}," }
+    for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
     print CSVFILE qq|\n|;
 
     %button = (
@@ -1603,7 +1603,7 @@ sub gl_subtotal_to_csv {
     $column_data{debit}  = $subtotaldebit;
     $column_data{credit} = $subtotalcredit;
 
-    for (@column_index) { print CSVFILE "$column_data{$_}," }
+    for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
     print CSVFILE qq|\n|;
 
     $subtotaldebit  = 0;
