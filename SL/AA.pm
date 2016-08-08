@@ -1174,7 +1174,8 @@ sub get_name {
     for (qw(currency employee employee_id)) { delete $ref->{$_} }
   }
  
-  delete $ref->{intnotes} if $form->{intnotes};
+  # 8 aug 2016 armaghan commented out line below to overwrite intnotes whenever customer/vendor is changed.
+  # delete $ref->{intnotes} if $form->{intnotes};
   for (keys %$ref) { $form->{$_} = $ref->{$_} }
   $sth->finish;
   
