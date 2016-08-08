@@ -2696,6 +2696,8 @@ sub audit_control {
   $form->{title} = $locale->text('Audit Control');
 
   AM->closedto(\%myconfig, \%$form);
+
+  $form->{closedto} = $locale->date(\%myconfig, $form->{closedto});
   
   my %checked;
   for (qw(revtrans audittrail aruniq apuniq gluniq souniq pouniq trackingitemsuniq nontrackingitemsuniq)) { $checked{$_} = "checked" if $form->{$_} }
