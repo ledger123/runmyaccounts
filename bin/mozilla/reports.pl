@@ -16,6 +16,326 @@ sub continue { &{$form->{nextsub}} };
 # Inventory Onhand Qty and Value by Based on FIFO
 #
 #=================================================
+
+#-------------------------------
+sub alltaxes {
+
+    use DBIx::Simple;
+    $form->{dbh} = $form->dbconnect(\%myconfig);
+    $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+    $form->{title} = $locale->text('All Taxes Report');
+    &print_title;
+
+    ( $null, $department_id ) = split( /--/, $form->{department} );
+    &bld_department( 'selectdepartment', 1, $department_id );
+
+    $form->all_departments(\%myconfig);
+
+
+  if (@{ $form->{all_years} }) {
+    # accounting years
+    $selectaccountingyear = "\n";
+    for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|$_\n| }
+    $selectaccountingmonth = "\n";
+    for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|$_--|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+    $selectfrom = qq|
+        <tr>
+	  <th align=right>|.$locale->text('Period').qq|</th>
+	  <td colspan=3>
+	  <select name=month>|.$form->select_option($selectaccountingmonth, $form->{month}, 1, 1).qq|</select>
+	  <select name=year>|.$form->select_option($selectaccountingyear, $form->{year}, 1).qq|</select>
+	  <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+	  <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+	  <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+	  <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+	  </td>
+	</tr>
+|;
+
+  }
+
+
+    my @columns        = qw(module account transdate invnumber description name number amount tax);
+    my @total_columns  = qw(amount tax);
+    my @search_columns = qw(fromdate todate);
+
+    my %sort_positions = {
+        account        => 1,
+        accdescription => 2,
+        invnumber      => 3,
+        transdate      => 4,
+        description    => 5,
+        name           => 6,
+        number         => 7,
+        amount         => 8,
+        tax            => 9,
+    };
+    my $sort  = $form->{sort}  ? $form->{sort}  : 'module';
+    my $sort2 = $form->{sort2} ? $form->{sort2} : 'account';
+    my $sortorder = $form->{sortorder};
+    my $oldsort   = $form->{oldsort};
+    $sortorder = ( $sort eq $oldsort ) ? ( $sortorder eq 'asc' ? 'desc' : 'asc' ) : 'asc';
+
+    #$form->{todate} = $form->current_date( \%myconfig ) if !$form->{todate};
+
+    #RP->create_links(\%myconfig, \%$form, $report{$form->{reportcode}}->{vc});
+
+    my $cashchecked;
+    my $accrualchecked;
+    if ( $form->{method} eq 'cash' ) {
+        $cashchecked = 'checked';
+    }
+    else {
+        $accrualchecked = 'checked';
+    }
+    #($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+
+    if ( !$form->{runit} ) {
+
+        # Defaults
+        $form->{l_subtotal} = 'checked';
+        $accrualchecked = 'checked';
+    }
+
+    print qq|
+<form action="$form->{script}" method="post">
+<table>
+<tr>
+    <th align=right>| . $locale->text('Department') . qq|</th>
+    <td><select name=department>$form->{selectdepartment}</select></td>
+</tr>
+<tr>
+    <th align="right">| . $locale->text('From date') . qq|</th>
+    <td><input name=fromdate type=text size=12 class="date" value="$form->{fromdate}"></td>
+</tr>
+<tr>
+    <th align="right">| . $locale->text('To date') . qq|</th>
+    <td><input name=todate type=text size=12 class="date" value="$form->{todate}"></td>
+</tr>
+$selectfrom_disabled
+<tr>
+    <th align="right" class="norpint">| . $locale->text('Include') . qq|</th>
+    <td class="noprint">|;
+    for (@columns) {
+        $checked = $form->{runit} ? ( $form->{"l_$_"} ? 'checked' : '' ) : 'checked';
+        print qq|<input type=checkbox name=l_$_ value="1" $checked> | . ucfirst($_);
+    }
+    $form->hide_form(qw(nextsub path login));
+    print qq|
+    </td>
+</tr>
+<tr>
+    <th align="right">| . $locale->text('Method') . qq|</th>
+    <td>
+        <input type=radio name=method value="accrual" $accrualchecked> Accrual
+        <input type=radio name=method value="cash" $cashchecked> Cash
+    </td>
+</tr>
+
+<tr>
+    <th align="right">| . $locale->text('Subtotal') . qq|</th>
+    <td><input type=checkbox name=l_subtotal value="checked" $form->{l_subtotal}></td>
+</tr>
+</table>
+
+<hr/>
+<input type=hidden name=runit value=1>
+<input type=submit name=action class="submit noprint" value="Continue">
+</form>
+|;
+
+    my @report_columns;
+    for (@columns) { push @report_columns, $_ if $form->{"l_$_"} }
+
+    my $where;
+    if ( !$form->{runit} ) {
+        $where = ' 1 = 2 ';          # Display data only when Update button is pressed.
+        $form->{l_subtotal} = 'checked';
+    }
+
+    my $transdate = "aa.transdate";
+
+    if ( $form->{fromdate} ) {
+        $where .= qq| AND $transdate >= '$form->{fromdate}'|;
+    }
+    if ( $form->{todate} ) {
+        $where .= qq| AND $transdate <= '$form->{todate}'|;
+    }
+
+    if ( $form->{method} eq 'cash' ) {
+        $transdate = "aa.datepaid";
+
+        my $todate = $form->{todate};
+        if ( !$todate ) {
+            $todate = $form->current_date($myconfig);
+        }
+
+        $cashwhere = qq|
+             AND ac.trans_id IN (
+                 SELECT trans_id
+                 FROM acc_trans
+                 JOIN chart ON (chart_id = chart.id)
+                 WHERE link LIKE '%_paid%'
+                 AND aa.approved = '1'
+                 AND $transdate <= '$todate'
+                 AND aa.paid = aa.amount
+               )
+              |;
+    }
+
+    &split_combos('department');
+    $form->{department_id} *= 1;
+    $where .= qq| AND aa.department_id = $form->{department_id}| if $form->{department};
+
+    my $query;
+
+    $query = qq~
+        SELECT 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number,
+        aa.netamount amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE c.link LIKE '%tax%'
+        $where
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9
+
+        UNION ALL
+
+        SELECT DISTINCT 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE aa.netamount = aa.amount
+        $where
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9
+
+        UNION ALL
+
+        SELECT 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number,
+        aa.netamount amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        $where
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9
+
+        UNION ALL
+
+        SELECT DISTINCT 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE aa.netamount = aa.amount
+        $where
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9
+
+        ORDER BY 1, 2, 6
+    ~;
+
+    my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
+
+    my ( %tabledata, %grandtotals, %totals, %subtotals );
+
+    my $url = "$form->{script}?oldsort=$sort&sortorder=$sortorder";
+    for (qw(action nextsub sortorder l_subtotal login path)) { $url .= "&$_=$form->{$_}" }
+    for (@report_columns) { $url .= qq|&l_$_=$form->{"l_$_"}| if $form->{"l_$_"} }
+    for (@search_columns) { $url .= qq|&$_=$form->{$_}|       if $form->{$_} }
+    for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading" href="$url&sort=$_">| . ucfirst $_ . qq|</a></th>\n| }
+
+    print qq|
+        <table cellpadding="3" cellspacing="2">
+        <tr class="listheading">
+|;
+    for (@report_columns) { print $tabledata{$_} }
+
+    print qq|
+        </tr>
+|;
+
+    my $groupvalue;
+    my $groupvalue2;
+    my $i = 0;
+
+    for $row (@allrows) {
+        $groupvalue  = $row->{account} if !$groupvalue;
+        $groupvalue2 = $row->{module}  if !$groupvalue2;
+        if ( $form->{l_subtotal} and ( $row->{account} ne $groupvalue or $row->{module} ne $groupvalue2 ) ) {
+            for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }
+            for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $subtotals{$_}, 2 ) . qq|</th>| }
+
+            print qq|<tr class="listsubtotal">|;
+            for (@report_columns) { print $tabledata{$_} }
+            print qq|</tr>\n|;
+            $groupvalue = $row->{account};
+            for (@total_columns) { $subtotals{$_} = 0 }
+
+            if ( $groupvalue2 ne $row->{module} ) {
+                for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $totals{$_}, 2 ) . qq|</th>| }
+                print qq|<tr class="listsubtotal">|;
+                for (@report_columns) { print $tabledata{$_} }
+                print qq|</tr>\n|;
+                for (@total_columns) { $totals{$_} = 0 }
+            }
+        }
+        $groupvalue2 = $row->{module};
+
+        for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
+        for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
+        for (@total_columns) { $totals{$_}      += $row->{$_} }
+        for (@total_columns) { $subtotals{$_}   += $row->{$_} }
+        for (@total_columns) { $grandtotals{$_} += $row->{$_} }
+
+        print qq|<tr class="listrow$i">|;
+        for (@report_columns) { print $tabledata{$_} }
+        print qq|</tr>\n|;
+        $i += 1;
+        $i %= 2;
+    }
+
+    for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }
+    for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $subtotals{$_}, 2 ) . qq|</th>| }
+
+    print qq|<tr class="listsubtotal">|;
+    for (@report_columns) { print $tabledata{$_} }
+    print qq|</tr>\n|;
+
+    for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $totals{$_}, 2 ) . qq|</th>| }
+    print qq|<tr class="listtotal">|;
+    for (@report_columns) { print $tabledata{$_} }
+    print qq|</tr>|;
+
+    for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $grandtotals{$_}, 2 ) . qq|</th>| }
+    print qq|<tr class="listtotal">|;
+    for (@report_columns) { print $tabledata{$_} }
+    print qq|</tr>
+
+</table>
+</body>
+</html>|;
+
+}
+
 #-------------------------------
 sub onhandvalue_search {
    $form->{title} = $locale->text('Inventory Onhand Value');
