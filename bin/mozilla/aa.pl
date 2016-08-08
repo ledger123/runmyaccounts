@@ -1123,7 +1123,9 @@ sub form_footer {
             'Update'                => { ndx => 1,  key => 'U', value => $locale->text('Update') },
             'Print'                 => { ndx => 2,  key => 'P', value => $locale->text('Print') },
             'Post'                  => { ndx => 3,  key => 'O', value => $locale->text('Post') },
+	        'Print and Post'        => { ndx => 4, key => 'R', value => $locale->text('Print and Post') },
             'Post as new'           => { ndx => 5,  key => 'N', value => $locale->text('Post as new') },
+	        'Print and Post as new' => { ndx => 6, key => 'W', value => $locale->text('Print and Post as new') },
             'Schedule'              => { ndx => 7,  key => 'H', value => $locale->text('Schedule') },
             'New Number'            => { ndx => 10, key => 'M', value => $locale->text('New Number') },
             'Delete'                => { ndx => 11, key => 'D', value => $locale->text('Delete') },
@@ -1137,7 +1139,7 @@ sub form_footer {
                 for ( "Post", "Print and Post", "Delete" ) { delete $button{$_} }
             }
 
-            if ( !$latex ) {
+            if ( !$latex or $hide_print_and_post ) {
                 for ( "Print and Post", "Print and Post as new" ) { delete $button{$_} }
             }
 

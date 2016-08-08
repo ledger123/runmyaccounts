@@ -1,4 +1,6 @@
-use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzip);
+use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzip $hide_print_and_post);
+
+$hide_print_and_post = 1;
 
 # path to user configuration files
 $userspath = "users";

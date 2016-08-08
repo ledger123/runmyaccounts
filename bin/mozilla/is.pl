@@ -900,7 +900,9 @@ sub form_footer {
 	       'Post' => { ndx => 3, key => 'O', value => $locale->text('Post') },
 	       'Ship to' => { ndx => 4, key => 'T', value => $locale->text('Ship to') },
 	       'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
+	       'Print and Post' => { ndx => 6, key => 'R', value => $locale->text('Print and Post') },
 	       'Post as new' => { ndx => 7, key => 'N', value => $locale->text('Post as new') },
+	       'Print and Post as new' => { ndx => 8, key => 'W', value => $locale->text('Print and Post as new') },
 	       'Sales Order' => { ndx => 9, key => 'L', value => $locale->text('Sales Order') },
 	       'Schedule' => { ndx => 10, key => 'H', value => $locale->text('Schedule') },
 	       'New Number' => { ndx => 13, key => 'M', value => $locale->text('New Number') },
@@ -915,7 +917,7 @@ sub form_footer {
 	for ("Post", "Print and Post", "Delete") { delete $button{$_} }
       }
      
-      if (!$latex) {
+      if (!$latex or $hide_print_and_post) {
 	for ("Print and Post", "Print and Post as new") { delete $button{$_} }
       }
 
