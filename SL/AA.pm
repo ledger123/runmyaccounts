@@ -125,7 +125,7 @@ sub post_transaction {
   # deduct tax from amounts if tax included
   for $i (1 .. $form->{rowcount}) {
 
-    if ($amount{fxamount}{$i}) {
+    if ($amount{fxamount}{$i} or $form->{"tax_$i"}) {
       
       if ($form->{taxincluded}) {
 	$amount = ($fxinvamount) ? $fxtax * $amount{fxamount}{$i} / $fxinvamount : 0;
@@ -177,7 +177,6 @@ sub post_transaction {
       
     }
   }
-
 
   my $invamount = $invnetamount + $tax;
   
@@ -365,7 +364,7 @@ sub post_transaction {
 
     # insert detail records in acc_trans
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
-    if ($ref->{amount}) {
+    if ($ref->{amount} or $ref->{taxamount}) {
       $ref->{taxamount} *= 1;
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
 		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount)

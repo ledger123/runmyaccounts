@@ -1186,7 +1186,7 @@ sub update {
         @a     = ();
         for $i ( 1 .. $form->{rowcount} ) {
             $form->{"amount_$i"} = $form->parse_amount( \%myconfig, $form->{"amount_$i"} ) if !$form->{firsttime};
-            if ( $form->{"amount_$i"} ) {
+            if ( $form->{"amount_$i"} or $form->{"tax_$i"} ) {
                 push @a, {};
                 $j = $#a;
 
@@ -1213,10 +1213,12 @@ sub update {
             if ($form->{"tax_$_"}){
                ($taxaccno, $null) = split(/--/, $form->{"tax_$_"});
                if (!$form->{"linetaxamount_$_"} || $form->{"tax_$_"} ne $form->{"oldtax_$_"} || $form->{"amount_$_"} != $form->{"oldamount_$_"} || $form->{taxincluded} ne $form->{oldtaxincluded} ){
+                    if ($form->{"amount_$_"}){ # Calculate only when there is amount. Otherwise leave the user entered amount as it is.
                     if ($form->{taxincluded}){
                         $form->{"linetaxamount_$_"} = $form->{"amount_$_"} - $form->{"amount_$_"} / (1 + $form->{"${taxaccno}_rate"});
                     } else {
                         $form->{"linetaxamount_$_"} = $form->{"amount_$_"} * $form->{"${taxaccno}_rate"};
+                    }
                     }
                }
 
