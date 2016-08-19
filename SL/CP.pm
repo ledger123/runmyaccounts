@@ -125,7 +125,7 @@ sub get_openvc {
 
   my $dbh = $form->dbconnect($myconfig);
 
-  my $where = qq|a.amount != a.paid
+  my $where = qq|a.fxamount != a.fxpaid
                  AND a.approved = '1'
 		 AND a.onhold = '0'
 		 AND NOT a.id IN (SELECT id
@@ -441,7 +441,7 @@ sub get_openinvoices {
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   if ($form->{payment} eq 'payments') {
-    $where = qq|WHERE a.amount != a.paid
+    $where = qq|WHERE a.fxamount != a.fxpaid
                 AND a.approved = '1'
 		AND a.onhold = '0'
 		AND NOT a.id IN (SELECT id
