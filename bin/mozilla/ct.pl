@@ -167,6 +167,9 @@ sub history {
 	        <td>
 		  <table>
 		    <tr>
+		      <td><input name="type" type=radio class=radio value=transaction> $translabel</td>
+		    </tr>
+		    <tr>
 		      <td><input name=type type=radio class=radio value=invoice checked> $invlabel</td>
 		    </tr>
 		    <tr>
@@ -174,9 +177,6 @@ sub history {
 		    </tr>
 		    <tr>
 		      <td><input name="type" type=radio class=radio value=quotation> $quolabel</td>
-		    </tr>
-		    <tr>
-		      <td><input name="type" type=radio class=radio value=transaction> $translabel</td>
 		    </tr>
 		  </table>
 		</td>
