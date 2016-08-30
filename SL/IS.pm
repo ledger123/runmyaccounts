@@ -2368,6 +2368,7 @@ sub price_matrix {
   my $pricegroupprice;
   my $sellprice;
   my $baseprice;
+  my $currprice;
   my $mref;
   my %p = ();
   my $i = 0;
@@ -2405,6 +2406,7 @@ sub price_matrix {
     
     if (($mref->{pricebreak} + $mref->{customer_id} + $mref->{pricegroup_id}) == 0) {
       $baseprice = $sellprice;
+      $currprice = $sellprice if $form->{currency} eq $mref->{curr};
     }
 
     $i++;
@@ -2415,6 +2417,7 @@ sub price_matrix {
   if (! exists $p{0}) {
     $p{0} = $baseprice;
   }
+  $p{0} = $currprice if !$p{0} and $currprice;
   
   if ($i > 1) {
     $ref->{sellprice} = $p{0};
