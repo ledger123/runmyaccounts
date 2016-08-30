@@ -616,6 +616,15 @@ sub invoice_details {
 	      WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
   ($form->{iban}, $form->{bic}, $form->{membernumber}, $form->{dcn}, $form->{rvc}) = $dbh->selectrow_array($query);
 
+  if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
+    $query = qq|SELECT dcn FROM ar
+              WHERE id = $form->{id}|;
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+    $form->{dcn} = $sth->fetchrow_array;
+    $sth->finish;    	
+  }
+
   for my $dcn (qw(dcn rvc)) { $form->{$dcn} = $form->format_dcn($form->{$dcn}) }
 
   # save dcn
