@@ -157,7 +157,7 @@ __DATA__
 <h3>View Single customer in XML format</h3>
 <pre>http://localhost:3000/customers/10825.xml</pre>
 
-<h3>View Single customer in XML format</h3>
+<h3>View Single customer in JSON format</h3>
 <pre>http://localhost:3000/customers/10825.json</pre>
 
 <h3>Adding a customer with JSON from command line</h3>
