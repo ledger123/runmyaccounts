@@ -26,18 +26,58 @@ my %myconfig = (
   templates => 'templates/demo@ledger28',
 );
 
+# Global handle for db connections
+my $db = "";
+
+# Create db connection if needed
+helper db => sub {
+    if($db){
+        return $db;
+    }else{
+        $db = DBI->connect('DBI:mysql:database=yourdb;host=localhost','dbuser','dbpassword') or die $DBI::errstr;
+        return $db;
+    }
+};
+
+
+# Disconnect db connection
+helper db_disconnect => sub {
+    my $self = shift;
+    $self->db->disconnect;
+    $db = "";  
+};
+
+
 my $globalform = new Form; # should not be needed except connecting to db so get rid of it
 my $dbh = $globalform->dbconnect(\%myconfig);
 my $dbs = DBIx::Simple->connect($dbh);
+
 
 helper slconfig => sub { \%myconfig };
 helper dbh => sub { $dbh };
 helper dbs => sub { $dbs };
 
+
+# Authentication token validation
+under sub {
+    my $c  = shift;
+    my $token   = $c->param('token');
+    
+    if ($token eq '123'){
+        return 1;
+    } else {
+        $c->render(text => 'Access denied');
+        #$c->db_disconnect;
+        return;
+    }
+};
+
+
 get '/' => sub {
     my $c = shift;
     $c->render('index');
 };
+
 
 # Customers list in json, xml or html depending how it is called.
 get '/customers/:id' => { id => '0' } => sub {
