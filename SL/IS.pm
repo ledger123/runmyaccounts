@@ -1659,6 +1659,23 @@ sub post_invoice {
   
   my $rc = $dbh->commit;
 
+  # armaghan tkt #86 rounding difference between ar and acc_trans
+  $diff = $dbh->selectrow_array("SELECT amount-paid FROM ar WHERE id = $form->{id}");
+  if ($diff == 0){ # Invoice is fully paid
+     $ar_amount = $dbh->selectrow_array("SELECT amount FROM ar WHERE id = $form->{id}");
+     $ac_amount = $dbh->selectrow_array("
+         SELECT SUM(amount)
+         FROM acc_trans ac
+         JOIN chart c ON (c.id = ac.chart_id)
+         WHERE trans_id = $form->{id}
+         AND link NOT LIKE '%_paid%'
+     ");
+     if ($ar_amount != $ac_amount){
+        $dbh->do("UPDATE ar SET amount = $ac_amount, paid = $ac_amount WHERE id = $form->{id}") or $form->dberror('Error running query ...');
+        $dbh->commit;
+     }
+  }
+
   $dbh->disconnect if $disconnect;
 
   $rc;
