@@ -1676,19 +1676,19 @@ sub post_invoice {
      }
 
      # Now check if there is minor difference in the AR posting
-     $query = qq|SELECT ABS(ROUND(sum(amount)::numeric,2)) FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link = 'AR')|;
+     $query = qq|SELECT ROUND(sum(amount)::numeric,2) FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link = 'AR')|;
      ($ar_amount) = $dbh->selectrow_array($query);
-     if ($ar_amount > 0){
+     if ($ar_amount != 0){
         ($ar_accno_id) = $dbh->selectrow_array(qq|
             SELECT chart_id FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link = 'AR') LIMIT 1|
         );
         ($income_accno_id) = $dbh->selectrow_array(qq|
             SELECT chart_id FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%IC_income%') LIMIT 1|
         );
-        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $ar_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $income_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
         $dbh->do($query) or $form->error($query);
         $ar_amount *= -1;
-        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $income_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $ar_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
         $dbh->do($query) or $form->error($query);
         $dbh->commit;
      }
