@@ -800,7 +800,7 @@ sub transactions {
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
  
   if ($form->{outstanding}) {
-    $paid = qq|CASE WHEN a.fxamount = a.fxpaid AND a.fxpaid != 0 AND a.paid != 0 |;
+    $paid = qq|CASE WHEN ROUND(a.fxamount::numeric, $form->{precision}) = ROUND(a.fxpaid::numeric, $form->{precision}) AND a.fxpaid != 0 AND a.paid != 0 |;
     $paid .= qq|
             AND a.datepaid <= '$form->{transdateto}'| if $form->{transdateto};
     $paid .= qq|THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
@@ -1016,7 +1016,7 @@ sub transactions {
              WHERE $where
              ORDER by $sortorder";
   $form->{query} = $query;  
-        
+
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
