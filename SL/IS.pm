@@ -1658,6 +1658,41 @@ sub post_invoice {
   
   my $rc = $dbh->commit;
 
+  # armaghan tkt #86 rounding difference between ar and acc_trans
+  ($transdate, $diff) = $dbh->selectrow_array("SELECT transdate, amount-paid FROM ar WHERE id = $form->{id}");
+  if ($diff == 0){ # Invoice is fully paid
+     $ar_amount = $dbh->selectrow_array("SELECT amount FROM ar WHERE id = $form->{id}");
+     $ac_amount = $dbh->selectrow_array("
+         SELECT SUM(amount)
+         FROM acc_trans ac
+         JOIN chart c ON (c.id = ac.chart_id)
+         WHERE trans_id = $form->{id}
+         AND link NOT LIKE '%_paid%'
+     ");
+     if ($ar_amount != $ac_amount){
+        $dbh->do("UPDATE ar SET amount = $ac_amount, paid = $ac_amount WHERE id = $form->{id}") or $form->dberror('Error running query ...');
+        $dbh->commit;
+     }
+
+     # Now check if there is minor difference in the AR posting
+     $query = qq|SELECT ROUND(sum(amount)::numeric,2) FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link = 'AR')|;
+     ($ar_amount) = $dbh->selectrow_array($query);
+     if ($ar_amount != 0){
+        ($ar_accno_id) = $dbh->selectrow_array(qq|
+            SELECT chart_id FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link = 'AR') LIMIT 1|
+        );
+        ($income_accno_id) = $dbh->selectrow_array(qq|
+            SELECT chart_id FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%IC_income%') LIMIT 1|
+        );
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $income_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
+        $dbh->do($query) or $form->error($query);
+        $ar_amount *= -1;
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $ar_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
+        $dbh->do($query) or $form->error($query);
+        $dbh->commit;
+     }
+  }
+
   $dbh->disconnect if $disconnect;
 
   $rc;

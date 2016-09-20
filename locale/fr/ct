@@ -13,6 +13,7 @@ $self{texts} = {
   'Address'                     => 'Adresse',
   'All'                         => 'Tous',
   'Amount'                      => 'Montant',
+  'Bank'						=> 'Banque',
   'BIC'                         => 'BIC',
   'Bcc'                         => 'Copie cachée',
   'Billing Address'             => 'Adresse de facturation',
