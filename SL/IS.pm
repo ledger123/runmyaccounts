@@ -1563,9 +1563,6 @@ sub post_invoice {
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
 
-  $fxamount_total = $form->round_amount($fxamount_total, $form->{precision});
-  $fxpaid_total = $form->round_amount($fxpaid_total, $form->{precision});
-
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
@@ -1663,11 +1660,11 @@ sub post_invoice {
   my $rc = $dbh->commit;
 
   # armaghan tkt #86 rounding difference between ar and acc_trans
-  ($transdate, $diff, $fxdiff) = $dbh->selectrow_array("SELECT transdate, amount-paid, fxamount-fxpaid FROM ar WHERE id = $form->{id}");
-  if ($diff == 0 or $fxdiff == 0){ # Invoice is fully paid
+  ($transdate, $diff) = $dbh->selectrow_array("SELECT transdate, amount-paid FROM ar WHERE id = $form->{id}");
+  if ($diff == 0){ # Invoice is fully paid
      $ar_amount = $dbh->selectrow_array("SELECT amount FROM ar WHERE id = $form->{id}");
      $ac_amount = $dbh->selectrow_array("
-         SELECT ROUND(SUM(amount)::numeric,3)
+         SELECT SUM(amount)
          FROM acc_trans ac
          JOIN chart c ON (c.id = ac.chart_id)
          WHERE trans_id = $form->{id}
