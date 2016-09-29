@@ -33,6 +33,13 @@ sub invoice_details {
  
   # this is for the template
   $form->{invdate} = $form->{transdate};
+
+  $form->{duedate2} = $form->datetonum($myconfig, $form->{duedate});
+  $form->{invdate2} = $form->datetonum($myconfig, $form->{transdate});
+
+  my @address = split /\r?\n/, $form->{address};
+  ($form->{companyaddress1}, $form->{companyaddress2}, $form->{companycity}, $form->{companystate}, $form->{companyzip}, $form->{companycountry}) = @address;
+
   $form->{invdescription} = $form->{description};
   
   my $tax;
