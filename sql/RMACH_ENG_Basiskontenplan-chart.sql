@@ -58,7 +58,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1540','Tools and equipment','A','A','AP_amount','150',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1590','Other Tangible Assets','A','A','AP_amount','150',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('160','IMMOBILE SACHANLAGEN','H','A','','160',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1600','Immobile Sachanlagen','A','A','','160',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1600','Tangible fixed assets','A','A','','160',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('170','INTANGIBLE ASSETS','H','A','','170',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1700','Patents, Brands','A','A','AP_amount','170',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1741','Software','A','A','AP_amount','170',false,true,'');
