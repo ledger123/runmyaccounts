@@ -37,8 +37,13 @@ sub invoice_details {
   $form->{duedate2} = $form->datetonum($myconfig, $form->{duedate});
   $form->{invdate2} = $form->datetonum($myconfig, $form->{transdate});
 
-  my @address = split /\r?\n/, $form->{address};
-  ($form->{companyaddress1}, $form->{companyaddress2}, $form->{companycity}, $form->{companystate}, $form->{companyzip}, $form->{companycountry}) = @address;
+  my %defaults = $form->get_defaults($dbh, \@{[qw(address2 city state zip country)]});
+  $form->{companyaddress1} = $defaults{address};
+  $form->{companyaddress2} = $defaults{address2};
+  $form->{companycity} = $defaults{city};
+  $form->{companystate} = $defaults{state};
+  $form->{companyzip} = $defaults{zip};
+  $form->{companycountry} = $defaults{country};
 
   $form->{invdescription} = $form->{description};
   
