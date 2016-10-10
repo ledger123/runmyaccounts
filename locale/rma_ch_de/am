@@ -329,6 +329,7 @@ $self{subs} = {
   'add_currency'                => 'add_currency',
   'add_department'              => 'add_department',
   'add_dispatch'				=> 'add_dispatch',
+  'auslieferungsart_hinzufügen' => 'add_dispatch',
   'add_exchange_rate'           => 'add_exchange_rate',
   'add_gifi'                    => 'add_gifi',
   'add_language'                => 'add_language',
