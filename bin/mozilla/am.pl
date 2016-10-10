@@ -2266,6 +2266,10 @@ sub defaults {
 	</tr>
 	<tr valign=top>
 	  <th align=right>&nbsp;</th>
+	  <td><input name=address1 size=35 value="$form->{address1}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>&nbsp;</th>
 	  <td><input name=address2 size=35 value="$form->{address2}"></td>
 	</tr>
 	<tr valign=top>
@@ -2434,7 +2438,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact";
   
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 
