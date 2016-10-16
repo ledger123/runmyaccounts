@@ -730,6 +730,7 @@ sub parse_template {
                     $pagebreak .= $_;
                 }
             }
+            $sum = 0 if (/<%resetcarriedforward%>/);
 
             if (/<%foreach /) {
 
