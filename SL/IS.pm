@@ -1671,8 +1671,18 @@ sub post_invoice {
          AND link NOT LIKE '%_paid%'
          AND NOT fx_transaction
      ");
+     $ac_netamount = $dbh->selectrow_array("
+         SELECT SUM(amount)
+         FROM acc_trans ac 
+         JOIN chart c ON (c.id = ac.chart_id) 
+         WHERE trans_id = $form->{id}
+         AND link not like '%_paid%'
+         AND link not like '%_tax%' 
+         AND not fx_transaction
+     ");
+
      if ($ar_amount != $ac_amount){
-        $dbh->do("UPDATE ar SET amount = $ac_amount, paid = $ac_amount WHERE id = $form->{id}") or $form->dberror('Error running query ...');
+        $dbh->do("UPDATE ar SET amount = $ac_amount, netamount = $ac_netamount, paid = $ac_amount WHERE id = $form->{id}") or $form->dberror('Error running query ...');
         $dbh->commit;
      }
 
