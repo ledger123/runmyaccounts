@@ -1669,6 +1669,7 @@ sub post_invoice {
          JOIN chart c ON (c.id = ac.chart_id)
          WHERE trans_id = $form->{id}
          AND link NOT LIKE '%_paid%'
+         AND NOT fx_transaction
      ");
      if ($ar_amount != $ac_amount){
         $dbh->do("UPDATE ar SET amount = $ac_amount, paid = $ac_amount WHERE id = $form->{id}") or $form->dberror('Error running query ...');
