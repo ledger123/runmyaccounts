@@ -736,6 +736,7 @@ sub parse_template {
 	}
       }
 
+    $sum = 0 if (/<%resetcarriedforward%>/);
       
       if (/<%foreach /) {
 	
