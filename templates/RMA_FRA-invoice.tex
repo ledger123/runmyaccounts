@@ -2,12 +2,12 @@
 
 % Typ: Rechnung mit Einzahlungsschein
 % Name: invoice.tex
-% Sprache: Français 
-% Erstellungsdatum: 28. März 2016
+% Sprache: FranÃ§ais 
+% Erstellungsdatum: 28. MÃ¤rz 2016
 % Mandant: 
 % Version: 
 % Ersteller: 
-% © by Run my Accounts AG
+% Â© by Run my Accounts AG
 
 %%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
 
@@ -44,25 +44,13 @@
 
 %%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
 
-\ifthenelse{\equal{<%membernumber%>}{}}{
-
-%Hier könnte man IBAN Infos anfügen
-
-}{
-
-\ifthenelse{\equal{<%currency%>}{CHF}}{
-\ifthenelse{\equal{<%invtotal%>}{0.00}}{
-\end{document}
-
-}{
+\ifthenelse{\equal{<%membernumber%>}{}}{\end{document}}{}
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{\end{document}}{}
+\ifthenelse{\equal{<%currency%>}{CHF}}{}{\end{document}}{}
 
 \pagebreak
 
 <%include content_einzahlungsschein.tex%>
-
-}
-}
-{} }
   
 %%%%%%%%%%%%%  END  %%%%%%%%%%%%%
  
