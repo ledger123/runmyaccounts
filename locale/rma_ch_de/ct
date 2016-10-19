@@ -50,6 +50,7 @@ $self{texts} = {
   'Detail'                      => 'Einzelheiten',
   'Disc'                        => 'Disc',
   'Discount'                    => 'Rabatt',
+  'Dispatch Method'				=> 'Auslieferungsart',
   'E-mail'                      => 'E-Mail',
   'Edit Customer'               => 'Kundendaten bearbeiten',
   'Edit Vendor'                 => 'Lieferantendaten bearbeiten',
