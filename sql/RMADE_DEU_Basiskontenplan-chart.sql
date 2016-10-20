@@ -1534,7 +1534,7 @@ INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, c
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3834', 'USt EU-Erwerb Neufahrzeuge ohne UStID', 'A', 'L', '', '999', 'f', 'f', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3835', 'Umsatzsteuer nach § 13b UStG', 'A', 'L', '', '999', 'f', 'f', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3836', 'Reserviertes Konto - Umsatzsteuer nach § 13b UStG', 'A', 'L', '', '999', 'f', 'f', '');
-INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3838', 'Reserviertes Konto - Umsatzsteuer nach § 13b UStG 19 %', 'A', 'L', '', '999', 'f', 'f', '');
+INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3838', 'Umsatzsteuer DL nach 9 0 § 13b UStG 19% (52/53)', 'A', 'L', 'AP_tax:IC_taxservice', '999', 'f', 't', null);
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3839', 'Umsatzsteuer nach § 13a UStG', 'A', 'L', '', '999', 'f', 'f', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3840', 'Umsatzsteuer laufendes Jahr', 'A', 'L', '', '999', 'f', 'f', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3842', 'Umsatzsteuer Vorjahr', 'A', 'L', '', '999', 'f', 'f', '');
@@ -2729,7 +2729,7 @@ INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, c
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('7303', 'Abzugsfäh. and. Nebenleist. zu Steuern', 'A', 'E', '', '999', 'f', 't', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('4730.1', 'Gewährte Skonti', 'A', 'I', 'AR_amount', '999', 'f', 't', null);
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('4730', 'Gewährte Skonti', 'A', 'I', 'AR_paid', '999', 'f', 't', null);
-INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1407', 'Abziehbare Vorsteuer 0 § 13b UStG 19% (67)', 'A', 'A', 'AP_tax:IC_taxservice', '999', 'f', 't', '');
+INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1407', 'Abziehbare Vorsteuer 9 0 § 13b UStG 19% (67)', 'A', 'A', 'AP_tax:IC_taxservice', '999', 'f', 't', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3822', 'Geschuldete Umsatzsteuer', 'A', 'L', 'AP_amount', '999', 'f', 't', null);
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1800', 'Bankkonto 1', 'A', 'A', 'AR_paid:AP_paid', '999', 'f', 't', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1805', 'Bankkonto 2', 'A', 'A', 'AR_paid:AP_paid', '999', 'f', 't', null);
@@ -2754,4 +2754,4 @@ INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, c
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1372', 'Verrechnungskonto Kreditkarte 2', 'A', 'A', '', '999', 'f', 'f', null);
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1401.1', 'Abziehbare Vorsteuer 7% alt', 'A', 'A', '', '11', 'f', 't', null);
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1406.1', 'Abziehbare Vorsteuer 19% alt', 'A', 'A', '', '11', 'f', 't', null);
-
+INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('3837', 'Umsatzsteuer EU nach 9 0 § 13b UStG 19% (46/47)', 'A', 'L', 'AP_tax:IC_taxservice', '999', 'f', 't', '');
