@@ -5,6 +5,9 @@ require "$form->{path}/mylib.pl";
 sub continue { &{$form->{nextsub} } };
 
 sub ask_dbcheck {
+
+  $form->error($locale->text('Only for admin ...')) unless $myconfig{role} eq 'admin';
+
   $form->{title} = $locale->text('Ledger Doctor');
   $form->header;
   my $dbh = $form->dbconnect(\%myconfig);
@@ -44,6 +47,9 @@ print qq|
 }
 
 sub do_dbcheck {
+
+  $form->error($locale->text('Only for admin ...')) unless $myconfig{role} eq 'admin';
+
   $form->{title} = $locale->text('Ledger Doctor');
   $form->header;
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br />|;
@@ -59,25 +65,25 @@ sub do_dbcheck {
   $query = qq|
 		SELECT 'AR' AS module, id, invnumber, transdate 
 		FROM ar
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
+		WHERE transdate < ?
+		OR transdate > ?
 
 		UNION ALL
 
 		SELECT 'AP' AS module, id, invnumber, transdate 
 		FROM ap
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
+		WHERE transdate < ?
+		OR transdate > ?
 
 		UNION ALL
 
 		SELECT 'GL' AS module, id, reference, transdate 
 		FROM gl
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
+		WHERE transdate < ?
+		OR transdate > ?
   |;
   $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute;
+  $sth->execute($form->{firstdate}, $form->{lastdate}, $form->{firstdate}, $form->{lastdate}, $form->{firstdate}, $form->{lastdate});
   print qq|<table>|;
   print qq|<tr class=listheading>|;
   print qq|<th class=listheading>|.$locale->text('Module').qq|</td>|;
