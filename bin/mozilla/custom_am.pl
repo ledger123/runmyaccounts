@@ -108,7 +108,7 @@ sub do_dbcheck {
 		gl.transdate, false AS invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN gl ON (gl.id = ac.trans_id)
-    WHERE ac.transdate BETWEEN '2015-01-01 00:00' and '2016-01-01'
+    WHERE ac.transdate BETWEEN '$form->{firstdate}' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
 	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
@@ -118,7 +118,7 @@ sub do_dbcheck {
 		ar.transdate, ar.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ar ON (ar.id = ac.trans_id)
-    WHERE ac.transdate BETWEEN '2015-01-01 00:00' and '2016-01-01'
+    WHERE ac.transdate BETWEEN '$form->{firstdate}' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
 	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
@@ -128,7 +128,7 @@ sub do_dbcheck {
 		ap.transdate, ap.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ap ON (ap.id = ac.trans_id)
-    WHERE ac.transdate BETWEEN '2015-01-01 00:00' and '2016-01-01'
+    WHERE ac.transdate BETWEEN '$form->{firstdate}' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
 	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
