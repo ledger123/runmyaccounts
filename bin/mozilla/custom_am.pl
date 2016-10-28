@@ -108,8 +108,9 @@ sub do_dbcheck {
 		gl.transdate, false AS invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN gl ON (gl.id = ac.trans_id)
+    WHERE ac.transdate BETWEEN '2015-01-01 00:00' and '2016-01-01'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) <> 0
+	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	UNION ALL
 
@@ -117,8 +118,9 @@ sub do_dbcheck {
 		ar.transdate, ar.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ar ON (ar.id = ac.trans_id)
+    WHERE ac.transdate BETWEEN '2015-01-01 00:00' and '2016-01-01'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) <> 0
+	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	UNION ALL
 
@@ -126,8 +128,9 @@ sub do_dbcheck {
 		ap.transdate, ap.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ap ON (ap.id = ac.trans_id)
+    WHERE ac.transdate BETWEEN '2015-01-01 00:00' and '2016-01-01'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) <> 0
+	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	ORDER BY 3
   |;
@@ -154,7 +157,7 @@ sub do_dbcheck {
      	print qq|<td>$ref->{module}</td>|;
      	print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
      	print qq|<td>$ref->{transdate}</td>|;
-     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 2).qq|</td>|;
+     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 6).qq|</td>|;
      	print qq|</tr>|;
 	$total_amount += $ref->{amount};
      }
