@@ -787,6 +787,7 @@ sub parse_template {
 		# and <%lastpage%>
 		
 		my $psum = $self->format_amount($myconfig, $sum, $self->{precision});
+		$pb =~ s/<%xml_sumcarriedforward%>/$sum/g;
 		$pb =~ s/<%sumcarriedforward%>/$psum/g;
 		$pb =~ s/<%lastpage%>/$current_page/g;
 		
