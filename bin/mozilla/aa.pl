@@ -1163,6 +1163,33 @@ sub form_footer {
         &menubar;
     }
 
+    if ($form->{id}){
+        use DBIx::Simple;
+        my $dbh = $form->dbconnect(\%myconfig);
+        my $dbs = DBIx::Simple->connect($dbh);
+        $query = qq|
+                SELECT 
+                    ac.transdate, c.accno, c.description, 
+                    ac.amount, ac.source, ac.memo, 
+                    ac.fx_transaction, ac.cleared, ac.tax, 
+                    ac.taxamount, c.link
+                FROM acc_trans ac
+                JOIN chart c ON (c.id = ac.chart_id)
+                WHERE ac.trans_id = ?
+                ORDER BY ac.transdate
+        |;
+
+        my $table = $dbs->query($query, $form->{id})->xto(
+            tr => { class => [ 'listrow0', 'listrow1' ] },
+            th => { class => ['listheading'] },
+        );
+        $table->modify(td => {align => 'right'}, 'amount');
+        $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 2) }, 'amount');
+        $table->set_group( 'transdate', 1 );
+        $table->calc_totals( [qw(amount)] );
+        print $table->output;
+    }
+
     print qq|
 </form>
 
