@@ -52,53 +52,6 @@ sub do_dbcheck {
   my $callback = "$form->{script}?action=do_dbcheck&firstdate=$form->{firstdate}&lastdate=$form->{lastdate}&path=$form->{path}&login=$form->{login}";
   $callback = $form->escape($callback);
 
-  #------------------
-  # 1. Invalid Dates
-  #------------------
-  print qq|<h2>Invalid Dates</h2>|;
-  $query = qq|
-		SELECT 'AR' AS module, id, invnumber, transdate 
-		FROM ar
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
-
-		UNION ALL
-
-		SELECT 'AP' AS module, id, invnumber, transdate 
-		FROM ap
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
-
-		UNION ALL
-
-		SELECT 'GL' AS module, id, reference, transdate 
-		FROM gl
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
-  |;
-  $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute;
-  print qq|<table>|;
-  print qq|<tr class=listheading>|;
-  print qq|<th class=listheading>|.$locale->text('Module').qq|</td>|;
-  print qq|<th class=listheading>|.$locale->text('Invoice Number / Reference').qq|</td>|;
-  print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
-  print qq|</tr>|;
-  $i = 0;
-
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-     $module = lc $ref->{module};
-     $module = 'ir' if $ref->{invoice} and $ref->{module} eq 'AP';
-     $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
-
-     print qq|<tr class=listrow$i>|;
-     print qq|<td>$ref->{module}</td>|;
-     print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
-     print qq|<td>$ref->{transdate}</td>|;
-     print qq|</tr>|;
-  }
-  print qq|</table>|;
-
   #------------------------
   # 2. Unbalanced Journals
   #------------------------
