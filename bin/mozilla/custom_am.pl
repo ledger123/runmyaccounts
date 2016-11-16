@@ -58,7 +58,7 @@ sub do_dbcheck {
   print qq|<h3>Unbalanced Journals</h3>|;
   $query = qq|
 	SELECT 'GL' AS module, gl.reference AS invnumber, gl.id,
-		gl.transdate, false AS invoice, SUM(ac.amount) AS amount
+		ac.transdate, false AS invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN gl ON (gl.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
@@ -68,7 +68,7 @@ sub do_dbcheck {
 	UNION ALL
 
 	SELECT 'AR' AS module, ar.invnumber, ar.id,
-		ar.transdate, ar.invoice, SUM(ac.amount) AS amount
+		ac.transdate, ar.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ar ON (ar.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
@@ -78,7 +78,7 @@ sub do_dbcheck {
 	UNION ALL
 
 	SELECT 'AP' AS module, ap.invnumber, ap.id,
-		ap.transdate, ap.invoice, SUM(ac.amount) AS amount
+		ac.transdate, ap.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ap ON (ap.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
