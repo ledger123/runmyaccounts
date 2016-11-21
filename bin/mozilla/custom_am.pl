@@ -58,83 +58,36 @@ sub do_dbcheck {
   my $callback = "$form->{script}?action=do_dbcheck&firstdate=$form->{firstdate}&lastdate=$form->{lastdate}&path=$form->{path}&login=$form->{login}";
   $callback = $form->escape($callback);
 
-  #------------------
-  # 1. Invalid Dates
-  #------------------
-  print qq|<h2>Invalid Dates</h2>|;
-  $query = qq|
-		SELECT 'AR' AS module, id, invnumber, transdate 
-		FROM ar
-		WHERE transdate < ?
-		OR transdate > ?
-
-		UNION ALL
-
-		SELECT 'AP' AS module, id, invnumber, transdate 
-		FROM ap
-		WHERE transdate < ?
-		OR transdate > ?
-
-		UNION ALL
-
-		SELECT 'GL' AS module, id, reference, transdate 
-		FROM gl
-		WHERE transdate < ?
-		OR transdate > ?
-  |;
-  $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute($form->{firstdate}, $form->{lastdate}, $form->{firstdate}, $form->{lastdate}, $form->{firstdate}, $form->{lastdate});
-  print qq|<table>|;
-  print qq|<tr class=listheading>|;
-  print qq|<th class=listheading>|.$locale->text('Module').qq|</td>|;
-  print qq|<th class=listheading>|.$locale->text('Invoice Number / Reference').qq|</td>|;
-  print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
-  print qq|</tr>|;
-  $i = 0;
-
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-     $module = lc $ref->{module};
-     $module = 'ir' if $ref->{invoice} and $ref->{module} eq 'AP';
-     $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
-
-     print qq|<tr class=listrow$i>|;
-     print qq|<td>$ref->{module}</td>|;
-     print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
-     print qq|<td>$ref->{transdate}</td>|;
-     print qq|</tr>|;
-  }
-  print qq|</table>|;
-
   #------------------------
   # 2. Unbalanced Journals
   #------------------------
   print qq|<h3>Unbalanced Journals</h3>|;
   $query = qq|
 	SELECT 'GL' AS module, gl.reference AS invnumber, gl.id,
-		gl.transdate, false AS invoice, SUM(ac.amount) AS amount
+		ac.transdate, false AS invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN gl ON (gl.id = ac.trans_id)
-    WHERE ac.transdate BETWEEN '$form->{firstdate}' and '$form->{lastdate}'
+    WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
 	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	UNION ALL
 
 	SELECT 'AR' AS module, ar.invnumber, ar.id,
-		ar.transdate, ar.invoice, SUM(ac.amount) AS amount
+		ac.transdate, ar.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ar ON (ar.id = ac.trans_id)
-    WHERE ac.transdate BETWEEN '$form->{firstdate}' and '$form->{lastdate}'
+    WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
 	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	UNION ALL
 
 	SELECT 'AP' AS module, ap.invnumber, ap.id,
-		ap.transdate, ap.invoice, SUM(ac.amount) AS amount
+		ac.transdate, ap.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ap ON (ap.id = ac.trans_id)
-    WHERE ac.transdate BETWEEN '$form->{firstdate}' and '$form->{lastdate}'
+    WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
 	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
