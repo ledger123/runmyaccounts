@@ -920,7 +920,7 @@ sub form_footer {
   
   $form->hide_form(qw(rowcount callback path login oe_id));
 
-    if ($form->{id}){
+    if ($form->{id} and $debits_credits_footer){
         use DBIx::Simple;
         my $dbh = $form->dbconnect(\%myconfig);
         my $dbs = DBIx::Simple->connect($dbh);
