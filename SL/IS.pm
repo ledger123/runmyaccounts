@@ -247,7 +247,7 @@ sub invoice_details {
       
       for (qw(sku serialnumber ordernumber customerponumber bin description unit deliverydate sellprice listprice package netweight grossweight volume countryorigin hscode barcode itemnotes)) { push(@{ $form->{$_} }, $form->{"${_}_$i"}) }
 	
-      push(@{ $form->{xml_qty} }, $form->{"qty_$i"});
+      push(@{ $form->{xml_qty} }, $form->format_amount({ numberformat => '1000.00' }, $form->{"qty_$i"}, 4));
       push(@{ $form->{qty} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
       push(@{ $form->{ship} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
 
