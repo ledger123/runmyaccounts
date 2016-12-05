@@ -34,8 +34,8 @@ sub invoice_details {
   # this is for the template
   $form->{invdate} = $form->{transdate};
 
-  $form->{duedate2} = $form->datetonum($myconfig, $form->{duedate});
-  $form->{invdate2} = $form->datetonum($myconfig, $form->{transdate});
+  $form->{xml_duedate} = $form->datetonum($myconfig, $form->{duedate});
+  $form->{xml_invdate} = $form->datetonum($myconfig, $form->{transdate});
 
   my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
   $form->{companyaddress1} = $defaults{address1};
@@ -218,7 +218,7 @@ sub invoice_details {
 	  }
     
 	  push(@{ $form->{description} }, $item->[2]);
-	  for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate linetotal itemnotes package netweight grossweight volume countryorigin hscode barcode)) { push(@{ $form->{$_} }, "") }
+	  for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate linetotal itemnotes package netweight grossweight volume countryorigin hscode barcode xml_deliverydate xml_qty xml_sellprice xml_linetotal)) { push(@{ $form->{$_} }, "") }
 	  push(@{ $form->{lineitems} }, { amount => 0, tax => 0 });
 	}
       }
@@ -247,6 +247,7 @@ sub invoice_details {
       
       for (qw(sku serialnumber ordernumber customerponumber bin description unit deliverydate sellprice listprice package netweight grossweight volume countryorigin hscode barcode itemnotes)) { push(@{ $form->{$_} }, $form->{"${_}_$i"}) }
 	
+      push(@{ $form->{xml_qty} }, $form->format_amount({ numberformat => '1000.00' }, $form->{"qty_$i"}, 4));
       push(@{ $form->{qty} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
       push(@{ $form->{ship} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
 
@@ -285,6 +286,7 @@ sub invoice_details {
       # this is for the subtotals for grouping
       $subtotal += $linetotal;
 
+      push(@{ $form->{xml_linetotal} }, $linetotal);
       $form->{"linetotal_$i"} = $form->format_amount($myconfig, $linetotal, $form->{precision}, "0");
       push(@{ $form->{linetotal} }, $form->{"linetotal_$i"});
       
@@ -354,7 +356,7 @@ sub invoice_details {
 	      push(@{ $form->{part} }, NULL);
 	    }
 
-	    for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate itemnotes package netweight grossweight volume countryorigin hscode barcode)) { push(@{ $form->{$_} }, "") }
+	    for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate itemnotes package netweight grossweight volume countryorigin hscode barcode xml_deliverydate xml_qty xml_sellprice)) { push(@{ $form->{$_} }, "") }
 	    
 	    push(@{ $form->{description} }, $form->{groupsubtotaldescription});
 	    
@@ -381,9 +383,10 @@ sub invoice_details {
 	      push(@{ $form->{part} }, NULL);
 	    }
 
-	    for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate itemnotes package netweight grossweight volume countryorigin hscode barcode)) { push(@{ $form->{$_} }, "") }
+	    for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate itemnotes package netweight grossweight volume countryorigin hscode barcode xml_deliverydate xml_qty xml_sellprice)) { push(@{ $form->{$_} }, "") }
 
 	    push(@{ $form->{description} }, $form->{groupsubtotaldescription});
+	    push(@{ $form->{xml_linetotal} }, $subtotal);
 	    push(@{ $form->{linetotal} }, $form->format_amount($myconfig, $subtotal, $form->{precision}));
 	    push(@{ $form->{lineitems} }, { amount => 0, tax => 0 });
 	  }
@@ -419,6 +422,7 @@ sub invoice_details {
 
       $taxrate += $form->{"${_}_rate"};
       
+      push(@{ $form->{xml_taxrate} }, $form->{"${_}_rate"} * 100);
       push(@{ $form->{taxrate} }, $form->format_amount($myconfig, $form->{"${_}_rate"} * 100, $form->{precision}, '0.00'));
       push(@{ $form->{taxnumber} }, $form->{"${_}_taxnumber"});
     #}
@@ -510,14 +514,20 @@ sub invoice_details {
       }
       
       # need formatting here
+      push(@{ $form->{xml_taxbaseinclusive} }, $form->{"${_}_taxbaseinclusive"});
       push(@{ $form->{taxbaseinclusive} }, $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision}, '0.00'));
+      push(@{ $form->{xml_taxbase} }, $taxbase{$_});
       push(@{ $form->{taxbase} }, $form->format_amount($myconfig, $taxbase{$_}, $form->{precision}, '0.00'));
+      push(@{ $form->{xml_tax} }, $taxaccounts{$_});
       push(@{ $form->{tax} }, $form->format_amount($myconfig, $taxaccounts{$_}, $form->{precision}, '0.00'));
 
       $form->{"${_}_taxbaseinclusive"} = $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision}, '0.00');
+      $form->{"xml_${_}_taxbase"} = $taxbase{$_};
       $form->{"${_}_taxbase"} = $form->format_amount($myconfig, $taxbase{$_}, $form->{precision}, '0.00');
+      $form->{"xml_${_}_tax"} = $form->{"${_}_tax"};
       $form->{"${_}_tax"} = $form->format_amount($myconfig, $form->{"${_}_tax"}, $form->{precision}, '0.00');
       
+      $form->{"xml_${_}_taxrate"} = $form->{"${_}_rate"} * 100;
       $form->{"${_}_taxrate"} = $form->format_amount($myconfig, $form->{"${_}_rate"} * 100, $form->{precision}, '0.00');
       
     #}
@@ -556,7 +566,7 @@ sub invoice_details {
     $form->{cd_invtotal} = 0;
   }
 
-
+  $form->{xml_totaltax} = $tax;
   $form->{totaltax} = $form->format_amount($myconfig, $tax, $form->{precision}, "");
 
   # Remove incorrect 0 taxes from $form and acc_trans
@@ -614,6 +624,7 @@ sub invoice_details {
   $form->format_string(qw(text_amount text_decimal text_cd_invtotal text_cd_decimal text_out_amount text_out_decimal));
 
   for (qw(cd_amount paid)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}) }
+  for (qw(invtotal subtotal total)) { $form->{"xml_$_"} = $form->{$_} }
   for (qw(cd_subtotal cd_invtotal invtotal subtotal total totalparts totalservices)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}, "0") }
   for (qw(totalqty totalship totalnetweight totalgrossweight)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}) }
 
