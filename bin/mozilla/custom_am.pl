@@ -59,6 +59,36 @@ sub do_dbcheck {
   $callback = $form->escape($callback);
 
   #------------------------
+  # 1. Blank rows
+  #------------------------
+
+  print qq|<h3>Blank rows</h3>|;
+  $query = qq|
+    SELECT COUNT(*) 
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id NOT IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
+|;
+  my ($count) = $dbh->selectrow_array($query);
+  if ($count){
+     $form->info($locale->text("There are $count blank rows ..."));
+     print qq|
+<form method=post action='$form->{script}'>
+<input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank rows').qq|">
+|;
+
+  $form->{nextsub} = 'do_dbcheck';
+  $form->hide_form(qw(title path nextsub login));
+
+    print qq|
+</form>
+|;
+
+  } else {
+     $form->info($locale->text("No blank rows found ...")); 
+  }
+
+  #------------------------
   # 2. Unbalanced Journals
   #------------------------
   print qq|<h3>Unbalanced Journals</h3>|;
@@ -336,6 +366,18 @@ WHERE trans_id NOT IN
   $dbh->disconnect;
 }
 
+
+sub click_here_to_delete_blank_rows {
+  my $dbh = $form->dbconnect(\%myconfig);
+  $query = qq|
+    DELETE
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id NOT IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
+|;
+  $dbh->do($query);
+  $form->info($locale->text('Blank rows deleted if any ...'));
+}
 ######
 # EOF 
 ######
