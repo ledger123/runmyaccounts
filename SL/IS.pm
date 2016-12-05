@@ -33,6 +33,18 @@ sub invoice_details {
  
   # this is for the template
   $form->{invdate} = $form->{transdate};
+
+  $form->{duedate2} = $form->datetonum($myconfig, $form->{duedate});
+  $form->{invdate2} = $form->datetonum($myconfig, $form->{transdate});
+
+  my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
+  $form->{companyaddress1} = $defaults{address1};
+  $form->{companyaddress2} = $defaults{address2};
+  $form->{companycity} = $defaults{city};
+  $form->{companystate} = $defaults{state};
+  $form->{companyzip} = $defaults{zip};
+  $form->{companycountry} = $defaults{country};
+
   $form->{invdescription} = $form->{description};
   
   my $tax;
@@ -616,6 +628,15 @@ sub invoice_details {
 	      WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
   ($form->{iban}, $form->{bic}, $form->{membernumber}, $form->{dcn}, $form->{rvc}) = $dbh->selectrow_array($query);
 
+  if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
+    $query = qq|SELECT dcn FROM ar
+              WHERE id = $form->{id}|;
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+    $form->{dcn} = $sth->fetchrow_array;
+    $sth->finish;    	
+  }
+
   for my $dcn (qw(dcn rvc)) { $form->{$dcn} = $form->format_dcn($form->{$dcn}) }
 
   # save dcn
@@ -905,6 +926,8 @@ sub post_invoice {
   my @taxaccounts;
   my $amount;
   my $fxamount;
+  my $fxamount_total;
+  my $fxpaid_total;
   my $roundamount;
   my $grossamount;
   my $invamount = 0;
@@ -961,6 +984,7 @@ sub post_invoice {
       
       # linetotal
       my $fxlinetotal = $form->round_amount($form->{"sellprice_$i"} * $form->{"qty_$i"} * (1 - $form->{"discount_$i"}), $form->{precision});
+      $fxamount_total += $fxlinetotal;
 
       $amount = $fxlinetotal * $form->{exchangerate};
       my $linetotal = $form->round_amount($amount, $form->{precision});
@@ -985,7 +1009,7 @@ sub post_invoice {
 	  $tax += $amount = $linetotal * $taxrate;
 	  $fxtax += $fxamount = $fxlinetotal * $taxrate;
 	}
-
+    
         for (@taxaccounts) {
 	  if (($form->{"${_}_rate"} * $ml) > 0) {
 	    if ($taxrate != 0) {
@@ -998,6 +1022,7 @@ sub post_invoice {
 	$ml = -1;
       }
       $fxtax_total += $fxtax;
+      $fxamount_total += $fxtax;
 
       $grossamount = $form->round_amount($linetotal, $form->{precision});
       
@@ -1197,9 +1222,9 @@ sub post_invoice {
       $form->{datepaid} = $form->{"datepaid_$i"};
     }
   }
+  $fxpaid_total = $form->{paid};
 
-
-  if ($form->round_amount($form->{paid} - $fxamount + $fxtax_total, $form->{precision}) == 0) {
+  if ($form->round_amount($form->{paid} - ($fxamount + $fxtax_total), $form->{precision}) == 0) {
     $form->{paid} = $invamount;
   } else {
     $form->{paid} = $form->round_amount($form->{paid} * $form->{exchangerate}, $form->{precision});
@@ -1533,16 +1558,21 @@ sub post_invoice {
        $dbh->do($query) or $form->dberror($query);
      } else {
 	    $correction = (-1)*$correction;
-        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+	    if ( $correction != 0 ) {
+          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		            transdate, fx_transaction, cleared, approved, vr_id)
 		            VALUES ($form->{id}, $defaults{fxloss_accno_id},
 			    $correction, |.$dbh->quote($form->{"datepaid_1"}).qq|, '1', $cleared,
 			    '$approved', $voucherid)|;
-		$dbh->do($query) || $form->dberror($query);
+		  $dbh->do($query) || $form->dberror($query);
+		}
      }
   }
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
+
+  $fxamount_total *= 1;
+  $fxpaid_total *= 1;
 
   # save AR record
   $query = qq|UPDATE ar set
@@ -1555,8 +1585,8 @@ sub post_invoice {
               amount = $invamount,
               netamount = $invnetamount,
               paid = $form->{paid},
-              fxamount = $form->{oldinvtotal},
-              fxpaid = $form->{oldtotalpaid},
+              fxamount = $fxamount_total,
+              fxpaid = $fxpaid_total,
 	      datepaid = |.$form->dbquote($form->dbclean($form->{datepaid}), SQL_DATE).qq|,
 	      duedate = |.$form->dbquote($form->dbclean($form->{duedate}), SQL_DATE).qq|,
 	      invoice = '1',
@@ -1639,6 +1669,52 @@ sub post_invoice {
   $form->remove_locks($myconfig, $dbh, 'ar');
   
   my $rc = $dbh->commit;
+
+  # armaghan tkt #86 rounding difference between ar and acc_trans
+  ($transdate, $diff) = $dbh->selectrow_array("SELECT transdate, amount-paid FROM ar WHERE id = $form->{id}");
+  if ($diff == 0){ # Invoice is fully paid
+     $ar_amount = $dbh->selectrow_array("SELECT amount FROM ar WHERE id = $form->{id}");
+     $ac_amount = $dbh->selectrow_array("
+         SELECT SUM(amount)
+         FROM acc_trans ac
+         JOIN chart c ON (c.id = ac.chart_id)
+         WHERE trans_id = $form->{id}
+         AND link NOT LIKE '%_paid%'
+         AND NOT fx_transaction
+     ");
+     $ac_netamount = $dbh->selectrow_array("
+         SELECT SUM(amount)
+         FROM acc_trans ac 
+         JOIN chart c ON (c.id = ac.chart_id) 
+         WHERE trans_id = $form->{id}
+         AND link not like '%_paid%'
+         AND link not like '%_tax%' 
+         AND not fx_transaction
+     ");
+
+     if ($ar_amount != $ac_amount){
+        $dbh->do("UPDATE ar SET amount = $ac_amount, netamount = $ac_netamount, paid = $ac_amount WHERE id = $form->{id}") or $form->dberror('Error running query ...');
+        $dbh->commit;
+     }
+
+     # Now check if there is minor difference in the AR posting
+     $query = qq|SELECT ROUND(sum(amount)::numeric,2) FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link = 'AR')|;
+     ($ar_amount) = $dbh->selectrow_array($query);
+     if ($ar_amount != 0){
+        ($ar_accno_id) = $dbh->selectrow_array(qq|
+            SELECT chart_id FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link = 'AR') LIMIT 1|
+        );
+        ($income_accno_id) = $dbh->selectrow_array(qq|
+            SELECT chart_id FROM acc_trans WHERE trans_id=$form->{id} AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%IC_income%') LIMIT 1|
+        );
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $income_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
+        $dbh->do($query) or $form->error($query);
+        $ar_amount *= -1;
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate, amount, memo) VALUES ($form->{id}, $ar_accno_id, '$transdate', $ar_amount, 'rounding adjustment')|;
+        $dbh->do($query) or $form->error($query);
+        $dbh->commit;
+     }
+  }
 
   $dbh->disconnect if $disconnect;
 

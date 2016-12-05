@@ -2644,7 +2644,7 @@ sub do_print_reminder {
   # setup variables for the form
   $form->format_string(qw(companyemail companywebsite company address businessnumber username useremail tel fax));
   
-  @a = qw(id name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
+  @a = qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
   push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
@@ -2659,6 +2659,10 @@ sub do_print_reminder {
     
     if ($form->{"ndx_$ref->{id}"}) {
 
+      # default shipto to main address if shipto address is empty.
+      if (!$ref->{shiptoaddress1}){
+        for (qw(name address1 address2 city state zipcode country contact phone fax email)) { $ref->{"shipto$_"} = $ref->{$_} }
+      }
       for (@a) { $form->{$_} = $ref->{$_} }
 
       $form->{rvc} = $form->format_dcn($form->{rvc});
@@ -2677,12 +2681,13 @@ sub do_print_reminder {
       $form->{language_code} = $form->{"language_code_$ref->{id}"};
       $form->{currency} = $ref->{curr};
       
-      for (qw(invnumber ordnumber ponumber notes invdate duedate invdescription)) { $form->{$_} = () }
+      for (qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill)) { $form->{$_} = () }
      
       $ref->{invdate} = $ref->{transdate};
-      my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription);
+      my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill);
       for (@a) { $form->{"${_}_1"} = $ref->{$_} }
-      $form->format_string(map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription));
+
+      $form->format_string(map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription shippingpoint shipvia waybill));
       for (@a) { $form->{$_} = $form->{"${_}_1"} }
     
       $ref->{exchangerate} ||= 1;
@@ -2716,7 +2721,7 @@ sub do_print_reminder {
                     id          => $form->{id} );
          $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
       }
-      $form->parse_template(\%myconfig, $userspath);
+      $form->parse_template(\%myconfig, $userspath, $debuglatex);
 
     }
   }
@@ -2799,7 +2804,7 @@ sub do_print_statement {
 	
 	for ("c0", "c15", "c30", "c45", "c60", "c75", "c90", "") { $form->{"${_}total"} = $form->format_amount(\%myconfig, $form->{"${_}total"}, $form->{precision}) }
 
-	$form->parse_template(\%myconfig, $userspath);
+	$form->parse_template(\%myconfig, $userspath, $debuglatex);
 	
       }
     }

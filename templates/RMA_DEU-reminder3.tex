@@ -1,0 +1,76 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: 3. Mahnung
+% Name: reminder3.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 14. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_address.tex%>
+
+\null\vspace{7.2cm}
+
+\parbox{\textwidth}{
+\textbf{\large{Letzte Mahnung}\hfill \today}
+}
+
+\vspace{0.5cm}
+\parbox{\textwidth}{
+Sehr geehrte Damen und Herren\\
+\\
+Wir beziehen uns auf die \textbf{Rechnung Nr. <%invnumber%>}\ifthenelse{\equal{<%invdescription%>}{}}{}{ mit dem Titel \glqq <%invdescription%>\grqq} vom <%invdate%> über <%currency%> <%due%>. Leider konnten wir noch immer keinen Zahlungseingang feststellen.\\
+
+Sollte der Betrag nicht innerhalb von 3 Tagen auf unserem Bankkonto eingegangen sein, sehen wir uns zur Veranlassung weiterer Schritte gezwungen.
+
+\vspace{0.5cm}
+
+Freundliche Grüsse
+
+\vspace{0.5cm}
+
+<%company%>
+}
+
+
+%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
+
+\ifthenelse{\equal{<%membernumber%>}{}}{
+
+%Hier könnte man IBAN Infos anfügen
+
+}{
+
+\ifthenelse{\equal{<%currency%>}{CHF}}{
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{
+\end{document}
+
+}{
+
+\pagebreak
+
+<%include content_einzahlungsschein.tex%>
+
+
+}
+}
+{} }
+  
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}

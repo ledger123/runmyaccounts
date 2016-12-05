@@ -90,7 +90,7 @@ sub new {
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
   $self->{version} = "2.8.33";
-  $self->{dbversion} = "2.8.10";
+  $self->{dbversion} = "2.8.11";
 
   bless $self, $type;
   
@@ -105,11 +105,31 @@ sub debug {
     for (sort keys %$self) { print FH "$_ = $self->{$_}\n" }
     close(FH);
   } else {
-    print "\n";
+    if ($ENV{HTTP_USER_AGENT}) {
+      &header unless $self->{header};
+      print "<pre>";
+    }
     for (sort keys %$self) { print "$_ = $self->{$_}\n" }
+    print "</pre>" if $ENV{HTTP_USER_AGENT};
   }
   
 } 
+
+# Dump hash values for debugging
+sub dumper {
+   my ($self, $var) = @_;
+
+   use Data::Dumper;
+   $Data::Dumper::Indent = 3;
+   $Data::Dumper::Sortkeys = 1;
+
+   if ($ENV{HTTP_USER_AGENT}) {
+      &header unless $self->{header};
+      print "<pre>";
+   }
+   print Dumper($var);
+   print "</pre>" if $ENV{HTTP_USER_AGENT};
+}
 
   
 sub escape {
@@ -235,7 +255,17 @@ sub error {
       $self->header(0,1);
     }
 
-    print qq|<body><h2 class=error>An unexpected error occured!</h2>|;
+	if ( $dbmsg ) {
+	   print qq|<body><h2 class=error>Error!</h2>|;
+	}else {
+	   print qq|<body><h2 class=error>Error!</h2>
+	   <p><b>$self->{msg}</b>|;
+
+       print qq|<h2 class=dberror>DB Error!</h2>
+
+       <p><b class=dberror>$self->{dbmsg}</b>|;
+    
+	}
 	print STDERR "Error: $msg\n$dbmsg\n";
     exit;
 
@@ -604,7 +634,7 @@ sub round_amount {
 
 
 sub parse_template {
-  my ($self, $myconfig, $userspath) = @_;
+  my ($self, $myconfig, $userspath, $debuglatex) = @_;
   
   my ($chars_per_line, $lines_on_first_page, $lines_on_second_page) = (0, 0, 0);
   my ($current_page, $current_line) = (1, 1);
@@ -616,6 +646,8 @@ sub parse_template {
 
   my %include = ();
   my $ok;
+
+  $self->{debuglatex} = $debuglatex;
 
   if (-f "$self->{templates}/$self->{language_code}/$self->{IN}") {
     open(IN, "$self->{templates}/$self->{language_code}/$self->{IN}") or $self->error("$self->{templates}/$self->{language_code}/$self->{IN} : $!");
@@ -704,6 +736,7 @@ sub parse_template {
 	}
       }
 
+    $sum = 0 if (/<%resetcarriedforward%>/);
       
       if (/<%foreach /) {
 	
@@ -1406,27 +1439,28 @@ sub format_dcn {
 
 sub cleanup {
   my $self = shift;
-
-  chdir("$self->{tmpdir}");
-
-  my @err = ();
-  if (-f "$self->{errfile}") {
-    open(FH, "$self->{errfile}");
-    @err = <FH>;
-    close(FH);
-  }
   
-  if ($self->{tmpfile}) {
-    # strip extension
-    $self->{tmpfile} =~ s/\.\w+$//g;
-    my $tmpfile = $self->{tmpfile};
-    unlink(<$tmpfile.*>);
-  }
+  if ( !$self->{debuglatex} ) {
+    chdir("$self->{tmpdir}");
 
-  chdir("$self->{cwd}");
+    my @err = ();
+    if (-f "$self->{errfile}") {
+      open(FH, "$self->{errfile}");
+      @err = <FH>;
+      close(FH);
+    }
   
-  "@err";
+    if ($self->{tmpfile}) {
+      # strip extension
+      $self->{tmpfile} =~ s/\.\w+$//g;
+      my $tmpfile = $self->{tmpfile};
+      unlink(<$tmpfile.*>);
+    }
+
+    chdir("$self->{cwd}");
   
+    "@err";
+  }  
 }
 
 
@@ -1932,7 +1966,7 @@ sub add_shipto {
 		   .$dbh->quote($self->{shiptocontact}).qq|, |
 		   .$dbh->quote($self->{shiptophone}).qq|, |
            .$dbh->quote($self->{shiptofax}).qq|, |
-		   .$dbh->quote($self->{shiptoemail}).qq|;
+		   .$dbh->quote($self->{shiptoemail}).qq|)|;
     $dbh->do($query) || $self->dberror($query);
   }
 

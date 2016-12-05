@@ -1013,6 +1013,186 @@ sub delete_business {
 }
 
 
+# dispatch methods
+
+sub add_dispatch {
+
+  $form->{title} = "Add";
+  
+  $form->{callback} = "$form->{script}?action=add_dispatch&path=$form->{path}&login=$form->{login}" unless $form->{callback};
+
+  &dispatch_header;
+  &form_footer;
+
+}
+
+
+sub edit_dispatch {
+
+  $form->{title} = $locale->text('Dispatch Method');
+
+  AM->get_dispatch(\%myconfig, \%$form);
+
+  &dispatch_header;
+
+  $form->{orphaned} = 1;
+  &form_footer;
+
+}
+
+
+sub list_dispatch {
+
+  AM->dispatch(\%myconfig, \%$form);
+
+  my $href = "$form->{script}?action=list_dispatch&direction=$form->{direction}&path=$form->{path}&login=$form->{login}";
+
+  $form->sort_order();
+  
+  $form->{callback} = "$form->{script}?action=list_dispatch&direction=$form->{direction}&path=$form->{path}&login=$form->{login}";
+  
+  my $callback = $form->escape($form->{callback});
+  
+  $form->{title} = $locale->text('Type of Dispatch');
+
+  my @column_index = qw(description);
+
+  my %column_data;
+  
+  $column_data{description} = qq|<th width=90%><a class=listheading href=$href>|.$locale->text('Description').qq|</a></th>|;
+
+  $form->header;
+
+  print qq|
+<body>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+  for (@column_index) { print "$column_data{$_}\n" }
+
+  print qq|
+        </tr>
+|;
+
+  my $i;
+  
+  foreach my $ref (@{ $form->{ALL} }) {
+    
+    $i++; $i %= 2;
+    
+    print qq|
+        <tr valign=top class=listrow$i>
+|;
+
+   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_dispatch&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</td>|;
+   
+   for (@column_index) { print "$column_data{$_}\n" }
+
+   print qq|
+	</tr>
+|;
+  }
+
+  print qq|
+      </table>
+    </td>
+  </tr>
+  <tr>
+  <td><hr size=3 noshade></td>
+  </tr>
+</table>
+
+<br>
+<form method=post action=$form->{script}>
+|;
+
+  $form->{type} = "dispatch";
+  
+  $form->hide_form(qw(type callback path login));
+
+  print qq|
+<input class=submit type=submit name=action value="|.$locale->text('Add Dispatch').qq|">|;
+
+  if ($form->{menubar}) {
+    require "$form->{path}/menu.pl";
+    &menubar;
+  }
+
+  print qq|
+</form>
+  
+</body>
+</html> 
+|;
+  
+}
+
+
+sub dispatch_header {
+
+  $form->{description} = $form->quote($form->{description});
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<input type=hidden name=id value=$form->{id}>
+<input type=hidden name=type value=dispatch>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table>
+	<tr>
+	  <th align=right>|.$locale->text('Dispatch Method').qq|</th>
+	  <td><input name=description size=30 value="|.$form->quote($form->{description}).qq|"></td>
+	<tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+</table>
+|;
+
+}
+
+
+sub save_dispatch {
+
+  $form->isblank("description", $locale->text('Description missing!'));
+  AM->save_dispatch(\%myconfig, \%$form);
+  $form->redirect($locale->text('Dispatch method saved!'));
+
+}
+
+
+sub delete_dispatch {
+
+  AM->delete_dispatch(\%myconfig, \%$form);
+  $form->redirect($locale->text('Dispatch method deleted!'));
+
+}
+
+
+
 
 sub add_payment_method {
 
@@ -2084,6 +2264,30 @@ sub defaults {
 	  <th align=right>|.$locale->text('Address').qq|</th>
 	  <td><textarea name=address rows=3 cols=35>$form->{address}</textarea></td>
 	</tr>
+	<tr valign=top>
+	  <th align=right>&nbsp;</th>
+	  <td><input name=address1 size=35 value="$form->{address1}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>&nbsp;</th>
+	  <td><input name=address2 size=35 value="$form->{address2}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('City').qq|</th>
+	  <td><input name=city size=35 value="$form->{city}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('State').qq|</th>
+	  <td><input name=state size=25 value="$form->{state}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('Zip').qq|</th>
+	  <td><input name=zip size=15 value="$form->{zip}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('Country').qq|</th>
+	  <td><input name=country size=30 value="$form->{country}"></td>
+	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Phone').qq|</th>
 	  <td><input name=tel size=14 value="$form->{tel}"></td>
@@ -2234,7 +2438,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact";
   
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 
@@ -2543,12 +2747,12 @@ sub audit_control {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Activate Audit trail').qq|</th>
-	  <td><input name=audittrail class=checkbox type=checkbox value="1" $checked{audittrail}></td>
+	  <td><input name=audittrail class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
 	</tr>
-	<tr>
+	<!-- <tr>
 	  <th align=right>|.$locale->text('Remove Audit trail up to').qq|</th>
-	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
-	</tr>
+	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" disabled="disabled"></td>
+	</tr> -->
 <!--
 	<tr>
 	  <th align=right>|.$locale->text('Enforce unique numbers for').qq|</th>

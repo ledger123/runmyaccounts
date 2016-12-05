@@ -365,6 +365,7 @@ $self{texts} = {
   'Directory'                   => 'Verzeichnis',
   'Disc'                        => 'Disc',
   'Discount'                    => 'Rabatt',
+  'Dispatch Method'				=> 'Versandmethode',
   'Documents'                   => 'Dokumente',
   'Done'                        => 'Fertig',
   'Drawing'                     => 'Zeichnung',

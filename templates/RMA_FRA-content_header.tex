@@ -1,0 +1,39 @@
+\ifthenelse{\equal{\Addressblock}{left}}{\begin{textblock*}{6.5cm}(11.85cm,6.10cm)}{}
+\ifthenelse{\equal{\Addressblock}{pingenleft}}{\begin{textblock*}{6.5cm}(11.85cm,6.10cm)}{}
+\ifthenelse{\equal{\Addressblock}{right}}{\begin{textblock*}{6.5cm}(1.8cm,6.10cm)}{}
+
+\textbf{\Large{\DocType}}\\
+Date: <%invdate%><%orddate%><%quodate%>\\
+\ifthenelse{\equal{<%invnumber%>}{}}{}{Facture No: <%invnumber%>\\}
+\ifthenelse{\equal{<%quonumber%>}{}}{}{Offre No: <%quonumber%>\\}
+\ifthenelse{\equal{<%ordnumber%>}{}}{}{No de commande: <%ordnumber%>\\}
+\ifthenelse{\equal{<%ponumber%>}{}}{}{Votre No de commande: <%ponumber%>\\}
+\ifthenelse{\equal{<%customernumber%>}{}}{}{No de client: <%customernumber%>\\}
+\ifthenelse{\equal{<%businessnumber%>}{}}{}{No TVA: <%businessnumber%>\\}
+\ifthenelse{\equal{<%customertaxnumber%>}{}}{}{Votre no TVA: <%customertaxnumber%>\\}
+
+\end{textblock*}
+
+\null\vspace{4.2cm}
+
+%Rechnungstitel
+\textbf{\ifthenelse{\equal{\DocType }{Offre}}{<%quodescription%>}{\ifthenelse{\equal{\DocType }{Confirmation de commande}}{<%orddescription%>}{<%invdescription%>}}}
+\vspace{0.1cm}
+%}
+
+%Text-Feld 1
+\ifthenelse{\equal{<%shippingpoint%>}{}}{}{<%shippingpoint%>
+\vspace{0.1cm}
+}
+
+%Text-Feld 2
+\ifthenelse{\equal{<%shipvia%>}{}}{}{<%shipvia%>
+\vspace{0.1cm}
+}
+
+%Text-Feld 3
+\ifthenelse{\equal{<%waybill%>}{}}{}{<%waybill%>
+\vspace{0.1cm}
+}
+
+\vspace{0.3cm}

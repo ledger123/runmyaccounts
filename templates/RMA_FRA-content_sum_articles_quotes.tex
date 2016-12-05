@@ -1,0 +1,82 @@
+\renewcommand{\arraystretch}{1.2}
+ 
+\ifthenelse{\equal{<%tax%>}{}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+ <%if quototal%>
+ \textbf{\AmountType \ <%currency%>}& \textbf{<%quototal%>}\\
+ <%end quototal%>
+
+\hline
+& \footnotesize{<%company%> n'est pas soumis à la TVA.}\\
+
+ \end{tabularx}
+ }
+
+ }{
+
+\ifthenelse{\equal{<%taxincluded%>}{1}}{
+
+\parbox{\textwidth}{
+
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+<%if quototal%>
+\textbf{\AmountType \ <%currency%>} \ifthenelse{\equal{<%tax%>}{}}{} { incluse TVA}}& \textbf{<%quototal%>}\\
+<%end quototal%>
+
+\hline
+
+\end{tabularx}
+
+\vspace{0.2cm}
+
+\footnotesize 
+
+\begin{flushright}
+\begin{tabular}{@{}lrrr@{}}
+\textbf{TVA /%} & \textbf{Net} &  \textbf{TVA} & \textbf{Total}\\
+\hline
+<%foreach tax%>
+<%taxrate%> \%&<%taxbase%>  &<%tax%> & <%taxbaseinclusive%>\\
+<%end tax%>
+\end{tabular}
+
+\end{flushright}
+}
+
+}{
+
+\parbox{\textwidth}{
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+\hline
+
+Sous-total <%currency%> & <%subtotal%> \\
+
+<%foreach tax%>
+TVA <%taxrate%> \% sur <%taxbase%> & <%tax%> \\
+<%end tax%>
+
+\hline
+
+<%if quototal%>
+\textbf{\AmountType \ <%currency%>}& \textbf{<%quototal%>}
+<%end quototal%>
+
+\end{tabularx}
+
+\hline
+}
+}
+}
+
+ 
+ \renewcommand{\arraystretch}{1}

@@ -1,0 +1,81 @@
+\renewcommand{\arraystretch}{1.2}
+ 
+ \ifthenelse{\equal{<%tax%>}{}}{
+
+ \parbox{\textwidth}{
+
+ \begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+ \hline
+
+ <%if total%>
+ \textbf{\AmountType \ \ <%currency%>}& \textbf{<%invtotal%>}\\
+ <%end total%>
+
+\hline
+& \footnotesize{<%company%> ist nicht MWST-pflichtig.}\\
+
+ \end{tabularx}
+ }
+
+ }{
+
+ \ifthenelse{\equal{<%taxincluded%>}{1}}{
+
+ \parbox{\textwidth}{
+
+ \begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+ \hline
+
+ <%if total%>
+ \textbf{\AmountType \ \ <%currency%>\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}& \textbf{<%invtotal%>}\\
+ <%end total%>
+
+ \hline
+
+ \end{tabularx}
+
+ \vspace{0.2cm}
+
+ \footnotesize 
+
+ \begin{flushright}
+ \begin{tabular}{@{}lrrr@{}}
+ \textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
+ \hline
+ <%foreach tax%>
+ <%taxrate%> \%&<%taxbase%>  &<%tax%> & <%taxbaseinclusive%>\\
+ <%end tax%>
+ \end{tabular}
+
+ \end{flushright}
+ }
+
+ }{
+
+ \parbox{\textwidth}{
+ \begin{tabularx}{\textwidth}{@{}Xr@{}}
+
+ \hline
+
+ Zwischentotal <%currency%>& <%subtotal%> \\
+
+ <%foreach tax%>
+ MWST <%taxrate%> \% auf <%taxbase%> & <%tax%> \\
+ <%end tax%>
+
+ \hline
+
+ <%if total%>
+ \textbf{\AmountType \ \ <%currency%>}& \textbf{<%invtotal%>}
+ <%end total%>
+
+ \end{tabularx}
+
+ \hline
+ }
+ }
+ }
+ 
+ \renewcommand{\arraystretch}{1}

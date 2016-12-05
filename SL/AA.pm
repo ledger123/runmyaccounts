@@ -125,7 +125,7 @@ sub post_transaction {
   # deduct tax from amounts if tax included
   for $i (1 .. $form->{rowcount}) {
 
-    if ($amount{fxamount}{$i}) {
+    if ($amount{fxamount}{$i} or $form->{"tax_$i"}) {
       
       if ($form->{taxincluded}) {
 	$amount = ($fxinvamount) ? $fxtax * $amount{fxamount}{$i} / $fxinvamount : 0;
@@ -178,7 +178,6 @@ sub post_transaction {
     }
   }
 
-
   my $invamount = $invnetamount + $tax;
   
   my $paymentaccno;
@@ -188,9 +187,11 @@ sub post_transaction {
 
   $diff = 0;
   # add payments
+  my $fxpaid = 0;
   for $i (1 .. $form->{paidaccounts}) {
     $fxamount = $form->parse_amount($myconfig, $form->{"paid_$i"});
-    
+    $fxpaid += $fxamount;
+
     if ($fxamount) {
       $paid += $fxamount;
 
@@ -293,6 +294,11 @@ sub post_transaction {
     }
   }
 
+  #print qq|<pre>|; $form->info; print qq|FXAMOUNT: $fxinvamount\n|; $form->debug; $form->error;
+
+  $fxinvamount *= 1;
+  $fxinvpaid *= 1;
+
   $query = qq|UPDATE $table SET
 	      invnumber = |.$dbh->quote($form->{invnumber}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
@@ -305,8 +311,8 @@ sub post_transaction {
 	      paid = $paid * $arapml,
 	      datepaid = $datepaid,
 	      netamount = $invnetamount * $arapml,
-	      fxamount = |.( ($form->{oldinvtotal}) ? $form->{oldinvtotal}*1 : 0 ).qq|,
-	      fxpaid = |.( ($form->{oldtotalpaid}) ? $form->{oldtotalpaid}*1 : 0 ).qq|,
+	      fxamount = $fxinvamount,
+	      fxpaid = $fxpaid,
 	      terms = |.$form->dbclean($form->{terms}).qq|,
 	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
@@ -358,7 +364,7 @@ sub post_transaction {
 
     # insert detail records in acc_trans
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
-    if ($ref->{amount}) {
+    if ($ref->{amount} or $ref->{taxamount}) {
       $ref->{taxamount} *= 1;
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
 		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount)
@@ -793,7 +799,7 @@ sub transactions {
   ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
  
   if ($form->{outstanding}) {
-    $paid = qq|CASE WHEN a.fxamount = a.fxpaid AND a.fxpaid != 0 AND a.paid != 0 |;
+    $paid = qq|CASE WHEN ROUND(a.fxamount::numeric, $form->{precision}) = ROUND(a.fxpaid::numeric, $form->{precision}) AND a.fxpaid != 0 AND a.paid != 0 |;
     $paid .= qq|
             AND a.datepaid <= '$form->{transdateto}'| if $form->{transdateto};
     $paid .= qq|THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
@@ -1009,7 +1015,7 @@ sub transactions {
              WHERE $where
              ORDER by $sortorder";
   $form->{query} = $query;  
-        
+
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 

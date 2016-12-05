@@ -1,7 +1,3 @@
-# WLprinter start
-$printer{Netzwerkdrucker} = "wlprinter/fileprinter.pl $form->{login}";
-# WLprinter end
-
 1;
 
 require "$form->{path}/mylib.pl";
@@ -9,6 +5,9 @@ require "$form->{path}/mylib.pl";
 sub continue { &{$form->{nextsub} } };
 
 sub ask_dbcheck {
+
+  $form->error($locale->text('Only for admin ...')) unless $myconfig{role} eq 'admin';
+
   $form->{title} = $locale->text('Ledger Doctor');
   $form->header;
   my $dbh = $form->dbconnect(\%myconfig);
@@ -48,6 +47,9 @@ print qq|
 }
 
 sub do_dbcheck {
+
+  $form->error($locale->text('Only for admin ...')) unless $myconfig{role} eq 'admin';
+
   $form->{title} = $locale->text('Ledger Doctor');
   $form->header;
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br />|;
@@ -56,82 +58,38 @@ sub do_dbcheck {
   my $callback = "$form->{script}?action=do_dbcheck&firstdate=$form->{firstdate}&lastdate=$form->{lastdate}&path=$form->{path}&login=$form->{login}";
   $callback = $form->escape($callback);
 
-  #------------------
-  # 1. Invalid Dates
-  #------------------
-  print qq|<h2>Invalid Dates</h2>|;
-  $query = qq|
-		SELECT 'AR' AS module, id, invnumber, transdate 
-		FROM ar
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
-
-		UNION ALL
-
-		SELECT 'AP' AS module, id, invnumber, transdate 
-		FROM ap
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
-
-		UNION ALL
-
-		SELECT 'GL' AS module, id, reference, transdate 
-		FROM gl
-		WHERE transdate < '$form->{firstdate}'
-		OR transdate > '$form->{lastdate}'
-  |;
-  $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute;
-  print qq|<table>|;
-  print qq|<tr class=listheading>|;
-  print qq|<th class=listheading>|.$locale->text('Module').qq|</td>|;
-  print qq|<th class=listheading>|.$locale->text('Invoice Number / Reference').qq|</td>|;
-  print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
-  print qq|</tr>|;
-  $i = 0;
-
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-     $module = lc $ref->{module};
-     $module = 'ir' if $ref->{invoice} and $ref->{module} eq 'AP';
-     $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
-
-     print qq|<tr class=listrow$i>|;
-     print qq|<td>$ref->{module}</td>|;
-     print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
-     print qq|<td>$ref->{transdate}</td>|;
-     print qq|</tr>|;
-  }
-  print qq|</table>|;
-
   #------------------------
   # 2. Unbalanced Journals
   #------------------------
   print qq|<h3>Unbalanced Journals</h3>|;
   $query = qq|
 	SELECT 'GL' AS module, gl.reference AS invnumber, gl.id,
-		gl.transdate, false AS invoice, SUM(ac.amount) AS amount
+		ac.transdate, false AS invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN gl ON (gl.id = ac.trans_id)
+    WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) <> 0
+	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	UNION ALL
 
 	SELECT 'AR' AS module, ar.invnumber, ar.id,
-		ar.transdate, ar.invoice, SUM(ac.amount) AS amount
+		ac.transdate, ar.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ar ON (ar.id = ac.trans_id)
+    WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) <> 0
+	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	UNION ALL
 
 	SELECT 'AP' AS module, ap.invnumber, ap.id,
-		ap.transdate, ap.invoice, SUM(ac.amount) AS amount
+		ac.transdate, ap.invoice, SUM(ac.amount) AS amount
 	FROM acc_trans ac
 	JOIN ap ON (ap.id = ac.trans_id)
+    WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) <> 0
+	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
 
 	ORDER BY 3
   |;
@@ -158,7 +116,7 @@ sub do_dbcheck {
      	print qq|<td>$ref->{module}</td>|;
      	print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
      	print qq|<td>$ref->{transdate}</td>|;
-     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 2).qq|</td>|;
+     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 6).qq|</td>|;
      	print qq|</tr>|;
 	$total_amount += $ref->{amount};
      }
@@ -170,6 +128,15 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   # 3. Orphaned Rows
   #-------------------
   print qq|<h3>Orphaned Rows</h3>|;
+  $form->info('To delete these orphaned rows, run following query in psql or phpPgAdmin or pgAdmin3. 
+
+Important: Make sure you have a tested backup before running this delete query.');
+  print qq|<pre>
+DELETE FROM acc_trans 
+WHERE trans_id NOT IN
+(SELECT id FROM ar UNION ALL SELECT id FROM ap UNION ALL SELECT id FROM gl);
+</pre>|;
+	
   $query = qq|
 		SELECT ac.trans_id, ac.transdate, c.accno, c.description, ac.amount, ac.memo, ac.source
 		FROM acc_trans ac
@@ -290,48 +257,83 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   }
   print qq|
 </table>
-</body>
-</html>|;
-  $dbh->disconnect;
-}
-
-
-
-sub getsql {
-  $form->{title} = $locale->text('CSV Report');
-  $form->header;
-  print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br />|;
-  print qq|<form method=post action='$form->{script}'>|;
-
-  $sqlstmt = qq|
-SELECT partnumber, description
-FROM parts
-WHERE 1=2
-ORDER BY partnumber
 |;
-  print qq|<textarea name=sqlstmt rows=10 cols=70 wrap>$sqlstmt</textarea><br />|;
-  print qq|<input name=copyfromcsv type=checkbox class=checkbox value=1 >|;
-  print $locale->text('Add <b>COPY FROM CSV</b>');
-  print qq|<a href="http://www.ledger123.com/generic-csv-import/"> (Detail)</a>|;
-  print qq|<br /><br />|;
-  print qq|<input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">|;
-  $form->{nextsub} = 'bldcsv';
-  $form->hide_form(qw(title path nextsub login));
-}
 
-sub bldcsv {
-   if (($myconfig{acs} =~ /Export--CSV/) or ($myconfig{role} ne 'admin')){
-       $form->error($locale->text('Unauthorized access'));
-   } else {
-     if ($form->{sqlstmt} =~ /^select/i){
-       $sqlstmt = $form->{sqlstmt};
-       $dbh = $form->dbconnect(\%myconfig);
-       #$form->error($sqlstmt);
-       &export_to_csv($dbh, $sqlstmt, "report", $form->{copyfromcsv});
-     } else {
-       $form->error('Not allowed');
-     }
-   }
+
+  #-----------------------------
+  # 6a. Invoices with Deleted Parts
+  #-----------------------------
+  print qq|<h3>Invoices with missing customer.</h3>|;
+  $query = qq|
+		SELECT 'AR', id, invnumber, transdate, amount 
+		FROM ar
+		WHERE customer_id NOT IN (SELECT id FROM customer)
+
+        UNION ALL
+
+		SELECT 'AP', id, invnumber, transdate, amount 
+		FROM ap
+		WHERE vendor_id NOT IN (SELECT id FROM vendor)
+
+        ORDER BY 1, 3
+  |;
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  print qq|<table>|;
+  print qq|<tr class=listheading>|;
+  print qq|<th class=listheading>|.$locale->text('ID').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
+  print qq|</tr>|;
+  $i = 0;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     print qq|<tr class=listrow$i>|;
+     print qq|<td>$ref->{id}</td>|;
+     print qq|<td>$ref->{invnumber}</td>|;
+     print qq|<td>$ref->{transdate}</td>|;
+     print qq|<td align=right>$ref->{amount}</td>|;
+     print qq|</tr>|;
+  }
+  print qq|
+</table>
+|;
+
+
+
+  #-----------------------------
+  # 7. invoice table with blank dates
+  #-----------------------------
+  print qq|<h3>Missing dates in invoice table</h3>|;
+  $query = qq|SELECT COUNT(*) FROM invoice WHERE transdate IS NULL|;
+  my ($blankrows) = $dbh->selectrow_array($query);
+  if ($blankrows){
+     print qq|<p>There were '| . $blankrows . qq| rows with blank transdate in invoice table. Being corrected now ...'|;
+     $dbh->do('UPDATE invoice SET transdate = (SELECT transdate FROM ar WHERE ar.id = invoice.trans_id) WHERE trans_id IN (SELECT id FROM ar) AND transdate IS NULL');
+     $dbh->do('UPDATE invoice SET transdate = (SELECT transdate FROM ap WHERE ap.id = invoice.trans_id) WHERE trans_id IN (SELECT id FROM ap) AND transdate IS NULL');
+     print qq|<p>... corrected.</p>|;
+  } else {
+     print qq|<p>... ok.</p>|;
+  }
+
+  #-----------------------------
+  # 7. inventory table with blank dates
+  #-----------------------------
+  print qq|<h3>Missing dates in inventory table</h3>|;
+  $query = qq|SELECT COUNT(*) FROM inventory WHERE shippingdate IS NULL|;
+  my ($blankrows) = $dbh->selectrow_array($query);
+  if ($blankrows){
+     print qq|<p>There are | . $blankrows . qq| rows with blank shippingdate in invoice table. ...'|;
+     #$dbh->do('UPDATE invoice SET transdate = (SELECT transdate FROM ar WHERE ar.id = invoice.trans_id) WHERE trans_id IN (SELECT id FROM ar) AND transdate IS NULL');
+     #$dbh->do('UPDATE invoice SET transdate = (SELECT transdate FROM ap WHERE ap.id = invoice.trans_id) WHERE trans_id IN (SELECT id FROM ap) AND transdate IS NULL');
+     print qq|<p>... check.</p>|;
+  } else {
+     print qq|<p>... ok.</p>|;
+  }
+
+
+
+  $dbh->disconnect;
 }
 
 ######

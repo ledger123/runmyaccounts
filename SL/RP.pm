@@ -1254,7 +1254,7 @@ sub trial_balance {
 		l.description AS translation
 		FROM acc_trans ac
 		JOIN chart c ON (c.id = ac.chart_id)
-		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{countrycode}).qq|)
+		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = |.$dbh->quote($form->{language_code}).qq|)
 		$dpt_join
 		WHERE $where
 		$dpt_where
@@ -1702,7 +1702,7 @@ sub reminder {
   $where = qq|
 	a.paid != a.amount
 	AND a.approved = '1'
-	AND a.duedate <= current_date
+	AND a.duedate < current_date
 	AND c.id = ?
 	AND a.curr = ?|;
 	
@@ -1720,7 +1720,7 @@ sub reminder {
 	      c.contact, c.email,
 	      c.phone as $form->{vc}phone, c.fax as $form->{vc}fax,
 	      c.$form->{vc}number, c.taxnumber as $form->{vc}taxnumber,
-	      a.description AS invdescription,
+	      a.description AS invdescription, a.shippingpoint, a.shipvia, a.waybill,
 	      a.invnumber, a.transdate, a.till, a.ordnumber, a.ponumber, a.notes,
 	      a.amount - a.paid AS due,
 	      a.duedate, a.invoice, a.id, a.curr,

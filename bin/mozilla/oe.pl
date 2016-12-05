@@ -202,7 +202,7 @@ sub order_links {
 
 
 sub prepare_order {
-
+	
   $form->{formname} ||= $form->{type};
   $form->{sortby} ||= "runningnumber";
   $form->{format} ||= $myconfig{outputformat};
@@ -672,7 +672,7 @@ sub form_header {
   </tr>
 |;
 
-  $form->hide_form(qw(shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact shiptophone shiptofax shiptoemail message email subject cc bcc taxaccounts aa_id));
+  $form->hide_form(qw(shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact shiptophone shiptofax shiptoemail message email subject cc bcc taxaccounts aa_id inventory_items));
 
   foreach $accno (split / /, $form->{taxaccounts}) { $form->hide_form(map { "${accno}_$_" } qw(rate description taxnumber)) }
 
@@ -805,9 +805,7 @@ sub form_footer {
 	       'Ship to' => { ndx => 4, key => 'T', value => $locale->text('Ship to') },
 	       'Ship all' => { ndx => 5, key => 'A', value => $locale->text('Ship all') },
 	       'E-mail' => { ndx => 6, key => 'E', value => $locale->text('E-mail') },
-	       'Print and Save' => { ndx => 7, key => 'R', value => $locale->text('Print and Save') },
 	       'Save as new' => { ndx => 8, key => 'N', value => $locale->text('Save as new') },
-	       'Print and Save as new' => { ndx => 9, key => 'W', value => $locale->text('Print and Save as new') },
 	       'Sales Invoice' => { ndx => 10, key => 'I', value => $locale->text('Sales Invoice') },
 	       'Sales Order' => { ndx => 11, key => 'O', value => $locale->text('Sales Order') },
 	       'Quotation' => { ndx => 12, key => 'Q', value => $locale->text('Quotation') },
@@ -874,7 +872,7 @@ sub form_footer {
 	}
       }
 
-      if ($form->{aa_id}) {
+      if ($form->{aa_id} and $form->{inventory_items}) {
 	for ("Update", "Save", "Ship to", "Ship all", "Print and Save", "Sales Invoice", "Vendor Invoice", "Delete") { delete $a{$_} }
       }
     }
@@ -924,6 +922,7 @@ sub ship_all {
       
 sub update {
 
+  
   $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
   $form->isvaldate(\%myconfig, $form->{reqdate}, $locale->text('Invalid required date ...'));
 

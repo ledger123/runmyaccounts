@@ -880,9 +880,7 @@ sub form_footer {
 	       'Post' => { ndx => 3, key => 'O', value => $locale->text('Post') },
 	       'Ship to' => { ndx => 4, key => 'T', value => $locale->text('Ship to') },
 	       'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
-	       'Print and Post' => { ndx => 6, key => 'R', value => $locale->text('Print and Post') },
 	       'Post as new' => { ndx => 7, key => 'N', value => $locale->text('Post as new') },
-	       'Print and Post as new' => { ndx => 8, key => 'W', value => $locale->text('Print and Post as new') },
 	       'Purchase Order' => { ndx => 9, key => 'L', value => $locale->text('Purchase Order') },
 	       'Schedule' => { ndx => 10, key => 'H', value => $locale->text('Schedule') },
 	       'New Number' => { ndx => 13, key => 'M', value => $locale->text('New Number') },
@@ -921,6 +919,33 @@ sub form_footer {
   }
   
   $form->hide_form(qw(rowcount callback path login oe_id));
+
+    if ($form->{id} and $debits_credits_footer){
+        use DBIx::Simple;
+        my $dbh = $form->dbconnect(\%myconfig);
+        my $dbs = DBIx::Simple->connect($dbh);
+        $query = qq|
+                SELECT 
+                    ac.transdate, c.accno, c.description, 
+                    ac.amount, ac.source, 
+                    ac.fx_transaction
+                FROM acc_trans ac
+                JOIN chart c ON (c.id = ac.chart_id)
+                WHERE ac.trans_id = ?
+                ORDER BY ac.transdate
+        |;
+
+        my $table = $dbs->query($query, $form->{id})->xto(
+            tr => { class => [ 'listrow0', 'listrow1' ] },
+            th => { class => ['listheading'] },
+        );
+        $table->modify(td => {align => 'right'}, 'amount');
+        #$table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
+        $table->set_group( 'transdate', 1 );
+        $table->calc_subtotals( [qw(amount)] );
+        $table->calc_totals( [qw(amount)] );
+        print $table->output;
+    }
   
 print qq|
 </form>

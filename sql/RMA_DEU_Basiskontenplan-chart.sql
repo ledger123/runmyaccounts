@@ -2738,8 +2738,35 @@ INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '380
 INSERT INTO tax (chart_id,rate) VALUES ((select id from chart where accno = '1401'),0.07);
 
 
-
-DELETE FROM DEFAULTS;
+DELETE FROM DEFAULTS WHERE fldname='inventory_accno_id';
+DELETE FROM DEFAULTS WHERE fldname='income_accno_id';
+DELETE FROM DEFAULTS WHERE fldname='expense_accno_id';
+DELETE FROM DEFAULTS WHERE fldname='fxgain_accno_id';
+DELETE FROM DEFAULTS WHERE fldname='fxloss_accno_id';
+DELETE FROM DEFAULTS WHERE fldname='currencies';
+DELETE FROM DEFAULTS WHERE fldname='weightunit';
+DELETE FROM DEFAULTS WHERE fldname='cdt';
+DELETE FROM DEFAULTS WHERE fldname='precision';
+DELETE FROM DEFAULTS WHERE fldname='glnumber';
+DELETE FROM DEFAULTS WHERE fldname='sinumber';
+DELETE FROM DEFAULTS WHERE fldname='vinumber';
+DELETE FROM DEFAULTS WHERE fldname='batchnumber';
+DELETE FROM DEFAULTS WHERE fldname='vouchernumber';
+DELETE FROM DEFAULTS WHERE fldname='sonumber';
+DELETE FROM DEFAULTS WHERE fldname='ponumber';
+DELETE FROM DEFAULTS WHERE fldname='sqnumber';
+DELETE FROM DEFAULTS WHERE fldname='rfqnumber';
+DELETE FROM DEFAULTS WHERE fldname='partnumber';
+DELETE FROM DEFAULTS WHERE fldname='employeenumber';
+DELETE FROM DEFAULTS WHERE fldname='customernumber';
+DELETE FROM DEFAULTS WHERE fldname='vendornumber';
+DELETE FROM DEFAULTS WHERE fldname='projectnumber';
+DELETE FROM DEFAULTS WHERE fldname='audittrail';
+INSERT INTO defaults (fldname, fldvalue) VALUES ('inventory_accno_id', (SELECT id FROM chart WHERE accno = '1140'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('income_accno_id', (SELECT id FROM chart WHERE accno = '4200'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('expense_accno_id', (SELECT id FROM chart WHERE accno = '5100'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('fxgain_accno_id', (SELECT id FROM chart WHERE accno = '4840'));
+INSERT INTO defaults (fldname, fldvalue) VALUES ('fxloss_accno_id', (SELECT id FROM chart WHERE accno = '6880'));
 INSERT INTO defaults (fldname, fldvalue) VALUES ('weightunit', 'kg');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('precision', '2');
 INSERT INTO DEFAULTS (fldname, fldvalue) VALUES ('cdt', '1');
@@ -2758,13 +2785,6 @@ INSERT INTO defaults (fldname, fldvalue) VALUES ('customernumber','KD-0');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('vendornumber','L-0');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('projectnumber','P-0');
 INSERT INTO defaults (fldname, fldvalue) VALUES ('audittrail','1');
-INSERT INTO defaults (fldname, fldvalue) VALUES ('inventory_accno_id', (SELECT id FROM chart WHERE accno = '1140'));
-INSERT INTO defaults (fldname, fldvalue) VALUES ('income_accno_id', (SELECT id FROM chart WHERE accno = '4200'));
-INSERT INTO defaults (fldname, fldvalue) VALUES ('expense_accno_id', (SELECT id FROM chart WHERE accno = '5100'));
-INSERT INTO defaults (fldname, fldvalue) VALUES ('fxgain_accno_id', (SELECT id FROM chart WHERE accno = '4840'));
-INSERT INTO defaults (fldname, fldvalue) VALUES ('fxloss_accno_id', (SELECT id FROM chart WHERE accno = '6880'));
-
-
 
 DELETE FROM curr;
 INSERT INTO curr (rn, curr, precision) VALUES (1,'EUR',2);

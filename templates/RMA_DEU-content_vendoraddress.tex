@@ -1,0 +1,30 @@
+% Bei bündiger Positionierung des Adresskopfs 
+%\begin{textblock*}{6.5cm}(1.8cm,6.10cm)
+
+% Bei linker Positionierung des Adresskopfs / 2.25cm muss bei Nicht-Pingen Templates auf den Seitenrand unter \usepackage[a4paper, ... angepasst werden.
+\begin{textblock*}{6.5cm}(1.8cm,5.75cm)
+
+\textbf{Von:}
+
+<%name%>
+
+\ifthenelse{\equal{<%address1%>}{}}{}{<%address1%>}
+
+\ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>}
+
+<%zipcode%> <%city%>
+
+\ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+
+\end{textblock*}
+
+% Bei rechter Positionierung des Adresskopfs:
+\begin{textblock*}{6.5cm}(11.15cm,5.75cm)
+
+\textbf{An:}
+
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+
+\end{textblock*}

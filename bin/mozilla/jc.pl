@@ -610,9 +610,7 @@ sub timecard_footer {
   %button = ('Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
              'Print' => { ndx => 2, key => 'P', value => $locale->text('Print') },
 	     'Save' => { ndx => 3, key => 'S', value => $locale->text('Save') },
-	     'Print and Save' => { ndx => 6, key => 'R', value => $locale->text('Print and Save') },
 	     'Save as new' => { ndx => 7, key => 'N', value => $locale->text('Save as new') },
-	     'Print and Save as new' => { ndx => 8, key => 'W', value => $locale->text('Print and Save as new') },
 	     
 	     'Delete' => { ndx => 16, key => 'D', value => $locale->text('Delete') },
 	    );
@@ -625,7 +623,7 @@ sub timecard_footer {
 	for ('Update', 'Print', 'Save', 'Save as new') { $a{$_} = 1 }
 	
 	if ($latex) {
-	  for ('Print and Save', 'Print and Save as new') { $a{$_} = 1 }
+	  for ('Print and Save') { $a{$_} = 1 }
 	}
 
 	if ($form->{orphaned}) {
@@ -817,9 +815,7 @@ sub storescard_footer {
     %button = ('Update' => { ndx => 1, key => 'U', value => $locale->text('Update') },
                'Print' => { ndx => 2, key => 'P', value => $locale->text('Print') },
 	       'Save' => { ndx => 3, key => 'S', value => $locale->text('Save') },
-	       'Print and Save' => { ndx => 6, key => 'R', value => $locale->text('Print and Save') },
 	       'Save as new' => { ndx => 7, key => 'N', value => $locale->text('Save as new') },
-	       'Print and Save as new' => { ndx => 8, key => 'W', value => $locale->text('Print and Save as new') },
 	       'Delete' => { ndx => 16, key => 'D', value => $locale->text('Delete') },
 	      );
     
@@ -1849,7 +1845,7 @@ sub print_form {
     $status{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
   }
 
-  $form->parse_template(\%myconfig, $userspath);
+  $form->parse_template(\%myconfig, $userspath, $debuglatex);
 
   if ($old_form) {
 

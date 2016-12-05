@@ -37,6 +37,7 @@ $self{subs} = {
   'im_payment'                  => 'im_payment',
   'im_sales_invoice'            => 'im_sales_invoice',
   'import'                      => 'import',
+  'import_gl'                   => 'import_gl',
   'import_payments'             => 'import_payments',
   'import_sales_invoices'       => 'import_sales_invoices',
   'xrefhdr'                     => 'xrefhdr',

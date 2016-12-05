@@ -1,0 +1,52 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Offertanfrage
+% Name: request_quotation.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 14. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+<%include content_footer.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Offertanfrage}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_pagebreak_withoutamount_withfooter.tex%>
+
+<%include content_address.tex%>
+
+<%include content_header.tex%>
+
+<%include content_articles_withoutamount.tex%>
+
+\vspace{0.5cm}
+
+\textbf{Einreichung an:}
+\\
+<%company%>\\
+\BeforeSubString{ --}{<%address%>}\\
+\BehindSubString{-- }{<%address%>}\\
+
+\vspace{0.5cm}
+\parbox{\textwidth}{
+Wir bedanken uns für Ihre Einreichung bis zum \textbf{<%reqdate%>}.
+}
+
+<%include content_notes.tex%>
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}
