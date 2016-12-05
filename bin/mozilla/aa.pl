@@ -1163,7 +1163,7 @@ sub form_footer {
         &menubar;
     }
 
-    if ($form->{id}){
+    if ($form->{id} and $debits_credits_footer){
         use DBIx::Simple;
         my $dbh = $form->dbconnect(\%myconfig);
         my $dbs = DBIx::Simple->connect($dbh);
@@ -1184,7 +1184,7 @@ sub form_footer {
             th => { class => ['listheading'] },
         );
         $table->modify(td => {align => 'right'}, 'amount');
-        $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 2) }, 'amount');
+        $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
         $table->set_group( 'transdate', 1 );
         $table->calc_totals( [qw(amount)] );
         print $table->output;
