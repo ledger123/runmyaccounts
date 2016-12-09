@@ -584,6 +584,7 @@ sub post_transaction {
               WHERE trans_id=$form->{id}
               AND c.link LIKE '$ARAP'
           ");
+          $invamount2 *= 1;
           if ($invamount2){
               my ($transdate) = $dbh->selectrow_array("select max(transdate) from acc_trans where trans_id = $form->{id}");
               ($accno) = split /--/, $form->{$ARAP};

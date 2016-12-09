@@ -2747,12 +2747,12 @@ sub audit_control {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Activate Audit trail').qq|</th>
-	  <td><input name=audittrail class=checkbox type=checkbox value="1" $checked{audittrail}></td>
+	  <td><input name=audittrail class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
 	</tr>
-	<tr>
+	<!-- <tr>
 	  <th align=right>|.$locale->text('Remove Audit trail up to').qq|</th>
-	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
-	</tr>
+	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" disabled="disabled"></td>
+	</tr> -->
 <!--
 	<tr>
 	  <th align=right>|.$locale->text('Enforce unique numbers for').qq|</th>
