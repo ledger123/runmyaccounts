@@ -1195,9 +1195,12 @@ sub generate_income_statement {
    ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
    if ($form->{pivotby} eq 'project'){
       &income_statement_by_project;
-   } else {
+   } elsif ($form->{pivotby} eq 'department') {
       &income_statement_by_department;
+   } elsif ($form->{pivotby} eq 'department-account') {
+      &income_statement_by_department_account;
    }
+
 }
 
 #---------------
@@ -1491,6 +1494,127 @@ sub income_statement_by_department {
   print qq|</tr>|;
 }
 
+
+#---------------
+sub income_statement_by_department_account {
+
+  $form->header;
+  print qq|<body class="bill main2"><table width=100%><tr><td class=listtop>$form->{title}</td></tr></table><br/>|;
+  print qq|<h2 align=center>|.$locale->text('Income Statement Departments').qq|</h2>|;
+  print qq|<h2 align=center>|.$locale->text('For Period').qq|</h2>| if $form->{datefrom} && $form->{dateto};
+  print qq|<h2 align=center>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h2>| if $form->{datefrom};
+  print qq|<h2 align=center>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h2>| if $form->{dateto};
+  my $dbh = $form->dbconnect(\%myconfig);
+
+  my $ywhere = qq| 1 = 1 |;
+  if ($form->{datefrom}){
+    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
+    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
+  }
+  if ($form->{dateto}){
+    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
+    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
+  }
+  $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
+
+  my $is_query = qq|
+        SELECT 
+            d.description department, 
+            c.accno, 
+            c.description, 
+            c.category, 
+            charttype,
+            SUM(ac.amount) amount
+		FROM acc_trans ac
+		JOIN chart c ON (c.id = ac.chart_id)
+		JOIN dpt_trans dt ON (dt.trans_id = ac.trans_id)
+        JOIN department d ON (d.id = dt.department_id)
+		WHERE c.category = ?
+        AND dt.department_id = ?
+        $where
+		GROUP BY d.description, c.accno, c.description, c.category, c.charttype
+		ORDER BY d.description, c.accno
+  |;
+
+  my $dquery = qq|SELECT id, description FROM department ORDER BY description|;
+  my $dsth = $dbh->prepare($dquery);
+  $dsth->execute;
+  while (my $department = $dsth->fetchrow_hashref(NAME_lc)){
+
+  print qq|
+<table cellpadding="5" width="80%">
+<thead><th colspan=4>$department->{description}</th></thead>
+<tr>
+<th>$department->{description}</th>
+<th colspan=2>|.$locale->text('Income').qq|</th>
+<th>|.$locale->text('Amount').qq|</th>
+</tr>
+|;
+
+  $sth = $dbh->prepare($is_query) || $form->dberror($is_query);
+  $sth->execute('I', $department->{id}) || $form->dberror($is_query);
+  # Print INCOME
+  my $totalincome = 0;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+     print qq|<tr>|;
+     print qq|<td>$ref->{department}</td>|;
+     print qq|<td>$ref->{accno}</td>|;
+     print qq|<td>$ref->{description}</td>|;
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $ref->{amount}, 0) . qq|</td>|;
+     $totalincome += $ref->{amount};
+     print qq|</tr>|;
+  }
+
+  print qq|
+    <tr>
+    <th>$department->{description}</th>
+    <th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('Income').qq|</th>
+    <th align=right>| . $form->format_amount(\%myconfig, $totalincome, 0) . qq|</th>
+    </tr>
+|;
+  $sth->finish;
+
+  $sth->execute('E', $department->{id}) || $form->dberror($is_query);
+  # Print EXPENSES
+  print qq|
+  <tr>
+  <th>$department->{description}</th>
+  <th colspan=2>|.$locale->text('COGS').qq|</th>
+  <th>|.$locale->text('Amount').qq|</th>
+  </tr>
+|;
+
+  my $totalexpenses = 0;
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+     print qq|<tr>|;
+     print qq|<td>$ref->{department}</td>|;
+     print qq|<td>$ref->{accno}</td>|;
+     print qq|<td>$ref->{description}</td>|;
+     print qq|<td align=right>| . $form->format_amount(\%myconfig, $ref->{amount}*-1, 0) . qq|</td>|;
+     $totalexpenses += $ref->{amount}*-1;
+     print qq|</tr>|;
+  }
+  $sth->finish;
+
+  print qq|
+    <tr>
+      <th>$department->{description}</th>
+      <th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('COGS').qq|</th>
+      <th align=right>| . $form->format_amount(\%myconfig, $totalexpenses, 0) . qq|</th>
+    </tr>
+|;
+
+  print qq|
+  <tr>
+      <th>$department->{description}</th>
+      <th colspan=2 align=left>|.$locale->text('Income/(Loss)').qq|</th>
+      <th align=right>| . $form->format_amount(\%myconfig, $totalincome - $totalexpenses, 0) . qq|</th>
+  </tr>
+  </table>
+|;
+
+  }
+}
 
 
 #===================================
