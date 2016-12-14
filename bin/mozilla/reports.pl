@@ -1155,16 +1155,21 @@ $(document).ready(function(){
 </tr>
 $selectfrom
 <tr>
+    <th>&nbsp;</th>
+    <td><input name=l_csv type=checkbox class=checkbox value=1> |.$locale->text('CSV Export').qq|</td>
+</tr>
+<tr>
 <th>|.$locale->text('Include').qq|:</th>
 <td>|;
 
-   my $dbh = $form->dbconnect(\%myconfig);
    my $query;
    if ($form->{pivotby} eq 'project'){
       $query = qq|SELECT id, projectnumber, description FROM project ORDER BY 2|;
    } else {
       $query = qq|SELECT id, description FROM department ORDER BY 2|;
    }
+
+   my $dbh = $form->dbconnect(\%myconfig);
    my $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute || $form->dberror($query);
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
@@ -1173,7 +1178,6 @@ $selectfrom
 
 print qq|
 </td></tr>
-
 <tr><td>&nbsp;</td><td>
   <input type="button" class="check" value="|.$locale->text('check all').qq|" />
 </td></tr>
@@ -1352,6 +1356,40 @@ sub income_statement_by_project {
 
 #---------------
 sub income_statement_by_department {
+
+  my $dbh = $form->dbconnect(\%myconfig);
+
+  my $where = qq|c.category IN ('I', 'E')|;
+  my $ywhere = qq| 1 = 1 |;
+  if ($form->{datefrom}){
+    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
+    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
+  }
+  if ($form->{dateto}){
+    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
+    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
+  }
+  $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
+
+  if ($form->{l_csv}){
+    my $query = qq|
+        SELECT 
+            d.description department, 
+            c.accno, 
+            c.description, 
+            SUM(ac.amount) amount
+		FROM acc_trans ac
+		JOIN chart c ON (c.id = ac.chart_id)
+		JOIN dpt_trans dt ON (dt.trans_id = ac.trans_id)
+        JOIN department d ON (d.id = dt.department_id)
+        WHERE $where 
+		GROUP BY d.description, c.accno, c.description
+		ORDER BY d.description, c.accno
+    |;
+    export_to_csv($dbh, $query, "income_statement");
+	exit;
+   }
+
   $form->header;
   print qq|<body class="bill main2"><table width=100%><tr><td class=listtop>$form->{title}</td></tr></table><br/>|;
   print qq|<h2 align=center>|.$locale->text('Income Statement Departments').qq|</h2>|;
@@ -1386,18 +1424,6 @@ sub income_statement_by_department {
   $sth->finish;
   chop $is_query;
   chop $is_query;
-  my $where = qq|c.category IN ('I', 'E')|;
-  my $ywhere = qq| 1 = 1 |;
-  if ($form->{datefrom}){
-    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
-    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
-  }
-  if ($form->{dateto}){
-    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
-    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
-  }
-  $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
-
   $is_query .= qq| 
 		FROM acc_trans ac
 		JOIN chart c ON (c.id = ac.chart_id)
