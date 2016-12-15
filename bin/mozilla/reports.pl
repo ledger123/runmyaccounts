@@ -1154,18 +1154,10 @@ $(document).ready(function(){
   |.$locale->text('To').qq| <input name=dateto size=11 title='$myconfig{dateformat}'></td>
 </tr>
 $selectfrom
-|;
-
-   if ($form->{pivotby} ne 'project'){
-       print qq|
 <tr>
     <th>&nbsp;</th>
     <td><input name=l_csv type=checkbox class=checkbox value=1> |.$locale->text('CSV Export').qq|</td>
 </tr>
-|;
-   }
-
-   print qq|
 <tr>
 <th>|.$locale->text('Include').qq|:</th>
 <td>|;
@@ -1214,6 +1206,39 @@ sub generate_income_statement {
 
 #---------------
 sub income_statement_by_project {
+
+  my $dbh = $form->dbconnect(\%myconfig);
+
+  my $where = qq|c.category IN ('I', 'E')|;
+  my $ywhere = qq| 1 = 1 |;
+  if ($form->{datefrom}){
+    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
+    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
+  }
+  if ($form->{dateto}){
+    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
+    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
+  }
+  $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
+
+  if ($form->{l_csv}){
+    my $query = qq|
+        SELECT 
+            p.projectnumber, 
+            c.accno, 
+            c.description, 
+            SUM(ac.amount) amount
+		FROM acc_trans ac
+		JOIN chart c ON (c.id = ac.chart_id)
+        JOIN project p ON (p.id = ac.project_id)
+        WHERE $where 
+		GROUP BY p.projectnumber, c.accno, c.description
+		ORDER BY p.projectnumber, c.accno
+    |;
+    export_to_csv($dbh, $query, "income_statement");
+	exit;
+   }
+
   $form->header;
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
   print qq|<h4>INCOME STATEMENT</h4>|;
@@ -1236,17 +1261,6 @@ sub income_statement_by_project {
   $sth->finish;
   chop $is_query;
   chop $is_query;
-  my $where = qq|c.category IN ('I', 'E')|;
-  my $ywhere = qq| 1 = 1 |;
-  if ($form->{datefrom}){
-    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
-    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
-  }
-  if ($form->{dateto}){	
-    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
-    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
-  }
-  $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
 
   $is_query .= qq| 
 		FROM acc_trans ac
