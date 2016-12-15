@@ -345,6 +345,7 @@ $self{subs} = {
   'bldcsv'                      => 'bldcsv',
   'business_header'             => 'business_header',
   'clear_locks'                 => 'clear_locks',
+  'click_here_to_delete_bank_rows' => 'click_here_to_delete_bank_rows',
   'company_logo'                => 'company_logo',
   'config'                      => 'config',
   'continue'                    => 'continue',
