@@ -2747,8 +2747,9 @@ sub audit_control {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Activate Audit trail').qq|</th>
-	  <td><input name=audittrail class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
+	  <td><input name=audittrailview class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
 	</tr>
+	<input name=audittrail type=hidden value="1">
 	<!-- <tr>
 	  <th align=right>|.$locale->text('Remove Audit trail up to').qq|</th>
 	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" disabled="disabled"></td>
