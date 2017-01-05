@@ -8,6 +8,7 @@ use SL::CT;
 use SL::RP;
 use SL::AA;
 use SL::IS;
+use SL::IC;
 use Data::Dumper;
 use XML::Simple;
 use DBIx::Simple;
@@ -42,6 +43,15 @@ get '/' => sub {
     $c->render('index');
 };
 
+
+
+#-----------------------
+#
+# 1. Customers
+#
+# ----------------------
+
+# html form processing
 any '/customer' => sub {
     my $c = shift;
     my $params = $c->req->params->to_hash;
@@ -67,10 +77,15 @@ any '/customer' => sub {
 };
 
 
+# list of customers in xml, json or html
 get '/customers' => sub {
    my $c = shift;
+   my $params = $c->req->params->to_hash;
    my $form = new Form;
+
    $form->{db} = 'customer';
+   $form->{id} = $params->{id};
+
    for (qw(name customernumber address contact)) { $form->{"l_$_"} = 'Y' }
    CT->search($c->slconfig, $form);
 
@@ -82,7 +97,7 @@ get '/customers' => sub {
    }
 };
 
-
+# add customers from xml or json
 post '/customers' => sub {
     my $c = shift;
     my $form = new Form;
@@ -104,20 +119,208 @@ post '/customers' => sub {
     } else {
         $c->render(text => 'Invalid content type'); 
     }
+
     @keys = keys $data->{customer};
     for (@keys) { $form->{$_} = $data->{customer}->{$_} if $data->{customer}->{$_} }
 
     if ($form->{id}){
-        # if it existing customer and we are updating then find correct contactid and addressid
+        #if it existing customer and we are updating then find correct contactid and addressid
         $form->{contactid} = $c->dbs->query('SELECT id FROM contact WHERE trans_id = ?', $form->{id})->list;
         $form->{addressid} = $c->dbs->query('SELECT id FROM address WHERE trans_id = ?', $form->{id})->list;
     }
 
     CT->save($c->slconfig, $form);
     $c->render(text => "Customer added successfully posted as $content_type ...\n");
+    #$c->render( 'dumper', v => $data );
 };
 
 
+
+
+#-----------------------
+#
+# 2. Items
+#
+# ----------------------
+
+# items list in json, xml or json
+get '/items' => sub {
+   my $c = shift;
+   my $params = $c->req->params->to_hash;
+   my $form = new Form;
+   $form->{itemstatus} = 'active';
+   $form->{id} = $params->{id};
+
+   IC->all_parts($c->slconfig, $form);
+   if ($c->accepts('', 'json')){
+        $c->render(json => $form->{parts});
+   } else {
+        $c->render('items', form => $form);
+   }
+};
+
+# add item from json or xml
+post '/items' => sub {
+    my $c = shift;
+    my $form = new Form;
+
+    my $content_type = $c->req->headers->content_type;
+
+    my $data = {};
+    my $xmldata;
+    my @keys;
+
+    if ($content_type eq 'application/json'){
+        $data = $c->req->json;
+    } elsif ($content_type eq 'application/xml'){
+        $xmldata = $c->req->body;
+        my $xml = new XML::Simple;
+        $data = $xml->XMLin($xmldata);
+    } else {
+        $c->render(text => 'Invalid content type'); 
+    }
+    @keys = keys $data->{item};
+    for (@keys) { $form->{$_} = $data->{item}->{$_} if $data->{item}->{$_} }
+
+    IC->save($c->slconfig, $form);
+    $c->render(text => "Item successfully posted as $content_type ...\n");
+    #$c->render( 'dumper', v => $data );
+};
+
+
+#-----------------------
+#
+# 3. AR Invoices
+#
+# ----------------------
+
+# ar invoices list in json, xml or json
+get '/arinvoices' => sub {
+   my $c = shift;
+   my $params = $c->req->params->to_hash;
+   my $form = new Form;
+   $form->{id} = $params->{id};
+
+   my $where = " 1 = 1";
+   $where .= " AND ar.id = $form->{id}" if $form->{id};
+
+   $form->{db} = 'customer';
+   $form->{ARAP} = 'ar';
+
+   @{ $form->{transactions} } = $c->dbs->query(qq~
+        SELECT ar.id, ar.invnumber, c.name, ar.transdate, ar.amount, ar.paid, ar.invoice
+        FROM ar
+        JOIN customer c ON (c.id = ar.customer_id)
+        WHERE $where
+        ORDER BY invnumber
+   ~)->hashes;
+   if ($c->accepts('', 'json')){
+        $c->render(json => $form->{transactions});
+   } else {
+        $c->render('arinvoices', form => $form, slconfig => $c->slconfig );
+   }
+};
+
+
+# add ar invoice from json or xml
+post '/arinvoices' => sub {
+    my $c = shift;
+    my $form = new Form;
+
+    my $content_type = $c->req->headers->content_type;
+
+    my $data = {};
+    my $xmldata;
+    my @keys;
+
+    if ($content_type eq 'application/json'){
+        $data = $c->req->json;
+    } elsif ($content_type eq 'application/xml'){
+        $xmldata = $c->req->body;
+        my $xml = new XML::Simple;
+        $data = $xml->XMLin($xmldata);
+    } else {
+        $c->render(text => 'Invalid content type'); 
+    }
+    @keys = keys $data->{item};
+    for (@keys) { $form->{$_} = $data->{item}->{$_} if $data->{item}->{$_} }
+
+    IC->save($c->slconfig, $form);
+    $c->render(text => "Item successfully posted as $content_type ...\n");
+    #$c->render( 'dumper', v => $data );
+};
+
+
+#-----------------------
+#
+# 4. Sales Orders
+#
+# ----------------------
+
+# ar invoices list in json, xml or json
+get '/salesorders' => sub {
+   my $c = shift;
+   my $params = $c->req->params->to_hash;
+   my $form = new Form;
+   $form->{id} = $params->{id};
+
+   my $where = " 1 = 1";
+   $where .= " AND oe.id = $form->{id}" if $form->{id};
+
+   $form->{db} = 'customer';
+   $form->{ARAP} = 'ar';
+
+   @{ $form->{transactions} } = $c->dbs->query(qq~
+        SELECT oe.id, oe.ordnumber, c.name, oe.transdate, oe.amount
+        FROM oe
+        JOIN customer c ON (c.id = oe.customer_id)
+        WHERE $where
+        ORDER BY oe.ordnumber
+   ~)->hashes;
+   if ($c->accepts('', 'json')){
+        $c->render(json => $form->{transactions});
+   } else {
+        $c->render('salesorders', form => $form, slconfig => $c->slconfig );
+   }
+};
+
+
+# add ar invoice from json or xml
+post '/salesorders' => sub {
+    my $c = shift;
+    my $form = new Form;
+
+    my $content_type = $c->req->headers->content_type;
+
+    my $data = {};
+    my $xmldata;
+    my @keys;
+
+    if ($content_type eq 'application/json'){
+        $data = $c->req->json;
+    } elsif ($content_type eq 'application/xml'){
+        $xmldata = $c->req->body;
+        my $xml = new XML::Simple;
+        $data = $xml->XMLin($xmldata);
+    } else {
+        $c->render(text => 'Invalid content type'); 
+    }
+    @keys = keys $data->{item};
+    for (@keys) { $form->{$_} = $data->{item}->{$_} if $data->{item}->{$_} }
+
+    IC->save($c->slconfig, $form);
+    $c->render(text => "Item successfully posted as $content_type ...\n");
+    #$c->render( 'dumper', v => $data );
+};
+
+
+
+
+#-----------------------
+#
+# 9. OTHERS
+#
+# ----------------------
 any '/jsontest' => sub {
     my $c = shift;
     my $form = new Form;
@@ -312,23 +515,6 @@ any '/printinvoice' => sub {
     $c->render('printinvoice', form => $form, slconfig => $c->slconfig);
 };
 
-
-any '/artrans' => sub {
-    my $c = shift;
-    my $form = new Form;
-    $form->{db} = 'customer';
-    $form->{ARAP} = 'ar';
-    @{ $form->{transactions} } = $c->dbs->query('
-        SELECT ar.id, ar.invnumber, c.name, ar.transdate, ar.amount, ar.paid, ar.invoice
-        FROM ar
-        JOIN customer c ON (c.id = ar.customer_id)
-        ORDER BY invnumber
-    ')->hashes;
-    $c->render('artrans', form => $form, slconfig => $c->slconfig );
-};
-
-
-
 app->start;
 
 __DATA__
@@ -404,6 +590,323 @@ __DATA__
 </div>
 
 
+
+@@ customers.html.ep
+<!-- 
+-
+-
+-       CUSTOMERS
+-
+-
+-->
+% layout 'default';
+% title 'Customers';
+%= include 'menu';
+<li><a href="/customers.xml">customers.xml</a></li>
+<li><a href="/customers.json">customers.json</a></li>
+<li><a href="/customers.json?id=10118">customers.json?id=10118</a></li>
+<h3>Adding a customer with JSON from command line</h3>
+<pre>curl -X POST -H "Content-Type: application/json" -d @customer.json http://localhost:3000/customers</pre>
+<h3>Adding a customer with XML from command line</h3>
+<pre>curl -X POST -H "Content-Type: applicaiton/xml" -d @customer.xml http://localhost:3000/customers</pre>
+<h1>List of customers</h1>
+<table class="table table-striped">
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Number</th>
+    <th>Address</th>
+    <th>Contact</th>
+</tr>
+</thead>
+<tbody id="deptrows">
+    %= include 'customerrow'
+</tbody>
+</table>
+<br/>
+
+
+@@ customerrow.html.ep
+% for my $row (@{$form->{CT}}) {
+<tr>
+  <td><a href="/customer?id=<%=$row->{id}%>"><%= $row->{id} %></a></td>
+  <td><%= $row->{customernumber} %></td>
+  <td><%= $row->{name} %></td>
+  <td><%= $row->{address} %></td>
+  <td><%= $row->{contact} %></td>
+</tr>
+% }
+
+
+
+@@ customer.html.ep
+% layout 'default';
+% title 'Add / Change Customer';
+%= include 'menu'
+% if ($errormsg){
+<div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  <%= $errormsg %>
+</div>
+% }
+%= include 'customerform'
+
+
+
+@@ customerform.html.ep
+<h2>Customer Form</h2>
+<form method=post action="/customer" class="form-horizontal">
+<div class="form-group">
+    <label for="customernumber" class="control-label col-xs-2">Customer Number</label>
+    <div class="col-xs-10">
+        <input type=text id="customernumber" class="form-control" name=customernumber value="<%== $form->{customernumber} %>">
+    </div>
+</div>
+<div class="form-group">
+    <label for="name" class="control-label col-xs-2">Name</label>
+    <div class="col-xs-10">
+        <input type=text id="name" class="form-control" name=name value="<%== $form->{name} %>">
+    </div>
+</div>
+<div class="form-group">
+    <label for="firstname" class="control-label col-xs-2">First Name</label>
+    <div class="col-xs-10">
+        <input type=text id="firstname" class="form-control" name=firstname value="<%== $form->{firstname} %>">
+    </div>
+</div>
+<div class="form-group">
+    <label for="lastname" class="control-label col-xs-2">Last Name</label>
+    <div class="col-xs-10">
+        <input type=text id="lastname" class="form-control" name=lastname value="<%== $form->{lastname} %>">
+    </div>
+</div>
+
+
+<input type=submit class="btn btn-primary" name=action value="Save">
+<input type=hidden name=id value="<%== $form->{id} %>">
+<input type=hidden name=addressid value="<%== $form->{addressid} %>">
+<input type=hidden name=contactid value="<%== $form->{contactid} %>">
+</form>
+
+
+@@ customers.xml.ep
+<customers>
+% for my $row (@{$form->{CT}}) {
+<customer>
+% for my $k (keys ($row)){
+<<%= $k %>><%= $row->{$k} %></<%= $k %>>
+% }
+</customer>
+% }
+</customers>
+
+
+<!-- 
+-
+-
+-       ITEMS
+-
+-
+-->
+@@ items.html.ep
+% layout 'default';
+% title 'Goods & Services';
+%= include 'menu';
+
+<li><a href="/items.xml">items.xml</a></li>
+<li><a href="/items.json">items.json</a></li>
+<li><a href="/items.json?id=10323">items.json?id=10323</a></li>
+<h3>Adding an item with JSON from command line</h3>
+<pre>curl -X POST -H "Content-Type: application/json" -d @item.json http://localhost:3000/items</pre>
+<h3>Adding an item with XML from command line</h3>
+<pre>curl -X POST -H "Content-Type: applicaiton/xml" -d @item.xml http://localhost:3000/items</pre>
+
+<li><a href="/item.xml">Add Item</a></li>
+<li><a href="/customers.json">All Items</a></li>
+<h1>List of items</h1>
+<table class="table table-striped">
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Number</th>
+    <th>Description</th>
+    <th>Unit</th>
+    <th>Onhand</th>
+</tr>
+</thead>
+<tbody id="deptrows">
+    %= include 'itemsrow'
+</tbody>
+</table>
+<br/>
+
+@@ itemsrow.html.ep
+% for my $row (@{$form->{parts}}){
+<tr>
+  <td><a href="/customer?id=<%=$row->{id}%>"><%= $row->{id} %></a></td>
+  <td><%= $row->{partnumber} %></td>
+  <td><%= $row->{description} %></td>
+  <td><%= $row->{unit} %></td>
+  <td><%= $row->{onhand} %></td>
+</tr>
+% }
+
+
+@@ items.xml.ep
+<items>
+% for my $row (@{$form->{parts}}) {
+<item>
+% for my $k (keys ($row)){
+<<%= $k %>><%= $row->{$k} %></<%= $k %>>
+% }
+</item>
+% }
+</items>
+
+
+<!-- 
+-
+-
+-       AR INVOICES
+-
+-
+-->
+@@ printinvoice.html.ep
+% layout 'default';
+% title 'AR Invoices';
+%= include 'menu';
+<h2>Invoice printed to queue</h2>
+<a href="<%= $form->{filename} %>" target="_blank">View invoice</a>
+
+
+@@ arinvoices.html.ep
+% layout 'default';
+% title 'AR Invoices';
+%= include 'menu';
+
+<li><a href="/arinvoices.xml">arinvoices.xml</a></li>
+<li><a href="/arinvoices.json">arinvoices.json</a></li>
+<li><a href="/arinvoices.json?id=10305">arinvoices.json?id=10305</a></li>
+
+<h1>AR Invoices</h1>
+<table class="table table-striped">
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Invoice</th>
+    <th>Date</th>
+    <th>Customer</th>
+    <th>Amount</th>
+    <th>Paid</th>
+    <th>&nbsp;</th>
+</tr>
+</thead>
+<tbody id="arinvoices">
+%= include 'arinvoicesrow';
+</tbody>
+</table>
+<br/>
+<pre>
+
+
+
+
+@@ arinvoicesrow.html.ep
+<tr>
+<td colspan=6>
+<pre>
+%= dumper(time());
+</pre>
+</td>
+</tr>
+</tr>
+% for my $row ( @{ $form->{transactions} } ) {
+<tr>
+  <td><%= $row->{id} %></td>
+  <td><%= $row->{invnumber} %></td>
+  <td><%= $row->{transdate} %></td>
+  <td><%= $row->{name} %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{amount}, 2) %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{paid}, 2) %></td>
+% if ($row->{invoice}){
+  <td><a href="<%= url_for('printinvoice')->to_abs %>?id=<%= $row->{id} %>">Print</a></td>
+% } else {
+  <td>&nbsp;</td>
+% }
+</tr>
+% }
+
+
+<!-- 
+-
+-
+-       SALES ORDERS
+-
+-
+-->
+@@ salesorders.html.ep
+% layout 'default';
+% title 'Sales Orders';
+%= include 'menu';
+
+<li><a href="/salesorders.xml">salesorders.xml</a></li>
+<li><a href="/salesorders.json">salesorders.json</a></li>
+<li><a href="/salesorders.json?id=10214">salesorders.json?id=10214</a></li>
+
+<h1>Sales Orders</h1>
+<table class="table table-striped">
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Order</th>
+    <th>Date</th>
+    <th>Customer</th>
+    <th>Amount</th>
+    <th>&nbsp;</th>
+</tr>
+</thead>
+<tbody id="salesorders">
+%= include 'salesordersrow';
+</tbody>
+</table>
+<br/>
+<pre>
+
+
+
+
+@@ salesordersrow.html.ep
+<tr>
+<td colspan=6>
+<pre>
+%= dumper(time());
+</pre>
+</td>
+</tr>
+</tr>
+% for my $row ( @{ $form->{transactions} } ) {
+<tr>
+  <td><%= $row->{id} %></td>
+  <td><%= $row->{ordnumber} %></td>
+  <td><%= $row->{transdate} %></td>
+  <td><%= $row->{name} %></td>
+  <td align="right"><%= $form->format_amount($slconfig, $row->{amount}, 2) %></td>
+  <td><a href="<%= url_for('printinvoice')->to_abs %>?id=<%= $row->{id} %>">Print</a></td>
+  <td>&nbsp;</td>
+</tr>
+% }
+
+
+
+<!-- 
+-
+-
+-       TRIAL
+-
+-
+-->
 @@ trialform.html.ep
 <div class="row">
     <p>NOTE: This form uses websocket protocol to update trial balance below without refreshing page.
@@ -501,163 +1004,11 @@ __DATA__
 % }
 
 
-@@ printinvoice.html.ep
-% layout 'default';
-% title 'AR Transactions';
-%= include 'menu';
-<h2>Invoice printed to queue</h2>
-<a href="<%= $form->{filename} %>" target="_blank">View invoice</a>
-
-@@ artrans.html.ep
-% layout 'default';
-% title 'AR Transactions';
-%= include 'menu';
-
-<h1>AR Transactions</h1>
-
-<table class="table table-striped">
-<thead>
-<tr>
-    <th>Invoice</th>
-    <th>Date</th>
-    <th>Customer</th>
-    <th>Amount</th>
-    <th>Paid</th>
-    <th>&nbsp;</th>
-</tr>
-</thead>
-<tbody id="artrans">
-%= include 'artransrow';
-</tbody>
-</table>
-<br/>
-<pre>
-
-@@ artransrow.html.ep
-<tr>
-<td colspan=6>
-<pre>
-%= dumper(time());
-</pre>
-</td>
-</tr>
-</tr>
-% for my $row ( @{ $form->{transactions} } ) {
-<tr>
-  <td><%= $row->{invnumber} %></td>
-  <td><%= $row->{transdate} %></td>
-  <td><%= $row->{name} %></td>
-  <td align="right"><%= $form->format_amount($slconfig, $row->{amount}, 2) %></td>
-  <td align="right"><%= $form->format_amount($slconfig, $row->{paid}, 2) %></td>
-% if ($row->{invoice}){
-  <td><a href="<%= url_for('printinvoice')->to_abs %>?id=<%= $row->{id} %>">Print</a></td>
-% } else {
-  <td>&nbsp;</td>
-% }
-</tr>
-% }
-
-
-@@ customers.xml.ep
-<customers>
-% for my $row (@{$form->{CT}}) {
-<customer>
-% for my $k (keys ($row)){
-<<%= $k %>><%= $row->{$k} %></<%= $k %>>
-% }
-</customer>
-% }
-</customers>
-
-
-@@ customers.html.ep
-% layout 'default';
-% title 'Customers';
-%= include 'menu';
-<h3>Adding a customer with JSON from command line</h3>
-<pre>curl -X POST -H "Content-Type: application/json" -d @customer.json http://localhost:3000/customers</pre>
-<h3>Adding a customer with XML from command line</h3>
-<pre>curl -X POST -H "Content-Type: applicaiton/xml" -d @customer.xml http://localhost:3000/customers</pre>
-<h1>List of customers</h1>
-<table class="table table-striped">
-<thead>
-<tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Number</th>
-    <th>Address</th>
-    <th>Contact</th>
-</tr>
-</thead>
-<tbody id="deptrows">
-    %= include 'customerrow'
-</tbody>
-</table>
-<br/>
-
-
-@@ customerrow.html.ep
-% for my $row (@{$form->{CT}}) {
-<tr>
-  <td><a href="/customer?id=<%=$row->{id}%>"><%= $row->{id} %></a></td>
-  <td><%= $row->{customernumber} %></td>
-  <td><%= $row->{name} %></td>
-  <td><%= $row->{address} %></td>
-  <td><%= $row->{contact} %></td>
-</tr>
-% }
 
 
 
-@@ customer.html.ep
-% layout 'default';
-% title 'Add / Change Customer';
-%= include 'menu'
-% if ($errormsg){
-<div class="alert alert-danger" role="alert">
-  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-  <span class="sr-only">Error:</span>
-  <%= $errormsg %>
-</div>
-% }
-%= include 'customerform'
 
 
-
-@@ customerform.html.ep
-<h2>Customer Form</h2>
-<form method=post action="/customer" class="form-horizontal">
-<div class="form-group">
-    <label for="customernumber" class="control-label col-xs-2">Customer Number</label>
-    <div class="col-xs-10">
-        <input type=text id="customernumber" class="form-control" name=customernumber value="<%== $form->{customernumber} %>">
-    </div>
-</div>
-<div class="form-group">
-    <label for="name" class="control-label col-xs-2">Name</label>
-    <div class="col-xs-10">
-        <input type=text id="name" class="form-control" name=name value="<%== $form->{name} %>">
-    </div>
-</div>
-<div class="form-group">
-    <label for="firstname" class="control-label col-xs-2">First Name</label>
-    <div class="col-xs-10">
-        <input type=text id="firstname" class="form-control" name=firstname value="<%== $form->{firstname} %>">
-    </div>
-</div>
-<div class="form-group">
-    <label for="lastname" class="control-label col-xs-2">Last Name</label>
-    <div class="col-xs-10">
-        <input type=text id="lastname" class="form-control" name=lastname value="<%== $form->{lastname} %>">
-    </div>
-</div>
-
-
-<input type=submit class="btn btn-primary" name=action value="Save">
-<input type=hidden name=id value="<%== $form->{id} %>">
-<input type=hidden name=addressid value="<%== $form->{addressid} %>">
-<input type=hidden name=contactid value="<%== $form->{contactid} %>">
-</form>
 
 
 
@@ -665,6 +1016,10 @@ __DATA__
 % layout 'default';
 % title 'Departments';
 %= include 'menu'
+
+<li><a href="/departments.xml">Departments XML</a></li>
+<li><a href="/departments.json">Departments JSON</a></li>
+
 %= include 'departmentform2'
 <h1>List of departments</h1>
 <table class="table table-striped">
@@ -787,29 +1142,21 @@ __DATA__
 </div>
 
 
-@@ department.json.ep
-{
-"id":"<%= $form->{id} %>",
-"description":"<%= $form->{description} %>",
-}
-
-
 @@ menu.html.ep
 <div class="row">
 <ul class="list-inline">
     <li><a href="/">Home</a></li>
-    <li><a href="/customers">Customers HTML</a></li>
-    <li><a href="/customers.xml">Customers XML</a></li>
-    <li><a href="/customers.json">Customers JSON</a></li>
-    <li><a href="/departments">Departments</a></li>
-    <li><a href="/departments.xml">Departments XML</a></li>
-    <li><a href="/departments.json">Departments JSON</a></li>
     <li><a href="/customers">Customers</a></li>
-    <li><a href="/artrans">AR Transactions</a></li>
-    <li><a href="/trial">Trial Balance</a></li>
+    <li><a href="/items">Items</a></li>
+    <li><a href="/arinvoices">AR Invoices</a></li>
+    <li><a href="/salesorders">Sales Orders</a></li>
+    <li><a href="/departments">Departments</a></li>
+    <li><a href="/trial">Trial</a></li>
 </ul>
 </div>
 
+@@ dumper.html.ep
+%= dumper($v);
 
 @@ layouts/default.html.ep
 <!DOCTYPE html>
@@ -836,4 +1183,5 @@ __DATA__
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 </html>
+
 
