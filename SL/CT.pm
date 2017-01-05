@@ -610,6 +610,9 @@ sub search {
     $where .= " AND lower(e.name) LIKE '$var'";
   }
  
+  $form->{id} *= 1;
+  $where .= " AND c.id = $form->{id}" if $form->{id};
+
   foreach $item (@a) {
     if ($form->{$item} ne "") {
       $var = $form->like(lc $form->{$item});

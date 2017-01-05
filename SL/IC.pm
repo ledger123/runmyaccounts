@@ -911,6 +911,9 @@ sub all_parts {
   my $var;
   my $ref;
   
+  $form->{id} *= 1;
+  $where .= " AND p.id = $form->{id}" if $form->{id};
+
   for (qw(partnumber drawing microfiche toolnumber barcode)) {
     if ($form->{$_} ne "") {
       $var = $form->like(lc $form->{$_});
