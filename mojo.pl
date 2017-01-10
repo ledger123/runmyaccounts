@@ -199,10 +199,12 @@ get '/arinvoices' => sub {
    my $c = shift;
    my $params = $c->req->params->to_hash;
    my $form = new Form;
-   $form->{id} = $params->{id};
+
+   for (qw(id customer_id)) { $form->{$_} = $params->{$_}*1 }
 
    my $where = " 1 = 1";
    $where .= " AND ar.id = $form->{id}" if $form->{id};
+   $where .= " AND ar.customer_id = $form->{customer_id}" if $form->{customer_id};
 
    $form->{db} = 'customer';
    $form->{ARAP} = 'ar';
@@ -257,21 +259,26 @@ post '/arinvoices' => sub {
 #
 # ----------------------
 
-# ar invoices list in json, xml or json
+# sales orders list in json, xml or json
 get '/salesorders' => sub {
    my $c = shift;
    my $params = $c->req->params->to_hash;
    my $form = new Form;
    $form->{id} = $params->{id};
+   $form->{customer_id} = $params->{customer_id};
 
    my $where = " 1 = 1";
+   $form->{id} *= 1;
+   $form->{customer_id} *= 1;
+
    $where .= " AND oe.id = $form->{id}" if $form->{id};
+   $where .= " AND oe.customer_id = $form->{customer_id}" if $form->{customer_id};
 
    $form->{db} = 'customer';
    $form->{ARAP} = 'ar';
 
    @{ $form->{transactions} } = $c->dbs->query(qq~
-        SELECT oe.id, oe.ordnumber, c.name, oe.transdate, oe.amount
+        SELECT oe.id, oe.ordnumber, oe.customer_id, c.name, oe.transdate, oe.amount
         FROM oe
         JOIN customer c ON (c.id = oe.customer_id)
         WHERE $where
@@ -862,6 +869,7 @@ __DATA__
     <th>ID</th>
     <th>Order</th>
     <th>Date</th>
+    <th>Customer ID</th>
     <th>Customer</th>
     <th>Amount</th>
     <th>&nbsp;</th>
@@ -891,6 +899,7 @@ __DATA__
   <td><%= $row->{id} %></td>
   <td><%= $row->{ordnumber} %></td>
   <td><%= $row->{transdate} %></td>
+  <td><%= $row->{customer_id} %></td>
   <td><%= $row->{name} %></td>
   <td align="right"><%= $form->format_amount($slconfig, $row->{amount}, 2) %></td>
   <td><a href="<%= url_for('printinvoice')->to_abs %>?id=<%= $row->{id} %>">Print</a></td>
