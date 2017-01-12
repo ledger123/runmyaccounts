@@ -9,6 +9,7 @@ use SL::RP;
 use SL::AA;
 use SL::IS;
 use SL::IC;
+use SL::OE;
 use Data::Dumper;
 use XML::Simple;
 use DBIx::Simple;
@@ -97,6 +98,7 @@ get '/customers' => sub {
    }
 };
 
+
 # add customers from xml or json
 post '/customers' => sub {
     my $c = shift;
@@ -129,9 +131,9 @@ post '/customers' => sub {
         $form->{addressid} = $c->dbs->query('SELECT id FROM address WHERE trans_id = ?', $form->{id})->list;
     }
 
-    CT->save($c->slconfig, $form);
-    $c->render(text => "Customer added successfully posted as $content_type ...\n");
-    #$c->render( 'dumper', v => $data );
+    #CT->save($c->slconfig, $form);
+    #$c->render(text => "Customer added successfully posted as $content_type ...\n");
+    $c->render( 'dumper', v => $form );
 };
 
 
@@ -210,7 +212,7 @@ get '/arinvoices' => sub {
    $form->{ARAP} = 'ar';
 
    @{ $form->{transactions} } = $c->dbs->query(qq~
-        SELECT ar.id, ar.invnumber, c.name, ar.transdate, ar.amount, ar.paid, ar.invoice
+        SELECT ar.id, ar.invnumber, ar.customer_id, c.name, ar.transdate, ar.amount, ar.paid, ar.invoice
         FROM ar
         JOIN customer c ON (c.id = ar.customer_id)
         WHERE $where
@@ -291,7 +293,7 @@ get '/salesorders' => sub {
    }
 };
 
-
+ 
 # add ar invoice from json or xml
 post '/salesorders' => sub {
     my $c = shift;
@@ -312,12 +314,47 @@ post '/salesorders' => sub {
     } else {
         $c->render(text => 'Invalid content type'); 
     }
-    @keys = keys $data->{item};
-    for (@keys) { $form->{$_} = $data->{item}->{$_} if $data->{item}->{$_} }
+    @keys = keys $data->{salesorder};
+    for (@keys) { $form->{$_} = $data->{salesorder}->{$_} if $data->{salesorder}->{$_} }
+    for (qw(id customer_id rowcount)){ $form->{$_} *= 1 }
 
-    IC->save($c->slconfig, $form);
-    $c->render(text => "Item successfully posted as $content_type ...\n");
-    #$c->render( 'dumper', v => $data );
+    $form->{type} = 'sales_order';
+    $form->{vc} = 'customer';
+    $form->{defaultcurrency} = 'GBP';
+    $form->{form_name} = 'sales_order';
+    $form->{warehouse} = 'W1--10134';
+    $form->{department} = 'HARDWARE--10136';
+
+    my @taxaccounts = $c->dbs->query('
+        SELECT c.id, c.accno, t.rate
+        FROM chart c
+        JOIN tax t ON (t.chart_id = c.id)
+        WHERE id IN (SELECT chart_id FROM customertax WHERE customer_id = ?)'
+        , $form->{customer_id}
+    )->hashes;
+
+    for (@taxaccounts) { 
+        $form->{taxaccounts} .= "$_->{accno} ";
+        $form->{"$_->{accno}_rate"} = $_->{rate};
+    }
+    chop $form->{taxaccounts};
+
+    if ($form->{rowcount}){
+        for my $i (1 .. $form->{rowcount} - 1){
+            my @taxaccounts = $c->dbs->query('
+                SELECT c.accno 
+                FROM chart c 
+                WHERE id IN (SELECT chart_id FROM partstax WHERE parts_id = ?)', 
+                $form->{"id_$i"}
+            )->hashes;
+            for (@taxaccounts) { $form->{"taxaccounts_$i"} .= "$_->{accno} "}
+            chop $form->{"taxaccounts_$i"};
+        }
+    }
+
+    OE->save($c->slconfig, $form);
+    $c->render(text => "Order saved ...\n");
+    #$c->render( 'dumper', v => $form );
 };
 
 
@@ -804,6 +841,7 @@ __DATA__
     <th>ID</th>
     <th>Invoice</th>
     <th>Date</th>
+    <th>Customer ID</th>
     <th>Customer</th>
     <th>Amount</th>
     <th>Paid</th>
@@ -834,6 +872,7 @@ __DATA__
   <td><%= $row->{id} %></td>
   <td><%= $row->{invnumber} %></td>
   <td><%= $row->{transdate} %></td>
+  <td><%= $row->{customer_id} %></td>
   <td><%= $row->{name} %></td>
   <td align="right"><%= $form->format_amount($slconfig, $row->{amount}, 2) %></td>
   <td align="right"><%= $form->format_amount($slconfig, $row->{paid}, 2) %></td>
@@ -861,6 +900,11 @@ __DATA__
 <li><a href="/salesorders.xml">salesorders.xml</a></li>
 <li><a href="/salesorders.json">salesorders.json</a></li>
 <li><a href="/salesorders.json?id=10214">salesorders.json?id=10214</a></li>
+
+<h3>Adding a sales order with JSON from command line</h3>
+<pre>curl -X POST -H "Content-Type: application/json" -d @salesorder.json http://localhost:3000/salesorders</pre>
+<h3>Adding a sales order with XML from command line</h3>
+<pre>curl -X POST -H "Content-Type: applicaiton/xml" -d @salesorder.xml http://localhost:3000/salesorders</pre>
 
 <h1>Sales Orders</h1>
 <table class="table table-striped">
