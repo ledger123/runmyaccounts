@@ -945,15 +945,11 @@ sub form_footer {
         use DBIx::Simple;
         my $dbh = $form->dbconnect(\%myconfig);
         my $dbs = DBIx::Simple->connect($dbh);
+
         $query = qq|
-                SELECT 
-                    ac.transdate, c.accno, c.description, 
-                    ac.amount, ac.source, 
-                    ac.fx_transaction
-                FROM acc_trans ac
-                JOIN chart c ON (c.id = ac.chart_id)
-                WHERE ac.trans_id = ?
-                ORDER BY ac.transdate
+                SELECT amount, paid, fxamount, fxpaid
+                FROM ar
+                WHERE id = ?
         |;
 
         my $table = $dbs->query($query, $form->{id})->xto(
@@ -961,10 +957,34 @@ sub form_footer {
             th => { class => ['listheading'] },
         );
         $table->modify(td => {align => 'right'}, 'amount');
+        $table->modify(td => {align => 'right'}, 'paid');
+        $table->modify(td => {align => 'right'}, 'fxamount');
+        $table->modify(td => {align => 'right'}, 'fxpaid');
+        print $table->output;
+
+        $query = qq|
+                SELECT 
+                    ac.transdate, c.accno, c.description, 
+                    case when ac.amount < 0 then 0 - ac.amount else 0 end debit,
+                    case when ac.amount > 0 then ac.amount else 0 end credit,
+                    ac.source, ac.memo,
+                    ac.fx_transaction
+                FROM acc_trans ac
+                JOIN chart c ON (c.id = ac.chart_id)
+                WHERE ac.trans_id = ?
+                ORDER BY ac.transdate, c.accno, ac.amount
+        |;
+
+        my $table = $dbs->query($query, $form->{id})->xto(
+            tr => { class => [ 'listrow0', 'listrow1' ] },
+            th => { class => ['listheading'] },
+        );
+        $table->modify(td => {align => 'right'}, 'debit');
+        $table->modify(td => {align => 'right'}, 'credit');
         #$table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
         $table->set_group( 'transdate', 1 );
-        $table->calc_subtotals( [qw(amount)] );
-        $table->calc_totals( [qw(amount)] );
+        $table->calc_subtotals( [qw(debit credit)] );
+        $table->calc_totals( [qw(debit credit)] );
         print $table->output;
     }
   
