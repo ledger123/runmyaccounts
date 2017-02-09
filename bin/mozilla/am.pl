@@ -2429,6 +2429,10 @@ sub defaults {
 	  <th align=right nowrap>|.$locale->text('Vendor Number').qq|</th>
 	  <td><input name=vendornumber size=40 value="$form->{vendornumber}"></td>
 	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Selected Account').qq|</th>
+	  <td><input name=selectedaccount size=15 value="$form->{selectedaccount}"></td>
+	</tr>
       </table>
     </td>
   </tr>
@@ -2747,8 +2751,9 @@ sub audit_control {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Activate Audit trail').qq|</th>
-	  <td><input name=audittrail class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
+	  <td><input name=audittrailview class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
 	</tr>
+	<input name=audittrail type=hidden value="1">
 	<!-- <tr>
 	  <th align=right>|.$locale->text('Remove Audit trail up to').qq|</th>
 	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" disabled="disabled"></td>

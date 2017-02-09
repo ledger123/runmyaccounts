@@ -137,6 +137,12 @@ sub chart_of_accounts {
 
 sub list {
 
+  if (!$form->{accno}){
+     my $dbh = $form->dbconnect(\%myconfig);
+     ($form->{accno}) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount' LIMIT 1");
+     ($form->{description}) = $dbh->selectrow_array("SELECT description FROM chart WHERE accno = '$form->{accno}'");
+  }
+
   $form->{title} = $locale->text('List Transactions');
   if ($form->{accounttype} eq 'gifi') {
     $form->{title} .= " - ".$locale->text('GIFI')." $form->{gifi_accno} - $form->{gifi_description}";
