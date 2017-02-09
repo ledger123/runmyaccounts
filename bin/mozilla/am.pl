@@ -2429,6 +2429,10 @@ sub defaults {
 	  <th align=right nowrap>|.$locale->text('Vendor Number').qq|</th>
 	  <td><input name=vendornumber size=40 value="$form->{vendornumber}"></td>
 	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Selected Account').qq|</th>
+	  <td><input name=selectedaccount size=15 value="$form->{selectedaccount}"></td>
+	</tr>
       </table>
     </td>
   </tr>
