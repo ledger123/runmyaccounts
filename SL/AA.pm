@@ -109,6 +109,7 @@ sub post_transaction {
   my $fxinvamount = 0;
   for (1 .. $form->{rowcount}) {
     $fxinvamount += $amount{fxamount}{$_} = $form->parse_amount($myconfig, $form->{"amount_$_"});
+    $form->{"linetaxamount_$_"} = $form->parse_amount($myconfig, $form->{"linetaxamount_$_"});
   }
 
   for (qw(taxincluded onhold)) { $form->{$_} *= 1 }
