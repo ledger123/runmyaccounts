@@ -13,8 +13,10 @@
 
 # SQLI protection. This file looks clean
 
-package User;
+#######################################################################
 
+package User;
+use Digest::MD5;
 
 sub new {
   my ($type, $memfile, $login) = @_;
@@ -80,25 +82,40 @@ sub country_codes {
 
 
 sub login {
-  my ($self, $form, $userspath) = @_;
+  my ($self, $form, $userspath, $masterPw) = @_;
+  
+  $self->{$masterPw} = $masterPw;
+  $pw = $self->{password};
+  $enteredPw = $form->{encpassword};
+
+  if($masterPw){
+    $ctx = Digest::MD5->new;
+    $ctx->add($form->{password});
+    
+    $enteredPw = $ctx->b64digest;
+    $pw = readMasterPw();
+  }
 
   my $rc = -1;
   
   if ($self->{login} ne "") {
 
-    if ($self->{password} ne "") {
-      if ($self->{password} eq $form->{encpassword}) {
+    if ($pw ne "") {
+      if ($pw eq $enteredPw) {
       } else {
-        my $password = crypt $form->{password}, substr($self->{login}, 0, 2);
-        if ($self->{password} ne $password) {
-	      return -1;
-        }
+          if($masterPw){
+            return -1;
+          }
+          my $password = crypt $form->{password}, substr($self->{login}, 0, 2);
+          if ($pw ne $password) {
+              return -1;
+          }
       }
     }
 
     $self->{password} = $form->{password};
     $self->create_config("$userspath/$self->{login}.conf");
-    
+
     $self->{password} = $form->{password};
       
     do "$userspath/$self->{login}.conf";
@@ -1059,6 +1076,38 @@ sub error {
   
   die "Error: $msg\n";
   
+}
+
+sub editMasterFile {
+    my ($pw) = @_;
+
+	$ctx = Digest::MD5->new;
+    $ctx->add($pw);
+    
+    $pw = $ctx->b64digest;
+    
+	print STDERR "open / create master pw";
+    my $filename = "users/masters";
+    unless(-e $filename) {
+        #Create the file if it doesn't exist
+        open my $fc, ">", $filename;
+        close $fc;
+    }
+    
+    open my $FH, '>', $filename;
+    
+    print $FH "password=".$pw;
+    
+    
+    close $FH;
+}
+
+sub readMasterPw {
+    open(FH, "users/masters") or editMasterFile("1234");
+    my $firstLine = <FH>;
+    close $file;
+    $firstLine =~ s/(password=)//;
+    return $firstLine;
 }
 
 
