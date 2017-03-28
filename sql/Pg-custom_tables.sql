@@ -140,3 +140,5 @@ CREATE TABLE dispatch (
 ALTER TABLE customer ADD dispatch_id INTEGER;
 ALTER TABLE vendor ADD dispatch_id INTEGER;
 
+ALTER TABLE invoicetax ADD amount float;
+

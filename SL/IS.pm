@@ -1111,8 +1111,8 @@ sub post_invoice {
 	my $taxamount = 0;
 	$taxamount = $linetotal * $form->{"${_}_rate"} if $form->{"${_}_rate"} != 0; 
         if ($taxamount != 0){
-	  my $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, taxamount)
-			VALUES ($form->{id}, $id, (SELECT id FROM chart WHERE accno=|.$dbh->quote($_).qq|), $taxamount)|;
+	  my $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, amount, taxamount)
+			VALUES ($form->{id}, $id, (SELECT id FROM chart WHERE accno=|.$dbh->quote($_).qq|), $linetotal,  $taxamount)|;
 	  $dbh->do($query) || $form->dberror($query);
 	}
       }
