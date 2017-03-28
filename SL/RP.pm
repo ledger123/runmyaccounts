@@ -1730,7 +1730,7 @@ sub reminder {
 	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
 	      current_date - a.duedate duedays,
 	      s.*,
-          bank.name bankname, bank.iban, bank.bic,
+          bank.name bankname, bank.iban, bank.bic bankbic,
           bank.dcn, bank.rvc, bank.membernumber,
           ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
           ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry

@@ -10,13 +10,14 @@ Datum: <%invdate%><%orddate%><%quodate%>\\
 \ifthenelse{\equal{<%ponumber%>}{}}{}{Ihre Bestell-Nr.: <%ponumber%>\\}
 \ifthenelse{\equal{<%customernumber%>}{}}{}{Kunden-Nr.: <%customernumber%>\\}
 \ifthenelse{\equal{<%businessnumber%>}{}}{}{MWST Nr.: <%businessnumber%>\\}
+\ifthenelse{\equal{<%customertaxnumber%>}{}}{}{Ihre MWST Nr.: <%customertaxnumber%>\\}
 
 \end{textblock*}
 
 \null\vspace{4.2cm}
 
 %Rechnungstitel
-\textbf{\ifthenelse{\equal{\DocType }{Offerte}}{<%quodescription%>}{\ifthenelse{\equal{\DocType }{Auftragsbest‰tigung}}{<%orddescription%>}{<%invdescription%>}}}
+\textbf{\ifthenelse{\equal{\DocType }{Offerte}}{<%quodescription%>}{\ifthenelse{\equal{\DocType }{Auftragsbest√§tigung}}{<%orddescription%>}{<%invdescription%>}}}
 \vspace{0.1cm}
 %}
 

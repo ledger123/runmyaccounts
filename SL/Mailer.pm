@@ -33,11 +33,6 @@ sub send {
   $boundary = "SL-$self->{version}-$boundary";
   
   $self->{charset} ||= "ISO-8859-1";
-  if ( $self->{bcc} ) {
-  	$self->{bcc} = $self->{bcc} . ",mailer\@runmyaccounts.com";
-  } else {
-  	$self->{bcc} = "mailer\@runmyaccounts.com";  
-  }
   
   if ( $self->{cc} && $self->{bcc} ) {
     $self->{bcc} = $self->{cc} . "," . $self->{bcc};

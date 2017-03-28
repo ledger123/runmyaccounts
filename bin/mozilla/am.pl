@@ -2264,6 +2264,30 @@ sub defaults {
 	  <th align=right>|.$locale->text('Address').qq|</th>
 	  <td><textarea name=address rows=3 cols=35>$form->{address}</textarea></td>
 	</tr>
+	<tr valign=top>
+	  <th align=right>&nbsp;</th>
+	  <td><input name=address1 size=35 value="$form->{address1}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>&nbsp;</th>
+	  <td><input name=address2 size=35 value="$form->{address2}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('City').qq|</th>
+	  <td><input name=city size=35 value="$form->{city}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('State').qq|</th>
+	  <td><input name=state size=25 value="$form->{state}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('Zip').qq|</th>
+	  <td><input name=zip size=15 value="$form->{zip}"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('Country').qq|</th>
+	  <td><input name=country size=30 value="$form->{country}"></td>
+	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Phone').qq|</th>
 	  <td><input name=tel size=14 value="$form->{tel}"></td>
@@ -2405,6 +2429,10 @@ sub defaults {
 	  <th align=right nowrap>|.$locale->text('Vendor Number').qq|</th>
 	  <td><input name=vendornumber size=40 value="$form->{vendornumber}"></td>
 	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Selected Account').qq|</th>
+	  <td><input name=selectedaccount size=15 value="$form->{selectedaccount}"></td>
+	</tr>
       </table>
     </td>
   </tr>
@@ -2414,7 +2442,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax namesbynumber typeofcontact";
   
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 
@@ -2723,12 +2751,13 @@ sub audit_control {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Activate Audit trail').qq|</th>
-	  <td><input name=audittrail class=checkbox type=checkbox value="1" $checked{audittrail}></td>
+	  <td><input name=audittrailview class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
 	</tr>
-	<tr>
+	<input name=audittrail type=hidden value="1">
+	<!-- <tr>
 	  <th align=right>|.$locale->text('Remove Audit trail up to').qq|</th>
-	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
-	</tr>
+	  <td><input name=removeaudittrail size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" disabled="disabled"></td>
+	</tr> -->
 <!--
 	<tr>
 	  <th align=right>|.$locale->text('Enforce unique numbers for').qq|</th>

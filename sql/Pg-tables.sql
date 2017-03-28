@@ -689,13 +689,3 @@ CREATE TABLE reportvars (
   reportvariable text,
   reportvalue text
 );
-
--- dispatch methods table
-CREATE TABLE dispatch (
-  id int DEFAULT nextval('id'),
-  description text
-);
-
-ALTER TABLE customer ADD dispatch_id INTEGER;
-ALTER TABLE vendor ADD dispatch_id INTEGER;
-
