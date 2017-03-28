@@ -196,15 +196,31 @@ $selectfrom_disabled
         SELECT 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
-        aa.netamount amount, SUM(ac.amount) AS tax
+        SUM(it.amount) amount, SUM(it.taxamount) AS tax
+        FROM invoicetax it
+        JOIN chart c ON (c.id = it.chart_id)
+        JOIN ar aa ON (aa.id = it.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE c.link LIKE '%tax%'
+        $where
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8
+
+        UNION ALL
+
+        SELECT 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
-        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN chart c ON (c.id = ac.tax_chart_id)
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        AND NOT invoice
+        GROUP BY 1,2,3,4,5,6,7,8
 
         UNION ALL
 
