@@ -242,15 +242,31 @@ $selectfrom_disabled
         SELECT 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
-        aa.netamount amount, SUM(ac.amount) AS tax
+        SUM(it.amount) amount, SUM(it.taxamount) AS tax
+        FROM invoicetax it
+        JOIN chart c ON (c.id = it.chart_id)
+        JOIN ap aa ON (aa.id = it.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        $where
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8
+
+        UNION ALL
+
+        SELECT 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
-        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN chart c ON (c.id = ac.tax_chart_id)
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        AND NOT invoice
+        GROUP BY 1,2,3,4,5,6,7,8
 
         UNION ALL
 
@@ -266,6 +282,18 @@ $selectfrom_disabled
         $where
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9
+
+        UNION ALL
+
+        SELECT 'GL' module, c.accno || '--' || c.description account,
+        gl.id, gl.reference, gl.transdate,
+        gl.description, '', '',
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.tax_chart_id)
+        JOIN gl ON (gl.id = ac.trans_id)
+        $where
+        GROUP BY 1,2,3,4,5,6,7,8
 
         ORDER BY 1, 2, 6
     ~;
