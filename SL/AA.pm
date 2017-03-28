@@ -367,13 +367,16 @@ sub post_transaction {
     $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
     if ($ref->{amount}) {
       $ref->{taxamount} *= 1;
+      ($tax_accno, $null) = split /--/, $ref->{tax};
+      ($tax_chart_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$tax_accno'");
+      $tax_chart_id *= 1;
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
-		  project_id, memo, fx_transaction, cleared, approved, tax, taxamount)
+		  project_id, memo, fx_transaction, cleared, approved, tax, tax_chart_id, taxamount)
 		  VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$ref->{accno}'),
 		  $ref->{amount} * $ml * $arapml, '$form->{transdate}',
 		  $ref->{project_id}, |.$dbh->quote($ref->{description}).qq|,
-		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $ref->{taxamount})|;
+		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $tax_chart_id, $ref->{taxamount})|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
