@@ -256,7 +256,8 @@ sub error {
     }
 
 	if ( $dbmsg ) {
-	   print qq|<body><h2 class=error>Error!</h2>|;
+	   print qq|<body><h2 class=error>Error!</h2>
+	   <p><b>$dbmsg</b>|;
 	}else {
 	   print qq|<body><h2 class=error>Error!</h2>
 	   <p><b>$self->{msg}</b>|;
