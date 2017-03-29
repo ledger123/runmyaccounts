@@ -57,7 +57,7 @@ sub alltaxes {
   }
 
 
-    my @columns        = qw(module account transdate invnumber description name number lt amount tax);
+    my @columns        = qw(module account transdate invnumber description name number f amount tax);
     my @total_columns  = qw(amount tax);
     my @search_columns = qw(fromdate todate);
 
@@ -196,7 +196,7 @@ $selectfrom_disabled
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
-        '*' lt,
+        '' f,
         SUM(it.amount) amount, SUM(it.taxamount) AS tax
         FROM invoicetax it
         JOIN chart c ON (c.id = it.chart_id)
@@ -212,7 +212,7 @@ $selectfrom_disabled
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
-        '*' lt,
+        '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.tax_chart_id)
@@ -229,7 +229,7 @@ $selectfrom_disabled
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
-        '' lt,
+        '*' f,
         aa.netamount amount, SUM(ac.amount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -247,7 +247,7 @@ $selectfrom_disabled
         SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
-        '*' lt,
+        '' f,
         aa.netamount amount, 0 as tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -263,7 +263,7 @@ $selectfrom_disabled
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
-        '*' lt,
+        '' f,
         SUM(it.amount)*-1 amount, SUM(it.taxamount)*-1 AS tax
         FROM invoicetax it
         JOIN chart c ON (c.id = it.chart_id)
@@ -279,7 +279,7 @@ $selectfrom_disabled
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
-        '*' lt,
+        '*' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.tax_chart_id)
@@ -296,7 +296,7 @@ $selectfrom_disabled
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
-        '' lt,
+        '*' f,
         aa.netamount amount, SUM(ac.amount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -314,7 +314,7 @@ $selectfrom_disabled
         SELECT DISTINCT 2 AS ordr, 'AP' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
-        '*' lt,
+        '' f,
         aa.netamount amount, 0 as tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -330,7 +330,7 @@ $selectfrom_disabled
         SELECT 3 AS ordr, 'GL' module, c.accno || '--' || c.description account,
         gl.id, gl.reference, gl.transdate,
         gl.description, '', '',
-        '*' lt,
+        '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.tax_chart_id)
@@ -400,7 +400,7 @@ $selectfrom_disabled
         if (!$groupvalue){
             $groupvalue  = $row->{account};
             $groupvalue2 = $row->{module};
-            print qq|<tr class="listheading"><td colspan=7>|;
+            print qq|<tr class="listheading"><td colspan=8>|;
             print qq|Module: $row->{module}<br/>|;
             print qq|Account: $row->{account}<br/>|;
             print qq|</td></tr>\n|;
@@ -423,7 +423,7 @@ $selectfrom_disabled
                 print qq|</tr>\n|;
                 for (@total_columns) { $totals{$_} = 0 }
             }
-            print qq|<tr class="listheading"><td colspan=7>|;
+            print qq|<tr class="listheading"><td colspan=8>|;
             print qq|Module: $row->{module}<br/>|;
             print qq|Account: $row->{account}<br/>|;
             print qq|</td></tr>\n|;
