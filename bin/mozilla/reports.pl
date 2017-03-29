@@ -410,6 +410,7 @@ $selectfrom_disabled
             $tabledata{name} = qq|<th>$groupvalue</th>|;
             for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $subtotals{$_}, 2 ) . qq|</th>| }
 
+
             print qq|<tr class="listsubtotal">|;
             for (@report_columns) { print $tabledata{$_} }
             print qq|</tr>\n|;
@@ -423,6 +424,10 @@ $selectfrom_disabled
                 print qq|</tr>\n|;
                 for (@total_columns) { $totals{$_} = 0 }
             }
+            print qq|<tr>|;
+            for (@report_columns) { print qq|<td>&nbsp;</td>| }
+            print qq|</tr>\n|;
+
             print qq|<tr class="listheading"><td colspan=8>|;
             print qq|Module: $row->{module}<br/>|;
             print qq|Account: $row->{account}<br/>|;
