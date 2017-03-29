@@ -193,7 +193,7 @@ $selectfrom_disabled
     my $query;
 
     $query = qq~
-        SELECT 'AR' module, c.accno || '--' || c.description account,
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
         SUM(it.amount) amount, SUM(it.taxamount) AS tax
@@ -204,11 +204,11 @@ $selectfrom_disabled
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8
+        GROUP BY 1,2,3,4,5,6,7,8,9
 
         UNION ALL
 
-        SELECT 'AR' module, c.accno || '--' || c.description account,
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
@@ -220,11 +220,11 @@ $selectfrom_disabled
         $where
         $cashwhere
         AND NOT invoice
-        GROUP BY 1,2,3,4,5,6,7,8
+        GROUP BY 1,2,3,4,5,6,7,8,9
 
         UNION ALL
 
-        SELECT DISTINCT 'AR' module, 'Non-taxable' account,
+        SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number,
         aa.netamount amount, 0 as tax
@@ -235,11 +235,11 @@ $selectfrom_disabled
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        GROUP BY 1,2,3,4,5,6,7,8,9,10
 
         UNION ALL
 
-        SELECT 'AP' module, c.accno || '--' || c.description account,
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
         SUM(it.amount) amount, SUM(it.taxamount) AS tax
@@ -250,11 +250,11 @@ $selectfrom_disabled
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8
+        GROUP BY 1,2,3,4,5,6,7,8,9
 
         UNION ALL
 
-        SELECT 'AP' module, c.accno || '--' || c.description account,
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
@@ -266,11 +266,11 @@ $selectfrom_disabled
         $where
         $cashwhere
         AND NOT invoice
-        GROUP BY 1,2,3,4,5,6,7,8
+        GROUP BY 1,2,3,4,5,6,7,8,9
 
         UNION ALL
 
-        SELECT DISTINCT 'AP' module, 'Non-taxable' account,
+        SELECT DISTINCT 2 AS ordr, 'AP' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number,
         aa.netamount amount, 0 as tax
@@ -281,11 +281,11 @@ $selectfrom_disabled
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9
+        GROUP BY 1,2,3,4,5,6,7,8,9,10
 
         UNION ALL
 
-        SELECT 'GL' module, c.accno || '--' || c.description account,
+        SELECT 3 AS ordr, 'GL' module, c.accno || '--' || c.description account,
         gl.id, gl.reference, gl.transdate,
         gl.description, '', '',
         SUM(ac.amount), SUM(ac.taxamount) AS tax
@@ -293,9 +293,9 @@ $selectfrom_disabled
         JOIN chart c ON (c.id = ac.tax_chart_id)
         JOIN gl ON (gl.id = ac.trans_id)
         $where
-        GROUP BY 1,2,3,4,5,6,7,8
+        GROUP BY 1,2,3,4,5,6,7,8,9
 
-        ORDER BY 1, 2, 6
+        ORDER BY 1, 2, 3, 6
     ~;
 
     my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
