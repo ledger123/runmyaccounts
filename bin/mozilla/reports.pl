@@ -301,30 +301,34 @@ $selectfrom_disabled
     my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
 
     #-- Report summary starts
-    my %summ;
-    for (@allrows){
-        $summ{$_->{module}}{$_->{account}}{amount} += $_->{amount};
-        $summ{$_->{module}}{$_->{account}}{tax} += $_->{tax};
-    }
-
-    print qq|<table width="100%">|;
-    print qq|<tr class="listheading">
-        <th>|.$locale->text('Module').qq|</th>
-        <th>|.$locale->text('Account').qq|</th>
-        <th>|.$locale->text('Amount').qq|</th>
-        <th>|.$locale->text('Tax').qq|</th>
-        </tr>|;
-    for my $module (qw(AR AP GL)){
-        for $account (sort keys %summ{$module}){
-            print qq|<tr class="listrow0">
-                <td>$module</td>
-                <td>$account</td>
-                <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{amount}, 0).qq|</td>
-                <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{tax}, 0).qq|</td>
-            </tr>|;
+    if ($form->{runit}){
+        my %summ;
+        for (@allrows){
+            $summ{$_->{module}}{$_->{account}}{amount} += $_->{amount};
+            $summ{$_->{module}}{$_->{account}}{tax} += $_->{tax};
         }
+
+        print qq|
+            <table width="100%">
+                <tr class="listheading">
+                <th>|.$locale->text('Module').qq|</th>
+                <th>|.$locale->text('Account').qq|</th>
+                <th>|.$locale->text('Amount').qq|</th>
+                <th>|.$locale->text('Tax').qq|</th>
+                </tr>
+        |;
+        for my $module (qw(AR AP GL)){
+            for my $account (sort keys %summ{$module}){
+                print qq|<tr class="listrow0">
+                    <td>$module</td>
+                    <td>$account</td>
+                    <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{amount}, 0).qq|</td>
+                    <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{tax}, 0).qq|</td>
+                </tr>|;
+            }
+        }
+        print qq|</table><br/>|;
     }
-    print qq|</table><br/>|;
     #-- Report summary ends
 
     my ( %tabledata, %grandtotals, %totals, %subtotals );
