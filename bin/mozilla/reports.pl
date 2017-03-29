@@ -333,6 +333,7 @@ $selectfrom_disabled
         }
         if ( $form->{l_subtotal} and ( $row->{account} ne $groupvalue or $row->{module} ne $groupvalue2 ) ) {
             for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }
+            $tabledata{name} = qq|<th>$groupvalue</th>|;
             for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $subtotals{$_}, 2 ) . qq|</th>| }
 
             print qq|<tr class="listsubtotal">|;
@@ -341,6 +342,7 @@ $selectfrom_disabled
             for (@total_columns) { $subtotals{$_} = 0 }
 
             if ( $groupvalue2 ne $row->{module} ) {
+                for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }
                 for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $totals{$_}, 2 ) . qq|</th>| }
                 print qq|<tr class="listsubtotal">|;
                 for (@report_columns) { print $tabledata{$_} }
@@ -369,12 +371,15 @@ $selectfrom_disabled
     }
 
     for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }
+    $tabledata{name} = qq|<th>$groupvalue</th>|;
     for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $subtotals{$_}, 2 ) . qq|</th>| }
 
     print qq|<tr class="listsubtotal">|;
     for (@report_columns) { print $tabledata{$_} }
     print qq|</tr>\n|;
 
+
+    for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }
     for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $totals{$_}, 2 ) . qq|</th>| }
     print qq|<tr class="listtotal">|;
     for (@report_columns) { print $tabledata{$_} }
