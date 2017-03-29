@@ -376,7 +376,7 @@ sub post_transaction {
 					WHERE accno = '$ref->{accno}'),
 		  $ref->{amount} * $ml * $arapml, '$form->{transdate}',
 		  $ref->{project_id}, |.$dbh->quote($ref->{description}).qq|,
-		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $tax_chart_id, $ref->{taxamount})|;
+		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $tax_chart_id, $ref->{taxamount} * $ml * $arapml)|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
