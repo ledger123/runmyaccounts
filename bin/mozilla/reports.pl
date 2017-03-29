@@ -361,14 +361,14 @@ $selectfrom_disabled
                 </tr>
         |;
         for my $module (qw(AR AP GL)){
-            for my $account (sort keys %summ{$module}){
+            #for my $account (sort keys %summ{$module}){
                 print qq|<tr class="listrow0">
                     <td>$module</td>
                     <td>$account</td>
                     <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{amount}, 0).qq|</td>
                     <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{tax}, 0).qq|</td>
                 </tr>|;
-            }
+            #}
         }
         print qq|</table><br/>|;
     }
