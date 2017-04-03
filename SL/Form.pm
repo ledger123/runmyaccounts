@@ -255,8 +255,9 @@ sub error {
       $self->header(0,1);
     }
 
-	if ( $dbmsg ) {
-	   print qq|<body><h2 class=error>Error!</h2>|;
+	if ( $dbmsg && !$errormessages) {
+	   print qq|<body><h2 class=error>Error!</h2>;
+       <p><b class=dberror>$self->{dbmsg}</b>|;
 	}else {
 	   print qq|<body><h2 class=error>Error!</h2>
 	   <p><b>$self->{msg}</b>|;
@@ -266,7 +267,7 @@ sub error {
        <p><b class=dberror>$self->{dbmsg}</b>|;
     
 	}
-	print STDERR "Error: $msg\n$dbmsg\n";
+	print STDERR "Error ($errormessages): $msg\n$dbmsg\n";
     exit;
 
   }
