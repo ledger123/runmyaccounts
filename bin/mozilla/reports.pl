@@ -361,7 +361,7 @@ $selectfrom_disabled
                 </tr>
         |;
         for my $m (qw(AR AP GL)){
-            for my $a (sort keys %summary{$m}){
+            for my $a (sort keys %{$summary{$m}}){
                 print qq|<tr class="listrow0">
                     <td>$m</td>
                     <td>$a</td>
