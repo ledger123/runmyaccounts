@@ -345,10 +345,10 @@ $selectfrom_disabled
 
     #-- Report summary starts
     if ($form->{runit}){
-        my %summ;
+        my %summary;
         for (@allrows){
-            $summ{$_->{module}}{$_->{account}}{amount} += $_->{amount};
-            $summ{$_->{module}}{$_->{account}}{tax} += $_->{tax};
+            $summary{$_->{module}}{$_->{account}}{amount} += $_->{amount};
+            $summary{$_->{module}}{$_->{account}}{tax} += $_->{tax};
         }
 
         print qq|
@@ -360,15 +360,15 @@ $selectfrom_disabled
                 <th>|.$locale->text('Tax').qq|</th>
                 </tr>
         |;
-        for my $module (qw(AR AP GL)){
-            #for my $account (sort keys %summ{$module}){
+        for my $m (qw(AR AP GL)){
+            for my $a (sort keys %summary{$m}){
                 print qq|<tr class="listrow0">
-                    <td>$module</td>
-                    <td>$account</td>
-                    <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{amount}, 0).qq|</td>
-                    <td align="right">|.$form->format_amount(\%myconfig, $summ{$module}{$account}{tax}, 0).qq|</td>
+                    <td>$m</td>
+                    <td>$a</td>
+                    <td align="right">|.$form->format_amount(\%myconfig, $summary{$m}{$a}{amount}, 0).qq|</td>
+                    <td align="right">|.$form->format_amount(\%myconfig, $summary{$m}{$a}{tax}, 0).qq|</td>
                 </tr>|;
-            #}
+            }
         }
         print qq|</table><br/>|;
     }
