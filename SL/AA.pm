@@ -161,7 +161,11 @@ sub post_transaction {
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
 	$amount = $amount{amount}{$i} - $amount{fxamount}{$i};
-	push @{ $form->{acc_trans}{lineitems} }, {
+
+    $fxlinetaxamount = $form->{"linetaxamount_$i"} * $form->{exchangerate};
+    $form->{"linetaxamount_$i"} = $fxlinetaxamount - $form->{"linetaxamount_$i"};
+
+    push @{ $form->{acc_trans}{lineitems} }, {
 	  accno => $accno,
 	  amount => $amount,
 	  project_id => $project_id,
