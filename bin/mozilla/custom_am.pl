@@ -162,12 +162,12 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
 </h3>|;
 
   $query = qq|
-        SELECT ar.invnumber, ac.trans_id, sum(ac.amount) amount
+        SELECT ar.id, ar.invnumber, ac.trans_id, ar.invoice invoice sum(ac.amount) amount
         FROM acc_trans ac 
         JOIN ar on (ar.id = ac.trans_id) 
         WHERE chart_id in (select id from chart where link='AR') 
         AND ar.amount = ar.paid 
-        GROUP BY ar.invnumber, ac.trans_id 
+        GROUP BY ar.invnumber, ac.trans_id, ar.invoice
         HAVING round(sum(ac.amount)::numeric, 2) <> 0
 |;
   $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -180,8 +180,11 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   print qq|</tr>|;
   $i = 0;
   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     $module = 'ar';
+     $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
+
      print qq|<tr class=listrow$i>|;
-     print qq|<td>$ref->{invnumber}</td>|;
+     print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
      print qq|<td>$ref->{trans_id}</td>|;
      print qq|<td align="right">$ref->{amount}</td>|;
      print qq|</tr>|;
@@ -194,12 +197,12 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
 </h3>|;
 
   $query = qq|
-        SELECT ap.invnumber, ac.trans_id, sum(ac.amount) amount
+        SELECT ap.id, ap.invnumber, ac.trans_id, sum(ac.amount) amount
         FROM acc_trans ac 
         JOIN ap on (ap.id = ac.trans_id) 
         WHERE chart_id in (select id from chart where link='AP') 
         AND ap.amount = ap.paid 
-        GROUP BY ap.invnumber, ac.trans_id 
+        GROUP BY ap.id, ap.invnumber, ac.trans_id 
         HAVING round(sum(ac.amount)::numeric, 2) <> 0
 |;
   $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -212,8 +215,11 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   print qq|</tr>|;
   $i = 0;
   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     $module = 'ap';
+     $module = 'ir' if $ref->{invoice} and $ref->{module} eq 'AR';
+
      print qq|<tr class=listrow$i>|;
-     print qq|<td>$ref->{invnumber}</td>|;
+     print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
      print qq|<td>$ref->{trans_id}</td>|;
      print qq|<td align="right">$ref->{amount}</td>|;
      print qq|</tr>|;
