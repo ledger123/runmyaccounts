@@ -365,8 +365,8 @@ $selectfrom_disabled
                 print qq|<tr class="listrow0">
                     <td>$m</td>
                     <td>$a</td>
-                    <td align="right">|.$form->format_amount(\%myconfig, $summary{$m}{$a}{amount}, 0).qq|</td>
-                    <td align="right">|.$form->format_amount(\%myconfig, $summary{$m}{$a}{tax}, 0).qq|</td>
+                    <td align="right">|.$form->format_amount(\%myconfig, $summary{$m}{$a}{amount}, 2).qq|</td>
+                    <td align="right">|.$form->format_amount(\%myconfig, $summary{$m}{$a}{tax}, 2).qq|</td>
                 </tr>|;
             }
         }
@@ -383,7 +383,7 @@ $selectfrom_disabled
     for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading" href="$url&sort=$_">| . ucfirst $_ . qq|</a></th>\n| }
 
     print qq|
-        <table cellpadding="3" cellspacing="2">
+        <table cellpadding="3" cellspacing="2" width="100%">
         <tr class="listheading">
 |;
     for (@report_columns) { print $tabledata{$_} }
