@@ -269,7 +269,7 @@ $selectfrom_disabled
         SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
-        '' f,
+        '*' f,
         aa.netamount amount, 0 as tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
@@ -321,7 +321,7 @@ $selectfrom_disabled
         SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
-        '' f,
+        '*' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN ap aa ON (aa.id = ac.trans_id)
@@ -332,8 +332,6 @@ $selectfrom_disabled
         AND ac.taxamount = 0
         AND NOT invoice
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
-
-
 
         UNION ALL
 
