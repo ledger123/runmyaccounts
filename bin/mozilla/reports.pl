@@ -279,7 +279,7 @@ $selectfrom_disabled
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ap.pl' script,
-        '*' f,
+        '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.tax_chart_id)
