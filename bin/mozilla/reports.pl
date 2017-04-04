@@ -195,7 +195,7 @@ $selectfrom_disabled
     $query = qq~
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.customernumber number, 'is.pl' script,
+        aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
         '' f,
         SUM(it.amount) amount, SUM(it.taxamount) AS tax
         FROM invoicetax it
@@ -205,13 +205,13 @@ $selectfrom_disabled
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
 
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.customernumber number, 'ar.pl' script,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
         '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
@@ -222,13 +222,13 @@ $selectfrom_disabled
         $where
         $cashwhere
         AND NOT invoice
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
 
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.customernumber number, 'ar.pl' script,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
         '*' f,
         aa.netamount amount, SUM(ac.amount) AS tax
         FROM acc_trans ac
@@ -240,13 +240,13 @@ $selectfrom_disabled
         $cashwhere
         AND NOT invoice
         AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
         UNION ALL
 
         SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.customernumber number, 'ar.pl' script,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
         '' f,
         aa.netamount amount, 0 as tax
         FROM acc_trans ac
@@ -256,13 +256,13 @@ $selectfrom_disabled
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
         UNION ALL
 
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.vendornumber number, 'ir.pl' script,
+        aa.description, vc.name, vc.vendornumber number, 'ir.pl' script, vc.id as vc_id,
         '' f,
         SUM(it.amount)*-1 amount, SUM(it.taxamount)*-1 AS tax
         FROM invoicetax it
@@ -272,13 +272,13 @@ $selectfrom_disabled
         WHERE c.link LIKE '%tax%'
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
 
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
         '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
@@ -289,13 +289,13 @@ $selectfrom_disabled
         $where
         $cashwhere
         AND NOT invoice
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
 
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
         '*' f,
         aa.netamount amount, SUM(ac.amount) AS tax
         FROM acc_trans ac
@@ -307,13 +307,13 @@ $selectfrom_disabled
         $cashwhere
         AND NOT invoice
         AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
         UNION ALL
 
         SELECT DISTINCT 2 AS ordr, 'AP' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
         '' f,
         aa.netamount amount, 0 as tax
         FROM acc_trans ac
@@ -323,20 +323,20 @@ $selectfrom_disabled
         WHERE aa.netamount = aa.amount
         $where
         $cashwhere
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
         UNION ALL
 
         SELECT 3 AS ordr, 'GL' module, c.accno || '--' || c.description account,
         gl.id, gl.reference, gl.transdate,
-        gl.description, '', '', 'gl.pl' script,
+        gl.description, '', '', 'gl.pl' script, 0 as vc_id,
         '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.tax_chart_id)
         JOIN gl ON (gl.id = ac.trans_id)
         $where
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         ORDER BY 1, 2, 3, 6
     ~;
@@ -438,8 +438,16 @@ $selectfrom_disabled
 
         for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
 
-        $link = qq|<a href="$row->{script}?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}" target=_blank>$row->{invnumber}</a>|;
-        $tabledata{invnumber} = qq|<td>$link</td>|;
+        $invnumber = qq|<a href="$row->{script}?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}" target=_blank>$row->{invnumber}</a>|;
+        $tabledata{invnumber} = qq|<td>$invnumber</td>|;
+
+        $db = ( $row->{module} eq 'AR' ) ? 'customer' : 'vendor';
+        $db = '' if $row->{module} eq 'GL';
+
+        if ($db){
+            $vc = qq|<a href="ct.pl?id=$row->{vc_id}&db=$db&action=edit&path=$form->{path}&login=$form->{login}" target=_blank>$row->{name}</a>|;
+            $tabledata{name} = qq|<td>$vc</td>|;
+        }
 
         for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
         for (@total_columns) { $totals{$_}      += $row->{$_} }
