@@ -193,6 +193,7 @@ $selectfrom_disabled
     my $query;
 
     $query = qq~
+        -- 1. AR Invoices
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
@@ -209,6 +210,7 @@ $selectfrom_disabled
 
         UNION ALL
 
+        -- 2. AR Transactions with line tax
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
@@ -226,6 +228,25 @@ $selectfrom_disabled
 
         UNION ALL
 
+        -- 2b. AR Transactions with line tax
+        SELECT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE 1 = 1
+        $where
+        $cashwhere
+        AND NOT invoice
+        AND ac.taxamount = 0
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 3. AR Transactions cumulative tax
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
@@ -244,6 +265,7 @@ $selectfrom_disabled
 
         UNION ALL
 
+        -- 4. AR Transactions without tax
         SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
@@ -260,6 +282,7 @@ $selectfrom_disabled
 
         UNION ALL
 
+        -- 5. AP Invoices
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ir.pl' script, vc.id as vc_id,
@@ -276,6 +299,7 @@ $selectfrom_disabled
 
         UNION ALL
 
+        -- 6. AR Transactions with line tax
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
@@ -290,6 +314,26 @@ $selectfrom_disabled
         $cashwhere
         AND NOT invoice
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 6b. AR Transactions with line tax
+        SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE 1 = 1
+        $where
+        $cashwhere
+        AND ac.taxamount = 0
+        AND NOT invoice
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+
 
         UNION ALL
 
