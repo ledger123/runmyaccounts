@@ -153,19 +153,18 @@ $selectfrom
     my @report_columns;
     for (@columns) { push @report_columns, $_ if $form->{"l_$_"} }
 
-    my $where;
+    my $aawhere;
+
     if ( !$form->{runit} ) {
-        $where = ' 1 = 2 ';          # Display data only when Update button is pressed.
+        $aawhere = ' 1 = 2 ';          # Display data only when Update button is pressed.
         $form->{l_subtotal} = 'checked';
     }
 
-    my $transdate = "aa.transdate";
-
     if ( $form->{fromdate} ) {
-        $where .= qq| AND $transdate >= '$form->{fromdate}'|;
+        $aawhere .= qq| AND aa.transdate >= '$form->{fromdate}'|;
     }
     if ( $form->{todate} ) {
-        $where .= qq| AND $transdate <= '$form->{todate}'|;
+        $aawhere .= qq| AND aa.transdate <= '$form->{todate}'|;
     }
 
     if ( $form->{method} eq 'cash' ) {
@@ -207,7 +206,7 @@ $selectfrom
         JOIN ar aa ON (aa.id = it.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE c.link LIKE '%tax%'
-        $where
+        $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
@@ -224,7 +223,7 @@ $selectfrom
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE c.link LIKE '%tax%'
-        $where
+        $aawhere
         $cashwhere
         AND NOT invoice
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
@@ -241,7 +240,7 @@ $selectfrom
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE 1 = 1
-        $where
+        $aawhere
         $cashwhere
         AND NOT invoice
         AND ac.taxamount = 0
@@ -260,7 +259,7 @@ $selectfrom
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE c.link LIKE '%tax%'
-        $where
+        $aawhere
         $cashwhere
         AND NOT invoice
         AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
@@ -279,7 +278,7 @@ $selectfrom
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE aa.netamount = aa.amount
-        $where
+        $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
@@ -296,7 +295,7 @@ $selectfrom
         JOIN ap aa ON (aa.id = it.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE c.link LIKE '%tax%'
-        $where
+        $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
