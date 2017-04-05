@@ -90,8 +90,11 @@ sub alltaxes {
     else {
         $accrualchecked = 'checked';
     }
-    #($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
 
+    if ($form->{year} && $form->{month}){
+        ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval});
+        for (qw(fromdate todate)){ $form->{$_} = $form->format_date($myconfig{dateformat}, $form->{$_}) }
+    }
     if ( !$form->{runit} ) {
 
         # Defaults
@@ -114,7 +117,7 @@ sub alltaxes {
     <th align="right">| . $locale->text('To date') . qq|</th>
     <td><input name=todate type=text size=12 class="date" value="$form->{todate}"></td>
 </tr>
-$selectfrom_disabled
+$selectfrom
 <tr>
     <th align="right" class="norpint">| . $locale->text('Include') . qq|</th>
     <td class="noprint">|;
