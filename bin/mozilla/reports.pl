@@ -212,6 +212,23 @@ $selectfrom
 
         UNION ALL
 
+        -- 1b. AR Invoices
+        SELECT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount) amount, SUM(it.taxamount) AS tax
+        FROM invoicetax it
+        JOIN ar aa ON (aa.id = it.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE 1 = 1
+        $aawhere
+        $cashwhere
+        AND it.taxamount = 0
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
         -- 2. AR Transactions with line tax
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
@@ -298,6 +315,23 @@ $selectfrom
         WHERE c.link LIKE '%tax%'
         $aawhere
         $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 5b. AP Invoices
+        SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ir.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount)*-1 amount, SUM(it.taxamount)*-1 AS tax
+        FROM invoicetax it
+        JOIN ap aa ON (aa.id = it.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE 1 = 1
+        $aawhere
+        $cashwhere
+        AND it.taxamount = 0
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
