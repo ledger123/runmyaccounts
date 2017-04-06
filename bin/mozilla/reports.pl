@@ -243,6 +243,7 @@ $selectfrom
         $aawhere
         $cashwhere
         AND NOT invoice
+        AND aa.linetax
         AND ac.taxamount = 0
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
@@ -331,8 +332,9 @@ $selectfrom
         WHERE 1 = 1
         $where
         $cashwhere
-        AND ac.taxamount = 0
         AND NOT invoice
+        AND aa.linetax
+        AND ac.taxamount = 0
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
