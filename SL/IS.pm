@@ -1139,15 +1139,24 @@ sub post_invoice {
       $dbh->do($query) || $form->dberror($query);
 
       # armaghan - per line tax amount for each tax
+	  my $taxamount = 0;
+      my $taxamounttotal = 0;
       for (@taxaccounts){
-	my $taxamount = 0;
 	$taxamount = $linetotal * $form->{"${_}_rate"} if $form->{"${_}_rate"} != 0; 
+    $taxamounttotal += $taxamount;
         if ($taxamount != 0){
 	  my $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, amount, taxamount)
 			VALUES ($form->{id}, $id, (SELECT id FROM chart WHERE accno=|.$dbh->quote($_).qq|), $linetotal,  $taxamount)|;
 	  $dbh->do($query) || $form->dberror($query);
 	}
       }
+     if ($taxamounttotal == 0){ # Item is not taxed
+	  my $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, amount, taxamount)
+			VALUES ($form->{id}, $id, 0, $linetotal, 0)|;
+	  $dbh->do($query) || $form->dberror($query);
+	 }
+
+
 
       # armaghan - manage warehouse inventory from sale/purchase invoices
       #if (!$form->{shipped}){ # if we are not coming from order screen.
