@@ -107,9 +107,11 @@ sub post_transaction {
 
   my %amount = ();
   my $fxinvamount = 0;
+  my $linetax = '0';
   for (1 .. $form->{rowcount}) {
     $fxinvamount += $amount{fxamount}{$_} = $form->parse_amount($myconfig, $form->{"amount_$_"});
     $form->{"linetaxamount_$_"} = $form->parse_amount($myconfig, $form->{"linetaxamount_$_"});
+    $linetax = '1' if $form->{"tax_$_"};
   }
 
   for (qw(taxincluded onhold)) { $form->{$_} *= 1 }
@@ -318,6 +320,7 @@ sub post_transaction {
 	      netamount = $invnetamount * $arapml,
 	      fxamount = $fxinvamount,
 	      fxpaid = $fxpaid,
+          linetax = '$linetax',
 	      terms = |.$form->dbclean($form->{terms}).qq|,
 	      curr = |.$dbh->quote($form->{currency}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
