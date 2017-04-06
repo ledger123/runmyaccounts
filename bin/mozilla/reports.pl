@@ -302,7 +302,7 @@ $selectfrom
 
         UNION ALL
 
-        -- 6. AR Transactions with line tax
+        -- 6. AP Transactions with line tax
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
@@ -320,11 +320,11 @@ $selectfrom
 
         UNION ALL
 
-        -- 6b. AR Transactions with line tax
+        -- 6b. AP Transactions with line tax
         SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
-        '*' f,
+        '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN ap aa ON (aa.id = ac.trans_id)
@@ -361,7 +361,7 @@ $selectfrom
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
         '' f,
-        aa.netamount amount, 0 as tax
+        0-aa.netamount amount, 0 as tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
         JOIN ap aa ON (aa.id = ac.trans_id)
