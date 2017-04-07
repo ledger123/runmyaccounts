@@ -255,6 +255,7 @@ $selectfrom
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE 1 = 1
         $aawhere
@@ -262,6 +263,7 @@ $selectfrom
         AND NOT invoice
         AND aa.linetax
         AND ac.taxamount = 0
+        AND (c.link like '%AR_amount%' OR c.link like '%IC_sale%' OR c.link like '%IC_income%')
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
@@ -362,6 +364,7 @@ $selectfrom
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE 1 = 1
         $where
@@ -369,6 +372,7 @@ $selectfrom
         AND NOT invoice
         AND aa.linetax
         AND ac.taxamount = 0
+        AND (c.link like '%AP_amount%' OR c.link like '%IC_cogs%' OR c.link like '%IC_expense%')
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
