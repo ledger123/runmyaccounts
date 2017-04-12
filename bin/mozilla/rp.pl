@@ -694,6 +694,7 @@ sub report {
 		    <td nowrap width=70><input name=c15 type=checkbox class=checkbox value=1> 15</td>
 		    <td nowrap width=70><input name=c45 type=checkbox class=checkbox value=1> 45</td>
 		    <td nowrap width=70><input name=c75 type=checkbox class=checkbox value=1> 75</td>
+		    <td nowrap><input name=payed type=checkbox class=checkbox value=1> |.$locale->text('Include Payed').qq|</td>
 		  </tr>
 		</table>
 	      </td>
