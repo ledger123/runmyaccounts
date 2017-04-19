@@ -591,7 +591,7 @@ sub post_transaction {
               ($accno) = split /--/, $form->{$ARAP};
               $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
                     VALUES ($form->{id}, (SELECT id FROM chart WHERE accno = '$accno'),
-                    $invamount2 * -1 * $ml * $arapml, '$transdate', '$approved')|;
+                    $invamount2 * $ml * $arapml, '$transdate', '$approved')|;
               $dbh->do($query) || $form->dberror($query);
               $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
                     VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2 * $ml * $arapml, '$transdate', '$approved')|;
