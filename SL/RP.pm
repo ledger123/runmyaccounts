@@ -1513,8 +1513,7 @@ sub aging {
   if($form->{payed}){
   	$where = qq|
 	a.approved = '1'
-	AND (a.datepaid > |.$dbh->quote($form->{todate}).qq| or a.datepaid is null)
-	AND ((a.amount = a.paid and (select max(acc.transdate) from acc_trans acc where acc.trans_id = a.id) >= |.$dbh->quote($form->{todate}).qq|) or a.amount <> a.paid)
+	AND ((a.amount = a.paid AND (SELECT MAX(acc.transdate) FROM acc_trans acc WHERE acc.trans_id = a.id) >= |.$dbh->quote($form->{todate}).qq|) OR a.amount <> a.paid OR a.datepaid > |.$dbh->quote($form->{todate}).qq| OR a.datepaid IS NULL)
 	AND c.id = ?
 	AND a.curr = ?|;
   }
