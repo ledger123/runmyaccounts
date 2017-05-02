@@ -381,7 +381,7 @@ $selectfrom
         aa.id, aa.invnumber, aa.transdate,
         aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
         '*' f,
-        aa.netamount amount, SUM(ac.amount) AS tax
+        0-aa.netamount amount, SUM(ac.amount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
         JOIN ap aa ON (aa.id = ac.trans_id)
