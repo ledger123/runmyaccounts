@@ -349,7 +349,7 @@ $selectfrom
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE c.link LIKE '%tax%'
-        $where
+        $aawhere
         $cashwhere
         AND NOT invoice
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
@@ -367,7 +367,7 @@ $selectfrom
         JOIN chart c ON (c.id = ac.chart_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE 1 = 1
-        $where
+        $aawhere
         $cashwhere
         AND NOT invoice
         AND aa.linetax
@@ -387,7 +387,7 @@ $selectfrom
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE c.link LIKE '%tax%'
-        $where
+        $aawhere
         $cashwhere
         AND NOT invoice
         AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
@@ -405,21 +405,21 @@ $selectfrom
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE aa.netamount = aa.amount
-        $where
+        $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
         UNION ALL
 
         SELECT 3 AS ordr, 'GL' module, c.accno || '--' || c.description account,
-        gl.id, gl.reference, gl.transdate,
-        gl.description, '', '', 'gl.pl' script, 0 as vc_id,
+        aa.id, aa.reference, aa.transdate,
+        aa.description, '', '', 'gl.pl' script, 0 as vc_id,
         '' f,
         SUM(ac.amount), SUM(ac.taxamount) AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.tax_chart_id)
-        JOIN gl ON (gl.id = ac.trans_id)
-        $where
+        JOIN gl aa ON (aa.id = ac.trans_id)
+        $aawhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         ORDER BY 1, 2, 3, 6
