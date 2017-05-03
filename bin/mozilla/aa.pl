@@ -1172,7 +1172,7 @@ sub form_footer {
                     ac.transdate, c.accno, c.description, 
                     ac.amount, ac.source, ac.memo, 
                     ac.fx_transaction, ac.cleared, ac.tax, 
-                    ac.taxamount, c.link
+                    ac.taxamount, c.link, ac.chart_id, ac.tax_chart_id
                 FROM acc_trans ac
                 JOIN chart c ON (c.id = ac.chart_id)
                 WHERE ac.trans_id = ?
