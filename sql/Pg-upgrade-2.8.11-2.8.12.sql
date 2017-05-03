@@ -56,6 +56,14 @@ UPDATE ap SET linetax = '1' WHERE NOT invoice AND id IN (
     SELECT DISTINCT trans_id FROM acc_trans WHERE tax <> ''
 );
 
+
+UPDATE acc_trans SET taxamount = amount * -1 * (SELECT rate FROM tax WHERE tax.chart_id = acc_trans.tax_chart_id)
+WHERE taxamount <> 0
+AND trans_id IN (SELECT id FROM ap);
+
+UPDATE acc_trans SET taxamount = ROUND(taxamount::numeric, 2) WHERE taxamount <> 0;
+
 --
 -- update defaults set fldvalue = '2.8.12' where fldname = 'version';
+
 
