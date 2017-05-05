@@ -57,7 +57,7 @@ UPDATE ap SET linetax = '1' WHERE NOT invoice AND id IN (
 );
 
 
-UPDATE acc_trans SET taxamount = amount * -1 * (SELECT rate FROM tax WHERE tax.chart_id = acc_trans.tax_chart_id)
+UPDATE acc_trans SET taxamount = amount * (SELECT rate FROM tax WHERE tax.chart_id = acc_trans.tax_chart_id)
 WHERE taxamount <> 0
 AND trans_id IN (SELECT id FROM ap);
 
