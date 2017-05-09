@@ -578,6 +578,7 @@ sub post_transaction {
 
   # armaghan 13/05/2015 Fix for rounding issue
   if ($invamount eq $paid){
+          $multiplicator = ($form->{vc} eq 'vendor') ? -1 : 1;
           my $invamount2 = $dbh->selectrow_array("
               SELECT round(sum(amount)::numeric,2)
               FROM acc_trans ac
@@ -594,11 +595,11 @@ sub post_transaction {
                     $invamount2 * $ml * $arapml, '$transdate', '$approved')|;
               $dbh->do($query) || $form->dberror($query);
               if ($invamount2 > 0) {
-                    $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
-                    VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2 * $ml * $arapml, '$transdate', '$approved')|;
+                $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
+                VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2 * |.$multiplicator.qq| * $ml * $arapml, '$transdate', '$approved')|;
               } else {
-                    $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
-                    VALUES ($form->{id}, $defaults{fxloss_accno_id}, $invamount2 * -1 * $ml * $arapml, '$transdate', '$approved')|;
+                $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
+                VALUES ($form->{id}, $defaults{fxloss_accno_id}, $invamount2 * |.$multiplicator.qq| * $ml * $arapml, '$transdate', '$approved')|;
               }
               $dbh->do($query) || $form->dberror($query);
           }
