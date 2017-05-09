@@ -615,6 +615,17 @@ sub post_transaction {
   
   $form->audittrail($dbh, "", \%audittrail);
 
+  use DBIx::Simple;
+  my $dbs = DBIx::Simple->connect($dbh);
+  my $row = $dbs->query('SELECT * FROM ar WHERE id = ?', $form->{id})->hash;
+  my $oldcval;
+  for my $cname (qw(invnumber transdate customer_id amount netamount)){
+      $oldcval = $dbs->query('SELECT cval FROM audittrail_detail WHERE trans_id = ? AND cname = ?', $form->{id}, $cname)->list;
+      if ($oldcval ne $row->{$cname}){
+        $dbs->query('INSERT INTO audittrail_detail (trans_id, cname, cval) VALUES (?, ?, ?)', $form->{id}, $cname, $row->{$cname});
+      }
+  }
+
   $form->save_recurring($dbh, $myconfig);
 
   $form->remove_locks($myconfig, $dbh, $table);

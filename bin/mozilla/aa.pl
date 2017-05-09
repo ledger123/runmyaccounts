@@ -366,7 +366,7 @@ sub create_links {
                     if ( $akey eq 'amount' ) {
                         $form->{"description_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{memo};
                         $form->{"tax_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{tax};
-                        $form->{"linetaxamount_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{taxamount};
+                        $form->{"linetaxamount_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{taxamount} * -1;
                         $form->{rowcount}++;
                         $netamount += $form->{"${akey}_$i"};
 
@@ -1188,6 +1188,21 @@ sub form_footer {
         $table->set_group( 'transdate', 1 );
         $table->calc_totals( [qw(amount)] );
         print $table->output;
+
+        $query = qq|
+                SELECT created, cname, cval
+                FROM audittrail_detail
+                WHERE trans_id = ?
+                ORDER BY created DESC
+        |;
+
+        $table = $dbs->query($query, $form->{id})->xto(
+            tr => { class => [ 'listrow0', 'listrow1' ] },
+            th => { class => ['listheading'] },
+        );
+        $table->set_group( 'created', 1 );
+        print $table->output;
+
     }
 
     print qq|
