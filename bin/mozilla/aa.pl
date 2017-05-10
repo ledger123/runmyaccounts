@@ -1190,8 +1190,9 @@ sub form_footer {
         print $table->output;
 
         $query = qq|
-                SELECT created, cname, cval
-                FROM audittrail_detail
+                SELECT TO_CHAR(a.created, 'MM/DD/YY HH24:MI:SS') created, a.action, a.cname, a.cval, e.name employee
+                FROM audittrail_detail a
+                LEFT JOIN employee e ON (e.id = a.employee_id)
                 WHERE trans_id = ?
                 ORDER BY created DESC
         |;

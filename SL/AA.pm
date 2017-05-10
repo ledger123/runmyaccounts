@@ -617,12 +617,31 @@ sub post_transaction {
 
   use DBIx::Simple;
   my $dbs = DBIx::Simple->connect($dbh);
-  my $row = $dbs->query('SELECT * FROM ar WHERE id = ?', $form->{id})->hash;
+
   my $oldcval;
-  for my $cname (qw(invnumber transdate customer_id amount netamount)){
+
+  my ($null, $employee_id) = $form->get_employee($dbh);
+  $employee_id *= 1;
+  for my $cname (qw(invnumber transdate customer_id)){
       $oldcval = $dbs->query('SELECT cval FROM audittrail_detail WHERE trans_id = ? AND cname = ?', $form->{id}, $cname)->list;
-      if ($oldcval ne $row->{$cname}){
-        $dbs->query('INSERT INTO audittrail_detail (trans_id, cname, cval) VALUES (?, ?, ?)', $form->{id}, $cname, $row->{$cname});
+      if ($oldcval ne $form->{$cname}){
+        $dbs->query('
+            INSERT INTO audittrail_detail (trans_id, action, cname, cval, employee_id) 
+            VALUES (?, ?, ?, ?, ?)', 
+            $form->{id}, $action, $cname, $form->{$cname}, $employee_id
+        );
+      }
+  }
+  for my $cname (qw(amount_1 amount_2)){
+      $cname2 = "AR_$cname";
+      $oldcval = $dbs->query('
+          SELECT cval FROM audittrail_detail WHERE trans_id = ? AND cval = ?', $form->{id}, "$form->{$cname2}--$form->{$cname}")->list;
+      if ($oldcval ne "$form->{$cname2}--$form->{$cname}"){
+        $dbs->query('
+            INSERT INTO audittrail_detail (trans_id, action, cname, cval, employee_id) 
+            VALUES (?, ?, ?, ?, ?)', 
+            $form->{id}, $action, 'amount', "$form->{$cname2}--$form->{$cname}", $employee_id
+        );
       }
   }
 
