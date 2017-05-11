@@ -623,7 +623,20 @@ sub post_transaction {
   my ($null, $employee_id) = $form->get_employee($dbh);
   $employee_id *= 1;
   for my $cname (qw(invnumber transdate customer_id)){
-      $oldcval = $dbs->query('SELECT cval FROM audittrail_detail WHERE trans_id = ? AND cname = ?', $form->{id}, $cname)->list;
+
+      $oldcval = $dbs->query('
+          SELECT cval 
+          FROM audittrail_detail 
+          WHERE trans_id = ? 
+          AND cname = ? 
+          AND id = (
+            SELECT MAX(id)
+            FROM audittrail_detail
+            WHERE trans_id = ?
+            AND cname = ?
+          ) ', $form->{id}, $cname, $form->{id}, $cname
+      )->list;
+
       if ($oldcval ne $form->{$cname}){
         $dbs->query('
             INSERT INTO audittrail_detail (trans_id, action, cname, cval, employee_id) 
@@ -632,16 +645,29 @@ sub post_transaction {
         );
       }
   }
-  for my $cname (qw(amount_1 amount_2)){
-      $cname2 = "AR_$cname";
-      $oldcval = $dbs->query('
-          SELECT cval FROM audittrail_detail WHERE trans_id = ? AND cval = ?', $form->{id}, "$form->{$cname2}--$form->{$cname}")->list;
-      if ($oldcval ne "$form->{$cname2}--$form->{$cname}"){
-        $dbs->query('
-            INSERT INTO audittrail_detail (trans_id, action, cname, cval, employee_id) 
-            VALUES (?, ?, ?, ?, ?)', 
-            $form->{id}, $action, 'amount', "$form->{$cname2}--$form->{$cname}", $employee_id
-        );
+  if ($form->{rowcount} > 1){
+      for $i (1 .. $form->{rowcount} - 1){
+          $cname = "amount_$i";
+          $cname2 = "AR_$cname";
+          $oldcval = $dbs->query('
+              SELECT cval 
+              FROM audittrail_detail 
+              WHERE trans_id = ? 
+              AND cname = ?
+              AND id = (
+                SELECT MAX(id)
+                FROM audittrail_detail
+                WHERE trans_id = ?
+                AND cname = ?
+              )', $form->{id}, $form->{$cname2}, $form->{id}, $form->{$cname2}
+          )->list;
+          if ($oldcval ne "$form->{$cname}"){
+            $dbs->query('
+                INSERT INTO audittrail_detail (trans_id, action, cname, cval, employee_id) 
+                VALUES (?, ?, ?, ?, ?)', 
+                $form->{id}, $action, $form->{$cname2}, $form->{$cname}, $employee_id
+            );
+          }
       }
   }
 
