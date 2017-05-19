@@ -2281,7 +2281,7 @@ sub transactions {
 
         }
 
-        $column_data{runningnumber} = "<td align=right>$i</td>";
+        $column_data{runningnumber} = "<td>$i</td>";
 
         for (qw(netamount amount paid debit credit)) { $column_data{$_} = "<td align=right>" . $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision}, "&nbsp;" ) . "</td>" }
 

@@ -264,7 +264,7 @@ body.menu {
 	height: 24px;
   font-weight: normal;
   border:none;
-  padding-top: 20px;
+  padding-top: 10px;
 }
 
 .listtop { 
@@ -303,11 +303,11 @@ A.listheading:link, A.listheading:active, A.listheading:visited {
 }
 
 th, td > b {
-  padding: 0.4rem 0.4rem;
+  padding: 0.2rem 0.2rem;
 }
 
 input, textarea, select {
-  margin: 0.4rem 0.4rem;
+  margin: 0.2rem 0.2rem;
 }
 
 select {
@@ -317,7 +317,7 @@ select {
 }
 
 select, input {
-    height: 26px;
+    height: 22px;
     background: white;
 }
 
@@ -407,7 +407,6 @@ table tr td[align=center] * {
   float: left;
 }
 
-
 .submit, .login input submit {
   font-family: "museo-sans-1","museo-sans-2",sans-serif;
   font-size: 13px;
@@ -426,12 +425,12 @@ table tr td[align=center] * {
   -ms-user-select: none;
   user-select: none;
   border: 1px solid transparent;
-  padding: 0.6rem 1.2rem;
+  padding: 0.3rem 0.6rem;
   font-size: 0.875rem;
   -webkit-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
   float: right;
-  margin-left: 5px;
+  margin-left: 1px;
   -webkit-appearance: button;
 }
 
@@ -444,7 +443,7 @@ table tr td[align=center] * {
 .checkbox, .radio {
   box-sizing: border-box;
   padding: 0;
-  margin-right: 0.3rem;
+  margin-right: 0.15rem;
   /*-webkit-appearance: checkbox;*/
 }
 
