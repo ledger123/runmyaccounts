@@ -1817,7 +1817,7 @@ sub form_header {
   $typeofcontact = qq|
               <input type=hidden name=action value="update">
 	      <tr>
-	        <td align=center><b>|.$locale->text('Type').qq|</b>
+	        <td><b>|.$locale->text('Type').qq|</b>
 		<input name=typeofcontact type=radio value="company" $typeofcontact{company} onClick="javascript:document.forms[0].submit()">|.$locale->text('Company').qq|
 		<input name=typeofcontact type=radio value="person" $typeofcontact{person} onClick="javascript:document.forms[0].submit()">|.$locale->text('Person').qq|
 		</td>
@@ -2053,8 +2053,8 @@ sub form_header {
 		<td><input name=bic size=11 maxlength=11 value="$form->{bic}"></td>
 	      </tr>
 	      <tr>
-		<td align=right><input name=remittancevoucher class=checkbox type=checkbox value=1 $form->{remittancevoucher}></td>
-		<th align=left>|.$locale->text('Remittance Voucher').qq|</th>
+          <th align=left>|.$locale->text('Remittance Voucher').qq|</th>
+		      <td><input name=remittancevoucher class=checkbox type=checkbox value=1 $form->{remittancevoucher}></td>
 	      </tr>
 	    </table>
 	  </td>

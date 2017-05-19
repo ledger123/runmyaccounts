@@ -261,11 +261,11 @@ function CheckAll(v) {
     $column_data{runningnumber} = qq|<td><input name="runningnumber_$i" size=3 value=$i></td>|;
     $column_data{partnumber} = qq|<td><input name="partnumber_$i" size=15 value="|.$form->quote($form->{"partnumber_$i"}).qq|" accesskey="$i" title="[Alt-$i]">$skunumber</td>|;
     $column_data{itemdetail} = $itemdetail;
-    $column_data{qty} = qq|<td align=right><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value="|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|"></td>|;
-    $column_data{ship} = qq|<td align=right><input name="ship_$i" size=8 value="|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|" READONLY></td>|;
+    $column_data{qty} = qq|<td><input name="qty_$i" title="$form->{"onhand_$i"}" size=8 value="|.$form->format_amount(\%myconfig, $form->{"qty_$i"}).qq|"></td>|;
+    $column_data{ship} = qq|<td><input name="ship_$i" size=8 value="|.$form->format_amount(\%myconfig, $form->{"ship_$i"}).qq|" READONLY></td>|;
     $column_data{unit} = qq|<td><input name="unit_$i" size=5 value="|.$form->quote($form->{"unit_$i"}).qq|"></td>|;
-    $column_data{sellprice} = qq|<td align=right nowrap><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces, $zero).qq|> $pricehistory</td>|;
-    $column_data{discount} = qq|<td align=right><input name="discount_$i" size=3 value=|.$form->format_amount(\%myconfig, $form->{"discount_$i"}).qq|></td>|;
+    $column_data{sellprice} = qq|<td nowrap><input name="sellprice_$i" size=11 value=|.$form->format_amount(\%myconfig, $form->{"sellprice_$i"}, $decimalplaces, $zero).qq|> $pricehistory</td>|;
+    $column_data{discount} = qq|<td><input name="discount_$i" size=3 value=|.$form->format_amount(\%myconfig, $form->{"discount_$i"}).qq|></td>|;
     $column_data{linetotal} = qq|<td align=right>|.$form->format_amount(\%myconfig, $linetotal, $form->{precision}, $zero).qq|</td>|;
     $column_data{bin} = qq|<td>$form->{"bin_$i"}</td>|;
     $column_data{onhand} = qq|<td>$form->{"onhand_$i"}</td>|;
