@@ -233,6 +233,24 @@ sub post_transaction {
 
     if ($form->{id}) {
       # delete detail records
+        $query = qq|INSERT INTO ${table}_log SELECT ar.*, now() FROM ar WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|INSERT INTO acc_trans_log SELECT acc_trans.*, now() FROM acc_trans WHERE trans_id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|
+            INSERT INTO acc_trans_log 
+            SELECT 
+                trans_id, chart_id, 
+                0 - amount, transdate, source,
+                approved, fx_transaction, project_id,
+                memo, id, cleared,
+                1, entry_id,
+                tax, taxamount, tax_chart_id,
+                now()
+            FROM acc_trans 
+            WHERE trans_id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
       for (qw(acc_trans dpt_trans payment)) {
 	$query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
 	$dbh->do($query) || $form->dberror($query);
