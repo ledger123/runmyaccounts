@@ -140,3 +140,10 @@ CREATE TABLE dispatch (
 ALTER TABLE customer ADD dispatch_id INTEGER;
 ALTER TABLE vendor ADD dispatch_id INTEGER;
 
+ALTER TABLE invoicetax ADD amount float;
+
+ALTER TABLE acc_trans ADD tax_chart_id INTEGER;
+
+ALTER TABLE ar ADD linetax BOOLEAN DEFAULT false;
+ALTER TABLE ap ADD linetax BOOLEAN DEFAULT false;
+
