@@ -1192,8 +1192,7 @@ sub form_footer {
         print qq|<h2>Log</h2>|;
         $table = lc $form->{ARAP};
         $query = qq|
-                SELECT 
-                    TO_CHAR(ts, 'MM/DD/YY HH24:MI:SS') ts, invnumber, transdate, amount, netamount, paid
+                SELECT TO_CHAR(ts, 'MM/DD/YY HH24:MI:SS') ts, a.invnumber, a.transdate, a.customer_id, a.amount, a.netamount, a.paid, a.notes, a.intnotes
                 FROM ${table}_log a
                 WHERE id = ?
                 ORDER BY ts DESC

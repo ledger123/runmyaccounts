@@ -232,25 +232,35 @@ sub post_transaction {
     &reverse_vouchers($dbh, $form);
 
     if ($form->{id}) {
-      # delete detail records
-        $query = qq|INSERT INTO ${table}_log SELECT ar.*, now() FROM ar WHERE id = $form->{id}|;
-        $dbh->do($query) || $form->dberror($query);
-        $query = qq|INSERT INTO acc_trans_log SELECT acc_trans.*, now() FROM acc_trans WHERE trans_id = $form->{id}|;
+        $query = qq|INSERT INTO ${table}_log SELECT ar.* FROM ar WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
         $query = qq|
             INSERT INTO acc_trans_log 
-            SELECT 
-                trans_id, chart_id, 
-                0 - amount, transdate, source,
-                approved, fx_transaction, project_id,
-                memo, id, cleared,
-                1, entry_id,
-                tax, taxamount, tax_chart_id,
-                now()
-            FROM acc_trans 
-            WHERE trans_id = $form->{id}|;
+            SELECT acc_trans.*, ar.ts
+            FROM acc_trans
+            JOIN ar ON (ar.id = acc_trans.trans_id)
+            WHERE trans_id = $form->{id}
+        |;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|UPDATE ${table} SET ts = NOW() WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
 
+        $query = qq|
+            INSERT INTO acc_trans_log 
+            SELECT 
+                ac.trans_id, ac.chart_id, 
+                0 - ac.amount, ac.transdate, ac.source,
+                ac.approved, ac.fx_transaction, ac.project_id,
+                ac.memo, ac.id, ac.cleared,
+                vr_id, ac.entry_id,
+                ac.tax, ac.taxamount, ac.tax_chart_id,
+                ar.ts
+            FROM acc_trans ac
+            JOIN ar ON (ar.id = ac.trans_id)
+            WHERE trans_id = $form->{id}|;
+            $dbh->do($query) || $form->dberror($query);
+
+        # delete detail records
       for (qw(acc_trans dpt_trans payment)) {
 	$query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
 	$dbh->do($query) || $form->dberror($query);
