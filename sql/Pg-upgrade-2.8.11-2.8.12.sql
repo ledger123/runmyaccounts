@@ -64,6 +64,6 @@ AND trans_id IN (SELECT id FROM ap);
 UPDATE acc_trans SET taxamount = ROUND(taxamount::numeric, 2) WHERE taxamount <> 0;
 
 --
--- update defaults set fldvalue = '2.8.12' where fldname = 'version';
+update defaults set fldvalue = '2.8.12' where fldname = 'version';
 
 
