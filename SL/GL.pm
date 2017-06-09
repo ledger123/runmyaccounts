@@ -645,7 +645,70 @@ sub transactions {
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
-	         ORDER BY $sortorder|;
+	     |;
+
+  if ($form->{include_log}){
+    $query .= qq|
+        
+        UNION ALL
+
+        SELECT g.id, 'gl' AS type, $false AS invoice, g.reference,
+                 g.description, ac.transdate, ac.source,
+		 ac.amount, c.accno, c.gifi_accno, g.notes, c.link,
+		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
+		 ac.memo, '0' AS name_id, '' AS db,
+		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
+		 '' AS address1, '' AS address2, '' AS city,
+		 '' AS zipcode, '' AS country, c.description AS accdescription,
+		 '' AS intnotes
+                 FROM gl g
+		 JOIN acc_trans_log ac ON (g.id = ac.trans_id)
+		 JOIN chart c ON (ac.chart_id = c.id)
+		 LEFT JOIN department d ON (d.id = g.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
+                 WHERE $glwhere
+	UNION ALL
+	         SELECT a.id, 'ar' AS type, a.invoice, a.invnumber,
+		 a.description, ac.transdate, ac.source,
+		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
+		 ac.memo, ct.id AS name_id, 'customer' AS db,
+		 $lineitem AS lineitem, ct.name, ct.customernumber,
+		 ad.address1, ad.address2, ad.city,
+		 ad.zipcode, ad.country, c.description AS accdescription,
+		 a.intnotes
+		 FROM ar a
+		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
+		 $invoicejoin
+		 JOIN chart c ON (ac.chart_id = c.id)
+		 JOIN customer ct ON (a.customer_id = ct.id)
+		 JOIN address ad ON (ad.trans_id = ct.id)
+		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
+		 WHERE $arwhere
+	UNION ALL
+	         SELECT a.id, 'ap' AS type, a.invoice, a.invnumber,
+		 a.description, ac.transdate, ac.source,
+		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
+		 ac.memo, ct.id AS name_id, 'vendor' AS db,
+		 $lineitem AS lineitem, ct.name, ct.vendornumber,
+		 ad.address1, ad.address2, ad.city,
+		 ad.zipcode, ad.country, c.description AS accdescription,
+		 a.intnotes
+		 FROM ap a
+		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
+		 $invoicejoin
+		 JOIN chart c ON (ac.chart_id = c.id)
+		 JOIN vendor ct ON (a.vendor_id = ct.id)
+		 JOIN address ad ON (ad.trans_id = ct.id)
+		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
+		 WHERE $apwhere
+	     |;
+  } # if $form->{include_log}
+
+  $query .= qq| ORDER BY $sortorder|;
 
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
