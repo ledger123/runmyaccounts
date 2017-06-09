@@ -355,6 +355,8 @@ sub search {
     $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
     $includeinreport{intnotes} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}>|, label => $locale->text('Internal Notes') };
+    $includeinreport{log} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_log" class=checkbox type=checkbox value=Y $form->{l_log}>|, label => $locale->text('Log') };
 
     @f = ();
     $form->{flds} = "";
@@ -1023,6 +1025,7 @@ sub transactions {
 
         $column_data{balance} = "<td align=right>" . $form->format_amount( \%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0 ) . "</td>";
         $column_data{cleared} = ( $ref->{cleared} ) ? "<td>*</td>" : "<td>&nbsp;</td>";
+        $column_data{log} = "<td>$ref->{log}</td>";
 
         if ( $ref->{id} != $sameid ) {
             $i++;
