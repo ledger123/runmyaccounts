@@ -1,7 +1,7 @@
-ALTER TABLE invoicetax DROP COLUMN amount;
-ALTER TABLE acc_trans DROP COLUMN tax_chart_id;
-ALTER TABLE ar DROP COLUMN linetax;
-ALTER TABLE ap DROP COLUMN linetax;
+-- ALTER TABLE invoicetax DROP COLUMN amount;
+-- ALTER TABLE acc_trans DROP COLUMN tax_chart_id;
+-- ALTER TABLE ar DROP COLUMN linetax;
+-- ALTER TABLE ap DROP COLUMN linetax;
 
 ----
 
@@ -57,7 +57,7 @@ UPDATE ap SET linetax = '1' WHERE NOT invoice AND id IN (
 );
 
 
-UPDATE acc_trans SET taxamount = amount * (SELECT rate FROM tax WHERE tax.chart_id = acc_trans.tax_chart_id)
+UPDATE acc_trans SET taxamount = amount * (SELECT rate FROM tax WHERE tax.chart_id = acc_trans.tax_chart_id AND tax.validto IS NULL LIMIT 1)
 WHERE taxamount <> 0
 AND trans_id IN (SELECT id FROM ap);
 
