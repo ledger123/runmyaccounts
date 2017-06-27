@@ -18,13 +18,12 @@ a:active { color: #1BB3DC; text-decoration: underline; border: 1px #6495ED;   }
   text-decoration: none;
 }*/
 
-
-
 body {
   font-family: "museo-sans-1","museo-sans-2",sans-serif;
   font-size: 13px;
   background-color: white;
   color: #333333;
+  text-align: right; //align btns right
 }
 
 hr {
@@ -123,8 +122,8 @@ table.login td.login a img, center a img {
 }
 
 a.roadmapref {
-	font-size: 10px;
-	font-style: italic;
+  font-size: 10px;
+  font-style: italic;
 }
 
 a.mainpageref {
@@ -151,11 +150,11 @@ body.menu {
 }
 
 .menuOpen {
-	
+  
   background-image: url("menu_open.png");
   background-repeat:no-repeat;
   background-position: right top;
-	
+  
   line-height: 14px;
   cursor: pointer;
   font-size: 13px;
@@ -165,11 +164,11 @@ body.menu {
 }
 
 .menuClose {
-	
+  
   background-image: url("menu_close.png");
   background-repeat:no-repeat;
   background-position: right top;
-	
+  
   line-height: 14px;
   cursor: pointer;
   font-size: 13px;
@@ -193,22 +192,22 @@ body.menu {
 }
 
 .menu .menuClose, .menu .menuClose  {
-	border-top: 1px solid #53626A;
+  border-top: 1px solid #53626A;
 }
 
 .submenu .menuClose  {
-	border-top: 1px solid #C3D2DA;	
-	margin: 0 0 0 4px;
+  border-top: 1px solid #C3D2DA;  
+  margin: 0 0 0 4px;
 }
 
 .submenu .menuClose:first-child  {
-	border-top: medium none;	
-	margin: 0 0 0 4px;
+  border-top: medium none;  
+  margin: 0 0 0 4px;
 }
 
 .submenu .menuOpen  {
-	border: none;	
-	margin: 0 0 0 4px;
+  border: none; 
+  margin: 0 0 0 4px;
 }
 
 .submenu, .submenu:HOVER {
@@ -217,12 +216,12 @@ body.menu {
 }
 
 .menu .menuLink {
-	border-top: 1px solid #53626A;
+  border-top: 1px solid #53626A;
 }
 
 .submenu .menuLink {
   margin: 0;
-  border: none;	
+  border: none; 
   font-weight: normal;
   padding-left: 14px;
   background: url("submenu_lines.png") no-repeat scroll 0 -20px transparent;
@@ -247,9 +246,9 @@ body.menu {
 }
 
 .listheading { 
-	font-size: 13px;
-	color: #53626A; 
-	height: 24px;
+  font-size: 13px;
+  color: #53626A; 
+  height: 24px;
   border-bottom: 1px solid #bac3c9;
 }
 
@@ -258,22 +257,22 @@ body.menu {
 }
 
 .sectionheading {
-	color: #181d1f;
+  color: #181d1f;
   font-size: 1.5rem;
-	padding: 2px;
-	height: 24px;
+  padding: 2px;
+  height: 24px;
   font-weight: normal;
   border:none;
-  padding-top: 10px;
+  padding-top: 20px;
 }
 
 .listtop { 
   font-family: "museo-sans-1","museo-sans-2",sans-serif;
-	font-size: 2rem;
-	background-color: white; 
-	text-align: left;
-	font-weight: normal;
-	padding: 10px 5px;
+  font-size: 2rem;
+  background-color: white; 
+  text-align: left;
+  font-weight: normal;
+  padding: 10px 5px;
 }
 
 A.listheading:link, A.listheading:active, A.listheading:visited {
@@ -283,31 +282,31 @@ A.listheading:link, A.listheading:active, A.listheading:visited {
 }
 
 .listrow1 td, .listrow0 td {
-	border-bottom: 1px solid #bac3c9;
+  border-bottom: 1px solid #bac3c9;
   vertical-align: top;
   /*padding: 0.75rem; */
   padding: 10px 2px;
 }
 
 .listsubtotal { 
-	font-size: 13px; 
-	color: black;
-	font-weight: bold;
+  font-size: 13px; 
+  color: black;
+  font-weight: bold;
 }
 
 .listtotal { 
-	font-size: 13px; 
-	color: black; 
-	font-weight: bold;
+  font-size: 13px; 
+  color: black; 
+  font-weight: bold;
   text-align: right;
 }
 
 th, td > b {
-  padding: 0.2rem 0.2rem;
+  padding: 0.4rem 0.4rem;
 }
 
 input, textarea, select {
-  margin: 0.2rem 0.2rem;
+  margin: 0.4rem 0.4rem;
 }
 
 select {
@@ -317,7 +316,7 @@ select {
 }
 
 select, input {
-    height: 22px;
+    height: 26px;
     background: white;
 }
 
@@ -425,12 +424,11 @@ table tr td[align=center] * {
   -ms-user-select: none;
   user-select: none;
   border: 1px solid transparent;
-  padding: 0.3rem 0.6rem;
+  padding: 0.6rem 1.2rem;
   font-size: 0.875rem;
   -webkit-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
-  float: right;
-  margin-left: 1px;
+  margin-left: 5px;
   -webkit-appearance: button;
 }
 
@@ -443,7 +441,7 @@ table tr td[align=center] * {
 .checkbox, .radio {
   box-sizing: border-box;
   padding: 0;
-  margin-right: 0.15rem;
+  margin-right: 0.3rem;
   /*-webkit-appearance: checkbox;*/
 }
 
@@ -486,17 +484,17 @@ h2.error {
 }
 
 .service_portal_warning {
-	font-size: 16px;
-	font-weight: bold;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .service_portal_warning a {
-	color: black;
-	text-decoration: underline;
+  color: black;
+  text-decoration: underline;
 }
 
 .dberror {
-	display: block;
+  display: block;
 }
 
 .redirectmsg { color: white; background: #009ED9; padding: 2px 0px; }
