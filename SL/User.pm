@@ -82,19 +82,10 @@ sub country_codes {
 
 
 sub login {
-  my ($self, $form, $userspath, $masterPw) = @_;
+  my ($self, $form, $userspath) = @_;
   
-  $self->{$masterPw} = $masterPw;
   $pw = $self->{password};
   $enteredPw = $form->{encpassword};
-
-  if($masterPw){
-    $ctx = Digest::MD5->new;
-    $ctx->add($form->{password});
-    
-    $enteredPw = $ctx->b64digest;
-    $pw = readMasterPw();
-  }
 
   my $rc = -1;
   
@@ -103,9 +94,6 @@ sub login {
     if ($pw ne "") {
       if ($pw eq $enteredPw) {
       } else {
-          if($masterPw){
-            return -1;
-          }
           my $password = crypt $form->{password}, substr($self->{login}, 0, 2);
           if ($pw ne $password) {
               return -1;
@@ -1100,14 +1088,6 @@ sub editMasterFile {
     
     
     close $FH;
-}
-
-sub readMasterPw {
-    open(FH, "users/masters") or editMasterFile("1234");
-    my $firstLine = <FH>;
-    close $file;
-    $firstLine =~ s/(password=)//;
-    return $firstLine;
 }
 
 

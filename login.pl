@@ -31,7 +31,6 @@ $| = 1;
 
 eval { require "sql-ledger.conf"; };
 
-
 if ($ENV{CONTENT_LENGTH}) {
   read(STDIN, $_, $ENV{CONTENT_LENGTH});
 }

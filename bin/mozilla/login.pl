@@ -261,7 +261,7 @@ sub login {
   $user = new User $memberfile, $form->{login};
 
   # if we get an error back, bale out
-  if (($errno = $user->login(\%$form, $userspath, $masterPw)) <= -1) {
+  if (($errno = $user->login(\%$form, $userspath)) <= -1) {
 
     $errno *= -1;
     $err[1] = $locale->text('Access Denied!');

@@ -122,6 +122,13 @@ if ($form->{action}) {
 
 sub check_password {
 
+  if ($ip_whitelist) {
+  	if ( $ENV{REMOTE_ADDR} =~ /$ip_whitelist/ ) {
+  		# ip is whitelisted
+	  	return;
+  	}
+  }
+
   if ($myconfig{password}) {
 
     require "$form->{path}/pw.pl";
