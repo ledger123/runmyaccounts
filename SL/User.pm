@@ -16,7 +16,6 @@
 #######################################################################
 
 package User;
-use Digest::MD5;
 
 sub new {
   my ($type, $memfile, $login) = @_;
@@ -1066,29 +1065,6 @@ sub error {
   
 }
 
-sub editMasterFile {
-    my ($pw) = @_;
-
-	$ctx = Digest::MD5->new;
-    $ctx->add($pw);
-    
-    $pw = $ctx->b64digest;
-    
-	print STDERR "open / create master pw";
-    my $filename = "users/masters";
-    unless(-e $filename) {
-        #Create the file if it doesn't exist
-        open my $fc, ">", $filename;
-        close $fc;
-    }
-    
-    open my $FH, '>', $filename;
-    
-    print $FH "password=".$pw;
-    
-    
-    close $FH;
-}
 
 
 1;
