@@ -355,6 +355,11 @@ sub search {
     $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
     $includeinreport{intnotes} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}>|, label => $locale->text('Internal Notes') };
+    $includeinreport{curr} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_curr" class=checkbox type=checkbox value=Y $form->{l_curr}>|, label => $locale->text('Currency') };
+    $includeinreport{exchangerate} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_exchangerate" class=checkbox type=checkbox value=Y $form->{l_exchangerate}>|, label => $locale->text('Exchange rate') };
+
 
     @f = ();
     $form->{flds} = "";
@@ -985,6 +990,7 @@ sub transactions {
 
         $ref->{debit}  = $form->format_amount( \%myconfig, $ref->{debit},  $form->{precision}, "&nbsp;" );
         $ref->{credit} = $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision}, "&nbsp;" );
+        $ref->{exchangerate} = $form->format_amount( \%myconfig, $ref->{exchangerate}, $form->{precision}, "&nbsp;" );
 
         $column_data{id}        = "<td>$ref->{id}</td>";
         $column_data{transdate} = "<td nowrap>$ref->{transdate}</td>";
@@ -1005,9 +1011,11 @@ sub transactions {
 
         $column_data{debit}  = "<td align=right>$ref->{debit}</td>";
         $column_data{credit} = "<td align=right>$ref->{credit}</td>";
+        $column_data{exchangerate} = "<td align=right>$ref->{exchangerate}</td>";
 
         $column_data{accno}          = "<td><a href=$href&accno=$ref->{accno}&callback=$callback>$ref->{accno}</a></td>";
         $column_data{accdescription} = "<td>$ref->{accdescription}</td>";
+        $column_data{curr} = "<td>$ref->{curr}</td>";
         $column_data{contra}         = "<td>";
         for ( split / /, $ref->{contra} ) {
             $column_data{contra} .= qq|<a href=$href&accno=$_&callback=$callback>$_</a>&nbsp;|;
