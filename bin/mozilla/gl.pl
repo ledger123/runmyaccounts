@@ -990,7 +990,7 @@ sub transactions {
         $column_data{transdate} = "<td nowrap>$ref->{transdate}</td>";
 
         $ref->{reference} ||= "&nbsp;";
-        $column_data{reference} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
+        $column_data{reference} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</a></td>";
 
         for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
 
@@ -1000,7 +1000,7 @@ sub transactions {
         }
 
         if ( $ref->{vc_id} ) {
-            $column_data{name} = "<td><a href=ct.pl?action=edit&id=$ref->{vc_id}&db=$ref->{db}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name}</td>";
+            $column_data{name} = "<td><a href=ct.pl?action=edit&id=$ref->{vc_id}&db=$ref->{db}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name}</a></td>";
         }
 
         $column_data{debit}  = "<td align=right>$ref->{debit}</td>";
