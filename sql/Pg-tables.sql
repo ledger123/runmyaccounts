@@ -66,7 +66,7 @@ CREATE TABLE defaults (
   fldvalue text
 );
 --
-INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.11');
+INSERT INTO defaults (fldname, fldvalue) VALUES ('version', '2.8.12');
 --
 CREATE TABLE acc_trans (
   trans_id int,
