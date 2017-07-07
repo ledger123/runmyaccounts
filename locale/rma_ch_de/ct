@@ -185,6 +185,7 @@ $self{subs} = {
   'list_subtotal'               => 'list_subtotal',
   'menubar'                     => 'menubar',
   'new_number'                  => 'new_number',
+  'neue_nummer'					=> 'new_number',
   'pos'                         => 'pos',
   'pricelist'                   => 'pricelist',
   'pricelist_footer'            => 'pricelist_footer',
