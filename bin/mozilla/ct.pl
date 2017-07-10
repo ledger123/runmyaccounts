@@ -1044,7 +1044,7 @@ sub list_names {
 	$column_data{$form->{sort}} = "<td>&nbsp;</td>";
       }
 	
-      $column_data{name} = "<td><a href=$form->{script}?action=edit&id=$ref->{id}&db=$form->{db}&path=$form->{path}&login=$form->{login}&status=$form->{status}&callback=$callback>$ref->{name}&nbsp;</td>";
+      $column_data{name} = "<td><a href=$form->{script}?action=edit&id=$ref->{id}&db=$form->{db}&path=$form->{path}&login=$form->{login}&status=$form->{status}&callback=$callback>$ref->{name}&nbsp;</a></td>";
 
       $email = "";
       if ($form->{sort} =~ /(email|cc)/) {
@@ -1069,7 +1069,7 @@ sub list_names {
     }
     
     if ($ref->{formtype} eq 'invoice') {
-      $column_data{invnumber} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{invid}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</td>";
+      $column_data{invnumber} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{invid}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</a></td>";
       
       $column_data{invamount} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{netamount}, $form->{precision}, "&nbsp;")."</td>";
       $column_data{invtax} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{amount} - $ref->{netamount}, $form->{precision}, "&nbsp;")."</td>";
@@ -1082,7 +1082,7 @@ sub list_names {
     }
      
     if ($ref->{formtype} eq 'order') {
-      $column_data{ordnumber} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{invid}&type=$ordertype&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{ordnumber}&nbsp;</td>";
+      $column_data{ordnumber} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{invid}&type=$ordertype&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{ordnumber}&nbsp;</a></td>";
       
       $column_data{ordamount} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{netamount}, $form->{precision}, "&nbsp;")."</td>";
       $column_data{ordtax} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{amount} - $ref->{netamount}, $form->{precision}, "&nbsp;")."</td>";
@@ -1095,7 +1095,7 @@ sub list_names {
     }
 
     if ($ref->{formtype} eq 'quotation') {
-      $column_data{quonumber} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{invid}&type=$quotationtype&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{quonumber}&nbsp;</td>";
+      $column_data{quonumber} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{invid}&type=$quotationtype&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{quonumber}&nbsp;</a></td>";
       
       $column_data{quoamount} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{netamount}, $form->{precision}, "&nbsp;")."</td>";
       $column_data{quotax} = "<td align=right>".$form->format_amount(\%myconfig, $ref->{amount} - $ref->{netamount}, $form->{precision}, "&nbsp;")."</td>";
@@ -1516,7 +1516,7 @@ sub list_history {
       
     $column_data{qty} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{qty} * $ml)."</td>";
     $column_data{discount} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{discount} * 100, 1, "&nbsp;")."</td>";
-    $column_data{partnumber} = qq|<td><a href=ic.pl?action=edit&id=$ref->{pid}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partnumber}</td>|;
+    $column_data{partnumber} = qq|<td><a href=ic.pl?action=edit&id=$ref->{pid}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partnumber}</a></td>|;
     
    
     $i++; $i %= 2;
