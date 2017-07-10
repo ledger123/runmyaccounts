@@ -694,7 +694,7 @@ sub list_spool {
   @column_index = $form->sort_columns(@columns);
   unshift @column_index, qw(runningnumber ndx);
 
-  $column_header{runningnumber} = "<th><a class=listheading>&nbsp;</th>";
+  $column_header{runningnumber} = "<th><a class=listheading>&nbsp;</a></th>";
   $form->{allbox} = ($form->{allbox}) ? "checked" : "";
   $action = ($form->{deselect}) ? "deselect_all" : "select_all";
   $column_header{ndx} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;

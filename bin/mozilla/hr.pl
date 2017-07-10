@@ -307,7 +307,7 @@ sub list_employees {
     $column_data{role} = qq|<td>$role{"$ref->{role}"}&nbsp;</td>|;
     $column_date{address} = qq|$ref->{address1} $ref->{address2}|;
 
-    $column_data{name} = "<td><a href=$form->{script}?action=edit&db=employee&id=$ref->{id}&path=$form->{path}&login=$form->{login}&status=$form->{status}&callback=$callback>$ref->{name}&nbsp;</td>";
+    $column_data{name} = "<td><a href=$form->{script}?action=edit&db=employee&id=$ref->{id}&path=$form->{path}&login=$form->{login}&status=$form->{status}&callback=$callback>$ref->{name}&nbsp;</a></td>";
 
     if ($ref->{email}) {
       $email = $ref->{email};
