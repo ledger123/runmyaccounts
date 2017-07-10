@@ -463,7 +463,7 @@ sub list_gifi {
 <tr valign=top class=listrow$i>|;
     
     my $accno = $form->escape($ref->{accno});
-    $column_data{accno} = qq|<td><a href=$form->{script}?action=edit_gifi&coa=1&accno=$accno&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</td>|;
+    $column_data{accno} = qq|<td><a href=$form->{script}?action=edit_gifi&coa=1&accno=$accno&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</a></td>|;
     $column_data{description} = qq|<td>$ref->{description}&nbsp;</td>|;
     
     for (@column_index) { print "$column_data{$_}\n" }
@@ -711,7 +711,7 @@ sub list_department {
    $costcenter = ($ref->{role} eq "C") ? "*" : "&nbsp;";
    $profitcenter = ($ref->{role} eq "P") ? "*" : "&nbsp;";
    
-   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_department&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</td>|;
+   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_department&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</a></td>|;
    $column_data{cost} = qq|<td align=center>$costcenter</td>|;
    $column_data{profit} = qq|<td align=center>$profitcenter</td>|;
 
@@ -908,7 +908,7 @@ sub list_business {
 
    $discount = $form->format_amount(\%myconfig, $ref->{discount} * 100, $form->{precision}, "&nbsp");
    
-   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_business&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</td>|;
+   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_business&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</a></td>|;
    $column_data{discount} = qq|<td align=right>$discount</td>|;
    
    for (@column_index) { print "$column_data{$_}\n" }
@@ -1093,7 +1093,7 @@ sub list_dispatch {
         <tr valign=top class=listrow$i>
 |;
 
-   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_dispatch&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</td>|;
+   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_dispatch&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</a></td>|;
    
    for (@column_index) { print "$column_data{$_}\n" }
 
@@ -1281,10 +1281,10 @@ sub list_paymentmethod {
    $fee = $form->format_amount(\%myconfig, $ref->{fee}, $form->{precision}, "&nbsp");
    
    $column_data{rn} = qq|<td align=right>$ref->{rn}</td>|;
-   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_paymentmethod&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</td>|;
+   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_paymentmethod&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</a></td>|;
    $column_data{fee} = qq|<td align=right>$fee</td>|;
-   $column_data{plus} = qq|<td><a href=$form->{script}?action=move&db=paymentmethod&fld=id&id=$ref->{id}&move=up&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/up.png alt="+" border=0></td>|;
-   $column_data{minus} = qq|<td><a href=$form->{script}?action=move&db=paymentmethod&fld=id&id=$ref->{id}&move=down&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/down.png alt="-" border=0></td>|;
+   $column_data{plus} = qq|<td><a href=$form->{script}?action=move&db=paymentmethod&fld=id&id=$ref->{id}&move=up&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/up.png alt="+" border=0></a></td>|;
+   $column_data{minus} = qq|<td><a href=$form->{script}?action=move&db=paymentmethod&fld=id&id=$ref->{id}&move=down&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/down.png alt="-" border=0></a></td>|;
   
    for (@column_index) { print "$column_data{$_}\n" }
 
@@ -1471,7 +1471,7 @@ sub list_sic {
       print qq|
         <tr valign=top class=listheading>
 |;
-      $column_data{code} = qq|<th><a href=$form->{script}?action=edit_sic&code=$ref->{code}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{code}</th>|;
+      $column_data{code} = qq|<th><a href=$form->{script}?action=edit_sic&code=$ref->{code}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{code}</a></th>|;
       $column_data{description} = qq|<th>$ref->{description}</th>|;
      
     } else {
@@ -1479,7 +1479,7 @@ sub list_sic {
         <tr valign=top class=listrow$i>
 |;
 
-      $column_data{code} = qq|<td><a href=$form->{script}?action=edit_sic&code=$ref->{code}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{code}</td>|;
+      $column_data{code} = qq|<td><a href=$form->{script}?action=edit_sic&code=$ref->{code}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{code}</a></td>|;
       $column_data{description} = qq|<td>$ref->{description}</td>|;
 
    }
@@ -1670,7 +1670,7 @@ sub list_language {
         <tr valign=top class=listrow$i>
 |;
 
-    $column_data{code} = qq|<td><a href=$form->{script}?action=edit_language&code=$ref->{code}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{code}</td>|;
+    $column_data{code} = qq|<td><a href=$form->{script}?action=edit_language&code=$ref->{code}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{code}</a></td>|;
     $column_data{description} = qq|<td>$ref->{description}</td>|;
     
    for (@column_index) { print "$column_data{$_}\n" }
@@ -1913,7 +1913,7 @@ sub list_templates {
         <tr valign=top class=listrow$i>
 |;
 
-    $column_data{code} = qq|<td><a href=$form->{script}?action=display_form&file=$myconfig{templates}/$ref->{code}/$form->{file}&path=$form->{path}&login=$form->{login}&code=$ref->{code}&callback=$callback>$ref->{code}</td>|;
+    $column_data{code} = qq|<td><a href=$form->{script}?action=display_form&file=$myconfig{templates}/$ref->{code}/$form->{file}&path=$form->{path}&login=$form->{login}&code=$ref->{code}&callback=$callback>$ref->{code}</a></td>|;
     $column_data{description} = qq|<td>$ref->{description}</td>|;
     
    for (@column_index) { print "$column_data{$_}\n" }
@@ -2932,7 +2932,7 @@ sub list_warehouse {
         <tr valign=top class=listrow$i>
 |;
 
-   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_warehouse&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</td>|;
+   $column_data{description} = qq|<td><a href=$form->{script}?action=edit_warehouse&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</a></td>|;
    $column_data{address} = qq|<td>$ref->{address1} $ref->{address2} $ref->{city} $ref->{state} $ref->{zipcode} $ref->{country}</td>|;
 
    for (@column_index) { print "$column_data{$_}\n" }
@@ -3292,10 +3292,10 @@ sub recurring_transactions {
   
   $column_data{reference} = "<th><a class=listheading href=$href&sort=reference>".$locale->text('Reference').qq"</a></th>";
   $column_data{id} = "<th class=listheading>".$locale->text('ID')."</th>";
-  $column_data{department} = "<th><a class=listheading href=$href&sort=department>".$locale->text('Department')."</th>";
-  $column_data{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</th>";
-  $column_data{name} = "<th nowrap><a class=listheading href=$href&sort=name>".$locale->text('Company Name')."</th>";
-  $column_data{vcnumber} = "<th nowrap><a class=listheading href=$href&sort=vcnumber>".$locale->text('Company Number')."</th>";
+  $column_data{department} = "<th><a class=listheading href=$href&sort=department>".$locale->text('Department')."</a></th>";
+  $column_data{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</a></th>";
+  $column_data{name} = "<th nowrap><a class=listheading href=$href&sort=name>".$locale->text('Company Name')."</a></th>";
+  $column_data{vcnumber} = "<th nowrap><a class=listheading href=$href&sort=vcnumber>".$locale->text('Company Number')."</a></th>";
   $column_data{nextdate} = "<th><a class=listheading href=$href&sort=nextdate>".$locale->text('Next')."</a></th>";
   $column_data{enddate} = "<th><a class=listheading href=$href&sort=enddate>".$locale->text('Ends')."</a></th>";
   $column_data{amount} = "<th class=listheading>".$locale->text('Amount')."</th>";
@@ -4051,7 +4051,7 @@ sub bank_accounts {
     $ref->{address} =~ s/\n/<br>/g;
     for (qw(name description membernumber rvc dcn)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
     for (qw(iban bic address)) { $column_data{$_} = "<td nowrap>$ref->{$_}&nbsp;</td>" }
-    $column_data{accno} = "<td><a href=$form->{script}?action=edit_bank&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</td>";
+    $column_data{accno} = "<td><a href=$form->{script}?action=edit_bank&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</a></td>";
 
     $j++; $j %= 2;
     print "
@@ -4422,7 +4422,7 @@ sub list_exchangerates {
 
     if ($ref->{transdate} eq $samedate) {
       $href = "$form->{script}?action=edit_exchangerate&transdate=$ref->{transdate}&currencies=$form->{currencies}&path=$form->{path}&login=$form->{login}&callback=$callback";
-      $column_data{transdate} = "<td><a href=$href>$ref->{transdate}</td>";
+      $column_data{transdate} = "<td><a href=$href>$ref->{transdate}</a></td>";
       for (qw(buy sell)) {
 	$column_data{"$ref->{curr}$_"} = "<td>".$form->format_amount(\%myconfig, $ref->{$_}, undef, "&nbsp;").qq|</td>|;
       }
@@ -4447,7 +4447,7 @@ sub list_exchangerates {
       }
       
       $href = "$form->{script}?action=edit_exchangerate&transdate=$ref->{transdate}&currencies=$form->{currencies}&path=$form->{path}&login=$form->{login}&callback=$callback";
-      $column_data{transdate} = "<td><a href=$href>$ref->{transdate}</td>";
+      $column_data{transdate} = "<td><a href=$href>$ref->{transdate}</a></td>";
       for (qw(buy sell)) {
 	$column_data{"$ref->{curr}$_"} = "<td>".$form->format_amount(\%myconfig, $ref->{$_}, undef, "&nbsp;").qq|</td>|;
       }
@@ -4676,10 +4676,10 @@ sub list_currencies {
 
    $ref->{curr} =~ s/ //g;
    $column_data{rn} = qq|<td align=right>$ref->{rn}</td>|;
-   $column_data{curr} = qq|<td><a href=$form->{script}?action=edit_currency&curr=$ref->{curr}&rn=$ref->{rn}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{curr}</td>|;
+   $column_data{curr} = qq|<td><a href=$form->{script}?action=edit_currency&curr=$ref->{curr}&rn=$ref->{rn}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{curr}</a></td>|;
    $column_data{precision} = qq|<td align=right>$ref->{precision}</td>|;
-   $column_data{plus} = qq|<td align=center><a href=$form->{script}?action=move&db=curr&fld=curr&id=$ref->{curr}&move=up&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/up.png alt="+" border=0></td>|;
-   $column_data{minus} = qq|<td align=center><a href=$form->{script}?action=move&db=curr&fld=curr&id=$ref->{curr}&move=down&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/down.png alt="-" border=0></td>|;
+   $column_data{plus} = qq|<td align=center><a href=$form->{script}?action=move&db=curr&fld=curr&id=$ref->{curr}&move=up&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/up.png alt="+" border=0></a></td>|;
+   $column_data{minus} = qq|<td align=center><a href=$form->{script}?action=move&db=curr&fld=curr&id=$ref->{curr}&move=down&path=$form->{path}&login=$form->{login}&callback=$callback><img src=$images/down.png alt="-" border=0></a></td>|;
    
 
    for (@column_index) { print "$column_data{$_}\n" }
