@@ -627,8 +627,8 @@ sub list_batches {
   $column_header{batchnumber} = "<th><a class=listheading href=$href&sort=batchnumber>".$locale->text('Batch Number')."</a></th>";
   $column_header{amount} = "<th class=listheading>" . $locale->text('Total') . "</th>";
   $column_header{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</a></th>";
-  $column_header{employee} = "<th><a class=listheading href=$href&sort=employee>".$locale->text('Employee')."</th>";
-  $column_header{manager} = "<th><a class=listheading href=$href&sort=manager>".$locale->text('Manager')."</th>";
+  $column_header{employee} = "<th><a class=listheading href=$href&sort=employee>".$locale->text('Employee')."</a></th>";
+  $column_header{manager} = "<th><a class=listheading href=$href&sort=manager>".$locale->text('Manager')."</a></th>";
   
   $title = "$form->{title} / $form->{company}";
   

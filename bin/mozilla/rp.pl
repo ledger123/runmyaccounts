@@ -3021,16 +3021,16 @@ sub generate_tax_report {
   $option .= "<br>$form->{period}";
   
  
-  $column_header{id} = qq|<th><a class=listheading href=$href&sort=id>|.$locale->text('ID').qq|</th>|;
-  $column_header{invnumber} = qq|<th><a class=listheading href=$href&sort=invnumber>|.$locale->text('Invoice').qq|</th>|;
-  $column_header{transdate} = qq|<th nowrap><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</th>|;
+  $column_header{id} = qq|<th><a class=listheading href=$href&sort=id>|.$locale->text('ID').qq|</a></th>|;
+  $column_header{invnumber} = qq|<th><a class=listheading href=$href&sort=invnumber>|.$locale->text('Invoice').qq|</a></th>|;
+  $column_header{transdate} = qq|<th nowrap><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</a></th>|;
   $column_header{netamount} = qq|<th class=listheading>|.$locale->text('Amount').qq|</th>|;
   $column_header{tax} = qq|<th class=listheading>|.$locale->text('Tax').qq|</th>|;
   
-  $column_header{name} = qq|<th><a class=listheading href=$href&sort=name>$name</th>|;
-  $column_header{"$form->{vc}number"} = qq|<th><a class=listheading href=$href&sort=$form->{vc}number>$vcnumber</th>|;
+  $column_header{name} = qq|<th><a class=listheading href=$href&sort=name>$name</a></th>|;
+  $column_header{"$form->{vc}number"} = qq|<th><a class=listheading href=$href&sort=$form->{vc}number>$vcnumber</a></th>|;
   
-  $column_header{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</th>|;
+  $column_header{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
 
   $option = '' if $form->{header}; # Display report search options for first account only
   if ($form->{accno}){
