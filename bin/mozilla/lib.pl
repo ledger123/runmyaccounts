@@ -326,7 +326,7 @@ sub rpt_txt {
 sub rpt_url {
   my $column_data = shift;
   my $link = $uploadurl . $myconfig{dbname} . "/" . $column_data;
-  my $str = qq|<td><a href="$link">$column_data<a></td|;
+  my $str = qq|<td><a href="$link">$column_data</a></td|;
   $str;
 }
 

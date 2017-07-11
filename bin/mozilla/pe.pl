@@ -886,8 +886,8 @@ sub list_projects {
 
     for (qw(production completed)) { $column_data{$_} = qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{$_}) }
 
-    $column_data{projectnumber} = qq|<td><a href=$form->{script}?action=edit&type=$form->{type}&status=$form->{status}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&project=$form->{project}&callback=$callback>$ref->{projectnumber}</td>|;
-    $column_data{partnumber} = qq|<td><a href=ic.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partnumber}</td>|;
+    $column_data{projectnumber} = qq|<td><a href=$form->{script}?action=edit&type=$form->{type}&status=$form->{status}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&project=$form->{project}&callback=$callback>$ref->{projectnumber}</a></td>|;
+    $column_data{partnumber} = qq|<td><a href=ic.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partnumber}</a></td>|;
     
     $j++; $j %= 2;
     
@@ -1259,7 +1259,7 @@ sub partsgroup_report {
         <tr valign=top class=listrow$i>
 |;
     
-    $column_data{partsgroup} = qq|<td><a href=$form->{script}?action=edit&type=$form->{type}&status=$form->{status}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partsgroup}</td>|;
+    $column_data{partsgroup} = qq|<td><a href=$form->{script}?action=edit&type=$form->{type}&status=$form->{status}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{partsgroup}</a></td>|;
     $pos = ($ref->{pos}) ? "*" : "&nbsp;";
     $column_data{pos} = qq|<td align=center>$pos</td>|;
     for (@column_index) { print "$column_data{$_}\n" }
@@ -1417,7 +1417,7 @@ sub pricegroup_report {
 
   @column_index = $form->sort_columns(qw(pricegroup));
 
-  $column_header{pricegroup} = qq|<th><a class=listheading href=$href&sort=pricegroup width=90%>|.$locale->text('Pricegroup').qq|</th>|;
+  $column_header{pricegroup} = qq|<th><a class=listheading href=$href&sort=pricegroup width=90%>|.$locale->text('Pricegroup').qq|</a></th>|;
 
   $form->{title} = $locale->text('Pricegroups') . " / $form->{company}";
 
@@ -1460,7 +1460,7 @@ sub pricegroup_report {
         <tr valign=top class=listrow$i>
 |;
     
-    $column_data{pricegroup} = qq|<td><a href=$form->{script}?action=edit&type=$form->{type}&status=$form->{status}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{pricegroup}</td>|;
+    $column_data{pricegroup} = qq|<td><a href=$form->{script}?action=edit&type=$form->{type}&status=$form->{status}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{pricegroup}</a></td>|;
     for (@column_index) { print "$column_data{$_}\n" }
     
     print "

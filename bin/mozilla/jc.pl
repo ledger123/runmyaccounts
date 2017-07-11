@@ -1338,7 +1338,7 @@ sub list_cards {
   
   $column_header{id} = "<th><a class=listheading href=$href&sort=id>".$locale->text('ID')."</a></th>";
   $column_header{transdate} = "<th><a class=listheading href=$href&sort=transdate>".$locale->text('Date')."</a></th>";
-  $column_header{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</th>";
+  $column_header{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</a></th>";
   $column_header{projectnumber} = "<th><a class=listheading href=$href&sort=projectnumber>$joblabel</a></th>";
   $column_header{partnumber} = "<th><a class=listheading href=$href&sort=partnumber>$laborlabel</a></th>";
   $column_header{projectdescription} = "<th><a class=listheading href=$href&sort=projectdescription>$desclabel</a></th>";
