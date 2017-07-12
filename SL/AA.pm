@@ -246,7 +246,15 @@ sub post_transaction {
         $dbh->do($query) || $form->dberror($query);
 
         $query = qq|
-            INSERT INTO acc_trans_log 
+            INSERT INTO acc_trans_log (
+                trans_id, chart_id, 
+                amount, transdate, source,
+                approved, fx_transaction, project_id,
+                memo, id, cleared,
+                vr_id, entry_id,
+                tax, taxamount, tax_chart_id,
+                ts
+                )
             SELECT 
                 ac.trans_id, ac.chart_id, 
                 0 - ac.amount, ac.transdate, ac.source,
