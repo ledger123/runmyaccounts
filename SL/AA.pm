@@ -232,13 +232,13 @@ sub post_transaction {
     &reverse_vouchers($dbh, $form);
 
     if ($form->{id}) {
-        $query = qq|INSERT INTO ${table}_log SELECT ar.* FROM ar WHERE id = $form->{id}|;
+        $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
         $query = qq|
             INSERT INTO acc_trans_log 
-            SELECT acc_trans.*, ar.ts
+            SELECT acc_trans.*, ${table}.ts
             FROM acc_trans
-            JOIN ar ON (ar.id = acc_trans.trans_id)
+            JOIN $table ON (${table}.id = acc_trans.trans_id)
             WHERE trans_id = $form->{id}
         |;
         $dbh->do($query) || $form->dberror($query);
@@ -262,9 +262,9 @@ sub post_transaction {
                 ac.memo, ac.id, ac.cleared,
                 vr_id, ac.entry_id,
                 ac.tax, ac.taxamount, ac.tax_chart_id,
-                ar.ts
+                ${table}.ts
             FROM acc_trans ac
-            JOIN ar ON (ar.id = ac.trans_id)
+            JOIN $table ON (${table}.id = ac.trans_id)
             WHERE trans_id = $form->{id}|;
             $dbh->do($query) || $form->dberror($query);
 
