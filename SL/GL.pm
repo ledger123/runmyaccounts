@@ -708,7 +708,7 @@ sub transactions {
 	     |;
   } # if $form->{include_log}
 
-  $query .= qq| ORDER BY 30, $sortorder|;
+  $query .= qq| ORDER BY 30, 31, $sortorder|;
 
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
