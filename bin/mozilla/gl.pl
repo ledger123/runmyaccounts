@@ -2206,3 +2206,45 @@ sub post {
 
 }
 
+
+sub view {
+    $form->header;
+
+    use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    $query = qq|
+            SELECT * 
+            FROM gl_log a
+            WHERE a.ts = ?
+            ORDER BY a.ts
+    |;
+
+    my $table = $dbs->query($query, $form->{ts})->xto(
+        tr => { class => [ 'listrow0', 'listrow1' ] },
+        th => { class => ['listheading'] },
+    );
+    $table->modify(td => {align => 'right'}, 'amount');
+    $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
+
+    print $table->output;
+
+    $query = qq|
+            SELECT * 
+            FROM acc_trans_log ac
+            WHERE ac.ts = ?
+            ORDER BY ac.ts
+    |;
+    $table = $dbs->query($query, $form->{ts})->xto(
+        tr => { class => [ 'listrow0', 'listrow1' ] },
+        th => { class => ['listheading'] },
+    );
+    $table->modify(td => {align => 'right'}, 'amount');
+    $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
+    $table->set_group( 'transdate', 1 );
+    $table->calc_totals( [qw(amount)] );
+
+    print $table->output;
+}
+
