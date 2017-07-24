@@ -252,9 +252,9 @@ function CheckAll(v) {
     my $pricehistory = '&nbsp;';
     if ($numrows != $i) {
       $zero = "0";
-      $pricehistory = qq|<a href="ic.pl?login=$form->{login}&path=$form->{path}&action=history&id=$form->{"id_$i"}&vc=$form->{vc}" target=_blank>?</a>|;
+      $pricehistory = qq|<a href="ic.pl?login=$form->{login}&path=$form->{path}&action=history&id=$form->{"id_$i"}&vc=$form->{vc}" target="_blank">?</a>|;
       if ($itemdetailok) {
-	$itemdetail = qq|<td><a href="ic.pl?login=$form->{login}&path=$form->{path}&action=edit&id=$form->{"id_$i"}" target=_blank>?</a></td>|;
+	$itemdetail = qq|<td><a href="ic.pl?login=$form->{login}&path=$form->{path}&action=edit&id=$form->{"id_$i"}" target="_blank">?</a></td>|;
       }
     }
     
@@ -299,8 +299,8 @@ function CheckAll(v) {
 
     if ($form->{type} !~ /_quotation/) {
       $orderxref = qq|
-                <b>$orderxrefnumber</b> <input name="ordernumber_$i" value="$form->{"ordernumber_$i"}"> <a href=oe.pl?action=lookup_order&ordnumber=|.$form->escape($form->{"ordernumber_$i"},1).qq|&vc=customer&path=$form->{path}&login=$form->{login} target=_blank>?</a>
-		<b>$poxrefnumber</b> <input name="customerponumber_$i" value="$form->{"customerponumber_$i"}"> <a href=oe.pl?action=lookup_order&ordnumber=|.$form->escape($form->{"customerponumber_$i"},1).qq|&vc=vendor&path=$form->{path}&login=$form->{login} target=_blank>?</a>
+                <b>$orderxrefnumber</b> <input name="ordernumber_$i" value="$form->{"ordernumber_$i"}"> <a href=oe.pl?action=lookup_order&ordnumber=|.$form->escape($form->{"ordernumber_$i"},1).qq|&vc=customer&path=$form->{path}&login=$form->{login} target="_blank">?</a>
+		<b>$poxrefnumber</b> <input name="customerponumber_$i" value="$form->{"customerponumber_$i"}"> <a href=oe.pl?action=lookup_order&ordnumber=|.$form->escape($form->{"customerponumber_$i"},1).qq|&vc=vendor&path=$form->{path}&login=$form->{login} target="_blank">?</a>
 |;
     }
 

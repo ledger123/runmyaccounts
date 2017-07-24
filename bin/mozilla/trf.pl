@@ -88,7 +88,7 @@ sub form_header {
 	} else {
     	   $itemdetail = "<td></td>";
       	   if ($itemdetailok) {
-		$itemdetail = qq|<td><a href="ic.pl?login=$form->{login}&path=$form->{path}&action=edit&id=$form->{"parts_id_$i"}" target=_blank>?</a></td>|;
+		$itemdetail = qq|<td><a href="ic.pl?login=$form->{login}&path=$form->{path}&action=edit&id=$form->{"parts_id_$i"}" target="_blank">?</a></td>|;
       	   }
 	   $total += $form->{"cost_$i"}*$form->{"qty_$i"};
 	   print qq|<tr>|;
