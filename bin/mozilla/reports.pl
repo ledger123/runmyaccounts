@@ -522,14 +522,14 @@ $selectfrom
 
         for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
 
-        $invnumber = qq|<a href="$row->{script}?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}" target=_blank>$row->{invnumber}</a>|;
+        $invnumber = qq|<a href="$row->{script}?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}" target="_blank">$row->{invnumber}</a>|;
         $tabledata{invnumber} = qq|<td>$invnumber</td>|;
 
         $db = ( $row->{module} eq 'AR' ) ? 'customer' : 'vendor';
         $db = '' if $row->{module} eq 'GL';
 
         if ($db){
-            $vc = qq|<a href="ct.pl?id=$row->{vc_id}&db=$db&action=edit&path=$form->{path}&login=$form->{login}" target=_blank>$row->{name}</a>|;
+            $vc = qq|<a href="ct.pl?id=$row->{vc_id}&db=$db&action=edit&path=$form->{path}&login=$form->{login}" target="_blank">$row->{name}</a>|;
             $tabledata{name} = qq|<td>$vc</td>|;
         }
 

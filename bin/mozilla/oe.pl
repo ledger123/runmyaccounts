@@ -510,7 +510,7 @@ sub form_header {
 
   my $vcdetail;
   if ($form->{"$form->{vc}"}){
-    $vcdetail = qq|<a href="ct.pl?login=$form->{login}&path=$form->{path}&action=edit&db=$form->{vc}&id=$form->{"$form->{vc}_id"}" target=_blank>?</a>|;
+    $vcdetail = qq|<a href="ct.pl?login=$form->{login}&path=$form->{path}&action=edit&db=$form->{vc}&id=$form->{"$form->{vc}_id"}" target="_blank">?</a>|;
   }
 
   if ($form->{"select$form->{vc}"}) {
