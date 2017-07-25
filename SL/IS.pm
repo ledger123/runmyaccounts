@@ -2179,8 +2179,12 @@ sub retrieve_invoice {
     if ($form->{paymentmethod_id}) {
       $form->{payment_method} = "$form->{paymentmethod}--$form->{paymentmethod_id}";
     }
-    
-    $form->{type} = ($form->{amount} < 0) ? 'credit_invoice' : 'invoice';
+        
+    if ( !$form->{precision} ) {
+    	$form->{precision} = 2;
+    }    
+        
+    $form->{type} = ($form->round_amount($form->{amount}, $form->{precision}) < 0) ? 'credit_invoice' : 'invoice';
     $form->{type} = 'pos_invoice' if $form->{till};
     $form->{formname} = $form->{type};
 
