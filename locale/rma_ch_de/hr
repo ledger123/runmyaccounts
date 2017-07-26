@@ -102,6 +102,7 @@ $self{subs} = {
   'list_employees'              => 'list_employees',
   'menubar'                     => 'menubar',
   'new_number'                  => 'new_number',
+  'neue_nummer'                 => 'new_number',
   'save'                        => 'save',
   'save_as_new'                 => 'save_as_new',
   'save_deduction'              => 'save_deduction',
