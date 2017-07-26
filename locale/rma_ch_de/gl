@@ -182,6 +182,7 @@ $self{subs} = {
   'menubar'                     => 'menubar',
   'name_selected'               => 'name_selected',
   'new_number'                  => 'new_number',
+  'neue_nummer'                 => 'new_number',
   'post'                        => 'post',
   'post_as_new'                 => 'post_as_new',
   'preview'                     => 'preview',
