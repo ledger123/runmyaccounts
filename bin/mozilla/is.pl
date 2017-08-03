@@ -660,7 +660,7 @@ sub form_footer {
   $subtotal = qq|
 	      <tr>
 		<th align=right>|.$locale->text('Subtotal').qq|</th>
-		<td align=right>|.$form->format_amount(\%myconfig, $form->{invsubtotal}, $form->{precision}, 0).qq|</td>
+		<td id=subtotal align=right>|.$form->format_amount(\%myconfig, $form->{invsubtotal}, $form->{precision}, 0).qq|</td>
 	      </tr>
 |;
 
@@ -794,7 +794,7 @@ sub form_footer {
 	      $tax
 	      <tr>
 		<th align=right>|.$locale->text('Total').qq|</th>
-		<td align=right>$form->{invtotal}</td>
+		<td id=total align=right>$form->{invtotal}</td>
 	      </tr>
 	    </table>
 	  </td>
