@@ -869,7 +869,7 @@ function CheckAll() {
 <br>
 |;
 
-  $form->hide_form(qw(callback title type sort path login printcustomer printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed notprinted notemailed precision));
+  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed notprinted notemailed precision));
 
   $form->{copies} ||= 1;
 
