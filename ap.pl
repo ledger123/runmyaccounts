@@ -243,7 +243,7 @@ sub error {
     print qq|Content-Type: text/html
 
 <body><h2 class=error>Error!</h2>
-    <p><b>$msg</b>|;
+    <p><b id=errorMessage>$msg</b>|;
 
     exit;
   }
