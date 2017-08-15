@@ -257,10 +257,10 @@ sub error {
 
 	if ( $dbmsg && !$errormessages) {
 	   print qq|<body><h2 class=error>Error!</h2>;
-       <p><b class=dberror>$self->{dbmsg}</b>|;
+       <p><b id=errorMessage class=dberror>$self->{dbmsg}</b>|;
 	}else {
 	   print qq|<body><h2 class=error>Error!</h2>
-	   <p><b>$self->{msg}</b>|;
+	   <p><b id=errorMessage>$self->{msg}</b>|;
 
        print qq|<h2 class=dberror>DB Error!</h2>
 

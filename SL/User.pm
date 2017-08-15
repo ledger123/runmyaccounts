@@ -1057,7 +1057,7 @@ sub error {
 <body bgcolor=ffffff>
 
 <h2><font color=red>Error!</font></h2>
-<p><b>$msg</b>|;
+<p><b id=errorMessage>$msg</b>|;
 
   }
   
