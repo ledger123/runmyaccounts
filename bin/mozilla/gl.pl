@@ -355,6 +355,10 @@ sub search {
     $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
     $includeinreport{intnotes} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}>|, label => $locale->text('Internal Notes') };
+    $includeinreport{log} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_log" class=checkbox type=checkbox value=Y $form->{l_log}>|, label => $locale->text('Log') };
+    $includeinreport{ts} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_ts" class=checkbox type=checkbox value=Y $form->{l_ts}>|, label => $locale->text('TS') };
 
     @f = ();
     $form->{flds} = "";
@@ -489,6 +493,7 @@ sub search {
 		    <tr>
 		      <td nowrap><input name="l_subtotal" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Subtotal') . qq|</td>
               <td><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Exchange Rate Difference').qq|</td>
+              <td><input type=checkbox class=checkbox name=include_log value=1> |.$locale->text('Include Log').qq|</td>
 		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('CSV') . qq|</td>
 		    </tr>
 		  </table>
@@ -991,6 +996,9 @@ sub transactions {
 
         $ref->{reference} ||= "&nbsp;";
         $column_data{reference} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</a></td>";
+        if ($ref->{log} eq '*'){
+            $column_data{reference} = "<td><a href=$ref->{module}.pl?action=view&id=$ref->{id}&ts=".$form->escape($ref->{ts})."&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
+        }
 
         for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
 
@@ -1022,6 +1030,8 @@ sub transactions {
 
         $column_data{balance} = "<td align=right>" . $form->format_amount( \%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0 ) . "</td>";
         $column_data{cleared} = ( $ref->{cleared} ) ? "<td>*</td>" : "<td>&nbsp;</td>";
+        $column_data{log} = "<td>$ref->{log}</td>";
+        $column_data{ts} = "<td>$ref->{ts}</td>";
 
         if ( $ref->{id} != $sameid ) {
             $i++;
@@ -2194,5 +2204,47 @@ sub post {
         $form->error( $locale->text('Cannot post transaction!') );
     }
 
+}
+
+
+sub view {
+    $form->header;
+
+    use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    $query = qq|
+            SELECT * 
+            FROM gl_log a
+            WHERE a.ts = ?
+            ORDER BY a.ts
+    |;
+
+    my $table = $dbs->query($query, $form->{ts})->xto(
+        tr => { class => [ 'listrow0', 'listrow1' ] },
+        th => { class => ['listheading'] },
+    );
+    $table->modify(td => {align => 'right'}, 'amount');
+    $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
+
+    print $table->output;
+
+    $query = qq|
+            SELECT * 
+            FROM acc_trans_log ac
+            WHERE ac.ts = ?
+            ORDER BY ac.ts
+    |;
+    $table = $dbs->query($query, $form->{ts})->xto(
+        tr => { class => [ 'listrow0', 'listrow1' ] },
+        th => { class => ['listheading'] },
+    );
+    $table->modify(td => {align => 'right'}, 'amount');
+    $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
+    $table->set_group( 'transdate', 1 );
+    $table->calc_totals( [qw(amount)] );
+
+    print $table->output;
 }
 
