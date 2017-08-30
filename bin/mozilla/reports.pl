@@ -205,7 +205,7 @@ $selectfrom
         JOIN chart c ON (c.id = it.chart_id)
         JOIN ar aa ON (aa.id = it.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
-        WHERE c.link LIKE '%tax%'
+        WHERE 1 = 1
         $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
@@ -213,21 +213,21 @@ $selectfrom
         UNION ALL
 
         -- 1b. AR Invoices
-        SELECT 1 AS ordr, 'AR' module, 'Non-taxable' account,
-        aa.id, aa.invnumber, aa.transdate,
-        aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
-        '' f,
-        SUM(it.amount) amount, SUM(it.taxamount) AS tax
-        FROM invoicetax it
-        JOIN ar aa ON (aa.id = it.trans_id)
-        JOIN customer vc ON (vc.id = aa.customer_id)
-        WHERE 1 = 1
-        $aawhere
-        $cashwhere
-        AND it.taxamount = 0
-        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+        --SELECT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        --aa.id, aa.invnumber, aa.transdate,
+        --aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
+        --'' f,
+        --SUM(it.amount) amount, SUM(it.taxamount) AS tax
+        --FROM invoicetax it
+        --JOIN ar aa ON (aa.id = it.trans_id)
+        --JOIN customer vc ON (vc.id = aa.customer_id)
+        --WHERE 1 = 1
+        --$aawhere
+        --$cashwhere
+        --AND it.taxamount = 0
+        --GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
-        UNION ALL
+        --UNION ALL
 
         -- 2. AR Transactions with line tax
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
@@ -298,6 +298,7 @@ $selectfrom
         JOIN ar aa ON (aa.id = ac.trans_id)
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE aa.netamount = aa.amount
+        AND NOT aa.invoice
         $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
