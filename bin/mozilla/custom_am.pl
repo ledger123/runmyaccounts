@@ -457,6 +457,60 @@ sub click_here_to_delete_blank_rows {
   $dbh->do($query);
   $form->info($locale->text('Blank rows deleted if any ...'));
 }
+
+
+sub fix_invoicetax_for_alltaxes_report {
+    #use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    #my $dbs = DBIx::Simple->connect($dbh);
+
+    $form->info("Building invoicetax table<br>\n");
+    $query = qq|DELETE FROM invoicetax|;
+    $dbh->do($query) || $form->dberror($query);
+
+    my $query = qq|
+	    SELECT i.id, i.trans_id, i.parts_id, i.qty * i.sellprice amount,
+		(i.qty * i.sellprice * tax.rate) AS taxamount, 
+		ptax.chart_id
+	    FROM invoice i
+	    JOIN partstax ptax ON (ptax.parts_id = i.parts_id)
+	    JOIN tax ON (tax.chart_id = ptax.chart_id)
+	    WHERE i.trans_id = ?
+	    AND ptax.chart_id = ?|;
+    my $itsth = $dbh->prepare($query) || $form->dberror($query);
+
+    $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, amount, taxamount)
+		   VALUES (?, ?, ?, ?, ?)|;
+    my $itins = $dbh->prepare($query) || $form->dberror($query);
+
+    ## 1. First AR
+    $query = qq|SELECT ar.id, ar.customer_id, ctax.chart_id 
+		FROM ar
+		JOIN customertax ctax ON (ar.customer_id = ctax.customer_id)|;
+    $sth = $dbh->prepare($query) || $form->dberror($query);
+    $sth->execute;
+    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+	    $itsth->execute($ref->{id}, $ref->{chart_id});
+        while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
+            $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}, $itref->{taxamount});
+        }
+    }
+
+    ## 2. Now AP
+    $query = qq|SELECT ap.id, ap.vendor_id, vtax.chart_id 
+		FROM ap
+		JOIN vendortax vtax ON (ap.vendor_id = vtax.vendor_id)|;
+    $sth = $dbh->prepare($query) || $form->dberror($query);
+    $sth->execute;
+    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+	$itsth->execute($ref->{id}, $ref->{chart_id});
+       while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
+          $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}, $itref->{taxamount});
+       }
+    }
+    $form->info($locale->text('Done ...'));
+}
+
 ######
 # EOF 
 ######
