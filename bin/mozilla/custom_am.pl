@@ -440,7 +440,60 @@ WHERE trans_id NOT IN
      print qq|<p>... ok.</p>|;
   }
 
+  print qq|<h3>Incorrect line tax transactions ...</h3>|;
 
+  $query = qq|
+       SELECT ap.id, 'AP' as module, ap.invnumber, ap.amount, ap.netamount, ap.amount - ap.netamount tax1, sum(ac.taxamount) tax2
+       FROM ap 
+       JOIN acc_trans ac on ap.id = ac.trans_id 
+       AND ap.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
+       GROUP BY 1, 2, 3, 4, 5, 6
+
+       UNION 
+
+       SELECT ar.id, 'AR' as module, ar.invnumber, ar.amount, ar.netamount, ar.amount - ar.netamount tax1, sum(ac.taxamount) tax2
+       FROM ar
+       JOIN acc_trans ac on ar.id = ac.trans_id 
+       AND ar.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
+       GROUP BY 1, 2, 3, 4, 5, 6
+
+       ORDER BY 2,3
+  |;
+
+
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  print qq|<table>|;
+  print qq|<tr class=listheading>|;
+  print qq|<th class=listheading>|.$locale->text('Module').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Net Amount').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Invoice Tax').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Line Tax').qq|</td>|;
+  print qq|</tr>|;
+
+  $i = 0;
+
+  my $module;
+  my $total_amount;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     $module = lc $ref->{module};
+     $module = 'ir' if $ref->{invoice} and $ref->{module} eq 'AP';
+     $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
+
+
+     if ($form->round_amount($ref->{tax1}, 2) != $form->round_amount($ref->{tax2}, 2)){
+     	print qq|<tr class=listrow$i>|;
+     	print qq|<td>$ref->{module}</td>|;
+     	print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
+     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 2).qq|</td>|;
+     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{netamount}, 2).qq|</td>|;
+     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax1}, 2).qq|</td>|;
+     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax2}, 2).qq|</td>|;
+     	print qq|</tr>|;
+     }
+  }
 
   $dbh->disconnect;
 }
