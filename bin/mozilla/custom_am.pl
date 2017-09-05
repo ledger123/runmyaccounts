@@ -443,7 +443,7 @@ WHERE trans_id NOT IN
   print qq|<h3>Incorrect line tax transactions ...</h3>|;
 
   $query = qq|
-       SELECT ap.id, 'AP' as module, ap.invnumber, ap.amount, ap.netamount, ap.amount - ap.netamount tax1, sum(ac.taxamount) tax2
+       SELECT ap.id, 'AP' as module, ap.invnumber, ap.amount, ap.netamount, ap.amount - ap.netamount tax1, sum(ac.taxamount * -1) tax2
        FROM ap 
        JOIN acc_trans ac on ap.id = ac.trans_id 
        AND ap.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
@@ -481,7 +481,6 @@ WHERE trans_id NOT IN
      $module = lc $ref->{module};
      $module = 'ir' if $ref->{invoice} and $ref->{module} eq 'AP';
      $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
-
 
      if ($form->round_amount($ref->{tax1}, 2) != $form->round_amount($ref->{tax2}, 2)){
      	print qq|<tr class=listrow$i>|;
