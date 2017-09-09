@@ -31,7 +31,7 @@ sub post_transaction {
   $form->{department_id} *= 1;
   
 
-  my %defaults = $form->get_defaults($dbh, \@{['fx%accno_id', 'cdt', 'precision']});
+  my %defaults = $form->get_defaults($dbh, \@{['fx%accno_id', 'cdt', 'precision', 'extendedlog']});
   $form->{precision} = $defaults{precision};
 
   my $ml = 1;
@@ -237,7 +237,7 @@ sub post_transaction {
 
     &reverse_vouchers($dbh, $form);
 
-    if ($form->{id}) {
+    if ($form->{id} and $defaults{extendedlog}) {
         $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
         $query = qq|

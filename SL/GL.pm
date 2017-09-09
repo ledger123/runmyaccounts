@@ -94,22 +94,22 @@ sub post_transaction {
   my $approved = ($form->{pending}) ? '0' : '1';
   my $action = ($approved) ? 'posted' : 'saved';
 
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
+  my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
   $form->{precision} = $defaults{precision};
 
-  if ($form->{id} *= 1) {
-    $query = qq|INSERT INTO gl_log SELECT * FROM gl WHERE id = $form->{id}|;
-    $dbh->do($query) || $form->dberror($query);
-    $query = qq|
-        INSERT INTO acc_trans_log 
-        SELECT acc_trans.*, gl.ts
-        FROM acc_trans
-        JOIN gl ON (gl.id = acc_trans.trans_id)
-        WHERE trans_id = $form->{id}
-    |;
-    $dbh->do($query) || $form->dberror($query);
-    $query = qq|UPDATE gl SET ts = NOW() WHERE id = $form->{id}|;
-    $dbh->do($query) || $form->dberror($query);
+  if ($form->{id} *= 1 and $defaults{extendedlog}) {
+        $query = qq|INSERT INTO gl_log SELECT * FROM gl WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|
+            INSERT INTO acc_trans_log 
+            SELECT acc_trans.*, gl.ts
+            FROM acc_trans
+            JOIN gl ON (gl.id = acc_trans.trans_id)
+            WHERE trans_id = $form->{id}
+        |;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|UPDATE gl SET ts = NOW() WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
 
     $query = qq|
         INSERT INTO acc_trans_log (
@@ -134,7 +134,6 @@ sub post_transaction {
         WHERE trans_id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
   }
-
 
   if ($form->{id} *= 1) {
     $keepcleared = 1;
