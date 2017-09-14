@@ -167,6 +167,7 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
         JOIN ar on (ar.id = ac.trans_id) 
         WHERE chart_id in (select id from chart where link='AR') 
         AND ar.amount = ar.paid 
+        AND ar.transdate BETWEEN '$form->{firstdate}' AND '$form->{lastdate}'
         GROUP BY ar.invnumber, ar.invoice, ac.trans_id 
         HAVING round(sum(ac.amount)::numeric, 2) <> 0
 |;
@@ -205,6 +206,7 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
         JOIN ap on (ap.id = ac.trans_id) 
         WHERE chart_id in (select id from chart where link='AP') 
         AND ap.amount = ap.paid 
+        AND ap.transdate BETWEEN '$form->{firstdate}' AND '$form->{lastdate}'
         GROUP BY ap.invnumber, ac.trans_id 
         HAVING round(sum(ac.amount)::numeric, 2) <> 0
 |;
@@ -447,6 +449,7 @@ WHERE trans_id NOT IN
        FROM ap 
        JOIN acc_trans ac on ap.id = ac.trans_id 
        AND ap.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
+       AND ap.transdate BETWEEN '$form->{fromdate}' AND '$form->{todate}'
        GROUP BY 1, 2, 3, 4, 5, 6
 
        UNION 
@@ -455,6 +458,7 @@ WHERE trans_id NOT IN
        FROM ar
        JOIN acc_trans ac on ar.id = ac.trans_id 
        AND ar.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
+       AND ar.transdate BETWEEN '$form->{fromdate}' AND '$form->{todate}'
        GROUP BY 1, 2, 3, 4, 5, 6
 
        ORDER BY 2,3
