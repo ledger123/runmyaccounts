@@ -1189,23 +1189,18 @@ sub form_footer {
         $table->calc_totals( [qw(amount)] );
         print $table->output;
 
-        print qq|<h2>Log</h2>|;
         $table = lc $form->{ARAP};
         $query = qq|
-                SELECT TO_CHAR(ts, 'MM/DD/YY HH24:MI:SS') ts, a.invnumber, a.transdate, a.customer_id, a.amount, a.netamount, a.paid, a.notes, a.intnotes
+                SELECT TO_CHAR(ts, 'MM/DD/YY HH24:MI:SS') ts, a.invnumber, a.transdate, a.amount, a.netamount, a.paid, a.notes, a.intnotes
                 FROM ${table}_log a
                 WHERE id = ?
                 ORDER BY ts DESC
         |;
-
         $table = $dbs->query($query, $form->{id})->xto(
             tr => { class => [ 'listrow0', 'listrow1' ] },
             th => { class => ['listheading'] },
         );
-        #$table->modify(td => {align => 'right'}, 'amount');
-        #$table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
-        #$table->set_group( 'ts', 1 );
-        #$table->calc_totals( [qw(amount)] );
+        $form->info($locale->text('Transaction header log'));
         print $table->output;
 
         $query = qq|
@@ -1229,8 +1224,8 @@ sub form_footer {
         $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
         $table->set_group( 'ts', 1 );
         $table->calc_totals( [qw(amount)] );
+        $form->info($locale->text('Transaction GL log'));
         print $table->output;
-
     }
 
     print qq|

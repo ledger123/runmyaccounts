@@ -642,7 +642,7 @@ sub post_invoice {
     $form->{"${_}_id"} *= 1;
   }
 
-  my %defaults = $form->get_defaults($dbh, \@{['fx%_accno_id', 'cdt', 'precision']});
+  my %defaults = $form->get_defaults($dbh, \@{['fx%_accno_id', 'cdt', 'precision', 'extendedlog']});
   $form->{precision} = $defaults{precision};
   
   $query = qq|SELECT inventory_accno_id, income_accno_id, expense_accno_id
@@ -677,8 +677,54 @@ sub post_invoice {
       }
       $sth->finish;
 
+      if ($defaults{extendedlog}) {
+        $query = qq|INSERT INTO ap_log SELECT ap.* FROM ap WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|
+            INSERT INTO invoice_log
+            SELECT invoice.*, ap.ts
+            FROM invoice
+            JOIN ap ON (ap.id = invoice.trans_id)
+            WHERE invoice.trans_id = $form->{id}
+        |;
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|
+            INSERT INTO acc_trans_log 
+            SELECT acc_trans.*, ap.ts
+            FROM acc_trans
+            JOIN ap ON (ap.id = acc_trans.trans_id)
+            WHERE trans_id = $form->{id}
+        |;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|UPDATE ap SET ts = NOW() WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|
+            INSERT INTO acc_trans_log (
+                trans_id, chart_id, 
+                amount, transdate, source,
+                approved, fx_transaction, project_id,
+                memo, id, cleared,
+                vr_id, entry_id,
+                tax, taxamount, tax_chart_id,
+                ts
+                )
+            SELECT 
+                ac.trans_id, ac.chart_id, 
+                0 - ac.amount, ac.transdate, ac.source,
+                ac.approved, ac.fx_transaction, ac.project_id,
+                ac.memo, ac.id, ac.cleared,
+                vr_id, ac.entry_id,
+                ac.tax, ac.taxamount, ac.tax_chart_id,
+                ap.ts
+            FROM acc_trans ac
+            JOIN ap ON (ap.id = ac.trans_id)
+            WHERE trans_id = $form->{id}|;
+            $dbh->do($query) || $form->dberror($query);
+      } # if ($defaults{extendedlog})
       &reverse_invoice($dbh, $form);
-      
+
     } else { 
       $query = qq|INSERT INTO ap (id) 
                   VALUES ($form->{id})|;
