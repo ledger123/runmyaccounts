@@ -22,4 +22,19 @@ CREATE TABLE gl_log AS SELECT * FROM gl WHERE 1 = 2;
 CREATE TABLE acc_trans_log AS SELECT * FROM acc_trans WHERE 1 = 2;
 ALTER TABLE acc_trans_log ADD COLUMN ts timestamp DEFAULT NOW();
 
+UPDATE ar SET 
+    ts = (SELECT MAX(transdate) FROM audittrail a WHERE a.trans_id = ar.id)
+WHERE id IN (SELECT trans_id FROM audittrail);
+
+UPDATE ap SET 
+    ts = (SELECT MAX(transdate) FROM audittrail a WHERE a.trans_id = ap.id)
+WHERE id IN (SELECT trans_id FROM audittrail);
+
+UPDATE gl SET 
+    ts = (SELECT MAX(transdate) FROM audittrail a WHERE a.trans_id = gl.id)
+WHERE id IN (SELECT trans_id FROM audittrail);
+
+UPDATE acc_trans_log SET 
+    ts = (SELECT MAX(transdate) FROM audittrail a WHERE a.trans_id = acc_trans_log.trans_id)
+WHERE trans_id IN (SELECT trans_id FROM audittrail);
 
