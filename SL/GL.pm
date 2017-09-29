@@ -100,18 +100,19 @@ sub post_transaction {
   if ($form->{id} *= 1 and $defaults{extendedlog}) {
         $query = qq|INSERT INTO gl_log SELECT * FROM gl WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
+        $query = qq|UPDATE gl SET ts = NOW() WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
         $query = qq|
             INSERT INTO acc_trans_log 
-            SELECT acc_trans.*, gl.ts
+            SELECT acc_trans.*, NOW()
             FROM acc_trans
             JOIN gl ON (gl.id = acc_trans.trans_id)
             WHERE trans_id = $form->{id}
         |;
         $dbh->do($query) || $form->dberror($query);
-        $query = qq|UPDATE gl SET ts = NOW() WHERE id = $form->{id}|;
-        $dbh->do($query) || $form->dberror($query);
 
-    $query = qq|
+        $query = qq|
         INSERT INTO acc_trans_log (
             trans_id, chart_id, 
             amount, transdate, source,
@@ -128,7 +129,7 @@ sub post_transaction {
             ac.memo, ac.id, ac.cleared,
             vr_id, ac.entry_id,
             ac.tax, ac.taxamount, ac.tax_chart_id,
-            gl.ts
+            NOW() + TIME '00:01'
         FROM acc_trans ac
         JOIN gl ON (gl.id = ac.trans_id)
         WHERE trans_id = $form->{id}|;
