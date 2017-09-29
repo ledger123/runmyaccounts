@@ -237,7 +237,8 @@ sub post_transaction {
 
     &reverse_vouchers($dbh, $form);
 
-    if ($form->{id} and $defaults{extendedlog}) {
+    if ($form->{id}){
+        if ($defaults{extendedlog}) {
         $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
         $query = qq|
@@ -273,7 +274,7 @@ sub post_transaction {
             JOIN $table ON (${table}.id = ac.trans_id)
             WHERE trans_id = $form->{id}|;
             $dbh->do($query) || $form->dberror($query);
-
+        } # if ($defaults{extendedlog})
         # delete detail records
       for (qw(acc_trans dpt_trans payment)) {
 	$query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
