@@ -449,7 +449,7 @@ WHERE trans_id NOT IN
        FROM ap 
        JOIN acc_trans ac on ap.id = ac.trans_id 
        AND ap.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
-       AND ap.transdate BETWEEN '$form->{fromdate}' AND '$form->{todate}'
+       AND ap.transdate BETWEEN '$form->{firstdate}' AND '$form->{lastdate}'
        GROUP BY 1, 2, 3, 4, 5, 6
 
        UNION 
@@ -458,12 +458,11 @@ WHERE trans_id NOT IN
        FROM ar
        JOIN acc_trans ac on ar.id = ac.trans_id 
        AND ar.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
-       AND ar.transdate BETWEEN '$form->{fromdate}' AND '$form->{todate}'
+       AND ar.transdate BETWEEN '$form->{firstdate}' AND '$form->{lastdate}'
        GROUP BY 1, 2, 3, 4, 5, 6
 
        ORDER BY 2,3
   |;
-
 
   $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute;
