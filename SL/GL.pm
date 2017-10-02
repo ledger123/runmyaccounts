@@ -100,12 +100,9 @@ sub post_transaction {
   if ($form->{id} *= 1 and $defaults{extendedlog}) {
         $query = qq|INSERT INTO gl_log SELECT * FROM gl WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
-        $query = qq|UPDATE gl SET ts = NOW() WHERE id = $form->{id}|;
-        $dbh->do($query) || $form->dberror($query);
-
         $query = qq|
             INSERT INTO acc_trans_log 
-            SELECT acc_trans.*, NOW()
+            SELECT acc_trans.*, gl.ts
             FROM acc_trans
             JOIN gl ON (gl.id = acc_trans.trans_id)
             WHERE trans_id = $form->{id}
@@ -129,10 +126,13 @@ sub post_transaction {
             ac.memo, ac.id, ac.cleared,
             vr_id, ac.entry_id,
             ac.tax, ac.taxamount, ac.tax_chart_id,
-            NOW() + TIME '00:01'
+            NOW() 
         FROM acc_trans ac
         JOIN gl ON (gl.id = ac.trans_id)
         WHERE trans_id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|UPDATE gl SET ts = NOW() + TIME '00:01' WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
   }
 
@@ -616,7 +616,6 @@ sub transactions {
     }
   }
   
-
   my $false = ($myconfig->{dbdriver} =~ /Pg/) ? FALSE : q|'0'|;
 
   my %ordinal = ( id => 1,
@@ -703,8 +702,8 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, '*' log, g.ts
-                 FROM gl_log g
+		 '' AS intnotes, '*' log, ac.ts
+                 FROM gl g
 		 JOIN acc_trans_log ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
@@ -719,8 +718,8 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, '*' log, a.ts
-		 FROM ar_log a
+		 a.intnotes, '*' log, ac.ts
+		 FROM ar a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -738,8 +737,8 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, '*' log, a.ts
-		 FROM ap_log a
+		 a.intnotes, '*' log, ac.ts
+		 FROM ap a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
