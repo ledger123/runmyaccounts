@@ -598,13 +598,13 @@ sub transactions {
     GL->transactions( \%myconfig, \%$form );
 
     $href = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction)) { $href .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_log l_ts)) { $href .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $href .= "&$_=" . $form->escape( $form->{$_} ) }
 
     $form->sort_order();
 
     $callback = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction)) { $callback .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_log l_ts)) { $callback .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $callback .= "&$_=" . $form->escape( $form->{$_} ) }
 
     %acctype = (
