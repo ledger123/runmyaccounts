@@ -2205,7 +2205,7 @@ sub all_vc {
       $name_ext =~ s/^, //;
       $name_ext =~ s/,$//;
       
-      $ref->{name} .= " - $name_ext" if $name_ext;
+      $ref->{name} .= " $name_ext" if $name_ext;
       $ref->{name} =~ s/(.{64}).*/$1/;
       # ISNA_end
       push @{ $self->{"all_$vc"} }, $ref;
