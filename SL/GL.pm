@@ -132,7 +132,7 @@ sub post_transaction {
         WHERE trans_id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
 
-        $query = qq|UPDATE gl SET ts = NOW() + TIME '00:01' WHERE id = $form->{id}|;
+        $query = qq|UPDATE gl SET ts = NOW() + TIME '00:00:01' WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
   }
 

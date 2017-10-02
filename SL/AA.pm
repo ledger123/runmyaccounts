@@ -249,8 +249,6 @@ sub post_transaction {
             WHERE trans_id = $form->{id}
         |;
         $dbh->do($query) || $form->dberror($query);
-        $query = qq|UPDATE ${table} SET ts = NOW() WHERE id = $form->{id}|;
-        $dbh->do($query) || $form->dberror($query);
 
         $query = qq|
             INSERT INTO acc_trans_log (
@@ -269,11 +267,15 @@ sub post_transaction {
                 ac.memo, ac.id, ac.cleared,
                 vr_id, ac.entry_id,
                 ac.tax, ac.taxamount, ac.tax_chart_id,
-                ${table}.ts
+                NOW()
             FROM acc_trans ac
             JOIN $table ON (${table}.id = ac.trans_id)
             WHERE trans_id = $form->{id}|;
-            $dbh->do($query) || $form->dberror($query);
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|UPDATE ${table} SET ts = NOW() + TIME '00:00:01' WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
         } # if ($defaults{extendedlog})
         # delete detail records
       for (qw(acc_trans dpt_trans payment)) {
