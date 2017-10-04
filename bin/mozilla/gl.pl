@@ -359,8 +359,6 @@ sub search {
       { ndx => $i++, checkbox => 1, html => qq|<input name="include_log" class=checkbox type=checkbox value=Y $form->{include_log}>|, label => $locale->text('Include Log') };
     $includeinreport{ts} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_ts" class=checkbox type=checkbox value=Y $form->{l_ts}>|, label => $locale->text('TS') };
-    $includeinreport{log} =
-      { ndx => $i++, checkbox => 1, html => qq|<input name="l_log" class=checkbox type=checkbox value=Y $form->{l_log}>|, label => $locale->text('Log') };
 
 
     @f = ();
@@ -600,13 +598,13 @@ sub transactions {
     GL->transactions( \%myconfig, \%$form );
 
     $href = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_log l_ts)) { $href .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts)) { $href .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $href .= "&$_=" . $form->escape( $form->{$_} ) }
 
     $form->sort_order();
 
     $callback = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_log l_ts)) { $callback .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts)) { $callback .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $callback .= "&$_=" . $form->escape( $form->{$_} ) }
 
     %acctype = (
@@ -764,6 +762,11 @@ sub transactions {
         push @columns, $column;
         $column_data{$column} = $label;
         $column_sort{$column} = $sort;
+    }
+    if ($form->{include_log}){
+        $form->{l_log} = 'Y';
+        push @columns, 'log';
+        $column_data{log} = qq|&nbsp;|;
     }
 
     push @columns, "gifi_contra";
