@@ -697,7 +697,7 @@ sub post_invoice {
             WHERE trans_id = $form->{id}
         |;
         $dbh->do($query) || $form->dberror($query);
-        $query = qq|UPDATE ap SET ts = NOW() WHERE id = $form->{id}|;
+        $query = qq|UPDATE ap SET ts = NOW() + TIME '00:00:01' WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
 
         $query = qq|
@@ -717,7 +717,7 @@ sub post_invoice {
                 ac.memo, ac.id, ac.cleared,
                 vr_id, ac.entry_id,
                 ac.tax, ac.taxamount, ac.tax_chart_id,
-                ap.ts
+                NOW()
             FROM acc_trans ac
             JOIN ap ON (ap.id = ac.trans_id)
             WHERE trans_id = $form->{id}|;
