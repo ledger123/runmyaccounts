@@ -355,10 +355,13 @@ sub search {
     $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
     $includeinreport{intnotes} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}>|, label => $locale->text('Internal Notes') };
-    $includeinreport{log} =
-      { ndx => $i++, checkbox => 1, html => qq|<input name="l_log" class=checkbox type=checkbox value=Y $form->{l_log}>|, label => $locale->text('Log') };
+    $includeinreport{include_log} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="include_log" class=checkbox type=checkbox value=Y $form->{include_log}>|, label => $locale->text('Include Log') };
     $includeinreport{ts} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_ts" class=checkbox type=checkbox value=Y $form->{l_ts}>|, label => $locale->text('TS') };
+    $includeinreport{log} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_log" class=checkbox type=checkbox value=Y $form->{l_log}>|, label => $locale->text('Log') };
+
 
     @f = ();
     $form->{flds} = "";
@@ -493,7 +496,6 @@ sub search {
 		    <tr>
 		      <td nowrap><input name="l_subtotal" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Subtotal') . qq|</td>
               <td><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Exchange Rate Difference').qq|</td>
-              <td><input type=checkbox class=checkbox name=include_log value=1> |.$locale->text('Include Log').qq|</td>
 		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('CSV') . qq|</td>
 		    </tr>
 		  </table>
