@@ -990,7 +990,7 @@ sub transactions {
 
         $ref->{debit}  = $form->format_amount( \%myconfig, $ref->{debit},  $form->{precision}, "&nbsp;" );
         $ref->{credit} = $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision}, "&nbsp;" );
-        $ref->{exchangerate} = $form->format_amount( \%myconfig, $ref->{exchangerate}, $form->{precision}, "&nbsp;" );
+        $ref->{exchangerate} = $form->format_amount( \%myconfig, $ref->{exchangerate}, 8, "&nbsp;" );
 
         $column_data{id}        = "<td>$ref->{id}</td>";
         $column_data{transdate} = "<td nowrap>$ref->{transdate}</td>";
