@@ -1907,7 +1907,7 @@ sub closedto {
 
   my $dbh = $form->dbconnect($myconfig);
   
-  my %defaults = $form->get_defaults($dbh, \@{[qw(closedto revtrans audittrail extendedlo)]});
+  my %defaults = $form->get_defaults($dbh, \@{[qw(closedto revtrans audittrail extendedlog)]});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   $dbh->disconnect;
