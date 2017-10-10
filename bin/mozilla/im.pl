@@ -2799,7 +2799,6 @@ sub prepare_datev {
 	INSERT INTO acc_trans2 (trans_id, transdate, chart_id, tax_chart_id, amount, taxamount)
 	   SELECT trans_id, transdate, chart_id, tax_chart_id, SUM(amount+amount2), SUM(taxamount)
 	   FROM acc_trans
-	   WHERE NOT fx_transaction
 	   GROUP BY trans_id, transdate, chart_id, tax_chart_id');
     $form->{dbs}->commit;
 
