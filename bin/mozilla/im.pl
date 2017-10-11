@@ -2968,10 +2968,11 @@ sub export_datev {
         $accounttype_standard = '';
     }
 
-    ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
-    $form->{datefrom} = $form->format_date($myconfig{dateformat}, $form->{datefrom}) if $form->{datefrom};
-    $form->{dateto} = $form->format_date($myconfig{dateformat}, $form->{dateto}) if $form->{dateto};
-
+    if ($form->{year} && $form->{month}){
+        ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval});
+        $form->{datefrom} = $form->format_date($myconfig{dateformat}, $form->{datefrom}) if $form->{datefrom};
+        $form->{dateto} = $form->format_date($myconfig{dateformat}, $form->{dateto}) if $form->{dateto};
+    }
     if (!$form->{l_csv}){
         $form->header;
         print qq|
