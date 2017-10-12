@@ -45,3 +45,6 @@ WHERE trans_id IN (SELECT trans_id FROM audittrail);
 UPDATE invoice_log SET 
     ts = (SELECT MAX(transdate) FROM audittrail a WHERE a.trans_id = invoice_log.trans_id)
 WHERE trans_id IN (SELECT trans_id FROM audittrail);
+
+update defaults set fldvalue = '2.8.13' where fldname = 'version';
+
