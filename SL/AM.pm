@@ -1907,7 +1907,7 @@ sub closedto {
 
   my $dbh = $form->dbconnect($myconfig);
   
-  my %defaults = $form->get_defaults($dbh, \@{[qw(closedto revtrans audittrail)]});
+  my %defaults = $form->get_defaults($dbh, \@{[qw(closedto revtrans audittrail extendedlog)]});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   $dbh->disconnect;
@@ -1937,7 +1937,7 @@ sub closebooks {
     timelocal(0,0,0,$day, $month-1, $year); # dies in case of bad date
   };
   
-  for (qw(revtrans closedto audittrail)) {
+  for (qw(revtrans closedto audittrail extendedlog)) {
     $dth->execute($_) || $form->dberror;
     $dth->finish;
 

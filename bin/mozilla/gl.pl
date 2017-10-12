@@ -355,10 +355,11 @@ sub search {
     $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
     $includeinreport{intnotes} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}>|, label => $locale->text('Internal Notes') };
-    $includeinreport{log} =
-      { ndx => $i++, checkbox => 1, html => qq|<input name="l_log" class=checkbox type=checkbox value=Y $form->{l_log}>|, label => $locale->text('Log') };
+    $includeinreport{include_log} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="include_log" class=checkbox type=checkbox value=Y $form->{include_log}>|, label => $locale->text('Include Log') };
     $includeinreport{ts} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_ts" class=checkbox type=checkbox value=Y $form->{l_ts}>|, label => $locale->text('TS') };
+
 
     @f = ();
     $form->{flds} = "";
@@ -493,7 +494,6 @@ sub search {
 		    <tr>
 		      <td nowrap><input name="l_subtotal" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Subtotal') . qq|</td>
               <td><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Exchange Rate Difference').qq|</td>
-              <td><input type=checkbox class=checkbox name=include_log value=1> |.$locale->text('Include Log').qq|</td>
 		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('CSV') . qq|</td>
 		    </tr>
 		  </table>
@@ -598,13 +598,13 @@ sub transactions {
     GL->transactions( \%myconfig, \%$form );
 
     $href = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction)) { $href .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts)) { $href .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $href .= "&$_=" . $form->escape( $form->{$_} ) }
 
     $form->sort_order();
 
     $callback = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction)) { $callback .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts)) { $callback .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $callback .= "&$_=" . $form->escape( $form->{$_} ) }
 
     %acctype = (
@@ -762,6 +762,11 @@ sub transactions {
         push @columns, $column;
         $column_data{$column} = $label;
         $column_sort{$column} = $sort;
+    }
+    if ($form->{include_log}){
+        $form->{l_log} = 'Y';
+        push @columns, 'log';
+        $column_data{log} = qq|&nbsp;|;
     }
 
     push @columns, "gifi_contra";
