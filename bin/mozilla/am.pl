@@ -2660,9 +2660,9 @@ sub save_taxes {
     ($accno, $i) = split /_/, $_;
     if ($accno eq $sameaccno && $i > 1) {
       $j = $i - 1;
-      if (! $form->{"validto_$j"}) {
-	$form->error($locale->text('Valid To date missing for').qq| $form->{"taxdescription_$j"}|);
-      }
+      #if (! $form->{"validto_$j"}) {
+	  #  $form->error($locale->text('Valid To date missing for').qq| $form->{"taxdescription_$j"}|);
+      #}
     }
     $sameaccno = $accno;
   }
