@@ -90,7 +90,7 @@ sub new {
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
   $self->{version} = "2.8.33";
-  $self->{dbversion} = "2.8.12";
+  $self->{dbversion} = "2.8.13";
 
   bless $self, $type;
   
@@ -2205,7 +2205,7 @@ sub all_vc {
       $name_ext =~ s/^, //;
       $name_ext =~ s/,$//;
       
-      $ref->{name} .= " - $name_ext" if $name_ext;
+      $ref->{name} .= " $name_ext" if $name_ext;
       $ref->{name} =~ s/(.{64}).*/$1/;
       # ISNA_end
       push @{ $self->{"all_$vc"} }, $ref;

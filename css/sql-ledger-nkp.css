@@ -306,7 +306,7 @@ th, td > b {
 }
 
 input, textarea, select {
-  margin: 0.4rem 0.4rem;
+  margin: 0.2rem 0.3rem;
 }
 
 select {
@@ -428,7 +428,7 @@ table tr td[align=center] * {
   font-size: 0.875rem;
   -webkit-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
-  margin-left: 5px;
+  margin-left: 2px;
   -webkit-appearance: button;
 }
 

@@ -31,7 +31,7 @@ sub post_transaction {
   $form->{department_id} *= 1;
   
 
-  my %defaults = $form->get_defaults($dbh, \@{['fx%accno_id', 'cdt', 'precision']});
+  my %defaults = $form->get_defaults($dbh, \@{['fx%accno_id', 'cdt', 'precision', 'extendedlog']});
   $form->{precision} = $defaults{precision};
 
   my $ml = 1;
@@ -237,8 +237,47 @@ sub post_transaction {
 
     &reverse_vouchers($dbh, $form);
 
-    if ($form->{id}) {
-      # delete detail records
+    if ($form->{id}){
+        if ($defaults{extendedlog}) {
+        $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+        $query = qq|
+            INSERT INTO acc_trans_log 
+            SELECT acc_trans.*, ${table}.ts
+            FROM acc_trans
+            JOIN $table ON (${table}.id = acc_trans.trans_id)
+            WHERE trans_id = $form->{id}
+        |;
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|
+            INSERT INTO acc_trans_log (
+                trans_id, chart_id, 
+                amount, transdate, source,
+                approved, fx_transaction, project_id,
+                memo, id, cleared,
+                vr_id, entry_id,
+                tax, taxamount, tax_chart_id,
+                ts
+                )
+            SELECT 
+                ac.trans_id, ac.chart_id, 
+                0 - ac.amount, ac.transdate, ac.source,
+                ac.approved, ac.fx_transaction, ac.project_id,
+                ac.memo, ac.id, ac.cleared,
+                vr_id, ac.entry_id,
+                ac.tax, ac.taxamount, ac.tax_chart_id,
+                NOW()
+            FROM acc_trans ac
+            JOIN $table ON (${table}.id = ac.trans_id)
+            WHERE trans_id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|UPDATE ${table} SET ts = NOW() + TIME '00:00:01' WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
+        } # if ($defaults{extendedlog})
+        # delete detail records
       for (qw(acc_trans dpt_trans payment)) {
 	$query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
 	$dbh->do($query) || $form->dberror($query);

@@ -2728,7 +2728,7 @@ sub audit_control {
   AM->closedto(\%myconfig, \%$form);
   
   my %checked;
-  for (qw(revtrans audittrail aruniq apuniq gluniq souniq pouniq trackingitemsuniq nontrackingitemsuniq)) { $checked{$_} = "checked" if $form->{$_} }
+  for (qw(revtrans audittrail aruniq apuniq gluniq souniq pouniq trackingitemsuniq nontrackingitemsuniq extendedlog)) { $checked{$_} = "checked" if $form->{$_} }
  
   $form->header;
   
@@ -2754,6 +2754,10 @@ sub audit_control {
 	<tr>
 	  <th align=right>|.$locale->text('Activate Audit trail').qq|</th>
 	  <td><input name=audittrailview class=checkbox type=checkbox value="1" $checked{audittrail} disabled="disabled"></td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('Activate Extended Log').qq|</th>
+	  <td><input name=extendedlog class=checkbox type=checkbox value="1" $checked{extendedlog}></td>
 	</tr>
 	<input name=audittrail type=hidden value="1">
 	<!-- <tr>

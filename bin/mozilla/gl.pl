@@ -355,6 +355,15 @@ sub search {
     $includeinreport{contra} = { ndx => $i++, checkbox => 1, html => qq|<input name="l_contra" class=checkbox type=checkbox value=Y $form->{l_contra}>|, label => $locale->text('Contra') };
     $includeinreport{intnotes} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}>|, label => $locale->text('Internal Notes') };
+    $includeinreport{include_log} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="include_log" class=checkbox type=checkbox value=Y $form->{include_log}>|, label => $locale->text('Include Log') };
+    $includeinreport{ts} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_ts" class=checkbox type=checkbox value=Y $form->{l_ts}>|, label => $locale->text('TS') };
+    $includeinreport{curr} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_curr" class=checkbox type=checkbox value=Y $form->{l_curr}>|, label => $locale->text('Currency') };
+    $includeinreport{exchangerate} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_exchangerate" class=checkbox type=checkbox value=Y $form->{l_exchangerate}>|, label => $locale->text('Exchange rate') };
+
 
     @f = ();
     $form->{flds} = "";
@@ -593,13 +602,13 @@ sub transactions {
     GL->transactions( \%myconfig, \%$form );
 
     $href = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction)) { $href .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts)) { $href .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $href .= "&$_=" . $form->escape( $form->{$_} ) }
 
     $form->sort_order();
 
     $callback = "$form->{script}?action=transactions";
-    for (qw(direction oldsort path login month year interval reportlogin fx_transaction)) { $callback .= "&$_=$form->{$_}" }
+    for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts)) { $callback .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $callback .= "&$_=" . $form->escape( $form->{$_} ) }
 
     %acctype = (
@@ -757,6 +766,11 @@ sub transactions {
         push @columns, $column;
         $column_data{$column} = $label;
         $column_sort{$column} = $sort;
+    }
+    if ($form->{include_log}){
+        $form->{l_log} = 'Y';
+        push @columns, 'log';
+        $column_data{log} = qq|&nbsp;|;
     }
 
     push @columns, "gifi_contra";
@@ -985,12 +999,16 @@ sub transactions {
 
         $ref->{debit}  = $form->format_amount( \%myconfig, $ref->{debit},  $form->{precision}, "&nbsp;" );
         $ref->{credit} = $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision}, "&nbsp;" );
+        $ref->{exchangerate} = $form->format_amount( \%myconfig, $ref->{exchangerate}, 8, "&nbsp;" );
 
         $column_data{id}        = "<td>$ref->{id}</td>";
         $column_data{transdate} = "<td nowrap>$ref->{transdate}</td>";
 
         $ref->{reference} ||= "&nbsp;";
         $column_data{reference} = "<td><a href=$ref->{module}.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</a></td>";
+        if ($ref->{log} eq '*'){
+            $column_data{reference} = "<td><a href=$ref->{module}.pl?action=view&id=$ref->{id}&ts=".$form->escape($ref->{ts})."&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
+        }
 
         for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>" }
 
@@ -1005,9 +1023,11 @@ sub transactions {
 
         $column_data{debit}  = "<td align=right>$ref->{debit}</td>";
         $column_data{credit} = "<td align=right>$ref->{credit}</td>";
+        $column_data{exchangerate} = "<td align=right>$ref->{exchangerate}</td>";
 
         $column_data{accno}          = "<td><a href=$href&accno=$ref->{accno}&callback=$callback>$ref->{accno}</a></td>";
         $column_data{accdescription} = "<td>$ref->{accdescription}</td>";
+        $column_data{curr} = "<td>$ref->{curr}</td>";
         $column_data{contra}         = "<td>";
         for ( split / /, $ref->{contra} ) {
             $column_data{contra} .= qq|<a href=$href&accno=$_&callback=$callback>$_</a>&nbsp;|;
@@ -1022,6 +1042,8 @@ sub transactions {
 
         $column_data{balance} = "<td align=right>" . $form->format_amount( \%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0 ) . "</td>";
         $column_data{cleared} = ( $ref->{cleared} ) ? "<td>*</td>" : "<td>&nbsp;</td>";
+        $column_data{log} = "<td>$ref->{log}</td>";
+        $column_data{ts} = "<td>$ref->{ts}</td>";
 
         if ( $ref->{id} != $sameid ) {
             $i++;
@@ -2194,5 +2216,47 @@ sub post {
         $form->error( $locale->text('Cannot post transaction!') );
     }
 
+}
+
+
+sub view {
+    $form->header;
+
+    use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    $query = qq|
+            SELECT * 
+            FROM gl_log a
+            WHERE a.ts = ?
+            ORDER BY a.ts
+    |;
+
+    my $table = $dbs->query($query, $form->{ts})->xto(
+        tr => { class => [ 'listrow0', 'listrow1' ] },
+        th => { class => ['listheading'] },
+    );
+    $table->modify(td => {align => 'right'}, 'amount');
+    $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
+
+    print $table->output;
+
+    $query = qq|
+            SELECT * 
+            FROM acc_trans_log ac
+            WHERE ac.ts = ?
+            ORDER BY ac.ts
+    |;
+    $table = $dbs->query($query, $form->{ts})->xto(
+        tr => { class => [ 'listrow0', 'listrow1' ] },
+        th => { class => ['listheading'] },
+    );
+    $table->modify(td => {align => 'right'}, 'amount');
+    $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
+    $table->set_group( 'transdate', 1 );
+    $table->calc_totals( [qw(amount)] );
+
+    print $table->output;
 }
 

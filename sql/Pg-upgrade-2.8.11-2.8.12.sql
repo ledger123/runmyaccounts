@@ -18,7 +18,7 @@ SET amount = (
 WHERE trans_id IN (SELECT id FROM ap);
 
 UPDATE invoicetax
-SET amount = amount * (SELECT exchangerate FROM ap WHERE ap.id = invoicetax.trans_id)
+SET amount = amount * (SELECT exchangerate FROM ap WHERE ap.id = invoicetax.trans_id LIMIT 1)
 WHERE trans_id IN (SELECT id FROM ap);
 
 -- AR
