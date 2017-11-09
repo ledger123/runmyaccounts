@@ -753,8 +753,6 @@ sub transactions {
     $query .= qq| ORDER BY $sortorder|;
   } # if $form->{include_log}
 
-  $query .= qq| ORDER BY 33, $sortorder|;
-
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
