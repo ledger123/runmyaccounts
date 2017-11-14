@@ -1,0 +1,52 @@
+% layout 'default';
+% title 'GoBD-Export';
+% languages userconfig->val('x_language');
+
+<h1 class='listtop'>GoBD-Export</h1>
+
+%= form_for gobd => (method => 'GET') => begin
+
+<table>
+  <tr>
+    <th align="right"><%= l 'From' %></th>
+    <th align="left">
+      %= text_field 'from', class => 'date', size => 11, title => userconfig->val('dateformat')
+    </th>
+    % if (my $err = validation->error('from')) {
+    <th class="field-with-error">
+      %= l 'Incorrect date format'
+    </th>
+    % }
+  </tr>
+  <tr>
+    <th align="right"><%= l 'To' %></th>
+    <th align="left">
+      %= text_field 'to', class => 'date', size => 11, title => userconfig->val('dateformat')
+    </th>
+    % if (my $err = validation->error('to')) {
+    <th class="field-with-error">
+      %= l 'Incorrect date format'
+    </th>
+    % }
+  </tr>
+  <!--
+  <tr>
+    <th align="right"><%= l 'Include DTD file' %></th>
+    <td align="left">
+      %= check_box include_dtd => 1, checked => 1
+    </td>
+  </tr>
+  -->
+  <tr>
+    <th align="right"><%= l 'Long archive name' %></th>
+    <td align="left">
+      %= check_box longname => 1, checked => 1
+    </td>
+  </tr>
+</table>
+  
+<hr/>
+<br/>
+%= submit_button l('Continue'), class => 'submit'
+  
+% end

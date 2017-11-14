@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link
+       rel="stylesheet"
+       href="<%= url_for('/')->path->to_dir->to_abs_string . 'css/' . userconfig->val('stylesheet') %>"
+       type="text/css" title="SQL-Ledger stylesheet" />
+
+    %= javascript '/jquery.min.js'
+
+    <style>
+      th.field-with-error    { color:      #dd0000; font-weight: bold; }
+      input.field-with-error { background: #ffdddd; }
+      input[type=checkbox] { vertical-align: middle; }
+      input[type=radio]    { vertical-align: bottom; }
+
+      table.log { border-spacing: 1ex; }
+      table td.log { font-family: Courier, monospace; }
+
+      #log { display: none; }
+    </style>
+  </head>
+  <body>
+    <%= content %>
+  </body>
+</html>
