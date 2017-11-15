@@ -748,9 +748,10 @@ sub transactions {
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
 	     |;
+    $query .= qq| ORDER BY 33, $sortorder|;
+  } else {
+    $query .= qq| ORDER BY $sortorder|;
   } # if $form->{include_log}
-
-  $query .= qq| ORDER BY 33, $sortorder|;
 
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
