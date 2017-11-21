@@ -777,6 +777,8 @@ sub post_invoice {
 
   $form->{taxincluded} *= 1;
   
+  my $applicabletaxes;
+
   for $i (1 .. $form->{rowcount}) {
 
     $allocated = 0;
@@ -823,6 +825,7 @@ sub post_invoice {
       $fxdiff += $form->round_amount($amount - $linetotal, 10);
 
       @taxaccounts = split / /, $form->{"taxaccounts_$i"};
+      for (@taxaccounts) { $applicabletaxes .= " $_" if index($form->{taxaccounts}, $_) != -1 or index($form->{applicabletaxes}, $_) !=1 }
 
       $ml = 1;
       $tax = 0;
@@ -1254,6 +1257,7 @@ sub post_invoice {
     foreach $accno (keys %{ $form->{acc_trans}{$trans_id} }) {
       $amount = $form->round_amount($form->{acc_trans}{$trans_id}{$accno}{amount}, $form->{precision});
 	# armaghan removed if block to allow for 0 tax to be inserted.
+    if (index($applicabletaxes, $accno) != -1){
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 	            transdate)
 	            VALUES ($trans_id, (SELECT id FROM chart
@@ -1261,6 +1265,7 @@ sub post_invoice {
                     $amount, |.$dbh->quote($form->{transdate}).qq|)|;
         $dbh->do($query) || $form->dberror($query);
       }
+    }
   }
 
   # if there is no amount but a payment record payable
