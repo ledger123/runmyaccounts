@@ -96,6 +96,12 @@ sub new {
   
 }
 
+sub logtofile {
+    my ($self, $txt) = @_;
+    open(FH, '>> logtofile.txt');
+    print FH "$txt\n";
+    close(FH);
+}
 
 sub debug {
   my ($self, $file) = @_;
