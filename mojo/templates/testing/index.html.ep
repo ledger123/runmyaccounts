@@ -4,6 +4,15 @@
 
 <h1 class='listtop'>Testing</h1>
 
+<h2><%= $msg %></h2>
+
+<p> Cookies:
+<pre>
+<%= dumper($self->req->cookies) %>
+</pre>
+</p>
+
+
 <p> Session:
 <pre>
 <%= dumper($self->session) %>
