@@ -772,11 +772,11 @@ sub delete_transaction {
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
 
   if ($form->{id} and $defaults{extendedlog}) {
-     $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
+     $query = qq|INSERT INTO ${table}_log_deleted SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
      $dbh->do($query) || $form->dberror($query);
 
      $query = qq|
-        INSERT INTO acc_trans_log (
+        INSERT INTO acc_trans_log_deleted (
             trans_id, chart_id, 
             amount, transdate, source,
             approved, fx_transaction, project_id,
