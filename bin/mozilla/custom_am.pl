@@ -70,11 +70,22 @@ sub do_dbcheck {
     AND chart_id NOT IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
 |;
   my ($count) = $dbh->selectrow_array($query);
-  if ($count){
+
+  $query = qq|
+    SELECT COUNT(*) 
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
+|;
+  my ($count2) = $dbh->selectrow_array($query);
+
+  if ($count or $count2){
      $form->info($locale->text("There are $count blank rows ..."));
+     $form->info($locale->text("There are $count2 blank TAX rows ..."));
      print qq|
 <form method=post action='$form->{script}'>
 <input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank rows').qq|">
+<input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank TAX rows').qq|">
 |;
 
   $form->{nextsub} = 'do_dbcheck';
@@ -514,6 +525,20 @@ sub click_here_to_delete_blank_rows {
 }
 
 
+sub click_here_to_delete_blank_tax_rows {
+  my $dbh = $form->dbconnect(\%myconfig);
+  $query = qq|
+    DELETE
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
+|;
+  $dbh->do($query);
+  $form->info($locale->text('Blank TAX rows deleted if any ...'));
+}
+
+
+
 sub fix_invoicetax_for_alltaxes_report {
     #use DBIx::Simple;
     my $dbh = $form->dbconnect(\%myconfig);
@@ -560,7 +585,7 @@ sub fix_invoicetax_for_alltaxes_report {
     while ($ref = $sth->fetchrow_hashref(NAME_lc)){
 	$itsth->execute($ref->{id}, $ref->{chart_id});
        while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
-          $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}, $itref->{taxamount});
+          $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}*-1, $itref->{taxamount}*-1);
        }
     }
     $form->info($locale->text('Done ...'));
