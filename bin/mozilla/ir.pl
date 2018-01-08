@@ -344,7 +344,7 @@ sub form_header {
     $addvc = '' if $myconfig{acs} =~ /Vendors--Add Vendor/;
 
     $vc .= qq|
-               <td colspan=3><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()">|.$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1).qq|</select>
+               <td colspan=3><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()" class="js-basic-single">|.$form->select_option($form->{"select$form->{vc}"}, $form->{$form->{vc}}, 1).qq|</select>
 		$vcdetail $addvc
 	       </td>
 	     </tr>
@@ -813,7 +813,7 @@ sub form_footer {
     
     $column_data{paid} = qq|<td align=center><input name="paid_$i" size=11 value=$form->{"paid_$i"}></td>|;
     $column_data{exchangerate} = qq|<td align=center>$exchangerate</td>|;
-    $column_data{AP_paid} = qq|<td align=center><select name="AP_paid_$i">|.$form->select_option($form->{"selectAP_paid"}, $form->{"AP_paid_$i"}).qq|</select></td>|;
+    $column_data{AP_paid} = qq|<td align=center><select name="AP_paid_$i" class="js-basic-single">|.$form->select_option($form->{"selectAP_paid"}, $form->{"AP_paid_$i"}).qq|</select></td>|;
     $column_data{datepaid} = qq|<td align=center><input name="datepaid_$i" size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{"datepaid_$i"}></td>|;
     $column_data{source} = qq|<td align=center><input name="source_$i" size=11 value="|.$form->quote($form->{"source_$i"}).qq|"></td>|;
     $column_data{memo} = qq|<td align=center><input name="memo_$i" size=11 value="|.$form->quote($form->{"memo_$i"}).qq|"></td>|;

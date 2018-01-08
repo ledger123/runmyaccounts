@@ -366,16 +366,35 @@ sub header {
 
     print qq|Content-Type: text/html
 
+
 <head>
   <title>$self->{titlebar}</title>
   <meta name="robots" content="noindex,nofollow" />
   $favicon
   $stylesheet
   $charset
-  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
+
   <script src="js/rma.js" type="text/javascript"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+
+<script
+  src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+  integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+  crossorigin="anonymous"></script>
+
+<link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
 |;
+
   print q|
 <script>
 $(document).ready(function(){
@@ -399,6 +418,13 @@ $(document).ready(function(){
   print q|
 });
 </script>
+
+<script>
+$(document).ready(function() {
+    $('.js-basic-single').select2();
+});
+</script>
+
 </head>
 |;
    print qq|

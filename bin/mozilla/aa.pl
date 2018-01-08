@@ -542,7 +542,7 @@ sub form_header {
         }
 
         $vc .= qq|
-                <td colspan=3><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()">|
+                <td colspan=3><select name="$form->{vc}" onChange="javascript:document.forms[0].submit()" class="js-basic-single">|
           . $form->select_option( $form->{"select$form->{vc}"}, $form->{ $form->{vc} }, 1 )
           . qq|</select>
 		$vcdetail $addvc
@@ -808,8 +808,8 @@ sub form_header {
             $line1 = qq|<tr valign=top>|;
             $line1 .= qq|<td><input name="amount_$i" size=11 value="|.$form->format_amount( \%myconfig, $form->{"amount_$i"}, $form->{precision} ) . qq|" accesskey="$i"></td>
                             <input type=hidden name="oldamount_$i" value="$form->{"amount_$i"}"><td></td>|;
-            $line1 .= qq|<td><select name="$form->{ARAP}_amount_$i">|.$form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select>|;
-            $line1 .= qq|<td><select name="tax_$i">|.$form->select_option( $form->{selecttax}, $form->{"tax_$i"} ).qq|</select>
+            $line1 .= qq|<td><select name="$form->{ARAP}_amount_$i" class="js-basic-single">|.$form->select_option( $form->{"select$form->{ARAP}_amount"}, $form->{"$form->{ARAP}_amount_$i"} ) . qq|</select>|;
+            $line1 .= qq|<td><select name="tax_$i" class="js-basic-single">|.$form->select_option( $form->{selecttax}, $form->{"tax_$i"} ).qq|</select>
                              <input type=hidden name="oldtax_$i" value='$form->{"tax_$i"}'></td>|;
             $line1 .= qq|<td align="right"><input type=text name="linetaxamount_$i" size=10 value="|.$form->format_amount(\%myconfig, $form->{"linetaxamount_$i"}, $form->{precision}).qq|"></td>|;
             $line1 .= qq|</tr>|;
@@ -1052,7 +1052,7 @@ sub form_header {
 
         $column_data{paid} = qq|<td align=center><input name="paid_$i" size=11 value=| . $form->format_amount( \%myconfig, $form->{"paid_$i"}, $form->{precision} ) . qq|></td>|;
         $column_data{ARAP_paid} =
-          qq|<td align=center><select name="$form->{ARAP}_paid_$i">| . $form->select_option( $form->{"select$form->{ARAP}_paid"}, $form->{"$form->{ARAP}_paid_$i"} ) . qq|</select></td>|;
+          qq|<td align=center><select name="$form->{ARAP}_paid_$i" class="js-basic-single">| . $form->select_option( $form->{"select$form->{ARAP}_paid"}, $form->{"$form->{ARAP}_paid_$i"} ) . qq|</select></td>|;
         $column_data{exchangerate} = qq|<td align=center>$exchangerate</td>|;
         $column_data{datepaid}     = qq|<td align=center><input name="datepaid_$i" size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{"datepaid_$i"}></td>|;
         $column_data{source}       = qq|<td align=center><input name="source_$i" size=11 value="| . $form->quote( $form->{"source_$i"} ) . qq|"></td>|;
@@ -1656,7 +1656,7 @@ sub search {
         $vc = qq|
               <tr>
 	        <th align=right nowrap>$vclabel</th>
-	        <td colspan=3><select name="$form->{vc}"><option>\n$form->{"select$form->{vc}"}</select>
+	        <td colspan=3><select name="$form->{vc}" class="js-basic-single"><option>\n$form->{"select$form->{vc}"}</select>
 	        </td>
 	      </tr>
 |;
