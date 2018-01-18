@@ -2232,6 +2232,7 @@ sub defaults {
   my %checked;
   
   $checked{cash} = "checked" if $form->{method} eq 'cash';
+  $checked{accrual} = "checked" if $form->{method} ne 'cash';
   $checked{cdt} = "checked" if $form->{cdt};
   $checked{linetax} = "checked" if $form->{linetax};
   $checked{name} = "checked";
@@ -2310,7 +2311,11 @@ sub defaults {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Reporting Method').qq|</th>
-	  <td><input name=method class=checkbox type=checkbox value=cash $checked{cash}>&nbsp;|.$locale->text('Cash').qq|</td>
+	  <td><input name=method value="cash" type=radio $checked{cash}>
+	  <b>|.$locale->text('Cash').qq|</b>
+	  <input name=method value="" type=radio $checked{accrual}>
+	  <b>|.$locale->text('Accrual').qq|</b>
+	  </td>
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Cash Discount').qq|</th>
