@@ -675,6 +675,59 @@ sub delete_invoice {
 
   $form->{id} *= 1;
 
+  my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
+
+  if ($form->{id} and $defaults{extendedlog}) {
+     $query = qq|INSERT INTO ar_log_deleted SELECT ar.* FROM ar WHERE id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+
+     $query = qq|
+        INSERT INTO acc_trans_log_deleted (
+            trans_id, chart_id, 
+            amount, transdate, source,
+            approved, fx_transaction, project_id,
+            memo, id, cleared,
+            vr_id, entry_id,
+            tax, taxamount, tax_chart_id,
+            ts
+            )
+        SELECT 
+            ac.trans_id, ac.chart_id, 
+            ac.amount, ac.transdate, ac.source,
+            ac.approved, ac.fx_transaction, ac.project_id,
+            ac.memo, ac.id, ac.cleared,
+            vr_id, ac.entry_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id,
+            ts
+        FROM acc_trans ac
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        WHERE trans_id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+
+     $query = qq|
+        INSERT INTO acc_trans_log_deleted (
+            trans_id, chart_id, 
+            amount, transdate, source,
+            approved, fx_transaction, project_id,
+            memo, id, cleared,
+            vr_id, entry_id,
+            tax, taxamount, tax_chart_id,
+            ts
+            )
+        SELECT 
+            ac.trans_id, ac.chart_id, 
+            0 - ac.amount, ac.transdate, ac.source,
+            ac.approved, ac.fx_transaction, ac.project_id,
+            ac.memo, ac.id, ac.cleared,
+            vr_id, ac.entry_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id,
+            NOW() 
+        FROM acc_trans ac
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        WHERE trans_id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+  }
+
   &reverse_invoice($dbh, $form);
   
   my %audittrail = ( tablename  => 'ar',
