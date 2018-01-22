@@ -1,0 +1,65 @@
+% layout 'default';
+% title 'GoBD-Export';
+% languages userconfig->val('x_language');
+
+<script>
+$(document).ready(function() {
+    $('#toggle_log').click(function() {
+        $('#log').toggle(250);
+    });
+});
+</script>
+
+<h1 class='listtop'>GoBD-Export</h1>
+
+<p>
+  % if ($export->log->maxlevel >= 4) {
+  <span style="background: #F0A0A0; font-weight: bold">
+    <%= l 'Export failed' %>.</span>
+  % }
+  % elsif ($export->log->maxlevel == 3) {
+  <span style="background: yellow; font-weight: bold">
+    <%= l 'Export successful' %>.</span>
+  % }
+  % else {
+  <span style="background: #90EE90; font-weight: bold">
+    <%= l 'Export successful' %>.</span>
+    % }
+    
+  (<a id='toggle_log' href="#"/><%= l "Show log" %></a>)
+</p>
+
+<%== $export->log->to_html("trace") %>
+
+
+% if ($export->log->maxlevel >= 4) { next }
+
+
+<p>
+  <span style="font-weight: bold"><%= l 'Archive-Name' %>:</span>
+  <tt><%= $export->{export_dir} %></tt>
+</p>
+
+<p>
+  <span style="text-decoration:underline; font-weight: bold">
+    <%= l 'Contents' %>:
+  </span>
+</p>
+
+% for my $obj (@{$export->{table_objects}}) {
+<%= link_to $obj->filename => url_for('/gobd/show/' . $obj->filename) %><br/>
+% }
+
+<%= link_to 'index.xml' => url_for('/gobd/show/index.xml') %><br/>
+
+<%= link_to $export->{dtd_filename} => url_for('/gobd/show/' . $export->{dtd_filename}) %><br/>
+
+
+<hr/>
+<br/>
+%= form_for url_for('/gobd/download') => (method => 'GET') => begin
+
+%= submit_button l("Download ZIP"), name => 'download', class => 'submit'
+
+% end
+
