@@ -492,12 +492,6 @@ sub search_name {
 
   &create_links;
 
-  if (@{ $form->{all_business} }) {
-    $form->{selectbusiness} = qq|\n|;
-    for (@{ $form->{all_business} }) { $form->{selectbusiness} .= qq|$_->{description}--$_->{id}\n| }
-    $form->{selectbusiness} = $form->escape($form->{selectbusiness},1);
-  }
-
   if ($form->{db} eq 'customer') {
     $vcname = $locale->text('Customer');
     $vcnumber = $locale->text('Customer Number');
