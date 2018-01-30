@@ -1116,6 +1116,12 @@ sub all_parts {
       $invwhere .= " AND i.assemblyitem = '0'";
       $invwhere .= " AND a.$transdate >= ".$dbh->quote($form->{transdatefrom})."" if $form->{transdatefrom};
       $invwhere .= " AND a.$transdate <= ".$dbh->quote($form->{transdateto})."" if $form->{transdateto};
+      
+      if ($form->{business}){
+        (undef, $business_id) = split(/--/, $form->{business});
+        $business_id *= 1;
+        $invwhere .= " AND ct.business_id = $business_id";
+      }
 
       if ($form->{description} ne "") {
 	$var = $form->like(lc $form->{description});
@@ -1833,6 +1839,18 @@ sub get_warehouses {
 
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
     push @{ $form->{all_warehouse} }, $ref;
+  }
+  $sth->finish;
+
+  # get business types
+  $query = qq|SELECT *
+              FROM business
+	      ORDER BY 2|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_business} }, $ref;
   }
   $sth->finish;
 

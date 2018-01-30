@@ -776,6 +776,22 @@ sub search {
 
   IC->get_warehouses(\%myconfig, \%$form) unless $form->{searchitems} =~ /(service|labor)/;
 
+  if (@{ $form->{all_business} }) {
+    $form->{selectbusiness} = qq|\n|;
+    for (@{ $form->{all_business} }) { $form->{selectbusiness} .= qq|$_->{description}--$_->{id}\n| }
+    $form->{selectbusiness} = $form->escape($form->{selectbusiness},1);
+  }
+  if ($form->{selectbusiness}) {
+
+    $typeofbusiness = qq|<tr>
+ 	  <th align=right>|.$locale->text('Type of Business').qq|</th>
+	  <td><select name=business>|
+	  .$form->select_option($form->{selectbusiness}, $form->{business}, 1)
+	  .qq|</select>
+	  </td></tr>
+|;
+  }
+
   if (@{ $form->{all_partsgroup} }) {
     $partsgroup = qq|<option>\n|;
 
@@ -1092,6 +1108,7 @@ sub search {
 	</tr>
 	<tr>
 	  $partsgroup
+      $typeofbusiness
 	  $serialnumber
 	</tr>
 	$makemodel
@@ -1303,7 +1320,6 @@ sub generate_report {
     $label = ucfirst $form->{method};
     $option .= $locale->text($label) ." : ";
   }
-
   if ($form->{bought} || $form->{sold} || $form->{onorder} || $form->{ordered} || $form->{rfq} || $form->{quoted}) {
     $form->{l_transdate} = "Y"; # armaghan - transdate is always displayed
     # warehouse stuff is meaningless
@@ -1333,7 +1349,12 @@ sub generate_report {
     } else {
       $option .= " : ".$locale->text('Detail');
     }
- 
+    if ($form->{business}) {
+      ($business, undef) = split(/--/, $form->{business});
+      $callback .= "&business".$form->escape($form->{business},1);
+      $option .= "\n<br>".$locale->text('Type of Business').': '. $business;
+    }
+
     if ($form->{transdatefrom}) {
       $callback .= "&transdatefrom=$form->{transdatefrom}";
       $option .= "\n<br>".$locale->text('From')."&nbsp;".$locale->date(\%myconfig, $form->{transdatefrom}, 1);
