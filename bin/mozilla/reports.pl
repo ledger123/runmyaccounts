@@ -282,6 +282,7 @@ $selectfrom
         $aawhere
         $cashwhere
         AND NOT invoice
+        AND NOT aa.linetax
         AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
