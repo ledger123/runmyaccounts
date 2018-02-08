@@ -267,6 +267,7 @@ $selectfrom
         $aawhere
         $cashwhere
         AND NOT invoice
+        AND NOT aa.linetax
         AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
@@ -284,6 +285,7 @@ $selectfrom
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE aa.netamount = aa.amount
         AND NOT aa.invoice
+        AND NOT aa.linetax
         $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
