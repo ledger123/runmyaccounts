@@ -2108,9 +2108,11 @@ sub display_taxes {
 	</tr>
 |;
 
-  for (split(/ /, $form->{taxaccounts})) {
+  my @array = sort(split(/ /, $form->{taxaccounts}));
+  
+  foreach $ref (@array) {
     
-    my ($null, $i) = split /_/, $_;
+    my ($null, $i) = split /_/, $ref;
 
     $form->{"taxrate_$i"} = $form->format_amount(\%myconfig, $form->{"taxrate_$i"}, undef, 0);
     
@@ -2194,7 +2196,7 @@ sub update_taxes {
       $accno = $ref->{accno};
       $taxdescription = $ref->{taxdescription};
     }
-    if ($i > 1 && $validto) {
+    if ($i >= 1 && $validto) {
       push @tax, { id => $id, accno => $accno, taxdescription => $taxdescription };
     }
   }
@@ -2665,9 +2667,9 @@ sub save_taxes {
     ($accno, $i) = split /_/, $_;
     if ($accno eq $sameaccno && $i > 1) {
       $j = $i - 1;
-      if (! $form->{"validto_$j"}) {
-	$form->error($locale->text('Valid To date missing for').qq| $form->{"taxdescription_$j"}|);
-      }
+      #if (! $form->{"validto_$j"}) {
+	  #  $form->error($locale->text('Valid To date missing for').qq| $form->{"taxdescription_$j"}|);
+      #}
     }
     $sameaccno = $accno;
   }
