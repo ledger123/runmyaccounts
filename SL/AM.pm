@@ -1582,323 +1582,56 @@ sub save_taxes {
 
 
 sub backup {
-  my ($self, $myconfig, $form, $userspath, $gzip) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  my $mail;
-  my $err;
+    my $mail;
+    my $err;
 
-  my @t = localtime;
-  $t[4]++;
-  $t[5] += 1900;
-  $t[3] = substr("0$t[3]", -2);
-  $t[4] = substr("0$t[4]", -2);
+    my @t = localtime(time);
+    $t[4]++;
+    $t[5] += 1900;
+    $t[3] = substr( "0$t[3]", -2 );
+    $t[4] = substr( "0$t[4]", -2 );
 
-  my $boundary = time;
-  my $tmpfile = "$userspath/$boundary.$myconfig->{dbname}-$form->{version}-$t[5]$t[4]$t[3].sql";
-  my $out = $form->{OUT};
-  $form->{OUT} = ">$tmpfile";
+    my $boundary = time;
+    my $tmpfile = "/tmp/$myconfig->{dbname}-$t[5]-$t[4]-$t[3].sql.gz";
 
-  open(OUT, "$form->{OUT}") or $form->error("$form->{OUT} : $!");
+    my $out = $form->{OUT};
+    $form->{OUT} = "$tmpfile";
 
-  # get sequences, functions and triggers
-  my %tables;
-  my %references;
-  my %sequences;
-  my @functions;
-  my @triggers;
-  my @schema;
+    open( OUT, '>:raw', "$form->{OUT}" ) or $form->error("$form->{OUT} : $!");
 
-  # get dbversion from -tables.sql
-  my $file = "$myconfig->{dbdriver}-tables.sql";
+    my $today = scalar localtime;
 
-  open(FH, "sql/$file") or $form->error("sql/$file : $!");
+    if ( $form->{media} eq 'email' ) {
+        print OUT qx(PGPASSWORD="$myconfig->{dbpasswd}" /usr/bin/pg_dump -U $myconfig->{dbuser} $myconfig->{dbname} | gzip -c);
+        close OUT;
 
-  my @a = <FH>;
-  close(FH);
+        use SL::Mailer;
+        $mail = new Mailer;
 
-  @dbversion = grep /VALUES \(.{1}version.{1}, .*\){1}/, @a;
+        $mail->{charset} = $form->{charset};
+        $mail->{to} = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+        $mail->{from} = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+        $mail->{subject} = "Run my Accounts Backup / $myconfig->{dbname}-$form->{version}-$t[5]$t[4]$t[3].sql.gz";
+        @{ $mail->{attachments} } = ($tmpfile);
+        $mail->{version} = $form->{version};
+        $mail->{fileid} = "$boundary.";
 
-  $dbversion = "@dbversion";
-  $dbversion =~ /(\d+\.\d+\.\d+)/;
+        $myconfig->{signature} =~ s/\\n/\n/g;
+        $mail->{message} = "-- \n$myconfig->{signature}";
 
-  $dbversion = User::calc_version($1);
-
-  opendir SQLDIR, "sql/." or $form->error($!);
-  @a = grep /$myconfig->{dbdriver}-upgrade-.*?\.sql$/, readdir SQLDIR;
-  closedir SQLDIR;
-
-  my $mindb;
-  my $maxdb;
-
-  foreach my $line (@a) {
-
-    $upgradescript = $line;
-    $line =~ s/(^$myconfig->{dbdriver}-upgrade-|\.sql$)//g;
-
-    ($mindb, $maxdb) = split /-/, $line;
-    $mindb = User::calc_version($mindb);
-
-    next if $mindb < $dbversion;
-
-    $maxdb = User::calc_version($maxdb);
-
-    $upgradescripts{$maxdb} = $upgradescript;
-  }
-
-  $upgradescripts{$dbversion} = "$myconfig->{dbdriver}-tables.sql";
-  $upgradescripts{functions} = "$myconfig->{dbdriver}-functions.sql";
-
-  if (-f "sql/$myconfig->{dbdriver}-custom_tables.sql") {
-    $upgradescripts{customtables} = "$myconfig->{dbdriver}-custom_tables.sql";
-  }
-  if (-f "sql/$myconfig->{dbdriver}-custom_functions.sql") {
-    $upgradescripts{customfunctions} = "$myconfig->{dbdriver}-custom_functions.sql";
-  }
-
-  my $el;
-
-  foreach my $key (sort keys %upgradescripts) {
-
-    $file = $upgradescripts{$key};
-
-    open(FH, "sql/$file") or $form->error("sql/$file : $!");
-
-    push @schema, qq|-- $file\n|;
-
-    while (<FH>) {
-
-      if (/references (\w+)/i) {
-	$references{$el} = 1;
-      }
-
-      if (/create table (\w+)/i) {
-	$el = $1;
-	$tables{$1} = 1;
-      }
-
-      if (/create sequence (\w+)/i) {
-	$sequences{$1} = 1;
-	next;
-      }
-
-      if (/end function/i) {
-	push @functions, $_;
-	$function = 0;
-	$temp = 0;
-	next;
-      }
-
-      if (/create function /i) {
-	$function = 1;
-      }
-
-      if ($function) {
-	push @functions, $_;
-	next;
-      }
-
-      if (/end trigger/i) {
-	push @triggers, $_;
-	$trigger = 0;
-	next;
-      }
-
-      if (/create trigger/i) {
-	$trigger = 1;
-      }
-
-      if ($trigger) {
-	push @triggers, $_;
-	next;
-      }
-
-      push @schema, $_ if $_ !~ /^(insert|--)/i;
-
+        $err = $mail->send($out);
     }
-    close(FH);
+    if ( $form->{media} eq 'file' ) {
+        open( IN, '<:raw', "$tmpfile" ) or $form->error("$tmpfile : $!");
+        open( OUT, ">-" ) or $form->error("STDOUT : $!");
+        binmode( OUT, ':raw' );
 
-  }
-
-
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
-
-  my $today = scalar localtime;
-
-  $myconfig->{dbhost} = 'localhost' unless $myconfig->{dbhost};
-
-  print OUT qq|-- Run my Accounts Backup
--- Dataset: $myconfig->{dbname}
--- Version: $form->{version}
--- Host: $myconfig->{dbhost}
--- Login: $form->{login}
--- User: $myconfig->{name}
--- Date: $today
---
-|;
-
-
-  # drop references first
-  for (keys %references) { print OUT qq|DROP TABLE $_;\n| }
-
-  delete $tables{temp};
-  # drop tables and sequences
-  for (keys %tables) {
-    if (! exists $references{$_}) {
-      print OUT qq|DROP TABLE $_;\n|;
+        print OUT qq|Content-Type: application/file;\n| . qq|Content-Disposition: attachment; filename="$myconfig->{dbname}-$t[5]-$t[4]-$t[3].sql.gz"\n\n|;
+        print OUT qx(PGPASSWORD="$myconfig->{dbpasswd}" /usr/bin/pg_dump -U $myconfig->{dbuser} $myconfig->{dbname} | gzip -c );
     }
-  }
-
-  print OUT "--\n";
-
-  # triggers and index files are dropped with the tables
-
-  # drop functions
-  foreach $item (@functions) {
-    if ($item =~ /create function (.*\))/i) {
-      print OUT qq|DROP FUNCTION $1;\n|;
-    }
-  }
-
-  delete $sequences{tempid};
-  # create sequences
-  foreach $item (keys %sequences) {
-    if ($myconfig->{dbdriver} eq 'DB2') {
-      $query = qq|SELECT NEXTVAL FOR $item FROM sysibm.sysdummy1|;
-    } else {
-      $query = qq|SELECT last_value FROM $item|;
-    }
-
-    my ($id) = $dbh->selectrow_array($query);
-
-    if ($myconfig->{dbdriver} eq 'DB2') {
-      print OUT qq|DROP SEQUENCE $item RESTRICT
-CREATE SEQUENCE $item AS INTEGER START WITH $id INCREMENT BY 1 MAXVALUE 2147483647 MINVALUE 1 CACHE 5;\n|;
-    } else {
-      if ($myconfig->{dbdriver} eq 'Pg') {
-	print OUT qq|CREATE SEQUENCE $item;
-SELECT SETVAL('$item', $id, FALSE);\n|;
-      } else {
-	print OUT qq|DROP SEQUENCE $item;
-CREATE SEQUENCE $item START $id;\n|;
-      }
-    }
-  }
-
-  # add schema
-  print OUT @schema;
-  print OUT "\n";
-
-  print OUT qq|-- set options
-$myconfig->{dboptions};
---
-|;
-
-  my $query;
-  my $sth;
-  my @arr;
-  my $fields;
-
-  delete $tables{semaphore};
-
-  foreach $table (keys %tables) {
-
-    $query = qq|SELECT * FROM $table|;
-    $sth = $dbh->prepare($query);
-    $sth->execute || $form->dberror($query);
-
-    $query = qq|INSERT INTO $table (|;
-    $query .= join ',', (map { $sth->{NAME}->[$_] } (0 .. $sth->{NUM_OF_FIELDS} - 1));
-    $query .= qq|) VALUES|;
-
-    while (@arr = $sth->fetchrow_array) {
-
-      $fields = "(";
-
-      $fields .= join ',', map { $dbh->quote($_) } @arr;
-      $fields .= ")";
-
-      print OUT qq|$query $fields;\n|;
-    }
-
-    $sth->finish;
-  }
-
-  print OUT "--\n";
-
-  # functions
-  for (@functions) { print OUT $_ }
-
-  # triggers
-  for (@triggers) { print OUT $_ }
-
-  # add the index files
-  open(FH, "sql/$myconfig->{dbdriver}-indices.sql");
-  @a = <FH>;
-  close(FH);
-  print OUT @a;
-
-  close(OUT);
-
-  $dbh->disconnect;
-
-  # compress backup if gzip defined
-  my $suffix = "";
-  if ($gzip) {
-    my @args = split / /, $gzip;
-    my @s = @args;
-
-    push @args, "$tmpfile";
-    system(@args) == 0 or $form->error("$args[0] : $?");
-
-    shift @s;
-    my %s = @s;
-    $suffix = ${-S} || ".gz";
-    $tmpfile .= $suffix;
-  }
-
-  if ($form->{media} eq 'email') {
-
-    use SL::Mailer;
-    $mail = new Mailer;
-
-    $mail->{charset} = $form->{charset};
-    $mail->{to} = qq|"$myconfig->{name}" <$myconfig->{email}>|;
-    $mail->{from} = qq|"$myconfig->{name}" <$myconfig->{email}>|;
-    $mail->{subject} = "Run my Accounts Backup / $myconfig->{dbname}-$form->{version}-$t[5]$t[4]$t[3].sql$suffix";
-    @{ $mail->{attachments} } = ($tmpfile);
-    $mail->{version} = $form->{version};
-    $mail->{fileid} = "$boundary.";
-
-    $myconfig->{signature} =~ s/\\n/\n/g;
-    $mail->{message} = "-- \n$myconfig->{signature}";
-
-    $err = $mail->send($out);
-  }
-
-  if ($form->{media} eq 'file') {
-
-    open(IN, "$tmpfile") or $form->error("$tmpfile : $!");
-    open(OUT, ">-") or $form->error("STDOUT : $!");
-
-    print OUT qq|Content-Type: application/file;
-Content-Disposition: attachment; filename="$myconfig->{dbname}-$form->{version}-$t[5]$t[4]$t[3].sql$suffix"
-
-|;
-    binmode(IN);
-    binmode(OUT);
-
-    while (<IN>) {
-      print OUT $_;
-    }
-
-    close(IN);
-    close(OUT);
-
-  }
-
-  unlink "$tmpfile";
-
+    unlink "$tmpfile";
 }
 
 
