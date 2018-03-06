@@ -1841,6 +1841,9 @@ sub generate_reminder {
 
   &reminder;
 
+  if (-f "$spool/$form->{login}_reminders.pdf"){
+     print qq|<a href="$spool/$form->{login}_reminders.pdf">Download reminders pdf</a>|;
+  }
 }
 
 sub export_as_csv {
@@ -2633,6 +2636,8 @@ sub print_reminder {
 
 sub do_print_reminder {
 
+  my $pdfs;
+
   $out = $form->{OUT};
 
   $form->{todate} ||= $form->current_date(\%myconfig);
@@ -2685,8 +2690,7 @@ sub do_print_reminder {
       for (qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill)) { $form->{$_} = () }
 
       $ref->{invdate} = $ref->{transdate};
-      my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill);
-      for (@a) { $form->{"${_}_1"} = $ref->{$_} }
+      my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill); for (@a) { $form->{"${_}_1"} = $ref->{$_} }
 
       $form->format_string(map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription shippingpoint shipvia waybill));
       for (@a) { $form->{$_} = $form->{"${_}_1"} }
@@ -2711,6 +2715,7 @@ sub do_print_reminder {
 
          $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
          $form->{OUT} = ">$spool/$filename";
+         $pdfs .= "$spool/$filename ";
 
          # save status
          $form->update_status(\%myconfig);
@@ -2723,9 +2728,9 @@ sub do_print_reminder {
          $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
       }
       $form->parse_template(\%myconfig, $userspath, $debuglatex);
-
     }
   }
+  system("/usr/bin/pdftk $pdfs cat output $spool/$form->{login}_reminders.pdf");
 }
 
 
