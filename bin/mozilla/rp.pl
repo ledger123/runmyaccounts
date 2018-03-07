@@ -2264,12 +2264,17 @@ sub print_options {
     <td>$media</td>
 |;
 
+
   if (%printer && $latex && $form->{media} ne 'email') {
     print qq|
       <td nowrap>|.$locale->text('Copies').qq|
       <input name=copies size=2 value=$form->{copies}></td>
 |;
   }
+
+  print qq|
+  <th><input type=checkbox name=create_single_pdf value=1> |.$locale->text("Create single PDF").qq|</th>
+|;
 
   $form->{selectlanguage} = $form->escape($form->{selectlanguage},1);
   $form->hide_form(qw(selectlanguage));
@@ -2637,6 +2642,7 @@ sub print_reminder {
 sub do_print_reminder {
 
   my $pdfs;
+  my $ids;
 
   $out = $form->{OUT};
 
@@ -2716,6 +2722,7 @@ sub do_print_reminder {
          $filename .= ($form->{format} eq 'postscript') ? '.ps' : '.pdf';
          $form->{OUT} = ">$spool/$filename";
          $pdfs .= "$spool/$filename ";
+         $ids .= "$form->{id} ";
 
          # save status
          $form->update_status(\%myconfig);
@@ -2730,7 +2737,17 @@ sub do_print_reminder {
       $form->parse_template(\%myconfig, $userspath, $debuglatex);
     }
   }
-  system("/usr/bin/pdftk $pdfs cat output $spool/$form->{login}_reminders.pdf");
+  if ($form->{create_single_pdf}){
+     system("/usr/bin/pdftk $pdfs cat output $spool/$form->{login}_reminders.pdf");
+     my $dbh = $form->dbconnect(\%myconfig);
+     my @ids = split(/ /, $ids);
+     for (@ids){
+        $dbh->do("UPDATE status SET spoolfile = NULL WHERE trans_id = $_");
+     }
+     $dbh->disconnect;
+  } else {
+     unlink "$spool/$form->{login}_reminders.pdf";
+  }
 }
 
 
