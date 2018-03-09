@@ -20,7 +20,7 @@ sub ask_dbcheck {
   </table><br />
 
 <h1>Check for database inconsistancies</h1>
-<form method=post action='$form->{script}'>
+<form method=post action=$form->{script}>
   <table>
     <tr>
 	<th>|.$locale->text('First transaction date').qq|</th>
@@ -83,7 +83,7 @@ sub do_dbcheck {
      $form->info($locale->text("There are $count blank rows ..."));
      $form->info($locale->text("There are $count2 blank TAX rows ..."));
      print qq|
-<form method=post action='$form->{script}'>
+<form method=post action=$form->{script}>
 <input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank rows').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank TAX rows').qq|">
 |;
