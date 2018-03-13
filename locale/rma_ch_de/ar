@@ -221,6 +221,7 @@ $self{subs} = {
   'create_links'                => 'create_links',
   'credit_invoice_'             => 'credit_invoice_',
   'debit_invoice_'              => 'debit_invoice_',
+  'debitorenrechnung'           => 'sales_invoice_',
   'delete'                      => 'delete',
   'delete_schedule'             => 'delete_schedule',
   'display'                     => 'display',
