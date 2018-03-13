@@ -466,6 +466,7 @@ sub print {
 	&prepare_invoice;
 	if ($myform->{type} ne 'invoice') {
 	  $form->{formname} = $myform->{type};
+    $form->{formname} = $myform->{"formname_$i"} if $myform->{"formname_$i"}; # only true for reminders;
 	}
 	delete $form->{paid};
 
@@ -819,8 +820,7 @@ function CheckAll() {
 
       $column_data{name} = qq|<td><a href=hr.pl?action=edit&id=$ref->{employee_id}&db=employee&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name}</a></td>|;
     } else {
-      $column_data{invnumber} = qq|<td><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&type=$form->{type}&callback=$callback>$ref->{invnumber}</a></td>
-    <input type=hidden name="reference_$i" value="|.$form->quote($ref->{invnumber}).qq|">|;
+      $column_data{invnumber} = qq|<td><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&type=$form->{type}&callback=$callback>$ref->{invnumber}</a></td>|;
     }
 
     # https://projects.runmyaccounts.com/redmine/issues/17920
@@ -844,6 +844,7 @@ function CheckAll() {
 <input type=hidden name="spoolfile_$i" value="$ref->{spoolfile}">
 <input type=hidden name="vc_$i" value="$ref->{vc}">
 <input type=hidden name="module_$i" value="$ref->{module}">
+<input type=hidden name="formname_$i" value="|.$form->quote($ref->{formname}).qq|">
 |;
   }
 

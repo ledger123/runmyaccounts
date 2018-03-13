@@ -400,7 +400,8 @@ sub get_spoolfiles {
 		  '$item' AS module, '' AS spoolfile, a.description, a.amount,
 		  '$arap{$form->{type}}{$item}' AS vc,
 		  ad.city, vc.email, '$arap{$form->{type}}{$item}' AS db,
-                  vc.id AS vc_id
+                  vc.id AS vc_id,
+                  (SELECT formname FROM status s WHERE s.trans_id = a.id AND formname LIKE 'reminder%' LIMIT 1) formname
 		  FROM $item a
 		  JOIN $arap{$form->{type}}{$item} vc ON (a.$arap{$form->{type}}{$item}_id = vc.id)
 		  JOIN address ad ON (ad.trans_id = vc.id)
