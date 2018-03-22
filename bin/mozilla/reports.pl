@@ -1709,6 +1709,13 @@ $selectfrom
       $query = qq|SELECT id, projectnumber, description FROM project ORDER BY 2|;
    } else {
       $query = qq|SELECT id, description FROM department ORDER BY 2|;
+      $query = qq|
+      SELECT id, description FROM department
+      UNION
+      SELECT 0, '(blank)'
+      ORDER BY description
+  |;
+
    }
 
    my $dbh = $form->dbconnect(\%myconfig);
@@ -1919,6 +1926,11 @@ sub income_statement_by_project {
 sub income_statement_by_department {
 
   my $dbh = $form->dbconnect(\%myconfig);
+
+  $dbh->do("DELETE FROM dpt_trans WHERE department_id = 0");
+  $dbh->do("INSERT INTO dpt_trans (department_id, trans_id) SELECT 0, id FROM ar WHERE department_id = 0");
+  $dbh->do("INSERT INTO dpt_trans (department_id, trans_id) SELECT 0, id FROM ap WHERE department_id = 0");
+  $dbh->do("INSERT INTO dpt_trans (department_id, trans_id) SELECT 0, id FROM gl WHERE department_id = 0");
 
   my $where = qq|c.category IN ('I', 'E')|;
   my $ywhere = qq| 1 = 1 |;
