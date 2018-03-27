@@ -32,7 +32,7 @@ INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, c
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('118', 'CRÉANCES À COURT TERME ENVERS LES ASSURANCES SOCIALES ET LES INSTITUTIONS DE PRÉVOYANCE PROFESSIONNELLE', 'H', 'A', '', '118', 'f', 'f', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('119', 'AUTRES CRÉANCES À COURT TERME', 'H', 'A', '', '119', 'f', 'f', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('120', 'STOCKS ET PRESTATIONS DE SERVICES NON FACTURÉES', 'H', 'A', '', '120', 'f', 'f', '');
-INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1192', 'Acomptes payés', 'A', 'A', 'AP_paid', '109', 'f', 't', '');
+INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1192', 'Acomptes payés', 'A', 'A', 'AP_paid', '119', 'f', 't', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1280', 'Travaux en cours', 'A', 'A', 'IC', '120', 'f', 't', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('130', 'ACTIFS DE RÉGULARISATION (ACTIFS TRANSITOIRES)', 'H', 'A', '', '130', 'f', 'f', '');
 INSERT INTO chart(accno, description, charttype, category, "link", gifi_accno, contra, allow_gl, symbol_link) VALUES ('1300', 'Charges payées d‘avance', 'A', 'A', '', '130', 'f', 't', '');

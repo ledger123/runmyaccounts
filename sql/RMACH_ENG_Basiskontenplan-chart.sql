@@ -35,7 +35,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1179','Withholding Tax','A','A','','117',false,true,'verrechnungssteuer');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('118','ACCOUNTS RECEIVABLE SOCIAL INSURANCE','H','A','','118',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('119','OTHER CURRENT RECEIVABLES','H','A','','119',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1192','Advance Payments','A','A','AP_paid','109',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1192','Advance Payments','A','A','AP_paid','119',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('120','INVENTORY','H','A','','120',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1280','Work in Progress','A','A','IC','120',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('130','ACCRUALS','H','A','','130',false,true,'');
