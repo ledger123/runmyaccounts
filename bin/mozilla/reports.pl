@@ -141,6 +141,10 @@ $selectfrom
     <th align="right">| . $locale->text('Subtotal') . qq|</th>
     <td><input type=checkbox name=l_subtotal value="checked" $form->{l_subtotal}></td>
 </tr>
+<tr>
+    <th align="right">| . $locale->text('Show SQL') . qq|</th>
+    <td><input type=checkbox name=l_sql value="checked" $form->{l_sql}></td>
+</tr>
 </table>
 
 <hr/>
@@ -412,6 +416,8 @@ $selectfrom
 
         ORDER BY 1, 2, 3, 6
     ~;
+
+    $form->info($query) if $form->{l_sql};
 
     my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
 
