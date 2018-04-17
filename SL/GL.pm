@@ -680,7 +680,8 @@ sub transactions {
 		  memo => 17,
 		  lineitem => 19,
 		  name => 20,
-		  vcnumber => 21);
+		  name => 21,
+		  vcnumber => 22);
   
   my @sf = qw(id transdate reference accno);
   my $sortorder = $form->sort_order(\@sf, \%ordinal);
