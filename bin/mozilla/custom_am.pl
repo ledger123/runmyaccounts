@@ -465,7 +465,7 @@ WHERE trans_id NOT IN
 
        UNION 
 
-       SELECT ar.id, 'AR' as module, ar.invnumber, ap.transdate, ar.amount, ar.netamount, ar.amount - ar.netamount tax1, sum(ac.taxamount) tax2
+       SELECT ar.id, 'AR' as module, ar.invnumber, ar.transdate, ar.amount, ar.netamount, ar.amount - ar.netamount tax1, sum(ac.taxamount) tax2
        FROM ar
        JOIN acc_trans ac on ar.id = ac.trans_id 
        AND ar.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
