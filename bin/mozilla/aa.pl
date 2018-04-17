@@ -379,7 +379,6 @@ sub create_links {
         }
     }
 
-    $form->{"selecttax"} = $form->escape( $form->{selecttax}, 1 );
     if ( $form->{paidaccounts} ) {
         $i = $form->{paidaccounts} + 1;
     }
@@ -451,6 +450,7 @@ sub create_links {
 sub form_header {
     $form->{taxincluded} = ( $form->{taxincluded} ) ? "checked" : "";
 
+    $form->{selecttax} = $form->escape($form->{selecttax});
     # format amounts
     $form->{exchangerate} = $form->format_amount( \%myconfig, $form->{exchangerate} );
 
