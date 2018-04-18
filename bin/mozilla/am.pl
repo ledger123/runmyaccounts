@@ -2442,6 +2442,10 @@ sub defaults {
 	  <th align=right nowrap>|.$locale->text('Selected Account').qq|</th>
 	  <td><input name=selectedaccount size=15 value="$form->{selectedaccount}"></td>
 	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Transition Account').qq|</th>
+	  <td><input name=transitionaccount size=15 value="$form->{transitionaccount}"></td>
+	</tr>
       </table>
     </td>
   </tr>
