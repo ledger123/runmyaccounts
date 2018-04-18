@@ -423,7 +423,8 @@ sub list_transactions {
     $totaldebit += $ca->{debit};
     $totalcredit += $ca->{credit};
     
-    $column_data{transdate} = qq|<td nowrap>$ca->{transdate}</td>|;
+    $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}";
+    $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a></td>|;
     $column_data{reference} = qq|<td>$href</td>|;
 
     $href = "<a href=ct.pl?path=$form->{path}&action=edit&id=$ca->{vc_id}&db=$ca->{db}&login=$form->{login}&callback=$form->{callback}>$ca->{name}</a>";

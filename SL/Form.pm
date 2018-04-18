@@ -1807,6 +1807,10 @@ sub dbconnect_noauto {
 
 }
 
+sub param {
+    my ( $self, $fldname ) = @_;
+    return $self->{$fldname};
+}
 
 sub dbquote {
   my ($self, $var, $type) = @_;
