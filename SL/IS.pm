@@ -35,7 +35,9 @@ sub invoice_details {
   $form->{invdate} = $form->{transdate};
 
   $form->{xml_duedate} = $form->datetonum($myconfig, $form->{duedate});
+  $form->{qr_duedate} = $form->format_date('yyyy-mm-dd', $form->{xml_duedate});
   $form->{xml_invdate} = $form->datetonum($myconfig, $form->{transdate});
+  $form->{qr_invdate} = $form->format_date('yyyy-mm-dd', $form->{xml_invdate});
 
   my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
   $form->{companyaddress1} = $defaults{address1};
@@ -600,6 +602,11 @@ sub invoice_details {
   my $decimal;
   
   $form->{total} = $form->round_amount($form->{total}, 2);
+  
+  $qr_numberformat = { numberformat => '1,000.00' };
+  $form->{qr_total} =  $form->format_amount($qr_numberformat, $form->{total}, 2);
+  for (qw(qr_total)){ $form->{qr_total} =~ s/,/ /g }
+
   ($whole, $decimal) = split /\./, $form->round_amount($form->{invtotal},2);
 
   $form->{decimal} = substr("${decimal}00", 0, 2);
@@ -647,6 +654,9 @@ sub invoice_details {
     $form->{dcn} = $sth->fetchrow_array;
     $sth->finish;    	
   }
+
+  $form->dumper($form);
+  $form->error;
 
   for my $dcn (qw(dcn rvc)) { $form->{$dcn} = $form->format_dcn($form->{$dcn}) }
 
