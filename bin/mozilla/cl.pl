@@ -28,12 +28,14 @@ sub list_trans {
     $form->header;
     print qq|<h1>Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT transdate, source, memo,
+      SELECT gl.reference, ac.transdate, ac.source, ac.memo,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
-      WHERE trans_id = ?
-      AND chart_id = (SELECT id FROM chart WHERE accno = ?)";
+      JOIN gl ON gl.id = ac.trans_id
+      WHERE ac.trans_id = ?
+      AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)
+    ";
 
     $table = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->xto();
     $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
@@ -49,9 +51,24 @@ sub list_trans {
     #$table->calc_totals( [qw(count)] );
     print $table->output;
 
+    $query = "
+      SELECT
+      (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
+      (case when ac.amount > 0 then ac.amount else 0 end) credit
+      FROM acc_trans ac
+      JOIN gl ON gl.id = ac.trans_id
+      WHERE ac.trans_id = ?
+      AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)
+    ";
+
+    my ($debit, $credit) = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->list or $form->error($dbs->error);
+    $form->info("$debit--$credit");
+
     my @form1flds = qw(fromdate todate arap);
     $form->{nextsub}  = 'list_trans';
-    $form->{arap} = 'ap' if !$form->{arap};
+    $form->{arap} = 'ap' if $debit;
+    $form->{arap} = 'ar' if $credit;
+    $search_amount = $debit + $credit; # one value will be always 0
 
     my $form1 = CGI::FormBuilder->new(
         method     => 'post',
@@ -142,11 +159,16 @@ sub list_trans {
         }
         for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
 
-        #$url = qq|$row->{module}?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
-        #$tabledata{invnumber} = qq|<td><a href="$url">$row->{invnumber}</a></td>|;
+        $url = qq|$arap.pl?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
+        $tabledata{invnumber} = qq|<td><a href="$url" target=_blank>$row->{invnumber}</a></td>|;
 
+        $row->{amount} *= 1;
+        $checked = '';
+        if ($row->{amount} eq $search_amount){
+            $checked = 'checked';
+        }
+        $tabledata{x} = qq|<td><input type=checkbox class=checkbox name=x_$j $checked><input type=hidden name=id_$j value=$row->{id}></td>|;
         for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
-        $tabledata{x} = qq|<td><input type=checkbox class=checkbox name=x_$j><input type=hidden name=id_$j value=$row->{id}></td>|;
         for (@total_columns) { $totals{$_}    += $row->{$_} }
         for (@total_columns) { $subtotals{$_} += $row->{$_} }
 
