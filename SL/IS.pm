@@ -605,7 +605,6 @@ sub invoice_details {
   
   $qr_numberformat = { numberformat => '1,000.00' };
   $form->{qr_total} =  $form->format_amount($qr_numberformat, $form->{total}, 2);
-  for (qw(qr_total)){ $form->{qr_total} =~ s/,/ /g }
 
   ($whole, $decimal) = split /\./, $form->round_amount($form->{invtotal},2);
 
@@ -620,6 +619,8 @@ sub invoice_details {
   $form->{text_out_amount} = $c->num2text($whole);
   $form->{integer_out_amount} = $whole;
 
+  $form->{qr_integer_out_amount} =  $form->format_amount($qr_numberformat, $form->{integer_out_amount}, 2);
+  for (qw(qr_total qr_integer_out_amount)){ $form->{$_} =~ s/,/ /g }
   if ($form->{cd_amount}) {
     ($whole, $decimal) = split /\./, $form->{cd_invtotal};
     $form->{cd_decimal} = substr("${decimal}00", 0, 2);
