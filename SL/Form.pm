@@ -662,6 +662,9 @@ sub parse_template {
   $sth->finish;
   $dbh->disconnect;
 
+  ## Uncomment following line to view template variables with values in browser.
+  # $self->dumper($self); $self->error;
+
   my %include = ();
   my $ok;
 
