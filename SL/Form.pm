@@ -651,6 +651,17 @@ sub parse_template {
   my $subdir = "";
   my $err = "";
 
+  # Setup variables from defaults table
+  my $dbh = $self->dbconnect($myconfig);
+  my $query = "SELECT fldname, fldvalue FROM defaults WHERE fldname LIKE 'latex'";
+  my $sth = $dbh->prepare($query);
+  $sth->execute;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     $form->{$ref->{fldname}} = $ref->{fldvalue};
+  }
+  $sh->finish;
+  $dbh->disconnect;
+
   my %include = ();
   my $ok;
 
