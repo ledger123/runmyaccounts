@@ -316,7 +316,7 @@ sub book_selected_transactions {
 
 sub just_do_it {
    use DBIx::Simple;
-   my $dbh = $form->dbconnect(\%myconfig);
+   my $dbh = $form->dbconnect_noauto(\%myconfig);
    my $dbs = DBIx::Simple->connect($dbh);
 
    my $clearing_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='selectedaccount')")->list;
@@ -328,16 +328,16 @@ sub just_do_it {
    $form->info("Clearing: $clearing_accno_id\n");
    $form->info("Transition: $transition_accno_id\n");
 
+   # Update GL transaction and replace clearing account with transition account
    $dbs->query("
       UPDATE acc_trans SET chart_id = ? WHERE chart_id = ? AND trans_id = ?",
          $transition_accno_id, $clearing_accno_id, $form->{trans_id}
    );
 
-   $dbs->query("
-      UPDATE acc_trans SET chart_id = ? WHERE chart_id = ? AND trans_id = ?",
-         $transition_accno_id, $clearing_accno_id, $form->{trans_id}
-   );
+   # Get payment date from GL transaction
+   my $payment_date = $dbs->query("SELECT transdate FROM gl WHERE id = ?", $form->{trans_id})->list;
 
+   # Add payment row to each AR/AP transactions which are to be updated
    $query = "
       SELECT id, 'ar' tbl, ar.invnumber, ar.transdate, ar.amount-ar.paid due
       FROM ar
@@ -354,12 +354,22 @@ sub just_do_it {
    @rows = $dbs->query($query)->hashes;
 
    for (@rows){
+      my $arap = uc $_->{tbl};
+      my $ml = $arap eq 'ar' ? 1 : -1;
+      my $arap_accno_id = $dbs->query("
+         SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$arap') LIMIT 1", $_->{id}
+      )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $_->{transdate}, $_->{due}
-      );
+        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $_->{due}
+      ) or $form->error($dbs->error);
+      $dbs->query("
+        INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
+        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due} * $ml
+      ) or $form->error($dbs->error);
+      $dbs->query("UPDATE $arap SET paid = amount WHERE id = ?", $_->{id}) or $form->error($dbs->error);
    }
-   #$dbs->commit;
+   $dbs->commit;
 
    $form->info("It is done ...");
 }
