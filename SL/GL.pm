@@ -683,7 +683,12 @@ sub transactions {
      my $sth = $dbh->prepare($query);
      $sth->execute;
      while ($row = $sth->fetchrow_hashref(NAME_lc)){
-        $dbh->do("UPDATE filtered SET entry_id2 = $row->{entry_id} WHERE debit = $row->{credit} AND entry_id2 = 0");
+        $dbh->do("
+          UPDATE filtered SET entry_id2 = $row->{entry_id}
+          WHERE debit = $row->{credit} 
+            AND entry_id2 = 0
+            AND entry_id = (SELECT entry_id FROM filtered WHERE debit = $row->{credit} AND entry_id2 = 0 LIMIT 1 )"
+        );
      }
   }
   my $debit_credit_filtered_where = " AND ac.entry_id NOT IN (
