@@ -60,15 +60,13 @@ sub list_trans {
       WHERE ac.trans_id = ?
       AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)
     ";
-
     my ($debit, $credit) = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->list or $form->error($dbs->error);
-    $form->info("$debit--$credit");
+    $search_amount = $debit + $credit; # one value will be always 0
 
     my @form1flds = qw(fromdate todate arap);
     $form->{nextsub}  = 'list_trans';
     $form->{arap} = 'ap' if $debit;
     $form->{arap} = 'ar' if $credit;
-    $search_amount = $debit + $credit; # one value will be always 0
 
     my $form1 = CGI::FormBuilder->new(
         method     => 'post',
@@ -111,7 +109,7 @@ sub list_trans {
     my $vc = $arap eq 'ar' ? 'customer' : 'vendor';
     my $query = qq|
         SELECT
-           aa.id, aa.invnumber, aa.transdate, aa.description, aa.amount, aa.paid
+           aa.id, aa.invnumber, aa.transdate, aa.description, aa.amount, aa.paid, aa.amount - aa.paid due
         FROM $arap aa
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
         WHERE aa.amount - aa.paid > 0
@@ -119,8 +117,8 @@ sub list_trans {
         ORDER BY aa.transdate|;
     my @allrows = $dbs->query( $query, @bind )->hashes or die( 'No transactions found ...' );
 
-    my @report_columns = qw(x invnumber transdate description amount paid);
-    my @total_columns = qw(amount paid);
+    my @report_columns = qw(x invnumber transdate description amount paid due);
+    my @total_columns = qw(amount paid due);
     my ( %tabledata, %totals, %subtotals );
 
     for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading">| . ucfirst $_ . qq|</th>\n| }
@@ -328,6 +326,11 @@ sub just_do_it {
    $form->info("Clearing: $clearing_accno_id\n");
    $form->info("Transition: $transition_accno_id\n");
 
+   # Amount to be adjusted
+   my $amount = $dbs->query("SELECT ABS(amount) FROM acc_trans WHERE chart_id = ? AND trans_id = ? ",
+       $clearing_accno_id, $form->{trans_id}
+   )->list;
+
    # Update GL transaction and replace clearing account with transition account
    $dbs->query("
       UPDATE acc_trans SET chart_id = ? WHERE chart_id = ? AND trans_id = ?",
@@ -361,13 +364,13 @@ sub just_do_it {
       )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $_->{due}
+        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due} * $ml
+        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount * $ml
       ) or $form->error($dbs->error);
-      $dbs->query("UPDATE $arap SET paid = amount WHERE id = ?", $_->{id}) or $form->error($dbs->error);
+      $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount, $_->{id}) or $form->error($dbs->error);
    }
    $dbs->commit;
 
