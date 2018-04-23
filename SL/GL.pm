@@ -666,7 +666,32 @@ sub transactions {
 
     }
   }
-  
+
+  $dbh->do('DELETE FROM filtered');
+  if ($form->{accno} and $form->{filter_amounts}){
+     # CREATE TABLE filtered (trans_id int, entry_id int default 0, entry_id2 int default 0, debit float default 0, credit float default 0);
+     my $query = qq|
+        INSERT INTO filtered (trans_id, entry_id, debit, credit)
+        SELECT trans_id, entry_id,
+        (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
+        (case when ac.amount > 0 then ac.amount else 0 end) credit
+        FROM acc_trans ac
+        WHERE ac.chart_id IN (SELECT id FROM chart WHERE accno = '$form->{accno}')
+     |;
+     $dbh->do($query);
+     $query = "SELECT * FROM filtered WHERE credit > 0";
+     my $sth = $dbh->prepare($query);
+     $sth->execute;
+     while ($row = $sth->fetchrow_hashref(NAME_lc)){
+        $dbh->do("UPDATE filtered SET entry_id2 = $row->{entry_id} WHERE debit = $row->{credit} AND entry_id2 = 0");
+     }
+  }
+  my $debit_credit_filtered_where = " AND ac.entry_id NOT IN (
+       SELECT entry_id FROM filtered WHERE entry_id2 > 0
+       UNION
+       SELECT entry_id2 FROM filtered WHERE entry_id2 > 0
+  )";
+
   my $false = ($myconfig->{dbdriver} =~ /Pg/) ? FALSE : q|'0'|;
 
   my %ordinal = ( id => 1,
@@ -694,13 +719,13 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts
+		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts, ac.entry_id
                  FROM gl g
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
-                 WHERE $glwhere
+                 WHERE $glwhere $debit_credit_filtered_where
 	UNION ALL
 	         SELECT a.id, 'ar' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
@@ -710,7 +735,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts
+		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id
 		 FROM ar a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -719,7 +744,7 @@ sub transactions {
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
-		 WHERE $arwhere
+		 WHERE $arwhere $debit_credit_filtered_where
 	UNION ALL
 	         SELECT a.id, 'ap' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
@@ -729,7 +754,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts
+		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id
 		 FROM ap a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -738,7 +763,7 @@ sub transactions {
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
-		 WHERE $apwhere
+		 WHERE $apwhere $debit_credit_filtered_where
 	     |;
 
   if ($form->{include_log}){
@@ -755,7 +780,7 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts
+		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id
                  FROM gl g
 		 JOIN acc_trans_log ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -771,7 +796,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
 		 FROM ar a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -790,7 +815,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
 		 FROM ap a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -815,7 +840,7 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts
+		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id
                  FROM gl_log_deleted g
 		 JOIN acc_trans_log_deleted ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -831,7 +856,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
 		 FROM ar_log_deleted a
 		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -850,7 +875,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
 		 FROM ap_log_deleted a
 		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
 		 $invoicejoin
