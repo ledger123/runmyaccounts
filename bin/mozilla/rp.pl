@@ -1009,7 +1009,7 @@ sub generate_income_statement {
 
   $form->{IN} = "income_statement.html";
 
-  $form->parse_template(\%myconfig);
+	$form->parse_template(\%myconfig, $userspath, $debuglatex);
 
 }
 
@@ -1048,7 +1048,7 @@ sub generate_balance_sheet {
 
   $form->{templates} = $myconfig{templates};
 
-  $form->parse_template(\%myconfig);
+	$form->parse_template(\%myconfig, $userspath, $debuglatex);
 
 }
 
