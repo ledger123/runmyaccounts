@@ -657,7 +657,7 @@ sub parse_template {
   my $sth = $dbh->prepare($query);
   $sth->execute;
   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-     $form->{$ref->{fldname}} = $ref->{fldvalue};
+     $self->{$ref->{fldname}} = $ref->{fldvalue};
   }
   $sth->finish;
   $dbh->disconnect;
