@@ -86,7 +86,7 @@ sub list_trans {
         stylesheet => 1,
         template   => {
             type     => 'TT2',
-            template => 'trtypes.form.tmpl',
+            template => 'search.tmpl',
             variable => 'form1',
         },
         keepextras => [qw(trans_id accno nextsub action path login callback)],
