@@ -656,9 +656,6 @@ sub invoice_details {
     $sth->finish;    	
   }
 
-  $form->dumper($form);
-  $form->error;
-
   for my $dcn (qw(dcn rvc)) { $form->{$dcn} = $form->format_dcn($form->{$dcn}) }
 
   # save dcn
