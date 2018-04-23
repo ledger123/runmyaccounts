@@ -548,6 +548,8 @@ sub transactions {
     $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
     $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
 
+    for (qw(amountfrom amountto)){ $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
+
     $form->{amountfrom} *= 1;
     $form->{amountto} *= 1;
 

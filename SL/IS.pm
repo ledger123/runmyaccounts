@@ -35,7 +35,9 @@ sub invoice_details {
   $form->{invdate} = $form->{transdate};
 
   $form->{xml_duedate} = $form->datetonum($myconfig, $form->{duedate});
+  $form->{qr_duedate} = $form->format_date('yyyy-mm-dd', $form->{xml_duedate});
   $form->{xml_invdate} = $form->datetonum($myconfig, $form->{transdate});
+  $form->{qr_invdate} = $form->format_date('yyyy-mm-dd', $form->{xml_invdate});
 
   my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
   $form->{companyaddress1} = $defaults{address1};
@@ -600,6 +602,10 @@ sub invoice_details {
   my $decimal;
   
   $form->{total} = $form->round_amount($form->{total}, 2);
+  
+  $qr_numberformat = { numberformat => '1,000.00' };
+  $form->{qr_total} =  $form->format_amount($qr_numberformat, $form->{total}, 2);
+
   ($whole, $decimal) = split /\./, $form->round_amount($form->{invtotal},2);
 
   $form->{decimal} = substr("${decimal}00", 0, 2);
@@ -613,6 +619,8 @@ sub invoice_details {
   $form->{text_out_amount} = $c->num2text($whole);
   $form->{integer_out_amount} = $whole;
 
+  $form->{qr_integer_out_amount} =  $form->format_amount($qr_numberformat, $form->{integer_out_amount}, 2);
+  for (qw(qr_total qr_integer_out_amount)){ $form->{$_} =~ s/,/ /g }
   if ($form->{cd_amount}) {
     ($whole, $decimal) = split /\./, $form->{cd_invtotal};
     $form->{cd_decimal} = substr("${decimal}00", 0, 2);
