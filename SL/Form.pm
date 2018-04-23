@@ -659,7 +659,7 @@ sub parse_template {
   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
      $form->{$ref->{fldname}} = $ref->{fldvalue};
   }
-  $sh->finish;
+  $sth->finish;
   $dbh->disconnect;
 
   my %include = ();
