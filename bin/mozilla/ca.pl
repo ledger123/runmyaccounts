@@ -246,6 +246,9 @@ sub list_transactions {
   $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   CA->all_transactions(\%myconfig, \%$form);
+
+  my $dbh = $form->dbconnect(\%myconfig);
+  my ($clearing_account) = $dbh->selectrow_array("SELECT 1 FROM defaults WHERE fldvalue = '$form->{accno}'");
   
   $department = $form->escape($form->{department});
   $projectnumber = $form->escape($form->{projectnumber});
@@ -409,8 +412,6 @@ sub list_transactions {
     
     # construct link to source
     $href = "<a href=$ca->{module}.pl?path=$form->{path}&action=edit&id=$ca->{id}&login=$form->{login}&callback=$form->{callback}>$ca->{reference}</a>";
-
-    
     $column_data{debit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{debit}, $form->{precision}, "&nbsp;")."</td>";
     $column_data{credit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{credit}, $form->{precision}, "&nbsp;")."</td>";
     
@@ -422,9 +423,33 @@ sub list_transactions {
     
     $totaldebit += $ca->{debit};
     $totalcredit += $ca->{credit};
-    
+
+    my $found = '';
+    if ($clearing_account){
+        if ($ca->{debit}){
+           $query = "
+             SELECT '*'
+             FROM acc_trans ac
+             JOIN ap ON (ap.id = ac.trans_id)
+             WHERE ap.amount - ap.paid <> 0
+             AND ap.amount - ap.paid = $ca->{debit}
+             LIMIT 1
+           ";
+        } else {
+           $query = "
+             SELECT '*'
+             FROM acc_trans ac
+             JOIN ar ON (ar.id = ac.trans_id)
+             WHERE ar.amount - ar.paid <> 0
+             AND ar.amount - ar.paid = $ca->{debit}
+             LIMIT 1
+           ";
+        }
+        ($found) = $dbh->selectrow_array($query);
+    }
+
     $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}";
-    $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a></td>|;
+    $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a> $found</td>|;
     $column_data{reference} = qq|<td>$href</td>|;
 
     $href = "<a href=ct.pl?path=$form->{path}&action=edit&id=$ca->{vc_id}&db=$ca->{db}&login=$form->{login}&callback=$form->{callback}>$ca->{name}</a>";
