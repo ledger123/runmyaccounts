@@ -371,7 +371,7 @@ sub just_do_it {
    }
 
    # Amount to be adjusted
-   my $amount = $dbs->query("SELECT ABS(amount) FROM acc_trans WHERE chart_id = ? AND trans_id = ? ",
+   my $amount = $dbs->query("SELECT amount FROM acc_trans WHERE chart_id = ? AND trans_id = ? ",
        $clearing_accno_id, $form->{trans_id}
    )->list;
 
@@ -409,7 +409,7 @@ sub just_do_it {
       )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount
+        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount * $ml
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
