@@ -403,7 +403,7 @@ sub just_do_it {
    for (@rows){
       my $arap = $_->{tbl};
       my $ARAP = uc $arap;
-      my $ml = $arap eq 'ar' ? 1 : -1;
+      my $ml = $arap eq 'ar' ? -1 : 1;
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
