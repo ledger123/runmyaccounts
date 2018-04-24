@@ -403,17 +403,16 @@ sub just_do_it {
    for (@rows){
       my $arap = $_->{tbl};
       my $ARAP = uc $arap;
-      my $ml = $arap eq 'ar' ? -1 : 1;
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount * $ml
+        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount * -1
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount * $ml
+        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount * -1
       ) or $form->error($dbs->error);
       $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount, $_->{id}) or $form->error($dbs->error);
    }
