@@ -401,10 +401,11 @@ sub just_do_it {
    @rows = $dbs->query($query)->hashes;
 
    for (@rows){
-      my $arap = uc $_->{tbl};
+      my $arap = $_->{tbl};
+      my $ARAP = uc $arap;
       my $ml = $arap eq 'ar' ? 1 : -1;
       my $arap_accno_id = $dbs->query("
-         SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$arap') LIMIT 1", $_->{id}
+         SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
