@@ -63,7 +63,7 @@ sub list_trans {
     my ($debit, $credit) = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->list or $form->error($dbs->error);
     $search_amount = $debit + $credit; # one value will be always 0
 
-    my @form1flds = qw(fromdate todate arap gl_account_id);
+    my @form1flds = qw(fromdate todate arap);
     $form->{nextsub}  = 'list_trans';
     $form->{arap} = 'ap' if $debit;
     $form->{arap} = 'ar' if $credit;
@@ -124,7 +124,13 @@ sub list_trans {
 
     for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading">| . ucfirst $_ . qq|</th>\n| }
 
-    my @chart = $dbs->query("SELECT id, accno || '--' || substr(description,1,30) descrip FROM chart WHERE charttype='A' ORDER BY accno")->hashes;
+    my @chart = $dbs->query("
+      SELECT id, accno || '--' || substr(description,1,30) descrip 
+      FROM chart
+      WHERE charttype='A'
+      AND allow_gl
+      ORDER BY accno
+    ")->hashes;
     my $selectaccno = "<option>\n";
     for (@chart){ $selectaccno .= "<option value=$_->{id}>$_->{descrip}\n" }
 
