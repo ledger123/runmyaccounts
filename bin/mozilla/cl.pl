@@ -49,7 +49,26 @@ sub list_trans {
 
     $table->modify( td => { align => 'right' }, [qw(debit credit)] );
     #$table->calc_totals( [qw(count)] );
+
+    my @chart = $dbs->query("
+      SELECT id, accno || '--' || substr(description,1,30) descrip
+      FROM chart
+      WHERE charttype='A'
+      AND allow_gl
+      ORDER BY accno
+    ")->hashes;
+    my $selectaccno = "<option>\n";
+    for (@chart){ $selectaccno .= "<option value=$_->{id}>$_->{descrip}\n" }
+
+    print qq|<form action="$form->{script}" method="post">
+    <table><tr><td>|;
     print $table->output;
+    print qq|</td><td>
+<table><tr>
+<th align="right">|.$locale->text('GL Account').qq|</th><td><select name=gl_account_id>$selectaccno</select></td>
+</tr></table>
+</td></tr></table>
+|;
 
     $query = "
       SELECT
@@ -65,34 +84,30 @@ sub list_trans {
 
     my @form1flds = qw(fromdate todate arap);
     $form->{nextsub}  = 'list_trans';
-    $form->{arap} = 'ap' if $debit;
-    $form->{arap} = 'ar' if $credit;
-
-    my $form1 = CGI::FormBuilder->new(
-        method     => 'post',
-        table      => 1,
-        title      => $locale->text('Select a transaction'),
-        fields     => \@form1flds,
-        required   => [qw(arap)],
-        options => {
-            arap => [qw(ar ap)],
-            gl_account_id => \@chart,
-        },
-        messages   => { form_required_text => '', },
-        selectnum  => 0,
-        submit     => ["Continue"],
-        params     => $form,
-        stylesheet => 1,
-        template   => {
-            type     => 'TT2',
-            template => 'search.tmpl',
-            variable => 'form1',
-        },
-        keepextras => [qw(trans_id accno nextsub action path login callback)],
-    );
-    $form1->field( name => 'fromdate', class => 'date', size => 10 );
-    $form1->field( name => 'todate', class => 'date', size => 10 );
-    print $form1->render;
+    if (!$form->{arap}){
+       $form->{arap} = 'ap' if $debit;
+       $form->{arap} = 'ar' if $credit;
+    }
+    $selectarap = qq|<option value="$form->{arap}" selected>$form->{arap}\n<option value="ar">ar\n<option value="ap">ap\n|;
+    print qq|
+<table>
+<tr>
+<th align="right">|.$locale->text("From date").qq|</th><td><input type=text size=12 class="date" title="$myconfig{dateformat}" name=fromdate value='$form->{fromdate}'></td>
+</tr>
+<tr>
+<th align="right">|.$locale->text("To date").qq|</th><td><input type=text size=12 class="date" title="$myconfig{dateformat}" name=todate value='$form->{todate}'></td>
+</tr>
+<tr>
+<th align="right">|.$locale->text("AR or AP?").qq|</th><td><select name=arap>$selectarap</select></td>
+</tr>
+</table>
+<hr/>
+<input type=hidden name=path value="$form->{path}">
+<input type=hidden name=login value="$form->{login}">
+<input type=hidden name=nextsub value='list_trans'>
+<input type=submit class=button name=action value="Continue">
+<input type=submit class=button name=action value="Book selected transactions">
+|;
 
     my @bind = ();
     my $where;
@@ -106,42 +121,26 @@ sub list_trans {
         push @bind, $form->{todate};
     }
 
-    my $arap = $form->{arap};
+    $arap = $form->{arap};
     my $vc = $arap eq 'ar' ? 'customer' : 'vendor';
     my $query = qq|
         SELECT
-           aa.id, aa.invnumber, aa.transdate, aa.description, aa.amount, aa.paid, aa.amount - aa.paid due
+           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.amount, aa.paid, aa.amount - aa.paid due
         FROM $arap aa
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
-        WHERE aa.amount - aa.paid > 0
+        WHERE aa.amount - aa.paid != 0
         $where
         ORDER BY aa.transdate|;
     my @allrows = $dbs->query( $query, @bind )->hashes or die( 'No transactions found ...' );
 
-    my @report_columns = qw(x invnumber transdate description amount paid due);
+    my @report_columns = qw(x invnumber transdate description ordnumber name amount paid due);
     my @total_columns = qw(amount paid due);
     my ( %tabledata, %totals, %subtotals );
 
     for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading">| . ucfirst $_ . qq|</th>\n| }
 
-    my @chart = $dbs->query("
-      SELECT id, accno || '--' || substr(description,1,30) descrip 
-      FROM chart
-      WHERE charttype='A'
-      AND allow_gl
-      ORDER BY accno
-    ")->hashes;
-    my $selectaccno = "<option>\n";
-    for (@chart){ $selectaccno .= "<option value=$_->{id}>$_->{descrip}\n" }
-
     print qq|
 <form action="$form->{script}" method="post">
-<input type=submit class=button name=action value="Book selected transactions">
-<table>
-<tr>
-<th>GL Account</th><td><select name=gl_account_id>$selectaccno</select></td>
-</tr>
-</table>
 
         <table cellpadding="3" cellspacing="2">
         <tr class="listheading">
