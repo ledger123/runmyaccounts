@@ -125,7 +125,7 @@ sub list_trans {
     my $vc = $arap eq 'ar' ? 'customer' : 'vendor';
     my $query = qq|
         SELECT
-           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.amount, aa.paid, aa.amount - aa.paid due
+           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.amount, aa.paid, aa.amount - aa.paid due, aa.invoice
         FROM $arap aa
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
         WHERE aa.amount - aa.paid != 0
@@ -172,6 +172,9 @@ sub list_trans {
         }
         for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
 
+        $arap = 'is' if $arap eq 'ar' and $row->{invoice};
+        $arap = 'ir' if $arap eq 'ap' and $row->{invoice};
+
         $url = qq|$arap.pl?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
         $tabledata{invnumber} = qq|<td><a href="$url" target=_blank>$row->{invnumber}</a></td>|;
 
@@ -212,7 +215,6 @@ sub list_trans {
 <hr/>
 |;
 
-
 }
 
 sub book_selected_transactions {
@@ -226,7 +228,7 @@ sub book_selected_transactions {
     $form->header;
     print qq|<h1>Final step: Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.id, gl.reference, ac.transdate, ac.source, ac.memo,
+      SELECT gl.id, gl.reference, ac.transdate, gl.description, ac.source, ac.memo,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
@@ -282,13 +284,13 @@ sub book_selected_transactions {
        my $module = $dbs->query($query)->list;
 
        $query = "
-          SELECT id, ar.invnumber, ar.transdate, ar.amount
+          SELECT id, ar.invnumber, ar.description, ar.ordnumber, ar.transdate, ar.amount
           FROM ar
           WHERE id IN ($trans)
 
           UNION ALL
 
-          SELECT id, ap.invnumber, ap.transdate, ap.amount
+          SELECT id, ap.invnumber, ap.description, ap.ordnumber, ap.transdate, ap.amount
           FROM ap
           WHERE id IN ($trans)
 
@@ -411,9 +413,9 @@ sub just_do_it {
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount * -1
+        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount
       ) or $form->error($dbs->error);
-      $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount, $_->{id}) or $form->error($dbs->error);
+      $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount * -1, $_->{id}) or $form->error($dbs->error);
    }
    $dbs->commit;
 
