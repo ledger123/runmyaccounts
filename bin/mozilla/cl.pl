@@ -76,6 +76,7 @@ sub list_trans {
         required   => [qw(arap)],
         options => {
             arap => [qw(ar ap)],
+            gl_account_id => \@chart,
         },
         messages   => { form_required_text => '', },
         selectnum  => 0,
@@ -123,9 +124,24 @@ sub list_trans {
 
     for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading">| . ucfirst $_ . qq|</th>\n| }
 
+    my @chart = $dbs->query("
+      SELECT id, accno || '--' || substr(description,1,30) descrip 
+      FROM chart
+      WHERE charttype='A'
+      AND allow_gl
+      ORDER BY accno
+    ")->hashes;
+    my $selectaccno = "<option>\n";
+    for (@chart){ $selectaccno .= "<option value=$_->{id}>$_->{descrip}\n" }
+
     print qq|
 <form action="$form->{script}" method="post">
 <input type=submit class=button name=action value="Book selected transactions">
+<table>
+<tr>
+<th>GL Account</th><td><select name=gl_account_id>$selectaccno</select></td>
+</tr>
+</table>
 
         <table cellpadding="3" cellspacing="2">
         <tr class="listheading">
@@ -248,61 +264,79 @@ sub book_selected_transactions {
    }
    chop $trans;
 
-   $query = "
-      SELECT 'ar.pl' module
-      FROM ar
-      WHERE id IN ($trans)
+   my $table;
 
-      UNION ALL
+   if ($trans){
+       $query = "
+          SELECT 'ar.pl' module
+          FROM ar
+          WHERE id IN ($trans)
 
-      SELECT 'ap.pl' module
-      FROM ap
-      WHERE id IN ($trans)
+          UNION ALL
 
-      ORDER BY 1";
+          SELECT 'ap.pl' module
+          FROM ap
+          WHERE id IN ($trans)
 
-   my $module = $dbs->query($query)->list;
+          ORDER BY 1";
 
-   $query = "
-      SELECT id, ar.invnumber, ar.transdate, ar.amount
-      FROM ar
-      WHERE id IN ($trans)
+       my $module = $dbs->query($query)->list;
 
-      UNION ALL
+       $query = "
+          SELECT id, ar.invnumber, ar.transdate, ar.amount
+          FROM ar
+          WHERE id IN ($trans)
 
-      SELECT id, ap.invnumber, ap.transdate, ap.amount
-      FROM ap
-      WHERE id IN ($trans)
+          UNION ALL
 
-      ORDER BY 1";
+          SELECT id, ap.invnumber, ap.transdate, ap.amount
+          FROM ap
+          WHERE id IN ($trans)
 
-    $table = $dbs->query( $query )->xto();
-    $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
-    $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
-    $table->modify( th => { class => 'listheading' }, 'head' );
-    $table->modify( th => { class => 'listtotal' },   'foot' );
-    $table->modify( th => { class => 'listsubtotal' } );
-    $table->modify( th => { align => 'center' },      'head' );
-    $table->modify( th => { align => 'right' },       'foot' );
-    $table->modify( th => { align => 'right' } );
+          ORDER BY 1";
 
-    $table->modify( td => { align => 'right' }, [qw(amount)] );
-    $table->calc_totals( [qw(amount)] );
-    print qq|<h3>Transactions to be adjusted ...</h3>|;
+        $table = $dbs->query( $query )->xto();
+        $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
+        $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
+        $table->modify( th => { class => 'listheading' }, 'head' );
+        $table->modify( th => { class => 'listtotal' },   'foot' );
+        $table->modify( th => { class => 'listsubtotal' } );
+        $table->modify( th => { align => 'center' },      'head' );
+        $table->modify( th => { align => 'right' },       'foot' );
+        $table->modify( th => { align => 'right' } );
 
-    $table->map_cell(
-        sub {
-            my $datum = shift;
-            return qq|<a href="$module?action=edit&id=$datum&path=$form->{path}&login=$form->{login}">$datum</a>|;
-        },
-        'id'
-    );
+        $table->modify( td => { align => 'right' }, [qw(amount)] );
+        $table->calc_totals( [qw(amount)] );
+        print qq|<h3>Transactions to be adjusted ...</h3>|;
 
-   print $table->output;
+        $table->map_cell(
+            sub {
+                my $datum = shift;
+                return qq|<a href="$module?action=edit&id=$datum&path=$form->{path}&login=$form->{login}">$datum</a>|;
+            },
+            'id'
+        );
+        print $table->output;
+   } elsif ($form->{gl_account_id}) {
+        my $query = qq|SELECT accno, description FROM chart WHERE id = ?|;
+        $table = $dbs->query( $query, $form->{gl_account_id} )->xto();
+        $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
+        $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
+        $table->modify( th => { class => 'listheading' }, 'head' );
+        $table->modify( th => { class => 'listtotal' },   'foot' );
+        $table->modify( th => { class => 'listsubtotal' } );
+        $table->modify( th => { align => 'center' },      'head' );
+        $table->modify( th => { align => 'right' },       'foot' );
+        $table->modify( th => { align => 'right' } );
+        print $table->output;
+   } else {
+      return;
+   }
 
    print qq|
 <form action="$form->{script}" method="post">
 <input type=hidden name=trans_id value="$form->{trans_id}">
+<input type=hidden name=gl_account_id value="$form->{gl_account_id}">
 <input type=hidden name=accno value="$form->{accno}">
 <input type=hidden name=trans value="$trans">
 <input type=hidden name=login value="$form->{login}">
@@ -326,8 +360,18 @@ sub just_do_it {
    $form->info("Clearing: $clearing_accno_id\n");
    $form->info("Transition: $transition_accno_id\n");
 
+   if ($form->{gl_account_id}){
+      $dbs->query("
+        UPDATE acc_trans SET chart_id = ? WHERE chart_id = ? AND trans_id = ?",
+           $form->{gl_account_id}, $clearing_accno_id, $form->{trans_id}
+      );
+      $dbs->commit;
+      $form->info("GL entry updated ...");
+      return;
+   }
+
    # Amount to be adjusted
-   my $amount = $dbs->query("SELECT ABS(amount) FROM acc_trans WHERE chart_id = ? AND trans_id = ? ",
+   my $amount = $dbs->query("SELECT amount FROM acc_trans WHERE chart_id = ? AND trans_id = ? ",
        $clearing_accno_id, $form->{trans_id}
    )->list;
 
@@ -357,18 +401,18 @@ sub just_do_it {
    @rows = $dbs->query($query)->hashes;
 
    for (@rows){
-      my $arap = uc $_->{tbl};
-      my $ml = $arap eq 'ar' ? 1 : -1;
+      my $arap = $_->{tbl};
+      my $ARAP = uc $arap;
       my $arap_accno_id = $dbs->query("
-         SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$arap') LIMIT 1", $_->{id}
+         SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount
+        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount * -1
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount * $ml
+        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount * -1
       ) or $form->error($dbs->error);
       $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount, $_->{id}) or $form->error($dbs->error);
    }

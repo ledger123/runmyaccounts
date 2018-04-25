@@ -753,8 +753,6 @@ sub report {
 
 	$overpaidlabel = $locale->text('Overpaid');
 
-    my $duedateto = $form->current_date(\%myconfig);
-
     print qq|
         $vc
     	<tr>
@@ -764,14 +762,6 @@ sub report {
     	<tr>
 		  <th align=right nowrap>|.$locale->text('Exclude Credits').qq|</th>
 		  <td nowrap width=70><input name=exclude_credits type=checkbox class=checkbox value=on></td>
-		</tr>
-    	<tr>
-		  <th align=right nowrap>|.$locale->text('Level').qq| >= </th>
-		  <td nowrap width=70><select name="level"><option><option value=1>1<option value=2>2<option value=3>3<select></td>
-		</tr>
-    	<tr>
-		  <th align=right nowrap>|.$locale->text('Due Date').qq| <= </th>
-		  <td nowrap width=70><input name="duedateto" type=text size=12 class="date" value="$duedateto" title="$myconfig{dateformat}"></td>
 		</tr>
 
 	<input type=hidden name=action value="$form->{nextsub}">
