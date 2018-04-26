@@ -235,6 +235,12 @@ sub book_selected_transactions {
    $trans_id = $form->{trans_id};
    $accno = $form->{accno};
 
+   my $trans;
+   for $i (1 .. $form->{rowcount} - 1){
+       $trans .= qq|$form->{"id_$i"},| if $form->{"x_$i"};
+   }
+   chop $trans;
+
     use DBIx::Simple;
     my $dbh = $form->dbconnect(\%myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
@@ -252,7 +258,24 @@ sub book_selected_transactions {
       ORDER BY c.accno
     ";
 
-    $table = $dbs->query( $query, $form->{trans_id} )->xto();
+    # $table = $dbs->query( $query, $form->{trans_id} )->xto();
+
+    @rows = $dbs->query($query, $form->{trans_id})->arrays;
+    #print $rows[0][1];
+    if ($trans){
+       my $transition_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='transitionaccount')")->list;
+       ($gl_accno, $gl_description) = $dbs->query("SELECT accno, description FROM chart WHERE id = ?", $transition_accno_id)->list;
+       $rows[1][3] = $gl_accno;
+       $rows[1][4] = $gl_description;
+    } elsif ($form->{gl_account_id}){
+       my ($gl_accno, $gl_description) = $dbs->query("SELECT accno, description FROM chart WHERE id = ?", $form->{gl_account_id})->list;
+       $rows[1][3] = $gl_accno;
+       $rows[1][4] = $gl_description;
+    }
+    use DBIx::XHTML_Table;
+    my $headers = [qw(ID Reference Date Account Account_Description Description Source Memo Debit Credit)];
+    my $table = DBIx::XHTML_Table->new(\@rows, $headers);
+
     $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
     $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
     $table->modify( th => { class => 'listheading' }, 'head' );
@@ -274,12 +297,6 @@ sub book_selected_transactions {
 
     print qq|<h3>Clearing account transaction ...</h3>|;
     print $table->output;
-
-   my $trans;
-   for $i (1 .. $form->{rowcount} - 1){
-       $trans .= qq|$form->{"id_$i"},| if $form->{"x_$i"};
-   }
-   chop $trans;
 
    my $table;
 
