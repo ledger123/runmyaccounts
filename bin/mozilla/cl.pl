@@ -28,16 +28,17 @@ sub list_trans {
     $form->header;
     print qq|<h1>Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.reference, ac.transdate, ac.source, ac.memo,
+      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
+      JOIN chart c ON (c.id = ac.chart_id)
       JOIN gl ON gl.id = ac.trans_id
       WHERE ac.trans_id = ?
-      AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)
+      ORDER BY c.accno
     ";
 
-    $table = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->xto();
+    $table = $dbs->query( $query, $form->{trans_id} )->xto();
     $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
     $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
     $table->modify( th => { class => 'listheading' }, 'head' );
@@ -48,8 +49,26 @@ sub list_trans {
     $table->modify( th => { align => 'right' } );
 
     $table->modify( td => { align => 'right' }, [qw(debit credit)] );
-    #$table->calc_totals( [qw(count)] );
+
+    my @chart = $dbs->query("
+      SELECT id, accno || '--' || substr(description,1,30) descrip
+      FROM chart
+      WHERE charttype='A'
+      AND allow_gl
+      ORDER BY accno
+    ")->hashes;
+    my $selectaccno = "<option>\n";
+    for (@chart){ $selectaccno .= "<option value=$_->{id}>$_->{descrip}\n" }
+
+    print qq|<form action="$form->{script}" method="post">
+    <table><tr><td>|;
     print $table->output;
+    print qq|</td><td>
+<table><tr>
+<th align="right">|.$locale->text('GL Account').qq|</th><td><select name=gl_account_id>$selectaccno</select></td>
+</tr></table>
+</td></tr></table>
+|;
 
     $query = "
       SELECT
@@ -65,34 +84,34 @@ sub list_trans {
 
     my @form1flds = qw(fromdate todate arap);
     $form->{nextsub}  = 'list_trans';
-    $form->{arap} = 'ap' if $debit;
-    $form->{arap} = 'ar' if $credit;
-
-    my $form1 = CGI::FormBuilder->new(
-        method     => 'post',
-        table      => 1,
-        title      => $locale->text('Select a transaction'),
-        fields     => \@form1flds,
-        required   => [qw(arap)],
-        options => {
-            arap => [qw(ar ap)],
-            gl_account_id => \@chart,
-        },
-        messages   => { form_required_text => '', },
-        selectnum  => 0,
-        submit     => ["Continue"],
-        params     => $form,
-        stylesheet => 1,
-        template   => {
-            type     => 'TT2',
-            template => 'search.tmpl',
-            variable => 'form1',
-        },
-        keepextras => [qw(trans_id accno nextsub action path login callback)],
-    );
-    $form1->field( name => 'fromdate', class => 'date', size => 10 );
-    $form1->field( name => 'todate', class => 'date', size => 10 );
-    print $form1->render;
+    if (!$form->{arap}){
+       $form->{arap} = 'ap' if $debit;
+       $form->{arap} = 'ar' if $credit;
+    }
+    if ($form->{arap} eq 'ar'){
+      $selectarap = qq|<option value="$form->{arap}" selected>$form->{arap}\n<option value="ap">ap\n|;
+    } else {
+      $selectarap = qq|<option value="$form->{arap}" selected>$form->{arap}\n<option value="ar">ar\n|;
+    }
+    print qq|
+<table>
+<tr>
+<th align="right">|.$locale->text("From date").qq|</th><td><input type=text size=12 class="date" title="$myconfig{dateformat}" name=fromdate value='$form->{fromdate}'></td>
+</tr>
+<tr>
+<th align="right">|.$locale->text("To date").qq|</th><td><input type=text size=12 class="date" title="$myconfig{dateformat}" name=todate value='$form->{todate}'></td>
+</tr>
+<tr>
+<th align="right">|.$locale->text("AR or AP?").qq|</th><td><select name=arap>$selectarap</select></td>
+</tr>
+</table>
+<hr/>
+<input type=hidden name=path value="$form->{path}">
+<input type=hidden name=login value="$form->{login}">
+<input type=hidden name=nextsub value='list_trans'>
+<input type=submit class=submit name=action value="Continue">
+<input type=submit class=submit name=action value="Book selected transactions">
+|;
 
     my @bind = ();
     my $where;
@@ -106,43 +125,27 @@ sub list_trans {
         push @bind, $form->{todate};
     }
 
-    my $arap = $form->{arap};
+    $arap = $form->{arap};
     my $vc = $arap eq 'ar' ? 'customer' : 'vendor';
     my $query = qq|
         SELECT
-           aa.id, aa.invnumber, aa.transdate, aa.description, aa.amount, aa.paid, aa.amount - aa.paid due
+           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.amount, aa.paid, aa.amount - aa.paid due, aa.invoice
         FROM $arap aa
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
-        WHERE aa.amount - aa.paid > 0
+        WHERE aa.amount - aa.paid != 0
         $where
         ORDER BY aa.transdate|;
     my @allrows = $dbs->query( $query, @bind )->hashes or die( 'No transactions found ...' );
 
-    my @report_columns = qw(x invnumber transdate description amount paid due);
+    my @report_columns = qw(x invnumber transdate description ordnumber name amount paid due);
     my @total_columns = qw(amount paid due);
     my ( %tabledata, %totals, %subtotals );
 
     for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading">| . ucfirst $_ . qq|</th>\n| }
 
-    my @chart = $dbs->query("
-      SELECT id, accno || '--' || substr(description,1,30) descrip 
-      FROM chart
-      WHERE charttype='A'
-      AND allow_gl
-      ORDER BY accno
-    ")->hashes;
-    my $selectaccno = "<option>\n";
-    for (@chart){ $selectaccno .= "<option value=$_->{id}>$_->{descrip}\n" }
-
     print qq|
 <form action="$form->{script}" method="post">
-<input type=submit class=button name=action value="Book selected transactions">
-<table>
-<tr>
-<th>GL Account</th><td><select name=gl_account_id>$selectaccno</select></td>
-</tr>
-</table>
-
+<input type=hidden name="filter_marked" value="$form->{filter_marked}">
         <table cellpadding="3" cellspacing="2">
         <tr class="listheading">
 |;
@@ -173,24 +176,41 @@ sub list_trans {
         }
         for (@report_columns) { $tabledata{$_} = qq|<td>$row->{$_}</td>| }
 
+        $arap = 'is' if $arap eq 'ar' and $row->{invoice};
+        $arap = 'ir' if $arap eq 'ap' and $row->{invoice};
+
         $url = qq|$arap.pl?id=$row->{id}&action=edit&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
         $tabledata{invnumber} = qq|<td><a href="$url" target=_blank>$row->{invnumber}</a></td>|;
 
         $row->{amount} *= 1;
         $checked = '';
-        if ($row->{amount} eq $search_amount){
+        if ($row->{amount} == $search_amount or $row->{amount}*-1 == $search_amount){
             $checked = 'checked';
         }
         $tabledata{x} = qq|<td><input type=checkbox class=checkbox name=x_$j $checked><input type=hidden name=id_$j value=$row->{id}></td>|;
-        for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
-        for (@total_columns) { $totals{$_}    += $row->{$_} }
-        for (@total_columns) { $subtotals{$_} += $row->{$_} }
+        if ($form->{filter_marked}){
+          if ($checked){
+            for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
+            for (@total_columns) { $totals{$_}    += $row->{$_} }
+            for (@total_columns) { $subtotals{$_} += $row->{$_} }
 
-        print qq|<tr class="listrow$i">|;
-        for (@report_columns) { print $tabledata{$_} }
-        print qq|</tr>\n|;
-        $i += 1; $j += 1;
-        $i %= 2;
+            print qq|<tr class="listrow$i">|;
+            for (@report_columns) { print $tabledata{$_} }
+            print qq|</tr>\n|;
+            $i += 1; $j += 1;
+            $i %= 2;
+          }
+        } else {
+            for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
+            for (@total_columns) { $totals{$_}    += $row->{$_} }
+            for (@total_columns) { $subtotals{$_} += $row->{$_} }
+
+            print qq|<tr class="listrow$i">|;
+            for (@report_columns) { print $tabledata{$_} }
+            print qq|</tr>\n|;
+            $i += 1; $j += 1;
+            $i %= 2;
+        }
     }
 
     for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }
@@ -205,7 +225,7 @@ sub list_trans {
     for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $totals{$_}, 2 ) . qq|</th>| }
     print qq|<tr class="listtotal">|;
     for (@report_columns) { print $tabledata{$_} }
-    $form->hide_form(qw(path login trans_id accno));
+    $form->hide_form(qw(path login trans_id accno callback));
     print qq|</tr>
 </table>
 <input type=hidden name=rowcount value=$j>
@@ -213,12 +233,17 @@ sub list_trans {
 <hr/>
 |;
 
-
 }
 
 sub book_selected_transactions {
    $trans_id = $form->{trans_id};
    $accno = $form->{accno};
+
+   my $trans;
+   for $i (1 .. $form->{rowcount} - 1){
+       $trans .= qq|$form->{"id_$i"},| if $form->{"x_$i"};
+   }
+   chop $trans;
 
     use DBIx::Simple;
     my $dbh = $form->dbconnect(\%myconfig);
@@ -227,15 +252,37 @@ sub book_selected_transactions {
     $form->header;
     print qq|<h1>Final step: Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.id, gl.reference, ac.transdate, ac.source, ac.memo,
+      SELECT gl.id, gl.reference, ac.transdate, c.id acc_id, c.accno, c.description account_description, gl.description, ac.source, ac.memo,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
       JOIN gl ON gl.id = ac.trans_id
+      JOIN chart c ON (c.id = ac.chart_id)
       WHERE ac.trans_id = ?
-      AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)";
+      ORDER BY c.accno
+    ";
 
-    $table = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->xto();
+    # $table = $dbs->query( $query, $form->{trans_id} )->xto();
+
+    @rows = $dbs->query($query, $form->{trans_id})->arrays;
+    my $clearing_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='selectedaccount')")->list;
+    $row_id = $clearning_accno_id == $rows[0][3] ? 0 : 1;
+
+    #print $rows[0][1];
+    if ($trans){
+       my $transition_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='transitionaccount')")->list;
+       ($gl_accno, $gl_description) = $dbs->query("SELECT accno, description FROM chart WHERE id = ?", $transition_accno_id)->list;
+       $rows[$row_id][4] = $gl_accno;
+       $rows[$row_id][5] = $gl_description;
+    } elsif ($form->{gl_account_id}){
+       my ($gl_accno, $gl_description) = $dbs->query("SELECT accno, description FROM chart WHERE id = ?", $form->{gl_account_id})->list;
+       $rows[$row_id][4] = $gl_accno;
+       $rows[$row_id][5] = $gl_description;
+    }
+    use DBIx::XHTML_Table;
+    my $headers = [qw(ID Reference Date Account_ID Account Account_Description Description Source Memo Debit Credit)];
+    my $table = DBIx::XHTML_Table->new(\@rows, $headers);
+
     $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
     $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
     $table->modify( th => { class => 'listheading' }, 'head' );
@@ -258,12 +305,6 @@ sub book_selected_transactions {
     print qq|<h3>Clearing account transaction ...</h3>|;
     print $table->output;
 
-   my $trans;
-   for $i (1 .. $form->{rowcount} - 1){
-       $trans .= qq|$form->{"id_$i"},| if $form->{"x_$i"};
-   }
-   chop $trans;
-
    my $table;
 
    if ($trans){
@@ -283,13 +324,13 @@ sub book_selected_transactions {
        my $module = $dbs->query($query)->list;
 
        $query = "
-          SELECT id, ar.invnumber, ar.transdate, ar.amount
+          SELECT id, ar.invnumber, ar.description, ar.ordnumber, ar.transdate, ar.amount
           FROM ar
           WHERE id IN ($trans)
 
           UNION ALL
 
-          SELECT id, ap.invnumber, ap.transdate, ap.amount
+          SELECT id, ap.invnumber, ap.description, ap.ordnumber, ap.transdate, ap.amount
           FROM ap
           WHERE id IN ($trans)
 
@@ -341,7 +382,9 @@ sub book_selected_transactions {
 <input type=hidden name=trans value="$trans">
 <input type=hidden name=login value="$form->{login}">
 <input type=hidden name=path value="$form->{path}">
-<input type=submit name=action value="Just do it">
+<input type=submit class=submit name=action value="Just do it">
+<input type=hidden name=callback value='$form->{callback}'>
+</form>
 |;
 
 }
@@ -354,11 +397,12 @@ sub just_do_it {
    my $clearing_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='selectedaccount')")->list;
    my $transition_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='transitionaccount')")->list;
 
-   $form->info("Trans id: $form->{trans_id}\n");
-   $form->info("Accno: $form->{accno}\n");
-   $form->info("Trans: $form->{trans}\n");
-   $form->info("Clearing: $clearing_accno_id\n");
-   $form->info("Transition: $transition_accno_id\n");
+   ## Needed for debugging only.
+   # $form->info("Trans id: $form->{trans_id}\n");
+   # $form->info("Accno: $form->{accno}\n");
+   # $form->info("Trans: $form->{trans}\n");
+   # $form->info("Clearing: $clearing_accno_id\n");
+   # $form->info("Transition: $transition_accno_id\n");
 
    if ($form->{gl_account_id}){
       $dbs->query("
@@ -382,7 +426,7 @@ sub just_do_it {
    );
 
    # Get payment date from GL transaction
-   my $payment_date = $dbs->query("SELECT transdate FROM gl WHERE id = ?", $form->{trans_id})->list;
+   my $gl_date = $dbs->query("SELECT transdate FROM gl WHERE id = ?", $form->{trans_id})->list;
 
    # Add payment row to each AR/AP transactions which are to be updated
    $query = "
@@ -400,9 +444,17 @@ sub just_do_it {
 
    @rows = $dbs->query($query)->hashes;
 
+   my $payment_date;
+   my $arap_date;
    for (@rows){
       my $arap = $_->{tbl};
       my $ARAP = uc $arap;
+      $arap_date = $dbs->query("SELECT transdate FROM $arap WHERE id = ?", $_->{id})->list;
+      if ($form->datediff(\%myconfig, $gl_date, $arap_date) > 0 ){
+          $payment_date = $arap_date;
+      } else {
+          $payment_date = $gl_date;
+      }
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
@@ -412,15 +464,14 @@ sub just_do_it {
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount * -1
+        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount
       ) or $form->error($dbs->error);
-      $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount, $_->{id}) or $form->error($dbs->error);
+      $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount * -1, $_->{id}) or $form->error($dbs->error);
    }
    $dbs->commit;
 
-   $form->info("It is done ...");
+   $form->redirect($locale->text("It is done ..."));
 }
-
 
 #########
 ### EOF
