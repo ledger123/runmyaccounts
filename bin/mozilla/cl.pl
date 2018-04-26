@@ -28,16 +28,17 @@ sub list_trans {
     $form->header;
     print qq|<h1>Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.reference, ac.transdate, gl.description, ac.source, ac.memo,
+      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
+      JOIN chart c ON (c.id = ac.chart_id)
       JOIN gl ON gl.id = ac.trans_id
       WHERE ac.trans_id = ?
-      AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)
+      ORDER BY c.accno
     ";
 
-    $table = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->xto();
+    $table = $dbs->query( $query, $form->{trans_id} )->xto();
     $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
     $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
     $table->modify( th => { class => 'listheading' }, 'head' );
@@ -48,7 +49,6 @@ sub list_trans {
     $table->modify( th => { align => 'right' } );
 
     $table->modify( td => { align => 'right' }, [qw(debit credit)] );
-    #$table->calc_totals( [qw(count)] );
 
     my @chart = $dbs->query("
       SELECT id, accno || '--' || substr(description,1,30) descrip
@@ -105,8 +105,8 @@ sub list_trans {
 <input type=hidden name=path value="$form->{path}">
 <input type=hidden name=login value="$form->{login}">
 <input type=hidden name=nextsub value='list_trans'>
-<input type=submit class=button name=action value="Continue">
-<input type=submit class=button name=action value="Book selected transactions">
+<input type=submit class=submit name=action value="Continue">
+<input type=submit class=submit name=action value="Book selected transactions">
 |;
 
     my @bind = ();
@@ -228,15 +228,17 @@ sub book_selected_transactions {
     $form->header;
     print qq|<h1>Final step: Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.id, gl.reference, ac.transdate, gl.description, ac.source, ac.memo,
+      SELECT gl.id, gl.reference, ac.transdate, c.accno, c.description account_description, gl.description, ac.source, ac.memo,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
       JOIN gl ON gl.id = ac.trans_id
+      JOIN chart c ON (c.id = ac.chart_id)
       WHERE ac.trans_id = ?
-      AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)";
+      ORDER BY c.accno
+    ";
 
-    $table = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->xto();
+    $table = $dbs->query( $query, $form->{trans_id} )->xto();
     $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
     $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
     $table->modify( th => { class => 'listheading' }, 'head' );
