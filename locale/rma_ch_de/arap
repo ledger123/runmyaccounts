@@ -23,7 +23,6 @@ $self{texts} = {
   'Next Date'                   => 'Nächstes Datum',
   'Number'                      => 'Artikelnummer',
   'PDF'                         => 'PDF',
-  'Postscript'                  => 'Postscript',
   'Print'                       => 'Drucken',
   'Project not on file!'        => 'Dieses Projekt ist nicht in der Datenbank!',
   'Recurring Transaction'       => 'Periodische Buchung',
