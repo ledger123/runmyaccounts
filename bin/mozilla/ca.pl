@@ -251,7 +251,7 @@ sub list_transactions {
   CA->all_transactions(\%myconfig, \%$form);
 
   my $dbh = $form->dbconnect(\%myconfig);
-  my ($clearing_account) = $dbh->selectrow_array("SELECT 1 FROM defaults WHERE fldvalue = '$form->{accno}'");
+  my ($clearing_account) = $dbh->selectrow_array("SELECT 1 FROM defaults WHERE fldname = 'selectedaccount' AND fldvalue = '$form->{accno}'");
   
   $department = $form->escape($form->{department});
   $projectnumber = $form->escape($form->{projectnumber});
