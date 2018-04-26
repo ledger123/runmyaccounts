@@ -427,9 +427,9 @@ sub just_do_it {
       my $ARAP = uc $arap;
       $arap_date = $dbs->query("SELECT transdate FROM $arap WHERE id = ?", $_->{id})->list;
       if ($form->datediff(\%myconfig, $gl_date, $arap_date) > 0 ){
-          $payment_date = $gl_date;
-      } else {
           $payment_date = $arap_date;
+      } else {
+          $payment_date = $gl_date;
       }
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
