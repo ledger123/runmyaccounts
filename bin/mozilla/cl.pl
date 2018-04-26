@@ -248,7 +248,7 @@ sub book_selected_transactions {
     $form->header;
     print qq|<h1>Final step: Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.id, gl.reference, ac.transdate, c.accno, c.description account_description, gl.description, ac.source, ac.memo,
+      SELECT gl.id, gl.reference, ac.transdate, c.id acc_id, c.accno, c.description account_description, gl.description, ac.source, ac.memo,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
@@ -261,19 +261,22 @@ sub book_selected_transactions {
     # $table = $dbs->query( $query, $form->{trans_id} )->xto();
 
     @rows = $dbs->query($query, $form->{trans_id})->arrays;
+    my $clearing_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='selectedaccount')")->list;
+    $row_id = $clearning_accno_id == $rows[0][3] ? 0 : 1;
+
     #print $rows[0][1];
     if ($trans){
        my $transition_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='transitionaccount')")->list;
        ($gl_accno, $gl_description) = $dbs->query("SELECT accno, description FROM chart WHERE id = ?", $transition_accno_id)->list;
-       $rows[1][3] = $gl_accno;
-       $rows[1][4] = $gl_description;
+       $rows[$row_id][4] = $gl_accno;
+       $rows[$row_id][5] = $gl_description;
     } elsif ($form->{gl_account_id}){
        my ($gl_accno, $gl_description) = $dbs->query("SELECT accno, description FROM chart WHERE id = ?", $form->{gl_account_id})->list;
-       $rows[1][3] = $gl_accno;
-       $rows[1][4] = $gl_description;
+       $rows[$row_id][4] = $gl_accno;
+       $rows[$row_id][5] = $gl_description;
     }
     use DBIx::XHTML_Table;
-    my $headers = [qw(ID Reference Date Account Account_Description Description Source Memo Debit Credit)];
+    my $headers = [qw(ID Reference Date Account_ID Account Account_Description Description Source Memo Debit Credit)];
     my $table = DBIx::XHTML_Table->new(\@rows, $headers);
 
     $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
