@@ -358,7 +358,7 @@ sub book_selected_transactions {
 <input type=hidden name=trans value="$trans">
 <input type=hidden name=login value="$form->{login}">
 <input type=hidden name=path value="$form->{path}">
-<input type=submit name=action value="Just do it">
+<input type=submit class=submit name=action value="Just do it">
 <input type=hidden name=callback value='$form->{callback}'>
 </form>
 |;
@@ -402,7 +402,7 @@ sub just_do_it {
    );
 
    # Get payment date from GL transaction
-   my $payment_date = $dbs->query("SELECT transdate FROM gl WHERE id = ?", $form->{trans_id})->list;
+   my $gl_date = $dbs->query("SELECT transdate FROM gl WHERE id = ?", $form->{trans_id})->list;
 
    # Add payment row to each AR/AP transactions which are to be updated
    $query = "
@@ -420,9 +420,17 @@ sub just_do_it {
 
    @rows = $dbs->query($query)->hashes;
 
+   my $payment_date;
+   my $arap_date;
    for (@rows){
       my $arap = $_->{tbl};
       my $ARAP = uc $arap;
+      $arap_date = $dbs->query("SELECT transdate FROM $arap WHERE id = ?", $_->{id})->list;
+      if ($form->datediff(\%myconfig, $gl_date, $arap_date) > 0 ){
+          $payment_date = $gl_date;
+      } else {
+          $payment_date = $arap_date;
+      }
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
