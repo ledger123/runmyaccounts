@@ -137,10 +137,12 @@ sub chart_of_accounts {
 
 sub list {
 
+  my $clearing_account;
   if (!$form->{accno}){
      my $dbh = $form->dbconnect(\%myconfig);
      ($form->{accno}) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount' LIMIT 1");
      ($form->{description}) = $dbh->selectrow_array("SELECT description FROM chart WHERE accno = '$form->{accno}'");
+     $clearing_account = 1;
   }
 
   $form->{title} = $locale->text('List Transactions');
@@ -221,7 +223,8 @@ sub list {
 	  <td colspan=3>
 	  <input name=l_accno class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('AR/AP').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
-      <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|</td>
+      <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|
+      <input type=checkbox class=checkbox name=filter_marked value=1> |.$locale->text('Filter marked transactions').qq|</td>
 	  </td>
 	</tr>
       </table>
@@ -415,15 +418,6 @@ sub list_transactions {
     $column_data{debit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{debit}, $form->{precision}, "&nbsp;")."</td>";
     $column_data{credit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{credit}, $form->{precision}, "&nbsp;")."</td>";
     
-    $form->{balance} += $ca->{amount};
-    $column_data{balance} = "<td align=right>".$form->format_amount(\%myconfig, $form->{balance} * $ml, $form->{precision}, 0)."</td>";
-
-    $subtotaldebit += $ca->{debit};
-    $subtotalcredit += $ca->{credit};
-    
-    $totaldebit += $ca->{debit};
-    $totalcredit += $ca->{credit};
-
     my $found = '';
     if ($clearing_account){
         if ($ca->{debit}){
@@ -446,6 +440,28 @@ sub list_transactions {
            ";
         }
         ($found) = $dbh->selectrow_array($query);
+    }
+
+    if ($form->{filter_marked}){
+      if ($found){
+    $form->{balance} += $ca->{amount};
+    $column_data{balance} = "<td align=right>".$form->format_amount(\%myconfig, $form->{balance} * $ml, $form->{precision}, 0)."</td>";
+
+    $subtotaldebit += $ca->{debit};
+    $subtotalcredit += $ca->{credit};
+
+    $totaldebit += $ca->{debit};
+    $totalcredit += $ca->{credit};
+      }
+    } else {
+    $form->{balance} += $ca->{amount};
+    $column_data{balance} = "<td align=right>".$form->format_amount(\%myconfig, $form->{balance} * $ml, $form->{precision}, 0)."</td>";
+
+    $subtotaldebit += $ca->{debit};
+    $subtotalcredit += $ca->{credit};
+
+    $totaldebit += $ca->{debit};
+    $totalcredit += $ca->{credit};
     }
 
     $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}";
@@ -472,7 +488,13 @@ sub list_transactions {
         <tr class=listrow$i>
 |;
 
-    for (@column_index) { print "$column_data{$_}\n" }
+    if ($form->{filter_marked}){
+      if ($found){
+         for (@column_index) { print "$column_data{$_}\n" }
+      }
+    } else {
+      for (@column_index) { print "$column_data{$_}\n" }
+    }
 
     print qq|
         </tr>
