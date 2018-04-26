@@ -435,7 +435,7 @@ sub list_transactions {
              FROM acc_trans ac
              JOIN ar ON (ar.id = ac.trans_id)
              WHERE ar.amount - ar.paid <> 0
-             AND ar.amount - ar.paid = $ca->{debit}
+             AND ar.amount - ar.paid = $ca->{credit}
              LIMIT 1
            ";
         }
