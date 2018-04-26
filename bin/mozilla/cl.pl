@@ -184,15 +184,29 @@ sub list_trans {
             $checked = 'checked';
         }
         $tabledata{x} = qq|<td><input type=checkbox class=checkbox name=x_$j $checked><input type=hidden name=id_$j value=$row->{id}></td>|;
-        for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
-        for (@total_columns) { $totals{$_}    += $row->{$_} }
-        for (@total_columns) { $subtotals{$_} += $row->{$_} }
+        if ($form->{filter_marked}){
+          if ($checked){
+            for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
+            for (@total_columns) { $totals{$_}    += $row->{$_} }
+            for (@total_columns) { $subtotals{$_} += $row->{$_} }
 
-        print qq|<tr class="listrow$i">|;
-        for (@report_columns) { print $tabledata{$_} }
-        print qq|</tr>\n|;
-        $i += 1; $j += 1;
-        $i %= 2;
+            print qq|<tr class="listrow$i">|;
+            for (@report_columns) { print $tabledata{$_} }
+            print qq|</tr>\n|;
+            $i += 1; $j += 1;
+            $i %= 2;
+          }
+        } else {
+            for (@total_columns) { $tabledata{$_} = qq|<td align="right">| . $form->format_amount( \%myconfig, $row->{$_}, 2 ) . qq|</td>| }
+            for (@total_columns) { $totals{$_}    += $row->{$_} }
+            for (@total_columns) { $subtotals{$_} += $row->{$_} }
+
+            print qq|<tr class="listrow$i">|;
+            for (@report_columns) { print $tabledata{$_} }
+            print qq|</tr>\n|;
+            $i += 1; $j += 1;
+            $i %= 2;
+        }
     }
 
     for (@report_columns) { $tabledata{$_} = qq|<td>&nbsp;</td>| }

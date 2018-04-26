@@ -349,7 +349,7 @@ sub list_transactions {
   $form->{prevreport} = $form->escape($form->{prevreport},1);
  
   $form->{callback} = "$form->{script}?action=list_transactions&department=$department&projectnumber=$projectnumber&title=$title";
-  for (qw(path direction oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno prevreport fx_transaction)) { $form->{callback} .= "&$_=$form->{$_}" }
+  for (qw(path direction oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno prevreport fx_transaction filter_marked)) { $form->{callback} .= "&$_=$form->{$_}" }
  
   
   $form->header;
@@ -464,7 +464,7 @@ sub list_transactions {
     $totalcredit += $ca->{credit};
     }
 
-    $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}";
+    $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}&filter_marked=$form->{filter_marked}&callback=$form->{callback}";
     $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a> $found</td>|;
     $column_data{reference} = qq|<td>$href</td>|;
 
