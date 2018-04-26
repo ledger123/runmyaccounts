@@ -462,8 +462,12 @@ sub list_transactions {
     $totalcredit += $ca->{credit};
     }
 
-    $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}&filter_marked=$form->{filter_marked}&callback=$form->{callback}";
-    $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a> $found</td>|;
+    if ($clearing_account){
+       $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}&filter_marked=$form->{filter_marked}&callback=$form->{callback}";
+       $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a> $found</td>|;
+    } else {
+       $column_data{transdate} = qq|<td nowrap>$ca->{transdate}</td>|;
+    }
     $column_data{reference} = qq|<td>$href</td>|;
 
     $href = "<a href=ct.pl?path=$form->{path}&action=edit&id=$ca->{vc_id}&db=$ca->{db}&login=$form->{login}&callback=$form->{callback}>$ca->{name}</a>";
