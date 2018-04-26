@@ -7,6 +7,8 @@
 #
 #======================================================================
 
+use DBIx::Simple;
+
 package Form;
 
 
@@ -94,6 +96,12 @@ sub new {
 
   bless $self, $type;
   
+}
+
+sub db_init {
+   my ($self, $myconfig) = @_;
+   $self->{dbh} = $self->dbconnect_noauto($myconfig);
+   $self->{dbs} = DBIx::Simple->connect($self->{dbh});
 }
 
 sub logtofile {

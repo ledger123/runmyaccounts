@@ -2765,5 +2765,384 @@ sub import_transactions {
 }
 
 
+sub prepare_datev {
+
+    if (!$form->{ok}){
+        $form->{title} = $locale->text('Prepare DATEV export');
+        $form->header;
+        print qq|
+<body>
+<table width="100%">
+<tr>
+    <th class="listtop">$form->{title}</th>
+</tr>
+</table>
+<h2>|.$locale->text('This process can take a while depending upon volumn of your data ...').qq|
+<form action="$form->{script}" method="post">
+<hr/>
+<input type=hidden name=ok value=1>
+<input type=hidden name=nextsub value=prepare_datev>
+<input type=hidden name=path value='$form->{path}'>
+<input type=hidden name=login value='$form->{login}'>
+<input type=submit name=action class=submit value='Continue'>
+</form>
+|;
+        exit;
+    }
+
+    $form->info("Started ...\n");
+
+    $form->{dbs}->query('delete from debitscredits');
+    $form->{dbs}->query('delete from acc_trans2');
+
+    $form->{dbs}->query('
+	INSERT INTO acc_trans2 (trans_id, transdate, chart_id, tax_chart_id, amount, taxamount)
+	   SELECT trans_id, transdate, chart_id, tax_chart_id, SUM(amount+amount2), SUM(taxamount)
+	   FROM acc_trans
+	   GROUP BY trans_id, transdate, chart_id, tax_chart_id');
+    $form->{dbs}->commit;
+
+    my @rows = $form->{dbs}->query(qq~
+        SELECT 
+                ac.trans_id::varchar || ac.transdate::varchar trans_group,
+                ac.trans_id,
+                gl.reference,
+                ap.invnumber ap_reference,
+                ar.invnumber ar_reference,
+                gl.description,
+                ar.description ar_description,
+                ap.description ap_description,
+                c.accno,
+                ac.transdate,
+		ac.tax_chart_id,
+		ac.taxamount,
+
+                case 
+                when ac.amount < 0 then 0-ac.amount
+                else 0
+                end debit,
+
+                case 
+                when ac.amount > 0 then ac.amount
+                else 0
+                end credit
+
+        FROM acc_trans2 ac
+        LEFT JOIN gl ON (gl.id = ac.trans_id)
+        LEFT JOIN ar ON (ar.id = ac.trans_id)
+        LEFT JOIN ap ON (ap.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
+        ORDER BY ac.trans_id, ac.transdate
+    ~)->hashes;
+
+    my $this_trans_group;
+    my $i = 1;
+    for my $row (@rows){
+        $this_trans_group = $row->{trans_group} if !$this_trans_group;
+        if ($this_trans_group != $row->{trans_group}){
+            $form->{rowcount} = $i;
+            &prepare_datev2;
+            $this_trans_group = $row->{trans_group};
+            $i = 1;
+        }
+        $form->{"reference_$i"} = $row->{reference} . $row->{ar_reference} . $row->{ap_reference};
+        $form->{"transdate_$i"} = $row->{transdate};
+        $form->{"description_$i"} = $row->{description} . $row->{ar_description} . $row->{ap_description};
+        $form->{"accno_$i"} = $row->{accno};
+        $form->{"debit_$i"} = $row->{debit};
+        $form->{"credit_$i"} = $row->{credit};
+        $form->{"tax_chart_id_$i"} = $row->{tax_chart_id};
+        $form->{"taxamount_$i"} = $row->{taxamount};
+        $i++;
+    }
+    $form->{rowcount} = $i;
+    &prepare_datev2; # Process last transaction
+
+    # Now process any error rows
+    @errorrows = $form->{dbs}->query('SELECT * FROM debitscredits WHERE debit_accno = credit_accno')->hashes;
+    for (@errorrows){
+	$similarrow = $form->{dbs}->query('
+		SELECT *
+		FROM debitscredits
+		WHERE reference = ? 
+		AND transdate = ?
+		AND amount = ?
+		LIMIT 1
+	', $_->{reference}, $_->{transdate}, $_->{amount})->hash;
+	if ($similarrow){
+	    $form->{dbs}->query('UPDATE debitscredits SET credit_accno = ? WHERE id =?', $_->{credit_accno}, $similarrow->{id});
+	    $form->{dbs}->query('UPDATE debitscredits SET credit_accno = ? WHERE id =?', $similarrow->{credit_accno}, $_->{id});
+	}
+    }
+    $form->{dbs}->commit;
+
+    $form->info("Completed ...");
+}
+
+sub prepare_datev2 {
+
+  $form->info("Processing $form->{reference_1}\n");
+  $form->{dbs}->query('delete from debits');
+  $form->{dbs}->query('delete from credits');
+ 
+  my %debits; my %credits;
+  for my $i (1 .. $form->{rowcount}){
+      #$form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
+      #$form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
+     $form->{dbs}->query(qq|
+         insert into debits (reference, description, transdate, accno, amount, tax_chart_id, taxamount)
+         values (?, ?, ?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"debit_$i"},
+	 $form->{"tax_chart_id_$i"}, $form->{"taxamount_$i"}
+     ) if $form->{"debit_$i"} > 0;
+     $form->{dbs}->query(qq|
+         insert into credits (reference, description, transdate, accno, amount, tax_chart_id, taxamount) 
+         values (?, ?, ?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"credit_$i"},
+	 $form->{"tax_chart_id_$i"}, $form->{"taxamount_$i"}
+     ) if $form->{"credit_$i"} > 0;
+     for (qw(reference description transdate accno debit credit)){ delete $form->{"${_}_$i"} }
+  }
+
+  # matching amounts and accounts should not be same
+  for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
+     for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} and accno <> '$row->{accno}' limit 1|)->hashes)){
+        $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount)
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}+$row2->{tax_chart_id}, $row->{taxamount}+$row2->{taxamount});
+        $form->{dbs}->query('delete from debits where id = ?', $row->{id});
+        $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
+     }
+  }
+
+  # matching amount but accounts can be same
+  for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
+     for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} limit 1|)->hashes)){
+        $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount)
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount}, $row->{tax_chart_id}+$row2->{tax_chart_id}, $row->{taxamount}+$row2->{taxamount});
+        $form->{dbs}->query('delete from debits where id = ?', $row->{id});
+        $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
+     }
+  }
+
+  while (1){
+      $debitrow = $form->{dbs}->query(qq|select * from debits order by amount DESC limit 1|)->hash;
+      $creditrow = $form->{dbs}->query(qq|select * from credits order by amount DESC limit 1|)->hash;
+      if ($debitrow->{amount} and $creditrow->{amount}){
+          if ($debitrow->{amount} > $creditrow->{amount}){
+              $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount) 
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount}, $debitrow->{tax_chart_id}+$creditrow->{tax_chart_id}, $debitrow->{taxamount}+$creditrow->{taxamount});
+              $form->{dbs}->query(qq|delete from credits where id = $creditrow->{id}|);
+              $form->{dbs}->query(qq|update debits set amount = amount - $creditrow->{amount} where id = $debitrow->{id}|);
+          } else {
+              $form->{dbs}->query('
+		insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount, tax_chart_id, taxamount) 
+		values (?, ?, ?, ?, ?, ?, ?, ?)',
+                $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount}, $debitrow->{tax_chart_id}+$creditrow->{tax_chart_id}, $debitrow->{taxamount}+$creditrow->{taxamount});
+              $form->{dbs}->query(qq|delete from debits where id = $debitrow->{id}|);
+              $form->{dbs}->query(qq|update credits set amount = amount - $debitrow->{amount} where id = $creditrow->{id}|);
+          }
+      } else {
+        last;
+      }
+  }
+
+  $form->{dbs}->commit;
+
+}
+
+
+sub export_datev {
+
+    $form->{title} = $locale->text('DATEV Export');
+
+    $accounttype_standard = 'checked';
+    $accounttype_gifi = '';
+    if ($form->{accounttype} eq 'gifi'){
+        $accounttype_gifi = 'checked';
+        $accounttype_standard = '';
+    }
+
+    if ($form->{year} && $form->{month}){
+        ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval});
+        $form->{datefrom} = $form->format_date($myconfig{dateformat}, $form->{datefrom}) if $form->{datefrom};
+        $form->{dateto} = $form->format_date($myconfig{dateformat}, $form->{dateto}) if $form->{dateto};
+    }
+    if (!$form->{l_csv}){
+        $form->header;
+        print qq|
+<body>
+<table width="100%">
+<tr>
+    <th class="listtop">$form->{title}</th>
+</tr>
+</table>
+|;
+
+   $form->all_years(\%myconfig);
+   if (@{ $form->{all_years} }) {
+        # accounting years
+        $selectaccountingyear = "<option>\n";
+        for (@{ $form->{all_years} }) { $selectaccountingyear .= qq|<option>$_\n| }
+        $selectaccountingmonth = "<option>\n";
+        for (sort keys %{ $form->{all_month} }) { $selectaccountingmonth .= qq|<option value=$_>|.$locale->text($form->{all_month}{$_}).qq|\n| }
+
+        $selectfrom = qq|
+        <tr>
+            <th align=right>|.$locale->text('Period').qq|</th>
+            <td>
+            <select name=month>$selectaccountingmonth</select>
+            <select name=year>$selectaccountingyear</select>
+            <br>
+            <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+            <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+            <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+            <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+            </td>
+        </tr>
+|;
+   }
+
+        print qq|
+<form action="$form->{script}" method="post">
+<table>
+<tr>
+    <th align="right">|.$locale->text('Reference').qq|</th>
+    <td><input name=reference type=text size=12 value='$form->{reference}'></td>
+</tr>
+<tr>
+    <th align="right">|.$locale->text('From').qq|</th>
+    <td><input name=datefrom type=text size=12 class=date value='$form->{datefrom}' title='$myconfig{dateformat}'></td>
+</tr>
+<tr>
+    <th align="right">|.$locale->text('To').qq|</th>
+    <td><input name=dateto type=text size=12 class=date value='$form->{dateto}' title='$myconfig{dateformat}'></td>
+</tr>
+$selectfrom
+<tr>
+  <th align=right>| . $locale->text('Accounts') . qq|</th>
+  <td>
+      <input name=accounttype class=radio type=radio value=standard $accounttype_standard> | . $locale->text('Standard') . qq|
+      <input name=accounttype class=radio type=radio value=gifi $accounttype_gifi> | . $locale->text('GIFI') . qq|
+  </td>
+</tr>
+<tr>
+      <th align="right">|.$locale->text('Options').qq|</th>
+      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
+</tr>
+<tr>
+      <th align="right">|.$locale->text('Subtotal').qq|</th>
+      <td><input name="l_subtotal" class=checkbox type=checkbox value=checked $form->{l_subtotal}></td>
+</tr>
+</table>
+<hr/>
+<input type=hidden name=runit value=1>
+<input type=hidden name=nextsub value=export_datev>
+<input type=hidden name=path value='$form->{path}'>
+<input type=hidden name=login value='$form->{login}'>
+<input type=submit name=action class=submit value='Continue'>
+</form>
+|;
+    }
+
+    my $where = ' 1 = 1 ';
+    $where = ' 1 = 2 ' if !$form->{runit};    # Display data only when Update button is pressed.
+
+    my @bind = ();
+
+    $callback = "$form->{script}?action=export_datev";
+    for (qw(path login l_subtotal reference datefrom dateto accounttype runit)) { $callback .= qq|&$_=$form->{$_}| if $form->{$_} }
+
+    my $query;
+    if ($form->{reference}){
+        my $reference = $form->like(lc $form->{reference});
+        $where .= qq| AND LOWER(reference) LIKE '$reference'|;
+    }
+    if ( $form->{datefrom} ) {
+        $where .= qq| AND transdate >= '$form->{datefrom}'|;
+    }
+    if ( $form->{dateto} ) {
+        $where .= qq| AND transdate <= '$form->{dateto}'|;
+    }
+
+    if ($form->{runit}){
+        if ($form->{accounttype} eq 'standard'){
+           $query = qq|
+            SELECT dc.reference, dc.description, dc.transdate,
+			dc.debit_accno, dc.credit_accno, dc.amount,
+			dc.taxamount, c.accno tax_accno, t.datev_flag,
+                CASE
+                    WHEN debit_accno = credit_accno THEN
+                    'ERROR'
+                    ELSE
+                    ''
+                END error
+            FROM debitscredits dc
+	    LEFT JOIN chart c ON (c.id = dc.tax_chart_id)
+	    LEFT JOIN tax t ON (t.chart_id = dc.tax_chart_id)
+            WHERE $where
+            ORDER BY reference, amount DESC
+            |;
+        } else {
+            $query = qq|
+            SELECT dc.reference, dc.description, dc.transdate, debit.gifi_accno debit_accno, credit.gifi_accno credit_accno, dc.amount,
+                CASE
+                    WHEN dc.debit_accno = dc.credit_accno THEN
+                    'ERROR'
+                    ELSE
+                    ''
+                END error
+            FROM debitscredits dc
+            JOIN chart debit ON (debit.accno = dc.debit_accno)
+            JOIN chart credit ON (credit.accno = dc.credit_accno)
+            WHERE $where
+            ORDER BY reference, amount DESC
+            |;
+        }
+
+        if ($form->{l_csv} eq 'Y'){
+           my $dbh = $form->dbconnect(\%myconfig);
+           &export_to_csv($dbh, $query, 'datev');
+           exit;
+        }
+
+        $table1 = $form->{dbs}->query($query
+        )->xto(
+                    tr => { class => [ 'listrow0', 'listrow1' ] },
+                    th => { class => ['listheading'] },
+        );
+
+    	$pageurl = qq|gl.pl?action=search&path=$form->{path}&login=$form->{login}&callback=$callback|;
+
+	$table1->map_cell(
+		sub {
+		    my $datum = shift;
+		    return qq|<a href="$pageurl&reference=$datum" target="_blank">$datum</a>|;
+		},
+		'reference'
+	);
+
+        $table1->set_group('reference');
+        $table1->modify( td => { align => 'right' }, 'amount' );
+        $table1->modify( td => { align => 'right' }, 'taxamount' );
+        $table1->map_cell( sub { return $form->format_amount( \%myconfig, shift ) }, 'amount' );
+        $table1->calc_subtotals( 'amount' ) if $form->{l_subtotal};
+        $table1->calc_subtotals( 'taxamount' ) if $form->{l_subtotal};
+        $table1->calc_totals( 'amount' );
+        $table1->calc_totals( 'taxamount' );
+
+        print $table1->output;
+    }
+}
+
+
+
+
+
 # EOF
 
