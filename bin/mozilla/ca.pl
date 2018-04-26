@@ -404,7 +404,7 @@ sub list_transactions {
 |;
 
   }
-    
+
   foreach $ca (@{ $form->{CA} }) {
 
     if ($form->{l_subtotal} eq 'Y') {
@@ -412,33 +412,31 @@ sub list_transactions {
 	&ca_subtotal;
       }
     }
-    
+
     # construct link to source
     $href = "<a href=$ca->{module}.pl?path=$form->{path}&action=edit&id=$ca->{id}&login=$form->{login}&callback=$form->{callback}>$ca->{reference}</a>";
     $column_data{debit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{debit}, $form->{precision}, "&nbsp;")."</td>";
     $column_data{credit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{credit}, $form->{precision}, "&nbsp;")."</td>";
-    
+
     my $found = '';
     if ($clearing_account){
-        if ($ca->{debit}){
-           $query = "
-             SELECT '*'
-             FROM acc_trans ac
-             JOIN ap ON (ap.id = ac.trans_id)
-             WHERE ap.amount - ap.paid <> 0
-             AND ap.amount - ap.paid = $ca->{debit}
-             LIMIT 1
-           ";
-        } else {
-           $query = "
-             SELECT '*'
-             FROM acc_trans ac
-             JOIN ar ON (ar.id = ac.trans_id)
-             WHERE ar.amount - ar.paid <> 0
-             AND ar.amount - ar.paid = $ca->{credit}
-             LIMIT 1
-           ";
-        }
+         $query = "
+           SELECT '*'
+           FROM acc_trans ac
+           JOIN ap ON (ap.id = ac.trans_id)
+           WHERE ap.amount - ap.paid <> 0
+           AND ((ap.amount - ap.paid = $ca->{debit}) OR (ap.paid - ap.amount = $ca->{credit}))
+
+           UNION ALL
+
+           SELECT '*'
+           FROM acc_trans ac
+           JOIN ar ON (ar.id = ac.trans_id)
+           WHERE ar.amount - ar.paid <> 0
+           AND ((ar.amount - ar.paid = $ca->{credit}) OR (ar.paid - ar.amount = $ca->{debit}))
+
+           LIMIT 1
+         ";
         ($found) = $dbh->selectrow_array($query);
     }
 

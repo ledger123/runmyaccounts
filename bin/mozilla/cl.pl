@@ -88,7 +88,11 @@ sub list_trans {
        $form->{arap} = 'ap' if $debit;
        $form->{arap} = 'ar' if $credit;
     }
-    $selectarap = qq|<option value="$form->{arap}" selected>$form->{arap}\n<option value="ar">ar\n<option value="ap">ap\n|;
+    if ($form->{arap} eq 'ar'){
+      $selectarap = qq|<option value="$form->{arap}" selected>$form->{arap}\n<option value="ap">ap\n|;
+    } else {
+      $selectarap = qq|<option value="$form->{arap}" selected>$form->{arap}\n<option value="ar">ar\n|;
+    }
     print qq|
 <table>
 <tr>
@@ -141,7 +145,7 @@ sub list_trans {
 
     print qq|
 <form action="$form->{script}" method="post">
-
+<input type=hidden name="filter_marked" value="$form->{filter_marked}">
         <table cellpadding="3" cellspacing="2">
         <tr class="listheading">
 |;
@@ -180,7 +184,7 @@ sub list_trans {
 
         $row->{amount} *= 1;
         $checked = '';
-        if ($row->{amount} eq $search_amount){
+        if ($row->{amount} == $search_amount or $row->{amount}*-1 == $search_amount){
             $checked = 'checked';
         }
         $tabledata{x} = qq|<td><input type=checkbox class=checkbox name=x_$j $checked><input type=hidden name=id_$j value=$row->{id}></td>|;
