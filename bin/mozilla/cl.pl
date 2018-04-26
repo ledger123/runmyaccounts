@@ -207,7 +207,7 @@ sub list_trans {
     for (@total_columns) { $tabledata{$_} = qq|<th align="right">| . $form->format_amount( \%myconfig, $totals{$_}, 2 ) . qq|</th>| }
     print qq|<tr class="listtotal">|;
     for (@report_columns) { print $tabledata{$_} }
-    $form->hide_form(qw(path login trans_id accno));
+    $form->hide_form(qw(path login trans_id accno callback));
     print qq|</tr>
 </table>
 <input type=hidden name=rowcount value=$j>
@@ -345,6 +345,8 @@ sub book_selected_transactions {
 <input type=hidden name=login value="$form->{login}">
 <input type=hidden name=path value="$form->{path}">
 <input type=submit name=action value="Just do it">
+<input type=hidden name=callback value='$form->{callback}'>
+</form>
 |;
 
 }
@@ -357,11 +359,12 @@ sub just_do_it {
    my $clearing_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='selectedaccount')")->list;
    my $transition_accno_id = $dbs->query("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='transitionaccount')")->list;
 
-   $form->info("Trans id: $form->{trans_id}\n");
-   $form->info("Accno: $form->{accno}\n");
-   $form->info("Trans: $form->{trans}\n");
-   $form->info("Clearing: $clearing_accno_id\n");
-   $form->info("Transition: $transition_accno_id\n");
+   ## Needed for debugging only.
+   # $form->info("Trans id: $form->{trans_id}\n");
+   # $form->info("Accno: $form->{accno}\n");
+   # $form->info("Trans: $form->{trans}\n");
+   # $form->info("Clearing: $clearing_accno_id\n");
+   # $form->info("Transition: $transition_accno_id\n");
 
    if ($form->{gl_account_id}){
       $dbs->query("
@@ -421,9 +424,8 @@ sub just_do_it {
    }
    $dbs->commit;
 
-   $form->info("It is done ...");
+   $form->redirect($locale->text("It is done ..."));
 }
-
 
 #########
 ### EOF

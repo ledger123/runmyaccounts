@@ -448,7 +448,7 @@ sub list_transactions {
         ($found) = $dbh->selectrow_array($query);
     }
 
-    $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}";
+    $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}";
     $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a> $found</td>|;
     $column_data{reference} = qq|<td>$href</td>|;
 
