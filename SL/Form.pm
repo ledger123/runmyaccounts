@@ -651,6 +651,20 @@ sub parse_template {
   my $subdir = "";
   my $err = "";
 
+  # Setup variables from defaults table
+  my $dbh = $self->dbconnect($myconfig);
+  my $query = "SELECT fldname, fldvalue FROM defaults WHERE fldname LIKE 'latex'";
+  my $sth = $dbh->prepare($query);
+  $sth->execute;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     $self->{$ref->{fldname}} = $ref->{fldvalue};
+  }
+  $sth->finish;
+  $dbh->disconnect;
+
+  ## Uncomment following line to view template variables with values in browser.
+  # $self->dumper($self); $self->error;
+
   my %include = ();
   my $ok;
 
@@ -1807,6 +1821,10 @@ sub dbconnect_noauto {
 
 }
 
+sub param {
+    my ( $self, $fldname ) = @_;
+    return $self->{$fldname};
+}
 
 sub dbquote {
   my ($self, $var, $type) = @_;

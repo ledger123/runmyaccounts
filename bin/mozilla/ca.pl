@@ -137,10 +137,12 @@ sub chart_of_accounts {
 
 sub list {
 
+  my $clearing_account;
   if (!$form->{accno}){
      my $dbh = $form->dbconnect(\%myconfig);
      ($form->{accno}) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount' LIMIT 1");
      ($form->{description}) = $dbh->selectrow_array("SELECT description FROM chart WHERE accno = '$form->{accno}'");
+     $clearing_account = 1;
   }
 
   $form->{title} = $locale->text('List Transactions');
@@ -221,7 +223,8 @@ sub list {
 	  <td colspan=3>
 	  <input name=l_accno class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('AR/AP').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
-      <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|</td>
+      <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|
+      <input type=checkbox class=checkbox name=filter_marked value=1> |.$locale->text('Filter marked transactions').qq|</td>
 	  </td>
 	</tr>
       </table>
@@ -246,6 +249,9 @@ sub list_transactions {
   $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
   CA->all_transactions(\%myconfig, \%$form);
+
+  my $dbh = $form->dbconnect(\%myconfig);
+  my ($clearing_account) = $dbh->selectrow_array("SELECT 1 FROM defaults WHERE fldname = 'selectedaccount' AND fldvalue = '$form->{accno}'");
   
   $department = $form->escape($form->{department});
   $projectnumber = $form->escape($form->{projectnumber});
@@ -343,7 +349,7 @@ sub list_transactions {
   $form->{prevreport} = $form->escape($form->{prevreport},1);
  
   $form->{callback} = "$form->{script}?action=list_transactions&department=$department&projectnumber=$projectnumber&title=$title";
-  for (qw(path direction oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno prevreport fx_transaction)) { $form->{callback} .= "&$_=$form->{$_}" }
+  for (qw(path direction oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno prevreport fx_transaction filter_marked)) { $form->{callback} .= "&$_=$form->{$_}" }
  
   
   $form->header;
@@ -398,7 +404,7 @@ sub list_transactions {
 |;
 
   }
-    
+
   foreach $ca (@{ $form->{CA} }) {
 
     if ($form->{l_subtotal} eq 'Y') {
@@ -406,24 +412,62 @@ sub list_transactions {
 	&ca_subtotal;
       }
     }
-    
+
     # construct link to source
     $href = "<a href=$ca->{module}.pl?path=$form->{path}&action=edit&id=$ca->{id}&login=$form->{login}&callback=$form->{callback}>$ca->{reference}</a>";
-
-    
     $column_data{debit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{debit}, $form->{precision}, "&nbsp;")."</td>";
     $column_data{credit} = "<td align=right>".$form->format_amount(\%myconfig, $ca->{credit}, $form->{precision}, "&nbsp;")."</td>";
-    
+
+    my $found = '';
+    if ($clearing_account){
+         $query = "
+           SELECT '*'
+           FROM acc_trans ac
+           JOIN ap ON (ap.id = ac.trans_id)
+           WHERE ap.amount - ap.paid <> 0
+           AND ((ap.amount - ap.paid = $ca->{debit}) OR (ap.paid - ap.amount = $ca->{credit}))
+
+           UNION ALL
+
+           SELECT '*'
+           FROM acc_trans ac
+           JOIN ar ON (ar.id = ac.trans_id)
+           WHERE ar.amount - ar.paid <> 0
+           AND ((ar.amount - ar.paid = $ca->{credit}) OR (ar.paid - ar.amount = $ca->{debit}))
+
+           LIMIT 1
+         ";
+        ($found) = $dbh->selectrow_array($query);
+    }
+
+    if ($form->{filter_marked}){
+      if ($found){
     $form->{balance} += $ca->{amount};
     $column_data{balance} = "<td align=right>".$form->format_amount(\%myconfig, $form->{balance} * $ml, $form->{precision}, 0)."</td>";
 
     $subtotaldebit += $ca->{debit};
     $subtotalcredit += $ca->{credit};
-    
+
     $totaldebit += $ca->{debit};
     $totalcredit += $ca->{credit};
-    
-    $column_data{transdate} = qq|<td nowrap>$ca->{transdate}</td>|;
+      }
+    } else {
+    $form->{balance} += $ca->{amount};
+    $column_data{balance} = "<td align=right>".$form->format_amount(\%myconfig, $form->{balance} * $ml, $form->{precision}, 0)."</td>";
+
+    $subtotaldebit += $ca->{debit};
+    $subtotalcredit += $ca->{credit};
+
+    $totaldebit += $ca->{debit};
+    $totalcredit += $ca->{credit};
+    }
+
+    if ($clearing_account){
+       $cl_link = "cl.pl?action=continue&nextsub=list_trans&accno=$form->{accno}&trans_id=$ca->{id}&path=$form->{path}&login=$form->{login}&filter_marked=$form->{filter_marked}&callback=$form->{callback}";
+       $column_data{transdate} = qq|<td nowrap><a href="$cl_link">$ca->{transdate}</a> $found</td>|;
+    } else {
+       $column_data{transdate} = qq|<td nowrap>$ca->{transdate}</td>|;
+    }
     $column_data{reference} = qq|<td>$href</td>|;
 
     $href = "<a href=ct.pl?path=$form->{path}&action=edit&id=$ca->{vc_id}&db=$ca->{db}&login=$form->{login}&callback=$form->{callback}>$ca->{name}</a>";
@@ -446,7 +490,13 @@ sub list_transactions {
         <tr class=listrow$i>
 |;
 
-    for (@column_index) { print "$column_data{$_}\n" }
+    if ($form->{filter_marked}){
+      if ($found){
+         for (@column_index) { print "$column_data{$_}\n" }
+      }
+    } else {
+      for (@column_index) { print "$column_data{$_}\n" }
+    }
 
     print qq|
         </tr>

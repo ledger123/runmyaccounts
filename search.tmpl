@@ -1,0 +1,36 @@
+[% form1.jshead %]
+  <table width=100%>
+  <tr><th class=listtop>[% form1.title %]</th></tr>
+  <tr height="5"></tr>
+  <tr>
+     <td align="top">
+     [% form1.start %]
+     <table>
+       <tr valign="top">
+       <td><table>
+       [% i = 1 %]
+       [% FOREACH field = form1.fields %]
+           <tr valign="top">
+              <th align="right">[% field.required ? "$field.label *" : field.label %]</th>
+              <td>
+                [% IF field.invalid %]
+                Missing or invalid entry, please try again.<br/>
+                [% END %]
+                [% field.field %]
+              </td>
+           </tr>
+       [% IF i == 17 OR i == 34 OR i == 50 %]
+       </table></td><td><table>
+       [% END %]
+       [% i = i + 1 %]
+       [% END %]
+       </td></table>
+       </tr>
+      </table>
+    </td>
+  </tr>
+  </table>
+  <hr size=3 noshade />
+  [% form1.submit %] [% form1.reset %]
+  [% form1.end %]
+

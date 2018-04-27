@@ -1,0 +1,14 @@
+$self{charset} = 'ISO-8859-1';
+
+$self{texts} = {
+};
+
+$self{subs} = {
+  'book_selected_transactions'  => 'book_selected_transactions',
+  'continue'                    => 'continue',
+  'just_do_it'                  => 'just_do_it',
+  'list_trans'                  => 'list_trans',
+};
+
+1;
+

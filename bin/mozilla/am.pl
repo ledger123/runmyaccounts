@@ -2069,6 +2069,7 @@ sub taxes {
   my $i = 0;
   foreach my $ref (@{ $form->{taxrates} }) {
     $i++;
+    $form->{"taxaccno_$i"} = $ref->{accno};
     $form->{"taxrate_$i"} = $ref->{rate};
     $form->{"taxdescription_$i"} = $ref->{description};
     
@@ -2102,6 +2103,7 @@ sub display_taxes {
       <table>
 	<tr>
 	  <th></th>
+	  <th>|.$locale->text('Account').qq| (%)</th>
 	  <th>|.$locale->text('Rate').qq| (%)</th>
 	  <th>|.$locale->text('Number').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
@@ -2125,7 +2127,7 @@ sub display_taxes {
     if ($form->{"taxdescription_$i"} eq $sametax) {
       print "";
     } else {
-      print qq|$form->{"taxdescription_$i"}|;
+      print qq|$form->{"taxaccno_$i"}--$form->{"taxdescription_$i"}|;
     }
     
     print qq|</th>
@@ -2439,6 +2441,10 @@ sub defaults {
 	<tr>
 	  <th align=right nowrap>|.$locale->text('Selected Account').qq|</th>
 	  <td><input name=selectedaccount size=15 value="$form->{selectedaccount}"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Transition Account').qq|</th>
+	  <td><input name=transitionaccount size=15 value="$form->{transitionaccount}"></td>
 	</tr>
       </table>
     </td>
