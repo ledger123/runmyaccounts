@@ -2160,7 +2160,7 @@ function CheckAll() {
 
   chop $form->{ids};
 
-  $form->hide_form(qw(title initcallback callback vc department path login ids));
+  $form->hide_form(qw(title initcallback callback vc department path login ids duedateto level));
   $form->hide_form($form->{vc});
   $form->hide_form(qw(type report));
 
