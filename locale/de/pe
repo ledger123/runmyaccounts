@@ -5,6 +5,7 @@ $self{texts} = {
   'Accounting Menu'             => 'Buchhaltungsmenü',
   'Active'                      => 'Aktiv',
   'Add'                         => 'Hinzufügen',
+  'Add Customer'                => 'Kunde anlegen',
   'Add Group'                   => 'Gruppe anlegen',
   'Add Job'                     => 'Fertigung anlegen',
   'Add Pricegroup'              => 'Preisgruppe anlegen',
