@@ -448,6 +448,7 @@ sub just_do_it {
    my $arap_date;
    for (@rows){
       my $arap = $_->{tbl};
+      my $ml = ($arap eq 'ap') ? -1 : 1;
       my $ARAP = uc $arap;
       $arap_date = $dbs->query("SELECT transdate FROM $arap WHERE id = ?", $_->{id})->list;
       if ($form->datediff(\%myconfig, $gl_date, $arap_date) > 0 ){
@@ -466,7 +467,7 @@ sub just_do_it {
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
         VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $amount
       ) or $form->error($dbs->error);
-      $dbs->query("UPDATE $arap SET paid = paid + ? WHERE id = ?", $amount * -1, $_->{id}) or $form->error($dbs->error);
+      $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $amount * $ml, $payment_date, $_->{id}) or $form->error($dbs->error);
    }
    $dbs->commit;
 
