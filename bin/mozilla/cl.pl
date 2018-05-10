@@ -457,11 +457,11 @@ sub just_do_it {
       )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $_->{due} * -1
+        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $_->{due} * $ml * -1
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due}
+        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due} * $ml
       ) or $form->error($dbs->error);
       $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $_->{due}, $payment_date, $_->{id}) or $form->error($dbs->error);
       $adjustment_total += $_->{due};
