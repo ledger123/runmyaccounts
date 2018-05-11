@@ -19,6 +19,18 @@ use CGI::FormBuilder;
 
 sub continue { &{ $form->{nextsub} } }
 
+sub select_all {
+   $form->{select_all} = 1;
+   &list_trans;
+}
+
+
+sub deselect_all {
+   $form->{deselect_all} = 1;
+   &list_trans;
+}
+
+
 sub list_trans {
 
     use DBIx::Simple;
@@ -111,6 +123,8 @@ sub list_trans {
 <input type=hidden name=nextsub value='list_trans'>
 <input type=submit class=submit name=action value="Continue">
 <input type=submit class=submit name=action value="Book selected transactions">
+<input type=submit class=submit name=action value="Select all">
+<input type=submit class=submit name=action value="Deselect all">
 |;
 
     my @bind = ();
@@ -187,6 +201,10 @@ sub list_trans {
         if ($row->{amount} == $search_amount or $row->{amount}*-1 == $search_amount){
             $checked = 'checked';
         }
+
+        $checked = 'checked' if $form->{select_all};
+        $checked = '' if $form->{deselect_all};
+
         $tabledata{x} = qq|<td><input type=checkbox class=checkbox name=x_$j $checked><input type=hidden name=id_$j value=$row->{id}></td>|;
         if ($form->{filter_marked}){
           if ($checked){
