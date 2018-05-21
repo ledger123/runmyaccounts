@@ -744,11 +744,12 @@ sub transactions {
         $option .= "$form->{accnoto} $form->{accnoto_description}";
     }
 
+    for (qw(amountfrom amountto)){ $form->{$_} = $form->format_amount( \%myconfig, $form->{$_}, $form->{precision} )  }
     if ( $form->{amountfrom} ) {
         $href     .= "&amountfrom=$form->{amountfrom}";
         $callback .= "&amountfrom=$form->{amountfrom}";
         $option   .= "\n<br>" if $option;
-        $option   .= $locale->text('Amount') . " >= " . $form->format_amount( \%myconfig, $form->{amountfrom}, $form->{precision} );
+        $option   .= $locale->text('Amount') . " >= " . $form->{amountfrom};
     }
     if ( $form->{amountto} ) {
         $href     .= "&amountto=$form->{amountto}";
@@ -760,7 +761,7 @@ sub transactions {
             $option .= "\n<br>" if $option;
             $option .= $locale->text('Amount') . " <= ";
         }
-        $option .= $form->format_amount( \%myconfig, $form->{amountto}, $form->{precision} );
+        $option .= $form->{amountto};
     }
 
     @columns = ();
