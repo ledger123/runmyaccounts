@@ -1428,7 +1428,6 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3554','Erhaltene Kautionen (1-5 Jahre)','A','L','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3555','Erhaltene Kautionen - Restlaufzeit 1 bis 5 Jahre','A','L','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3500','Sonstige Verbindlichkeiten','A','L','AP_paid','999',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3511','Verbindlichkeit.gg. Gesellschaftern b.1J (Spoiled Milk Holding AG)','A','L','','999',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3557','Erhaltene Kautionen (größer 5 Jahre)','A','L','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3558','Erhaltene Kautionen - Restlaufzeit größer 5 Jahre','A','L','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3560','Darlehen','A','L','','999',false,false,'');

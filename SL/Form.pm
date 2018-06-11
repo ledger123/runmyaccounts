@@ -1319,6 +1319,9 @@ sub format_line {
 
     s/<%(.+?)%>/$newstr/;
 
+	s/(²)/\\textsuperscript{2}/;
+	s/(³)/\\textsuperscript{3}/;
+
   }
 
   $_;
