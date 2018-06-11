@@ -500,6 +500,17 @@ sub just_do_it {
       $adjustment_total, $clearing_accno_id, $form->{trans_id}
    );
 
+   # check if the updated amount in above step equals to 0
+   $amount = $form->{dbs}->query("
+     SELECT amount FROM acc_trans WHERE chart_id = ? AND trans_id = ?",
+     $clearing_accno_id, $form->{trans_id}
+   )->list;
+
+   # delete if it is zero
+   if (!$amount){
+      $form->{dbs}->query("DELETE FROM acc_trans WHERE chart_id = ? AND trans_id = ?", $clearing_accno_id, $form->{trans_id});
+   }
+
    $dbs->commit;
 
    $form->redirect($locale->text("It is done ..."));
