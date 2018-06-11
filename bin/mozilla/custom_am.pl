@@ -79,13 +79,23 @@ sub do_dbcheck {
 |;
   my ($count2) = $dbh->selectrow_array($query);
 
-  if ($count or $count2){
+  $query = qq|
+    SELECT COUNT(*) 
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link NOT LIKE '%_tax%')
+|;
+  my ($count3) = $dbh->selectrow_array($query);
+
+  if ($count or $count2 or $count3){
      $form->info($locale->text("There are $count blank rows ..."));
      $form->info($locale->text("There are $count2 blank TAX rows ..."));
+     $form->info($locale->text("There are $count3 blank non-TAX rows ..."));
      print qq|
 <form method=post action=$form->{script}>
 <input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank rows').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank TAX rows').qq|">
+<input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank non-TAX rows').qq|">
 |;
 
   $form->{nextsub} = 'do_dbcheck';
@@ -539,7 +549,17 @@ sub click_here_to_delete_blank_tax_rows {
   $form->info($locale->text('Blank TAX rows deleted if any ...'));
 }
 
-
+sub click_here_to_delete_blank_non_tax_rows {
+  my $dbh = $form->dbconnect(\%myconfig);
+  $query = qq|
+    DELETE
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link NOT LIKE '%_tax%')
+|;
+  $dbh->do($query);
+  $form->info($locale->text('Blank non-TAX rows deleted if any ...'));
+}
 
 sub fix_invoicetax_for_alltaxes_report {
     #use DBIx::Simple;
