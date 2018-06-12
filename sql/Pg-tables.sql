@@ -106,7 +106,7 @@ CREATE TABLE invoice (
 --
 CREATE TABLE customer (
   id int DEFAULT nextval('id') primary key,
-  name varchar(64),
+  name varchar(128),
   contact varchar(64),
   phone varchar(20),
   fax varchar(20),
@@ -386,7 +386,7 @@ CREATE TABLE shipto (
 --
 CREATE TABLE vendor (
   id int DEFAULT nextval('id') primary key,
-  name varchar(64),
+  name varchar(128),
   contact varchar(64),
   phone varchar(20),
   fax varchar(20),

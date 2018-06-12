@@ -1693,9 +1693,6 @@ sub reminder {
     ($null, $department_id) = split /--/, $form->{department};
     $where .= qq| AND a.department_id = |.$form->dbclean($department_id).qq||;
   }
-  if ($form->{duedateto}){
-      $where .= qq| AND a.duedate <= '$form->{duedateto}'|;
-  }
   
   $form->{sort} =~ s/;//g;
   $form->{sort} = $form->dbclean($form->{sort});
@@ -1718,16 +1715,10 @@ sub reminder {
   }
   $sth->finish;
 
-  if ($form->{level}){
-     $form->{level}--;
-     $formwhere = "s.formname = 'reminder$form->{level}'";
-  } else {
-     $formwhere = "s.formname LIKE 'reminder_'";
-  }
   $query = qq|SELECT s.formname
               FROM status s
 	      JOIN ar a ON (a.id = s.trans_id)
-	      WHERE $formwhere
+	      WHERE s.formname LIKE 'reminder_'
 	      AND s.trans_id = ?
 	      AND a.curr = ?
 	      ORDER BY s.formname DESC|;
@@ -1739,7 +1730,7 @@ sub reminder {
   $where = qq|
 	a.paid != a.amount
 	AND a.approved = '1'
-	AND a.duedate < '$form->{duedateto}'
+	AND a.duedate < current_date
 	AND c.id = ?
 	AND a.curr = ?|;
 	
@@ -1812,7 +1803,7 @@ sub reminder {
 	}
 	$rth->finish;
 
-        if (! $found and !$form->{level}) {
+        if (! $found) {
 	  $ref->{level}++;
 	  push @{ $form->{AG} }, $ref;
 	}

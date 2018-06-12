@@ -90,7 +90,7 @@ sub new {
   $self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
   $self->{version} = "2.8.33";
-  $self->{dbversion} = "2.8.15";
+  $self->{dbversion} = "2.8.16";
 
   bless $self, $type;
   
@@ -1318,6 +1318,9 @@ sub format_line {
     }
 
     s/<%(.+?)%>/$newstr/;
+
+	s/(²)/\\textsuperscript{2}/;
+	s/(³)/\\textsuperscript{3}/;
 
   }
 
