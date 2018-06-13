@@ -501,14 +501,14 @@ sub just_do_it {
    );
 
    # check if the updated amount in above step equals to 0
-   $amount = $form->{dbs}->query("
+   $amount = $dbs->query("
      SELECT amount FROM acc_trans WHERE chart_id = ? AND trans_id = ?",
      $clearing_accno_id, $form->{trans_id}
    )->list;
 
    # delete if it is zero
    if (!$amount){
-      $form->{dbs}->query("DELETE FROM acc_trans WHERE chart_id = ? AND trans_id = ?", $clearing_accno_id, $form->{trans_id});
+      $dbs->query("DELETE FROM acc_trans WHERE chart_id = ? AND trans_id = ?", $clearing_accno_id, $form->{trans_id});
    }
 
    $dbs->commit;
