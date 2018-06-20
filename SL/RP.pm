@@ -1769,7 +1769,7 @@ sub reminder {
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
           LEFT JOIN bank ON (bank.id = a.bank_id)
           LEFT JOIN address ad2 ON (ad2.trans_id = c.payment_accno_id)
-	      WHERE a.duedate <= current_date
+	      WHERE a.duedate <= '$form->{duedateto}'
 	      AND $where
 	      $exclude_credits
 	      ORDER BY vc_id, transdate, invnumber|;

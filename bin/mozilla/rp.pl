@@ -753,6 +753,8 @@ sub report {
 
 	$overpaidlabel = $locale->text('Overpaid');
 
+  my $duedateto = $form->current_date(\%myconfig);
+
     print qq|
         $vc
     	<tr>
@@ -763,6 +765,10 @@ sub report {
 		  <th align=right nowrap>|.$locale->text('Exclude Credits').qq|</th>
 		  <td nowrap width=70><input name=exclude_credits type=checkbox class=checkbox value=on></td>
 		</tr>
+    <tr>
+      <th align=right nowrap>|.$locale->text('Due Date').qq| <= </th>
+      <td nowrap width=70><input name="duedateto" type=text size=12 class="date" value="$duedateto" title="$myconfig{dateformat}"></td>
+    </tr>
 
 	<input type=hidden name=action value="$form->{nextsub}">
 |;
@@ -1986,6 +1992,10 @@ sub reminder {
     $option .= "\n<br>" if $option;
     $option .= $form->{customer};
   }
+  if ($form->{duedateto}) {
+    $option .= "\n<br>" if $option;
+    $option .= $locale->text("Due Date") . " : " . $form->{duedateto};
+  }
 
   $title = "$form->{title} / $form->{company}";
 
@@ -2150,7 +2160,7 @@ function CheckAll() {
 
   chop $form->{ids};
 
-  $form->hide_form(qw(title initcallback callback vc department path login ids));
+  $form->hide_form(qw(title initcallback callback vc department path login ids duedateto));
   $form->hide_form($form->{vc});
   $form->hide_form(qw(type report));
 
