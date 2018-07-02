@@ -999,9 +999,9 @@ sub transactions {
 		  dcn => 30,
 		  paymentmethod => 31,
 		  paymentdiff => 32,
-		  accno => 39,
-		  source => 40,
-		  project => 41
+		  accno => 38,
+		  source => 39,
+		  project => 40
 		);
 
   
