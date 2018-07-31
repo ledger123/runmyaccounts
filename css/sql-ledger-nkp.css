@@ -306,7 +306,7 @@ A.listheading:link, A.listheading:active, A.listheading:visited {
 }
 
 th, td > b {
-  padding: 0.4rem 0.4rem;
+  padding: 10px 2px;
 }
 
 input, textarea, select {
@@ -479,16 +479,10 @@ h2.error {
 }
 
 
-/* media stuff */
+/* media stuff screen */
 
 @media screen {
   .noscreen {   /* items with this class won't display */
-    display: none;
-  }
-}
-
-@media print {
-  .noprint {   /* items with this class won't print */
     display: none;
   }
 }
@@ -508,5 +502,27 @@ h2.error {
 }
 
 .redirectmsg { color: white; background: #009ED9; padding: 2px 0px; }
+
+.printonly {
+	display: none;
+}
+
+/* media stuff print */
+@media print {
+
+  a {
+    color: black;
+    text-decoration: none;
+    background-color: transparent;
+  }
+	
+  .noprint {   /* items with this class won't print */
+    display: none;
+  }
+ 
+  .accno_header {
+  	page-break-after: always;
+  } 
+}
 
 ---------------------------------------------------------------------------

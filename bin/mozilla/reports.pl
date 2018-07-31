@@ -1175,9 +1175,9 @@ sub gl_list {
    $column_header{description} 	= rpt_hdr('description', $locale->text('Description'), $href);
    $column_header{name} 	= rpt_hdr('name', $locale->text('Company Name'), $href);
    $column_header{source}  	= rpt_hdr('source', $locale->text('Source'), $href);
-   $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'));
-   $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'));
-   $column_header{balance}  	= rpt_hdr('balance', $locale->text('Balance'));
+   $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'), undef,'right');
+   $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'), undef,'right');
+   $column_header{balance}  	= rpt_hdr('balance', $locale->text('Balance'), undef,'right');
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -1325,12 +1325,19 @@ sub gl_list {
 	   $sth = $dbh->prepare($query);
 	   $sth->execute || $form->dberror($query);
 
+
+
+	   $form->header;
+       print '<body>';
+
 	   $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
-	   &print_title;
+	   print '<div class="noprint">';
+	   print '<table width=100%><tr><th class="listtop">' . $form->{title} . '</th></tr></table>';
        print $locale->text('From') . ' : ' . $form->{datefrom} . '<br/>' if $form->{datefrom};
        print $locale->text('To') . ' : ' . $form->{dateto}  . '<br/>' if $form->{dateto};
 	   print $locale->text('From Account') . " : $fromaccount<br/>" if $form->{fromaccount};
 	   print $locale->text('To Account') . " : $toaccount<br/>" if $form->{toaccount};
+       print '</div>';	
 	
 	   # Subtotal and total variables
 	   my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
@@ -1338,7 +1345,6 @@ sub gl_list {
 	   # print data
 	   my $i = 1; my $no = 1;
 	   my $groupbreak = 'none';
-	   print qq|<table width=100%>|;
 	   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
 			if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
 			   if ($groupbreak ne 'none'){
@@ -1349,7 +1355,11 @@ sub gl_list {
 			      print "<tr valign=top class=listsubtotal>";
 			      for (@column_index) { print "\n$column_data{$_}" }
 			      print "</tr>";
+			      print qq|</table>|;
+			      print qq|<div class="accno_header"></div>|;
 			   }
+			   print qq|<table width=100%>|;
+	   	   
 			   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
 			   print qq|<tr valign=top>|;
 			   print qq|<th align=left colspan=7><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
@@ -1439,9 +1449,7 @@ sub gl_list {
 	   # grand totals
 	   print "<tr valign=top class=listtotal>";
 	   for (@column_index) { print "\n$column_data{$_}" }
-	   print "</tr>";
-	
-	   print qq|</table>|;
+	   print "</tr>";	
    } # else not csv
    $sth->finish;
    $dbh->disconnect;
