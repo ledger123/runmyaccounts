@@ -1608,8 +1608,6 @@ sub gl {
 
   $query = qq|SELECT curr FROM curr ORDER BY rn|;
   ($form->{defaultcurrency}) = $dbh->selectrow_array($query);
-  $form->{curr} ||= $form->{defaultcurrency};
-  $form->{currency} = $form->{curr};
 
   $query = qq|SELECT c.id, c.description
               FROM chart c
