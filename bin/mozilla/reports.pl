@@ -167,26 +167,28 @@ $selectfrom
         $aawhere .= qq| AND aa.transdate <= '$form->{todate}'|;
     }
 
-    if ( $form->{method} eq 'cash' ) {
-        $transdate = "aa.datepaid";
-
-        my $todate = $form->{todate};
-        if ( !$todate ) {
-            $todate = $form->current_date($myconfig);
-        }
-
-        $cashwhere = qq|
-             AND ac.trans_id IN (
-                 SELECT trans_id
-                 FROM acc_trans
-                 JOIN chart ON (chart_id = chart.id)
-                 WHERE link LIKE '%_paid%'
-                 AND aa.approved = '1'
-                 AND $transdate <= '$todate'
-                 AND aa.paid = aa.amount
-               )
-              |;
-    }
+#    if ( $form->{method} eq 'cash' ) {
+#        $transdate = "aa.datepaid";
+#
+#        my $todate = $form->{todate};
+#        if ( !$todate ) {
+#            $todate = $form->current_date($myconfig);
+#        }
+#
+#        $cashwhere = qq|
+#             AND ac.trans_id IN (
+#                 SELECT trans_id
+#                 FROM acc_trans
+#                 JOIN chart ON (chart_id = chart.id)
+#                 WHERE link LIKE '%_paid%'
+#                 AND aa.approved = '1'
+#                 AND $transdate <= '$todate'
+#                 AND aa.paid = aa.amount
+#               )
+#              |;
+#    }
+    
+    print STDERR "$cashwhere\n";
 
     &split_combos('department');
     $form->{department_id} *= 1;
@@ -211,23 +213,6 @@ $selectfrom
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 
         UNION ALL
-
-        -- 1b. AR Invoices
-        --SELECT 1 AS ordr, 'AR' module, 'Non-taxable' account,
-        --aa.id, aa.invnumber, aa.transdate,
-        --aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
-        --'' f,
-        --SUM(it.amount) amount, SUM(it.taxamount) AS tax
-        --FROM invoicetax it
-        --JOIN ar aa ON (aa.id = it.trans_id)
-        --JOIN customer vc ON (vc.id = aa.customer_id)
-        --WHERE 1 = 1
-        --$aawhere
-        --$cashwhere
-        --AND it.taxamount = 0
-        --GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
-
-        --UNION ALL
 
         -- 2. AR Transactions with line tax
         SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
@@ -282,6 +267,7 @@ $selectfrom
         $aawhere
         $cashwhere
         AND NOT invoice
+        AND NOT aa.linetax
         AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 
@@ -299,6 +285,7 @@ $selectfrom
         JOIN customer vc ON (vc.id = aa.customer_id)
         WHERE aa.netamount = aa.amount
         AND NOT aa.invoice
+        AND NOT aa.linetax
         $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
@@ -963,7 +950,7 @@ sub gl_search {
    print qq|
 <body>
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
-<form method=post action='$form->{script}'>
+<form method=post action=$form->{script}>
 
 <table>
 <tr>
@@ -1701,7 +1688,7 @@ $(document).ready(function(){
 
    print qq|
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
-<form method=post action='$form->{script}'>
+<form method=post action=$form->{script}>
 
 <table>
 <tr>
@@ -1719,9 +1706,21 @@ $selectfrom
 
    my $query;
    if ($form->{pivotby} eq 'project'){
-      $query = qq|SELECT id, projectnumber, description FROM project ORDER BY 2|;
+      $query = qq|
+      SELECT id, projectnumber, description FROM project
+      UNION
+      SELECT 0, '(blank)', '(blank)'
+      ORDER BY description
+      |;
    } else {
       $query = qq|SELECT id, description FROM department ORDER BY 2|;
+      $query = qq|
+      SELECT id, description FROM department
+      UNION
+      SELECT 0, '(blank)'
+      ORDER BY description
+  |;
+
    }
 
    my $dbh = $form->dbconnect(\%myconfig);
@@ -1763,6 +1762,7 @@ sub generate_income_statement {
 sub income_statement_by_project {
 
   my $dbh = $form->dbconnect(\%myconfig);
+  $dbh->do("UPDATE acc_trans SET project_id = 0 WHERE project_id IS NULL");
 
   my $where = qq|c.category IN ('I', 'E')|;
   my $ywhere = qq| 1 = 1 |;
@@ -1801,17 +1801,17 @@ sub income_statement_by_project {
   print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
   print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
-  my $query = qq|SELECT id, projectnumber FROM project ORDER BY projectnumber|;
+  my $query = qq|SELECT id, projectnumber FROM project UNION SELECT 0, '(blank)' ORDER BY projectnumber|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
   $sth->execute || $form->dberror($query);
 
   my %projects;
   my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-     if ($form->{"p_$ref->{id}"}){
+    if ($form->{"p_$ref->{id}"}){
 	$projects{"p_$ref->{id}"} = $ref->{projectnumber};
         $is_query .= qq|SUM(CASE WHEN ac.project_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{id},\n|
-     }
+    }
   }
   $sth->finish;
   chop $is_query;
@@ -1932,6 +1932,12 @@ sub income_statement_by_project {
 sub income_statement_by_department {
 
   my $dbh = $form->dbconnect(\%myconfig);
+
+  # TODO Modify invoice/trans post routines to avoid this work around.
+  $dbh->do("DELETE FROM dpt_trans WHERE department_id = 0");
+  $dbh->do("INSERT INTO dpt_trans (department_id, trans_id) SELECT 0, id FROM ar WHERE department_id = 0");
+  $dbh->do("INSERT INTO dpt_trans (department_id, trans_id) SELECT 0, id FROM ap WHERE department_id = 0");
+  $dbh->do("INSERT INTO dpt_trans (department_id, trans_id) SELECT 0, id FROM gl WHERE department_id = 0");
 
   my $where = qq|c.category IN ('I', 'E')|;
   my $ywhere = qq| 1 = 1 |;

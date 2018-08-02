@@ -20,7 +20,7 @@ sub ask_dbcheck {
   </table><br />
 
 <h1>Check for database inconsistancies</h1>
-<form method=post action='$form->{script}'>
+<form method=post action=$form->{script}>
   <table>
     <tr>
 	<th>|.$locale->text('First transaction date').qq|</th>
@@ -70,11 +70,32 @@ sub do_dbcheck {
     AND chart_id NOT IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
 |;
   my ($count) = $dbh->selectrow_array($query);
-  if ($count){
+
+  $query = qq|
+    SELECT COUNT(*) 
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
+|;
+  my ($count2) = $dbh->selectrow_array($query);
+
+  $query = qq|
+    SELECT COUNT(*) 
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link NOT LIKE '%_tax%')
+|;
+  my ($count3) = $dbh->selectrow_array($query);
+
+  if ($count or $count2 or $count3){
      $form->info($locale->text("There are $count blank rows ..."));
+     $form->info($locale->text("There are $count2 blank TAX rows ..."));
+     $form->info($locale->text("There are $count3 blank non-TAX rows ..."));
      print qq|
-<form method=post action='$form->{script}'>
+<form method=post action=$form->{script}>
 <input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank rows').qq|">
+<input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank TAX rows').qq|">
+<input type=submit class=submit name=action value="|.$locale->text('Click here to delete blank non-TAX rows').qq|">
 |;
 
   $form->{nextsub} = 'do_dbcheck';
@@ -445,7 +466,7 @@ WHERE trans_id NOT IN
   print qq|<h3>Incorrect line tax transactions ...</h3>|;
 
   $query = qq|
-       SELECT ap.id, 'AP' as module, ap.invnumber, ap.amount, ap.netamount, ap.amount - ap.netamount tax1, sum(ac.taxamount * -1) tax2
+       SELECT ap.id, 'AP' as module, ap.invnumber, ap.transdate, ap.amount, ap.netamount, ap.amount - ap.netamount tax1, sum(ac.taxamount * -1) tax2
        FROM ap 
        JOIN acc_trans ac on ap.id = ac.trans_id 
        AND ap.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
@@ -454,7 +475,7 @@ WHERE trans_id NOT IN
 
        UNION 
 
-       SELECT ar.id, 'AR' as module, ar.invnumber, ar.amount, ar.netamount, ar.amount - ar.netamount tax1, sum(ac.taxamount) tax2
+       SELECT ar.id, 'AR' as module, ar.invnumber, ar.transdate, ar.amount, ar.netamount, ar.amount - ar.netamount tax1, sum(ac.taxamount) tax2
        FROM ar
        JOIN acc_trans ac on ar.id = ac.trans_id 
        AND ar.id in (select distinct trans_id from acc_trans where tax is not null and tax <> '') 
@@ -470,6 +491,7 @@ WHERE trans_id NOT IN
   print qq|<tr class=listheading>|;
   print qq|<th class=listheading>|.$locale->text('Module').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Net Amount').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Invoice Tax').qq|</td>|;
@@ -489,6 +511,7 @@ WHERE trans_id NOT IN
      	print qq|<tr class=listrow$i>|;
      	print qq|<td>$ref->{module}</td>|;
      	print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
+     	print qq|<td>$ref->{transdate}</td>|;
      	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 2).qq|</td>|;
      	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{netamount}, 2).qq|</td>|;
      	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax1}, 2).qq|</td>|;
@@ -513,6 +536,30 @@ sub click_here_to_delete_blank_rows {
   $form->info($locale->text('Blank rows deleted if any ...'));
 }
 
+
+sub click_here_to_delete_blank_tax_rows {
+  my $dbh = $form->dbconnect(\%myconfig);
+  $query = qq|
+    DELETE
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%_tax%')
+|;
+  $dbh->do($query);
+  $form->info($locale->text('Blank TAX rows deleted if any ...'));
+}
+
+sub click_here_to_delete_blank_non_tax_rows {
+  my $dbh = $form->dbconnect(\%myconfig);
+  $query = qq|
+    DELETE
+    FROM acc_trans 
+    WHERE amount = 0 
+    AND chart_id IN (SELECT id FROM chart WHERE link NOT LIKE '%_tax%')
+|;
+  $dbh->do($query);
+  $form->info($locale->text('Blank non-TAX rows deleted if any ...'));
+}
 
 sub fix_invoicetax_for_alltaxes_report {
     #use DBIx::Simple;
@@ -560,7 +607,7 @@ sub fix_invoicetax_for_alltaxes_report {
     while ($ref = $sth->fetchrow_hashref(NAME_lc)){
 	$itsth->execute($ref->{id}, $ref->{chart_id});
        while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
-          $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}, $itref->{taxamount});
+          $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}*-1, $itref->{taxamount}*-1);
        }
     }
     $form->info($locale->text('Done ...'));

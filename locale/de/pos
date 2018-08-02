@@ -2,6 +2,7 @@ $self{charset} = 'ISO-8859-1';
 
 $self{texts} = {
   'Accounting Menu'             => 'Buchhaltungsmenü',
+  'Add Customer'                => 'Kunde anlegen',
   'Amount'                      => 'Betrag',
   'Business'                    => 'Gewerbe',
   'Cannot post transaction!'    => 'Rechnung kann nicht gebucht werden!',
@@ -30,14 +31,12 @@ $self{texts} = {
   'Posted!'                     => 'Verbucht!',
   'Price'                       => 'Preis',
   'Print'                       => 'Drucken',
-  'Print and Post'              => 'Drucken und buchen',
   'Printed'                     => 'Gedruckt',
   'Qty'                         => 'Menge',
   'Quarter'                     => 'Quartal',
   'Receipts'                    => 'Ausgangsbelege',
   'Record in'                   => 'Buchen auf',
   'Remaining'                   => 'Rest',
-  'Sales Invoice'               => 'Ausgangsrechnung',
   'Salesperson'                 => 'Verkäufer',
   'Screen'                      => 'Bildschirm',
   'Select a Printer!'           => 'Drucker auswählen!',
@@ -76,8 +75,6 @@ $self{subs} = {
   'löschen'                     => 'delete',
   'buchen'                      => 'post',
   'drucken'                     => 'print',
-  'drucken_und_buchen'          => 'print_and_post',
-  'ausgangsrechnung'            => 'sales_invoice',
   'erneuern'                    => 'update',
 };
 

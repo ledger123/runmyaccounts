@@ -1116,6 +1116,12 @@ sub all_parts {
       $invwhere .= " AND i.assemblyitem = '0'";
       $invwhere .= " AND a.$transdate >= ".$dbh->quote($form->{transdatefrom})."" if $form->{transdatefrom};
       $invwhere .= " AND a.$transdate <= ".$dbh->quote($form->{transdateto})."" if $form->{transdateto};
+      
+      if ($form->{business}){
+        (undef, $business_id) = split(/--/, $form->{business});
+        $business_id *= 1;
+        $invwhere .= " AND ct.business_id = $business_id";
+      }
 
       if ($form->{description} ne "") {
 	$var = $form->like(lc $form->{description});
@@ -1165,13 +1171,14 @@ sub all_parts {
 		    (SELECT sell FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.$transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber
+		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber, business.description business
 		    FROM invoice i
 		    JOIN parts p ON (p.id = i.parts_id)
 		    JOIN ap a ON (a.id = i.trans_id)
 		    JOIN vendor ct ON (a.vendor_id = ct.id)
 		    LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 		    LEFT JOIN employee e ON (a.employee_id = e.id)
+        LEFT JOIN business ON (business.id = ct.business_id)
 		    $makemodeljoin
 		    WHERE $invwhere|;
 	$union = "
@@ -1184,13 +1191,14 @@ sub all_parts {
 		    (SELECT buy FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.$transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber
+		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber, business.description business
 		     FROM invoice i
 		     JOIN parts p ON (p.id = i.parts_id)
 		     JOIN ar a ON (a.id = i.trans_id)
 		     JOIN customer ct ON (a.customer_id = ct.id)
 		     LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 		     LEFT JOIN employee e ON (a.employee_id = e.id)
+         LEFT JOIN business ON (business.id = ct.business_id)
 		     $makemodeljoin
 		     WHERE $invwhere|;
 	$union = "
@@ -1249,13 +1257,14 @@ sub all_parts {
 		    (SELECT buy FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber
+		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber, business.description business
 		     FROM orderitems i
 		     JOIN parts p ON (i.parts_id = p.id)
 		     JOIN oe a ON (i.trans_id = a.id)
 		     JOIN customer ct ON (a.customer_id = ct.id)
 		     LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 		     LEFT JOIN employee e ON (a.employee_id = e.id)
+         LEFT JOIN business ON (business.id = ct.business_id)
 		     $makemodeljoin
 		     WHERE $ordwhere
 		     AND a.customer_id > 0|;
@@ -1281,13 +1290,14 @@ sub all_parts {
 		    (SELECT sell FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber
+		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber, business.description business
 		    FROM orderitems i
 		    JOIN parts p ON (i.parts_id = p.id)
 		    JOIN oe a ON (i.trans_id = a.id)
 		    JOIN vendor ct ON (a.vendor_id = ct.id)
 		    LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 		    LEFT JOIN employee e ON (a.employee_id = e.id)
+        LEFT JOIN business ON (business.id = ct.business_id)
 		    $makemodeljoin
 		    WHERE $ordwhere
 		    AND a.vendor_id > 0|;
@@ -1333,13 +1343,14 @@ sub all_parts {
 		    (SELECT buy FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber
+		     i.discount, ct.id AS vc_id, 'customer' as vc, ct.customernumber as vcnumber, business.description business
 		     FROM orderitems i
 		     JOIN parts p ON (i.parts_id = p.id)
 		     JOIN oe a ON (i.trans_id = a.id)
 		     JOIN customer ct ON (a.customer_id = ct.id)
 		     LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 		     LEFT JOIN employee e ON (a.employee_id = e.id)
+         LEFT JOIN business ON (business.id = ct.business_id)
 		     $makemodeljoin
 		     WHERE $quowhere
 		     AND a.customer_id > 0|;
@@ -1365,13 +1376,14 @@ sub all_parts {
 		    (SELECT sell FROM exchangerate ex
 		     WHERE ex.curr = a.curr
 		     AND ex.transdate = a.transdate) AS exchangerate,
-		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber
+		     i.discount, ct.id AS vc_id, 'vendor' as vc, ct.vendornumber as vcnumber, business.description business
 		    FROM orderitems i
 		    JOIN parts p ON (i.parts_id = p.id)
 		    JOIN oe a ON (i.trans_id = a.id)
 		    JOIN vendor ct ON (a.vendor_id = ct.id)
 		    LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
 		    LEFT JOIN employee e ON (a.employee_id = e.id)
+        LEFT JOIN business ON (business.id = ct.business_id)
 		    $makemodeljoin
 		    WHERE $quowhere
 		    AND a.vendor_id > 0|;
@@ -1833,6 +1845,18 @@ sub get_warehouses {
 
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
     push @{ $form->{all_warehouse} }, $ref;
+  }
+  $sth->finish;
+
+  # get business types
+  $query = qq|SELECT *
+              FROM business
+	      ORDER BY 2|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+    push @{ $form->{all_business} }, $ref;
   }
   $sth->finish;
 

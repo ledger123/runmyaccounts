@@ -769,6 +769,59 @@ sub delete_transaction {
   
   $form->{id} *= 1;
 
+  my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
+
+  if ($form->{id} and $defaults{extendedlog}) {
+     $query = qq|INSERT INTO ${table}_log_deleted SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+
+     $query = qq|
+        INSERT INTO acc_trans_log_deleted (
+            trans_id, chart_id, 
+            amount, transdate, source,
+            approved, fx_transaction, project_id,
+            memo, id, cleared,
+            vr_id, entry_id,
+            tax, taxamount, tax_chart_id,
+            ts
+            )
+        SELECT 
+            ac.trans_id, ac.chart_id, 
+            ac.amount, ac.transdate, ac.source,
+            ac.approved, ac.fx_transaction, ac.project_id,
+            ac.memo, ac.id, ac.cleared,
+            vr_id, ac.entry_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id,
+            ts
+        FROM acc_trans ac
+        JOIN $table aa ON (aa.id = ac.trans_id)
+        WHERE trans_id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+
+     $query = qq|
+        INSERT INTO acc_trans_log_deleted (
+            trans_id, chart_id, 
+            amount, transdate, source,
+            approved, fx_transaction, project_id,
+            memo, id, cleared,
+            vr_id, entry_id,
+            tax, taxamount, tax_chart_id,
+            ts
+            )
+        SELECT 
+            ac.trans_id, ac.chart_id, 
+            0 - ac.amount, ac.transdate, ac.source,
+            ac.approved, ac.fx_transaction, ac.project_id,
+            ac.memo, ac.id, ac.cleared,
+            vr_id, ac.entry_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id,
+            NOW() 
+        FROM acc_trans ac
+        JOIN $table aa ON (aa.id = ac.trans_id)
+        WHERE trans_id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+  }
+
   my %audittrail = ( tablename  => $table,
                      reference  => $form->{invnumber},
 		     formname   => 'transaction',
@@ -946,9 +999,9 @@ sub transactions {
 		  dcn => 30,
 		  paymentmethod => 31,
 		  paymentdiff => 32,
-		  accno => 39,
-		  source => 40,
-		  project => 41
+		  accno => 38,
+		  source => 39,
+		  project => 40
 		);
 
   

@@ -4,6 +4,7 @@ $self{texts} = {
 };
 
 $self{subs} = {
+  'escape_csv'                  => 'escape_csv',
   'export_to_csv'               => 'export_to_csv',
   'export_to_xls'               => 'export_to_xls',
   'ref_to_csv'                  => 'ref_to_csv',

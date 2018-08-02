@@ -1,0 +1,63 @@
+[
+    {
+	"type":    "perlmodule",
+	"name":    "Mojolicious",
+	"version": "7.21",
+	"package": { "debian9": "libmojolicious-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "Mojolicious::Plugin::I18N",
+	"version": "0"
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "DBI",
+	"version": "0",
+	"package": { "debian": "libdbi-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "DBD::Pg",
+	"version": "0",
+	"package": { "debian": "libdbd-pg-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "DBIx::Simple",
+	"version": "0",
+	"package": { "debian": "libdbix-simple-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "File::pushd",
+	"version": "0",
+	"package": { "debian": "libfile-pushd-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "Text::CSV_XS",
+	"version": "0",
+	"package": { "debian": "libtext-csv-xs-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "XML::LibXML",
+	"version": "0",
+	"package": { "debian": "libxml-libxml-perl" }
+    },
+
+    {
+	"type": "executable",
+	"name": "zip",
+	"package": { "debian": "zip" }
+    }
+
+]

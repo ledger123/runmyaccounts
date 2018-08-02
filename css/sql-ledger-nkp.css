@@ -51,6 +51,10 @@ th {
   /*vertical-align: middle;*/
 }
 
+th[align="right"] {
+	text-align: right;
+}
+
 tr th {
   border: none;
 }
@@ -315,6 +319,11 @@ select {
     outline-offset: -1px;
 }
 
+select:focus {
+	outline: auto 1px #009FE3;
+    outline: auto 5px -webkit-focus-ring-color;
+}
+
 select, input {
     height: 26px;
     background: white;
@@ -430,6 +439,7 @@ table tr td[align=center] * {
   transition: all 0.2s ease-in-out;
   margin-left: 2px;
   -webkit-appearance: button;
+  border-radius: 0px !important;
 }
 
 .submit:HOVER {

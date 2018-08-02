@@ -70,11 +70,10 @@ $self{subs} = {
   'reconciliation'              => 'reconciliation',
   'section_menu'                => 'section_menu',
   'select_all'                  => 'select_all',
-  'speichern'                      => 'done',
   'update'                      => 'update',
   'weiter'                      => 'continue',
   'alle_abwählen'               => 'deselect_all',
-  'fertig'                      => 'done',
+  'speichern'                   => 'done',
   'alle_auswählen'              => 'select_all',
   'aktualisieren'               => 'update',
 };

@@ -498,6 +498,7 @@ sub search {
 		    <tr>
 		      <td nowrap><input name="l_subtotal" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('Subtotal') . qq|</td>
               <td><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Exchange Rate Difference').qq|</td>
+              <td><input type=checkbox class=checkbox name=filter_amounts value=1> |.$locale->text('Filter Amounts').qq|</td>
 		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('CSV') . qq|</td>
 		    </tr>
 		  </table>
@@ -547,6 +548,8 @@ sub transactions {
 
     $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
     $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
+
+    for (qw(amountfrom amountto)){ $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
 
     $form->{amountfrom} *= 1;
     $form->{amountto} *= 1;

@@ -2069,6 +2069,7 @@ sub taxes {
   my $i = 0;
   foreach my $ref (@{ $form->{taxrates} }) {
     $i++;
+    $form->{"taxaccno_$i"} = $ref->{accno};
     $form->{"taxrate_$i"} = $ref->{rate};
     $form->{"taxdescription_$i"} = $ref->{description};
     
@@ -2102,15 +2103,18 @@ sub display_taxes {
       <table>
 	<tr>
 	  <th></th>
+	  <th>|.$locale->text('Account').qq| (%)</th>
 	  <th>|.$locale->text('Rate').qq| (%)</th>
 	  <th>|.$locale->text('Number').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
 	</tr>
 |;
 
-  for (split(/ /, $form->{taxaccounts})) {
+  my @array = sort(split(/ /, $form->{taxaccounts}));
+  
+  foreach $ref (@array) {
     
-    my ($null, $i) = split /_/, $_;
+    my ($null, $i) = split /_/, $ref;
 
     $form->{"taxrate_$i"} = $form->format_amount(\%myconfig, $form->{"taxrate_$i"}, undef, 0);
     
@@ -2123,7 +2127,7 @@ sub display_taxes {
     if ($form->{"taxdescription_$i"} eq $sametax) {
       print "";
     } else {
-      print qq|$form->{"taxdescription_$i"}|;
+      print qq|$form->{"taxaccno_$i"}--$form->{"taxdescription_$i"}|;
     }
     
     print qq|</th>
@@ -2194,7 +2198,7 @@ sub update_taxes {
       $accno = $ref->{accno};
       $taxdescription = $ref->{taxdescription};
     }
-    if ($i > 1 && $validto) {
+    if ($i >= 1 && $validto) {
       push @tax, { id => $id, accno => $accno, taxdescription => $taxdescription };
     }
   }
@@ -2232,6 +2236,7 @@ sub defaults {
   my %checked;
   
   $checked{cash} = "checked" if $form->{method} eq 'cash';
+  $checked{accrual} = "checked" if $form->{method} ne 'cash';
   $checked{cdt} = "checked" if $form->{cdt};
   $checked{linetax} = "checked" if $form->{linetax};
   $checked{name} = "checked";
@@ -2310,7 +2315,11 @@ sub defaults {
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Reporting Method').qq|</th>
-	  <td><input name=method class=checkbox type=checkbox value=cash $checked{cash}>&nbsp;|.$locale->text('Cash').qq|</td>
+	  <td><input name=method value="cash" type=radio $checked{cash}>
+	  <b>|.$locale->text('Cash').qq|</b>
+	  <input name=method value="" type=radio $checked{accrual}>
+	  <b>|.$locale->text('Accrual').qq|</b>
+	  </td>
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Cash Discount').qq|</th>
@@ -2432,6 +2441,10 @@ sub defaults {
 	<tr>
 	  <th align=right nowrap>|.$locale->text('Selected Account').qq|</th>
 	  <td><input name=selectedaccount size=15 value="$form->{selectedaccount}"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Transition Account').qq|</th>
+	  <td><input name=transitionaccount size=15 value="$form->{transitionaccount}"></td>
 	</tr>
       </table>
     </td>
@@ -2660,9 +2673,9 @@ sub save_taxes {
     ($accno, $i) = split /_/, $_;
     if ($accno eq $sameaccno && $i > 1) {
       $j = $i - 1;
-      if (! $form->{"validto_$j"}) {
-	$form->error($locale->text('Valid To date missing for').qq| $form->{"taxdescription_$j"}|);
-      }
+      #if (! $form->{"validto_$j"}) {
+	  #  $form->error($locale->text('Valid To date missing for').qq| $form->{"taxdescription_$j"}|);
+      #}
     }
     $sameaccno = $accno;
   }

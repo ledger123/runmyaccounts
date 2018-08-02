@@ -90,6 +90,18 @@ sub create_links {
     $form->{selectbusiness} = $form->escape($form->{selectbusiness},1);
   }
 
+  if ($form->{selectbusiness}) {
+
+    $typeofbusiness = qq|
+ 	  <th align=right>|.$locale->text('Type of Business').qq|</th>
+	  <td><select name=business>|
+	  .$form->select_option($form->{selectbusiness}, $form->{business}, 1)
+	  .qq|</select>
+	  </td>
+|;
+
+  }
+
   if (@{ $form->{all_dispatch} }) {
     $form->{selectdispatch} = qq|\n|;
     for (@{ $form->{all_dispatch} }) { $form->{selectdispatch} .= qq|$_->{description}--$_->{id}\n| }
@@ -478,6 +490,8 @@ sub search {
 
 sub search_name {
 
+  &create_links;
+
   if ($form->{db} eq 'customer') {
     $vcname = $locale->text('Customer');
     $vcnumber = $locale->text('Customer Number');
@@ -566,6 +580,7 @@ sub search_name {
 		<td colspan=3><textarea name=notes rows=3 cols=32></textarea></td>
 	      </tr>
       $department
+      $typeofbusiness
 	    </table>
 	  </td>
 	  <td>
@@ -1289,6 +1304,13 @@ sub list_history {
   if ($form->{history} eq 'summary') {
     $option .= $locale->text('Summary');
   }
+  if ($form->{business}) {
+    ($business, undef) = split(/--/, $form->{business});
+    $callback .= "&business".$form->escape($form->{business},1);
+    $href .= "&business=".$form->escape($form->{business});
+    $option .= "\n<br>".$locale->text('Type of Business').': '. $business;
+  }
+
   if ($form->{name}) {
     $callback .= "&name=".$form->escape($form->{name},1);
     $href .= "&name=".$form->escape($form->{name});

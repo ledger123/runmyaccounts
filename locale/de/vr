@@ -9,6 +9,7 @@ $self{texts} = {
   'Add Payment Reversal Batch'  => 'Zahlungsbelege stornieren',
   'Add Payments Batch'          => 'Zahlungsbelege anlegen',
   'Add Voucher'                 => 'Beleg anlegen',
+  'All Batches'                 => 'Alle Massenbelege',
   'Approved'                    => 'Genehmigt',
   'Apr'                         => 'Apr',
   'April'                       => 'April',

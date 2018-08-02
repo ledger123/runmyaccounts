@@ -942,7 +942,12 @@ sub get_history {
   
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
-
+  
+  if ($form->{business}){
+    (undef, $business_id) = split(/--/, $form->{business});
+    $business_id *= 1;
+    $where .= " AND ct.business_id = $business_id";
+  }
   if ($form->{"$form->{db}number"} ne "") {
     $var = $form->like(lc $form->{"$form->{db}number"});
     $where .= " AND lower(ct.$form->{db}number) LIKE '$var'";

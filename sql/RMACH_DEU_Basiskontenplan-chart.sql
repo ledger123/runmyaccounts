@@ -36,7 +36,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1179','Verrechnungssteuer','A','A','','117',false,true,'verrechnungssteuer');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('118','KURZFRISTIGE FORDERUNGEN GEGENÜBER SOZIALVERSICHERUNGEN','H','A','','118',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('119','SONSTIGE KURZFRISTIGE FORDERUNGEN','H','A','','119',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1192','Geleistete Anzahlungen','A','A','AP_paid','109',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1192','Geleistete Anzahlungen','A','A','AP_paid','119',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('120','VORRÄTE UND NICHT FAKTURIERTE DIENSTLEISTUNGEN','H','A','','120',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1280','Nicht fakturierte Dienstleistungen','A','A','IC','120',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('130','AKTIVE RECHNUNGSABGRENZUNGEN','H','A','','130',false,true,'');

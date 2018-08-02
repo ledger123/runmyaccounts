@@ -22,6 +22,60 @@ sub delete_transaction {
   
   $form->{id} *= 1;
 
+  my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
+
+  if ($form->{id} and $defaults{extendedlog}) {
+     $query = qq|INSERT INTO gl_log_deleted SELECT * FROM gl WHERE id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+
+     $query = qq|
+        INSERT INTO acc_trans_log_deleted (
+            trans_id, chart_id, 
+            amount, transdate, source,
+            approved, fx_transaction, project_id,
+            memo, id, cleared,
+            vr_id, entry_id,
+            tax, taxamount, tax_chart_id,
+            ts
+            )
+        SELECT 
+            ac.trans_id, ac.chart_id, 
+            ac.amount, ac.transdate, ac.source,
+            ac.approved, ac.fx_transaction, ac.project_id,
+            ac.memo, ac.id, ac.cleared,
+            vr_id, ac.entry_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id,
+            ts 
+        FROM acc_trans ac
+        JOIN gl ON (gl.id = ac.trans_id)
+        WHERE trans_id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+
+
+     $query = qq|
+        INSERT INTO acc_trans_log_deleted (
+            trans_id, chart_id, 
+            amount, transdate, source,
+            approved, fx_transaction, project_id,
+            memo, id, cleared,
+            vr_id, entry_id,
+            tax, taxamount, tax_chart_id,
+            ts
+            )
+        SELECT 
+            ac.trans_id, ac.chart_id, 
+            0 - ac.amount, ac.transdate, ac.source,
+            ac.approved, ac.fx_transaction, ac.project_id,
+            ac.memo, ac.id, ac.cleared,
+            vr_id, ac.entry_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id,
+            NOW() 
+        FROM acc_trans ac
+        JOIN gl ON (gl.id = ac.trans_id)
+        WHERE trans_id = $form->{id}|;
+     $dbh->do($query) || $form->dberror($query);
+  }
+
   my %audittrail = ( tablename  => 'gl',
                      reference  => $form->{reference},
 		     formname   => 'transaction',
@@ -48,9 +102,6 @@ sub delete_transaction {
     $dbh->do($query) || $form->dberror($query);
   }
   
-  $query = qq|DELETE FROM gl WHERE id = $form->{id}|;
-  $dbh->do($query) || $form->dberror($query);
-
   for (qw(acc_trans dpt_trans yearend)) {
     $query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
@@ -615,7 +666,37 @@ sub transactions {
 
     }
   }
-  
+
+  $dbh->do('DELETE FROM filtered');
+  if ($form->{accno} and $form->{filter_amounts}){
+     # CREATE TABLE filtered (trans_id int, entry_id int default 0, entry_id2 int default 0, debit float default 0, credit float default 0);
+     my $query = qq|
+        INSERT INTO filtered (trans_id, entry_id, debit, credit)
+        SELECT trans_id, entry_id,
+        (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
+        (case when ac.amount > 0 then ac.amount else 0 end) credit
+        FROM acc_trans ac
+        WHERE ac.chart_id IN (SELECT id FROM chart WHERE accno = '$form->{accno}')
+     |;
+     $dbh->do($query);
+     $query = "SELECT * FROM filtered WHERE credit > 0";
+     my $sth = $dbh->prepare($query);
+     $sth->execute;
+     while ($row = $sth->fetchrow_hashref(NAME_lc)){
+        $dbh->do("
+          UPDATE filtered SET entry_id2 = $row->{entry_id}
+          WHERE debit = $row->{credit} 
+            AND entry_id2 = 0
+            AND entry_id = (SELECT entry_id FROM filtered WHERE debit = $row->{credit} AND entry_id2 = 0 LIMIT 1 )"
+        );
+     }
+  }
+  my $debit_credit_filtered_where = " AND ac.entry_id NOT IN (
+       SELECT entry_id FROM filtered WHERE entry_id2 > 0
+       UNION
+       SELECT entry_id2 FROM filtered WHERE entry_id2 > 0
+  )";
+
   my $false = ($myconfig->{dbdriver} =~ /Pg/) ? FALSE : q|'0'|;
 
   my %ordinal = ( id => 1,
@@ -629,7 +710,8 @@ sub transactions {
 		  memo => 17,
 		  lineitem => 19,
 		  name => 20,
-		  vcnumber => 21);
+		  name => 21,
+		  vcnumber => 22);
   
   my @sf = qw(id transdate reference accno);
   my $sortorder = $form->sort_order(\@sf, \%ordinal);
@@ -642,13 +724,13 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts
+		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts, ac.entry_id
                  FROM gl g
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 LEFT JOIN department d ON (d.id = g.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
-                 WHERE $glwhere
+                 WHERE $glwhere $debit_credit_filtered_where
 	UNION ALL
 	         SELECT a.id, 'ar' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
@@ -658,7 +740,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts
+		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id
 		 FROM ar a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -667,7 +749,7 @@ sub transactions {
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
-		 WHERE $arwhere
+		 WHERE $arwhere $debit_credit_filtered_where
 	UNION ALL
 	         SELECT a.id, 'ap' AS type, a.invoice, a.invnumber,
 		 a.description, ac.transdate, ac.source,
@@ -677,7 +759,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts
+		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id
 		 FROM ap a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -686,10 +768,11 @@ sub transactions {
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
-		 WHERE $apwhere
+		 WHERE $apwhere $debit_credit_filtered_where
 	     |;
 
   if ($form->{include_log}){
+    # first edited log
     $query .= qq|
         
         UNION ALL
@@ -702,7 +785,7 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts
+		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id
                  FROM gl g
 		 JOIN acc_trans_log ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -718,7 +801,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
 		 FROM ar a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -737,7 +820,7 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
 		 FROM ap a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -748,6 +831,67 @@ sub transactions {
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
 	     |;
+
+    # then deleted log
+    $query .= qq|
+        
+        UNION ALL
+
+        SELECT g.id, 'gl' AS type, $false AS invoice, g.reference,
+                 g.description, ac.transdate, ac.source,
+		 ac.amount, c.accno, c.gifi_accno, g.notes, c.link,
+		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
+		 ac.memo, '0' AS name_id, '' AS db,
+		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
+		 '' AS address1, '' AS address2, '' AS city,
+		 '' AS zipcode, '' AS country, c.description AS accdescription,
+		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id
+                 FROM gl_log_deleted g
+		 JOIN acc_trans_log_deleted ac ON (g.id = ac.trans_id)
+		 JOIN chart c ON (ac.chart_id = c.id)
+		 LEFT JOIN department d ON (d.id = g.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
+                 WHERE $glwhere
+	UNION ALL
+	         SELECT a.id, 'ar' AS type, a.invoice, a.invnumber,
+		 a.description, ac.transdate, ac.source,
+		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
+		 ac.memo, ct.id AS name_id, 'customer' AS db,
+		 $lineitem AS lineitem, ct.name, ct.customernumber,
+		 ad.address1, ad.address2, ad.city,
+		 ad.zipcode, ad.country, c.description AS accdescription,
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
+		 FROM ar_log_deleted a
+		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
+		 $invoicejoin
+		 JOIN chart c ON (ac.chart_id = c.id)
+		 JOIN customer ct ON (a.customer_id = ct.id)
+		 JOIN address ad ON (ad.trans_id = ct.id)
+		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
+		 WHERE $arwhere
+	UNION ALL
+	         SELECT a.id, 'ap' AS type, a.invoice, a.invnumber,
+		 a.description, ac.transdate, ac.source,
+		 ac.amount, c.accno, c.gifi_accno, a.notes, c.link,
+		 a.till, ac.cleared, d.description AS department, p.projectnumber,
+		 ac.memo, ct.id AS name_id, 'vendor' AS db,
+		 $lineitem AS lineitem, ct.name, ct.vendornumber,
+		 ad.address1, ad.address2, ad.city,
+		 ad.zipcode, ad.country, c.description AS accdescription,
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
+		 FROM ap_log_deleted a
+		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
+		 $invoicejoin
+		 JOIN chart c ON (ac.chart_id = c.id)
+		 JOIN vendor ct ON (a.vendor_id = ct.id)
+		 JOIN address ad ON (ad.trans_id = ct.id)
+		 LEFT JOIN department d ON (d.id = a.department_id)
+		 LEFT JOIN project p ON (p.id = ac.project_id)
+		 WHERE $apwhere
+	     |;
+
     $query .= qq| ORDER BY 33, $sortorder|;
   } else {
     $query .= qq| ORDER BY $sortorder|;
