@@ -950,7 +950,7 @@ sub gl_search {
    print qq|
 <body>
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
-<form method=get action=$form->{script}>
+<form method=post action=$form->{script}>
 
 <table>
 <tr>
