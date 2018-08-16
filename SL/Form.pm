@@ -1420,20 +1420,28 @@ sub format_line {
 
 }
 
+sub today {
+	my $self = shift;
+	my $myconfig = shift;
+	my $t = Time::Piece->localtime();
+	my $time = $t->strftime($self->get_dateformatx($myconfig));
+	return $time;
+}
+
 sub get_dateformatx {
 	my ($self, $myconfig) = @_;
 	if ($myconfig->{dateformat} eq 'dd.mm.yy') {
-		return '%d.%M.%Y';		
+		return '%d.%m.%Y';		
 	} elsif ($myconfig->{dateformat} eq 'mm-dd-yy') {
-		return '%M-%d-%Y';		
+		return '%m-%d-%Y';		
 	} elsif ($myconfig->{dateformat} eq 'mm/dd/yy') {
-		return '%M/%d/%Y';		
+		return '%m/%d/%Y';		
 	} elsif ($myconfig->{dateformat} eq 'dd-mm-yy') {
-		return '%d-%M-%Y';		
+		return '%d-%m-%Y';		
 	} elsif ($myconfig->{dateformat} eq 'dd/mm/yy') {
-		return '%d/%M/%Y';		
+		return '%d/%m/%Y';		
 	} elsif ($myconfig->{dateformat} eq 'yyyy-mm-dd') {
-		return '%Y-%M-%d';		
+		return '%Y-%m-%d';		
 	}
 	return '';
 }

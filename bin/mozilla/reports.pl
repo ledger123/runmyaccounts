@@ -950,8 +950,8 @@ sub gl_search {
    print qq|
 <body>
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
-<form method=post action=$form->{script}>
-
+<form method="get" action="$form->{script}">
+<input type="hidden" name="auth_token" value="<%auth_token%>" /> 
 <table>
 <tr>
   <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
@@ -1175,9 +1175,9 @@ sub gl_list {
    $column_header{description} 	= rpt_hdr('description', $locale->text('Description'), $href);
    $column_header{name} 	= rpt_hdr('name', $locale->text('Company Name'), $href);
    $column_header{source}  	= rpt_hdr('source', $locale->text('Source'), $href);
-   $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'), undef,'right');
-   $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'), undef,'right');
-   $column_header{balance}  	= rpt_hdr('balance', $locale->text('Balance'), undef,'right');
+   $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'), undef, 'right');
+   $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'), undef, 'right');
+   $column_header{balance}  	= rpt_hdr('balance', $locale->text('Balance'), undef, 'right');
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -1325,19 +1325,19 @@ sub gl_list {
 	   $sth = $dbh->prepare($query);
 	   $sth->execute || $form->dberror($query);
 
-
-
-	   $form->header;
-       print '<body>';
-
 	   $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
-	   print '<div class="noprint">';
-	   print '<table width=100%><tr><th class="listtop">' . $form->{title} . '</th></tr></table>';
-       print $locale->text('From') . ' : ' . $form->{datefrom} . '<br/>' if $form->{datefrom};
-       print $locale->text('To') . ' : ' . $form->{dateto}  . '<br/>' if $form->{dateto};
-	   print $locale->text('From Account') . " : $fromaccount<br/>" if $form->{fromaccount};
-	   print $locale->text('To Account') . " : $toaccount<br/>" if $form->{toaccount};
-       print '</div>';	
+	   $form->header;
+	   print qq|<body><table class="noprint report-header" width=100%>|;
+	   print qq|<tr><th class="listtop">$form->{title}</th></tr>|;
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From') . qq| $form->{datefrom}</th></tr>| if $form->{datefrom};
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To') . qq| $form->{dateto}</th></tr>| if $form->{dateto};
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From Account') . qq| $fromaccount</th></tr>| if  $form->{fromaccount};
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To Account') . qq| $toaccount</th></tr>| if  $form->{$toaccount};
+	   print qq|</table>\n|;
+	   
+	   my $today = $form->today(\%myconfig);
+	   
+	   print qq|<div class="printonly"><span class="creation-date">$today</span></div>|;
 	
 	   # Subtotal and total variables
 	   my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
@@ -1345,6 +1345,13 @@ sub gl_list {
 	   # print data
 	   my $i = 1; my $no = 1;
 	   my $groupbreak = 'none';
+	   my $period = '';
+	   $period .= $locale->text('From') . ' ' . $form->{datefrom} if $form->{datefrom};
+	   $period .= $locale->text('To') . ' ' . $form->{dateto} if $form->{dateto};
+	   
+	   print qq|<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {event: 'urlToPdf', url: window.location.href}}, '*')" class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 0; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjBweCIgeT0iMHB4IgogICAgIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIgogICAgIHZpZXdCb3g9IjAgMCA4MCA4MCIKICAgICBzdHlsZT0iZmlsbDojMDBBRUVGOyI+ICAgIDxwYXRoIHN0eWxlPSJsaW5lLWhlaWdodDpub3JtYWw7dGV4dC1pbmRlbnQ6MDt0ZXh0LWFsaWduOnN0YXJ0O3RleHQtZGVjb3JhdGlvbi1saW5lOm5vbmU7dGV4dC1kZWNvcmF0aW9uLXN0eWxlOnNvbGlkO3RleHQtZGVjb3JhdGlvbi1jb2xvcjojMDAwO3RleHQtdHJhbnNmb3JtOm5vbmU7YmxvY2stcHJvZ3Jlc3Npb246dGI7aXNvbGF0aW9uOmF1dG87bWl4LWJsZW5kLW1vZGU6bm9ybWFsIiBkPSJNIDE1IDkgTCAxNSA3MSBMIDUxIDcxIEwgNTQuMzQzNzUgNzEgTCA1Mi4zNDM3NSA2OSBMIDUxIDY5IEwgMTcgNjkgTCAxNyAxMSBMIDQ5IDExIEwgNDkgMjUgTCA2MyAyNSBMIDYzIDQ1IEwgNjUgNDUgTCA2NSAyMy41ODU5MzggTCA1MC40MTQwNjIgOSBMIDE1IDkgeiBNIDUxIDEyLjQxNDA2MiBMIDYxLjU4NTkzOCAyMyBMIDUxIDIzIEwgNTEgMTIuNDE0MDYyIHogTSAyMiAxMyBBIDEgMSAwIDAgMCAyMSAxNCBBIDEgMSAwIDAgMCAyMiAxNSBBIDEgMSAwIDAgMCAyMyAxNCBBIDEgMSAwIDAgMCAyMiAxMyB6IE0gMjIgMTcgQSAxIDEgMCAwIDAgMjEgMTggQSAxIDEgMCAwIDAgMjIgMTkgQSAxIDEgMCAwIDAgMjMgMTggQSAxIDEgMCAwIDAgMjIgMTcgeiBNIDIyIDIxIEEgMSAxIDAgMCAwIDIxIDIyIEEgMSAxIDAgMCAwIDIyIDIzIEEgMSAxIDAgMCAwIDIzIDIyIEEgMSAxIDAgMCAwIDIyIDIxIHogTSAyMiAyNSBBIDEgMSAwIDAgMCAyMSAyNiBBIDEgMSAwIDAgMCAyMiAyNyBBIDEgMSAwIDAgMCAyMyAyNiBBIDEgMSAwIDAgMCAyMiAyNSB6IE0gMjIgMjkgQSAxIDEgMCAwIDAgMjEgMzAgQSAxIDEgMCAwIDAgMjIgMzEgQSAxIDEgMCAwIDAgMjMgMzAgQSAxIDEgMCAwIDAgMjIgMjkgeiBNIDQwLjU0ODgyOCAyOSBDIDM5LjUzNTM0NSAyOSAzOC42MDY4NjMgMjkuNTY2OTc3IDM4LjEyNjk1MyAzMC4zNzMwNDcgQyAzNy42NDcwNDQgMzEuMTc5MTE2IDM3LjQ5MzU0NiAzMi4xNDk2MDEgMzcuNSAzMy4yMjY1NjIgQyAzNy41MTI5MSAzNS4zODA0ODUgMzguMjEzOTQzIDM4LjAzOTg2OSAzOS40MjM4MjggNDAuNzE0ODQ0IEMgMzkuNDU3NTQ4IDQwLjc4OTM5NCAzOS41MTIzNTggNDAuODU5MDYxIDM5LjU0Njg3NSA0MC45MzM1OTQgQyAzOS4zNTEwMzUgNDEuNTExNzMzIDM5LjIxNjgyMyA0Mi4wNTk1NTMgMzguOTk0MTQxIDQyLjY0MjU3OCBDIDM4LjMwMzYwMiA0NC40NTA1NDMgMzcuNDc4MTM5IDQ2LjIwOTY3MyAzNi42MDc0MjIgNDcuODY1MjM0IEMgMzUuMTYzMzY2IDQ4LjM3MjQzNyAzMy43ODI4NzYgNDguOTM1NTMzIDMyLjU4OTg0NCA0OS41NzQyMTkgQyAzMS4zMDg3OSA1MC4yNjAwMjYgMzAuMjExODczIDUxLjAxNDg0NSAyOS4zOTA2MjUgNTEuODgwODU5IEMgMjguNTY5Mzc3IDUyLjc0Njg3NCAyOCA1My43NzQ2NzggMjggNTQuOTE5OTIyIEMgMjggNTYuMDg5MTkzIDI5LjA1MTg5NCA1NyAzMC4zMjQyMTkgNTcgQyAzMS40NTQ0NCA1NyAzMi40ODQ0NDggNTYuNDQ3MzI5IDMzLjQ0MTQwNiA1NS42NTAzOTEgQyAzNC4zOTgzNjUgNTQuODUzNDUzIDM1LjMxMDIyOSA1My43Nzc0OTggMzYuMTkzMzU5IDUyLjUwOTc2NiBDIDM2LjgwNzk3IDUxLjYyNzQ5MyAzNy4zNzYxMDYgNTAuNTYzNzUgMzcuOTQ5MjE5IDQ5LjUyNzM0NCBDIDM5LjMyMDg4MiA0OS4wNzU2ODYgNDAuNzU4MDggNDguNjY0MDQxIDQyLjIxMDkzOCA0OC4zNDk2MDkgQyA0Mi45NjUzMTcgNDguMTg2MzQ0IDQzLjY4MDM5MSA0OC4xMTk4MTcgNDQuNDIzODI4IDQ4IEMgNDQuNDU5MDI4IDQ4LjAzMzk0IDQ0LjQ4NDEwMSA0OC4wNzk2NyA0NC41MTk1MzEgNDguMTEzMjgxIEMgNDYuNjc5Nzg2IDUwLjE2MjYzMyA0OS4zMTg3MzMgNTEuNjA3NDIyIDUyLjI3MTQ4NCA1MS42MDc0MjIgQyA1My4xMzU4MzEgNTEuNjA3NDIyIDUzLjk3NzExNiA1MS41MDM1NjIgNTQuNzE4NzUgNTEuMDY2NDA2IEMgNTUuNDYwMzg3IDUwLjYyOTI1MSA1NiA0OS43MzM1MzcgNTYgNDguNzQ2MDk0IEMgNTYgNDcuNjY5ODU5IDU1LjI1MDQ2NSA0Ni43NzI0NDEgNTQuMzM5ODQ0IDQ2LjMwNDY4OCBDIDUzLjQyOTIyMyA0NS44MzY5MzQgNTIuMzA4Mjk5IDQ1LjYxODA4IDUxLjAxMTcxOSA0NS41MjE0ODQgQyA0OS4zMjgzOTUgNDUuMzk2MDc3IDQ3LjMxMDkyMyA0NS41NjU1OTQgNDUuMjE2Nzk3IDQ1Ljg0OTYwOSBDIDQzLjgzMzI2OCA0NC4zNTgzMTEgNDIuNjQ1MTcyIDQyLjU5MzkwNyA0MS43MTQ4NDQgNDAuNzMwNDY5IEMgNDIuNDc2MDY2IDM4LjM1MTk3NiA0My4wNzgwNDEgMzYuMDQzNzcyIDQzLjIzNDM3NSAzNC4xNDQ1MzEgQyA0My4zNDEzNzUgMzIuODQ0NjMyIDQzLjI5OTM3NSAzMS43MTg4NTggNDIuOTM3NSAzMC43NjM2NzIgQyA0Mi41NzU2MjQgMjkuODA4NDg2IDQxLjY0MTIxMiAyOSA0MC41NDg4MjggMjkgeiBNIDQwLjU0ODgyOCAzMSBDIDQwLjg4MDQ0NCAzMSA0MC44ODk1OTkgMzEuMDA0IDQxLjA2NjQwNiAzMS40NzA3MDMgQyA0MS4yNDMyMTMgMzEuOTM3MzkyIDQxLjMzMzg3NSAzMi44NDI4NjggNDEuMjQwMjM0IDMzLjk4MDQ2OSBDIDQxLjE0OTE1NCAzNS4wODY5MiA0MC44OTIwMTUgMzYuNDI1MjMxIDQwLjUyMzQzOCAzNy44NjEzMjggQyAzOS45MjU3NzYgMzYuMTE3MTAzIDM5LjUwNzM3OSAzNC40NDQxMDEgMzkuNSAzMy4yMTI4OTEgQyAzOS40OTQ4NzYgMzIuMzU3OTQ2IDM5LjY1NDY2MyAzMS43MTczNiAzOS44NDU3MDMgMzEuMzk2NDg0IEMgNDAuMDM2NzQzIDMxLjA3NTYwOSA0MC4xMzgzMTIgMzEgNDAuNTQ4ODI4IDMxIHogTSAyMiAzMyBBIDEgMSAwIDAgMCAyMSAzNCBBIDEgMSAwIDAgMCAyMiAzNSBBIDEgMSAwIDAgMCAyMyAzNCBBIDEgMSAwIDAgMCAyMiAzMyB6IE0gMjIgMzcgQSAxIDEgMCAwIDAgMjEgMzggQSAxIDEgMCAwIDAgMjIgMzkgQSAxIDEgMCAwIDAgMjMgMzggQSAxIDEgMCAwIDAgMjIgMzcgeiBNIDIyIDQxIEEgMSAxIDAgMCAwIDIxIDQyIEEgMSAxIDAgMCAwIDIyIDQzIEEgMSAxIDAgMCAwIDIzIDQyIEEgMSAxIDAgMCAwIDIyIDQxIHogTSA0MC44NzUgNDMuMzIwMzEyIEMgNDEuNDg0MDY2IDQ0LjM0OTAyNCA0Mi4xNzEyMjUgNDUuMjg5MjA0IDQyLjkyNzczNCA0Ni4yMTQ4NDQgQyA0Mi41NDIwODcgNDYuMjg4Mjc0IDQyLjE3NjE1NiA0Ni4zMTI3MDQgNDEuNzg5MDYyIDQ2LjM5NjQ4NCBDIDQwLjkxMjY0NCA0Ni41ODYxNjIgNDAuMDcyNzQgNDYuODY1ODc1IDM5LjIxMDkzOCA0Ny4xMDU0NjkgQyAzOS43OTQ0NjYgNDUuODc1OTYzIDQwLjM3NjE1OCA0NC42MzI4MDYgNDAuODYzMjgxIDQzLjM1NzQyMiBDIDQwLjg2ODA4MSA0My4zNDQ4NDIgNDAuODcwMTggNDMuMzMyODk0IDQwLjg3NSA0My4zMjAzMTIgeiBNIDIyIDQ1IEEgMSAxIDAgMCAwIDIxIDQ2IEEgMSAxIDAgMCAwIDIyIDQ3IEEgMSAxIDAgMCAwIDIzIDQ2IEEgMSAxIDAgMCAwIDIyIDQ1IHogTSA0OS4xNTQyOTcgNDcuNDg4MjgxIEMgNDkuNzY3MjE0IDQ3LjQ3MTMwMyA1MC4zNDMzNiA0Ny40Nzg4NDUgNTAuODYzMjgxIDQ3LjUxNzU3OCBDIDUyLjAwNDIwMSA0Ny42MDI1NzggNTIuOTE0NTI3IDQ3LjgyMTM3MSA1My40MjU3ODEgNDguMDgzOTg0IEMgNTMuOTM3MDM1IDQ4LjM0NjU5OCA1NCA0OC40NzIzMjggNTQgNDguNzQ2MDk0IEMgNTQgNDkuMTY3NjUxIDUzLjk0MjQ5IDQ5LjIwMjY1NiA1My43MDMxMjUgNDkuMzQzNzUgQyA1My40NjM3NTkgNDkuNDg0ODQ0IDUyLjkzOTEzOCA0OS42MDc0MjIgNTIuMjcxNDg0IDQ5LjYwNzQyMiBDIDUwLjQ3NTIzNyA0OS42MDc0MjIgNDguODAyNjc5IDQ4Ljc3MTEwNiA0Ny4yMjY1NjIgNDcuNjAzNTE2IEMgNDcuODkxNjkzIDQ3LjU0Njc1NSA0OC41NDEzOCA0Ny41MDUyNTkgNDkuMTU0Mjk3IDQ3LjQ4ODI4MSB6IE0gNjQgNDggQyA2My40NDggNDggNjMgNDguNDQ3IDYzIDQ5IEwgNjMgNjcgTCA1NyA2NyBDIDU2LjU5NiA2NyA1Ni4yMzExNzIgNjcuMjQzMTg3IDU2LjA3NjE3MiA2Ny42MTcxODggQyA1NS45MjExNzIgNjcuOTkwMTg4IDU2LjAwNTk2OSA2OC40MjEwMzEgNTYuMjkyOTY5IDY4LjcwNzAzMSBMIDY3LjI5Mjk2OSA3OS43MDcwMzEgQyA2Ny42ODM5NjkgODAuMDk4MDMxIDY4LjMxNjAzMSA4MC4wOTgwMzEgNjguNzA3MDMxIDc5LjcwNzAzMSBMIDc5LjcwNzAzMSA2OC43MDcwMzEgQyA3OS44OTgwMzEgNjguNTE2MDMxIDgwIDY4LjI2IDgwIDY4IEMgODAgNjcuODcxIDc5Ljk3NDgyOCA2Ny43NDExODggNzkuOTIzODI4IDY3LjYxNzE4OCBDIDc5Ljc2ODgyOCA2Ny4yNDMxODcgNzkuNDA0IDY3IDc5IDY3IEwgNzMgNjcgTCA3MyA0OSBDIDczIDQ4LjQ0NyA3Mi41NTIgNDggNzIgNDggTCA2NCA0OCB6IE0gMjIgNDkgQSAxIDEgMCAwIDAgMjEgNTAgQSAxIDEgMCAwIDAgMjIgNTEgQSAxIDEgMCAwIDAgMjMgNTAgQSAxIDEgMCAwIDAgMjIgNDkgeiBNIDY1IDUwIEwgNzEgNTAgTCA3MSA2OSBMIDc2LjU4NTkzOCA2OSBMIDY4IDc3LjU4NTkzOCBMIDU5LjQxNDA2MiA2OSBMIDY1IDY5IEwgNjUgNTAgeiBNIDM0LjkxMDE1NiA1MC43NTU4NTkgQyAzNC43ODc5MzEgNTAuOTQxNDUxIDM0LjY3NTUwOSA1MS4xODg5OTEgMzQuNTUyNzM0IDUxLjM2NTIzNCBDIDMzLjczNzg0OSA1Mi41MzUwMDIgMzIuOTEwNTc3IDUzLjQ5MDI5NyAzMi4xNjAxNTYgNTQuMTE1MjM0IEMgMzEuNDA5NzM2IDU0Ljc0MDE3MSAzMC43NjQ3NDggNTUgMzAuMzI0MjE5IDU1IEMgMzAuMDY3NjkgNTUgMzAuMDE0NjMxIDU0LjkwMjIxNSAzMC4wMDM5MDYgNTQuODg2NzE5IEMgMzAuMDE0NTMgNTQuNDE2MzEyIDMwLjI1NjQ3NCA1My44NzUxNDkgMzAuODQzNzUgNTMuMjU1ODU5IEMgMzEuNDQ0Mzc3IDUyLjYyMjQ5MSAzMi4zNzg3MSA1MS45NTY5OSAzMy41MzUxNTYgNTEuMzM3ODkxIEMgMzMuOTMxMzIyIDUxLjEyNTgwNSAzNC40NjcyMTUgNTAuOTU2NTgxIDM0LjkxMDE1NiA1MC43NTU4NTkgeiBNIDIyIDUzIEEgMSAxIDAgMCAwIDIxIDU0IEEgMSAxIDAgMCAwIDIyIDU1IEEgMSAxIDAgMCAwIDIzIDU0IEEgMSAxIDAgMCAwIDIyIDUzIHogTSAyMiA1NyBBIDEgMSAwIDAgMCAyMSA1OCBBIDEgMSAwIDAgMCAyMiA1OSBBIDEgMSAwIDAgMCAyMyA1OCBBIDEgMSAwIDAgMCAyMiA1NyB6IE0gMjIgNjEgQSAxIDEgMCAwIDAgMjEgNjIgQSAxIDEgMCAwIDAgMjIgNjMgQSAxIDEgMCAwIDAgMjMgNjIgQSAxIDEgMCAwIDAgMjIgNjEgeiBNIDIyIDY1IEEgMSAxIDAgMCAwIDIxIDY2IEEgMSAxIDAgMCAwIDIyIDY3IEEgMSAxIDAgMCAwIDIzIDY2IEEgMSAxIDAgMCAwIDIyIDY1IHoiPjwvcGF0aD48L3N2Zz4=">
+</button>|;
 	   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
 			if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
 			   if ($groupbreak ne 'none'){
@@ -1355,20 +1362,26 @@ sub gl_list {
 			      print "<tr valign=top class=listsubtotal>";
 			      for (@column_index) { print "\n$column_data{$_}" }
 			      print "</tr>";
-			      print qq|</table>|;
-			      print qq|<div class="accno_header"></div>|;
+			      print "</table>";
+			      print "</br>";
 			   }
-			   print qq|<table width=100%>|;
-	   	   
-			   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
-			   print qq|<tr valign=top>|;
-			   print qq|<th align=left colspan=7><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
-			   print qq|</tr>|;
-		
+
+	   		   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
+			   print qq|<div class="printonly">|;
+			   print qq|<span class="page-topleft">| . $form->{company} . qq|</span>|;
+			   print qq|<span class="page-topright">| . $period . qq|</span>|;
+			   print qq|</div>|;
+
+			   print qq|<table class="report-table" width=100%>|;
+		   	   
 		   	   # print header
+		   	   print qq|<thead>|;
+			   print qq|<tr class="listtop" valign=top>|;
+			   print qq|<th class=pb10 align=left colspan=7>|.$locale->text('Account') . qq| $groupbreak</th>|;
+			   print qq|</tr>|;
 		   	   print qq|<tr class=listheading>|;
 		   	   for (@column_index) { print "\n$column_header{$_}" }
-		   	   print qq|</tr>|; 
+		   	   print qq|</tr></thead>|; 
 		
 			   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
 			   if ($form->{datefrom} || $ref->{type} eq "empty"){
@@ -1449,7 +1462,11 @@ sub gl_list {
 	   # grand totals
 	   print "<tr valign=top class=listtotal>";
 	   for (@column_index) { print "\n$column_data{$_}" }
-	   print "</tr>";	
+	   print "</tr>";
+	
+	   print qq|</table>|;
+	   print qq|<script>resizeTables();</script>|;
+	   
    } # else not csv
    $sth->finish;
    $dbh->disconnect;
