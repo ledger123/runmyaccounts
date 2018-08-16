@@ -1700,7 +1700,7 @@ sub update {
                 SELECT rate 
                 FROM tax 
                 WHERE chart_id = (SELECT id FROM chart WHERE accno = '$tax_accno')
-                AND (validto IS NULL OR validto <= '$form->{transdate}')|
+                AND (validto IS NULL OR validto >= '$form->{transdate}')|
             );
             $taxamount = $form->round_amount( ( $form->{"debit_$i"} + $form->{"credit_$i"} ) - ( $form->{"debit_$i"} + $form->{"credit_$i"} ) / ( 1 + $tax_rate ), $form->{precision} );
             $form->{"taxamount_$i"} = $taxamount;
