@@ -2102,8 +2102,8 @@ sub display_taxes {
     <td>
       <table>
 	<tr>
-	  <th></th>
-	  <th>|.$locale->text('Account').qq|</th>
+          <th>|.$locale->text('Account Number').qq|</th>
+          <th>|.$locale->text('Account').qq|</th>
 	  <th>|.$locale->text('Rate').qq|</th>
 	  <th>|.$locale->text('Number').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
