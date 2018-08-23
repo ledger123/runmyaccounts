@@ -950,8 +950,8 @@ sub gl_search {
    print qq|
 <body>
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
-<form method=post action=$form->{script}>
-
+<form method="get" action="$form->{script}">
+<input type="hidden" name="auth_token" value="<%auth_token%>" /> 
 <table>
 <tr>
   <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
@@ -1175,9 +1175,9 @@ sub gl_list {
    $column_header{description} 	= rpt_hdr('description', $locale->text('Description'), $href);
    $column_header{name} 	= rpt_hdr('name', $locale->text('Company Name'), $href);
    $column_header{source}  	= rpt_hdr('source', $locale->text('Source'), $href);
-   $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'));
-   $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'));
-   $column_header{balance}  	= rpt_hdr('balance', $locale->text('Balance'));
+   $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'), undef, 'right');
+   $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'), undef, 'right');
+   $column_header{balance}  	= rpt_hdr('balance', $locale->text('Balance'), undef, 'right');
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -1326,11 +1326,18 @@ sub gl_list {
 	   $sth->execute || $form->dberror($query);
 
 	   $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
-	   &print_title;
-       print $locale->text('From') . ' : ' . $form->{datefrom} . '<br/>' if $form->{datefrom};
-       print $locale->text('To') . ' : ' . $form->{dateto}  . '<br/>' if $form->{dateto};
-	   print $locale->text('From Account') . " : $fromaccount<br/>" if $form->{fromaccount};
-	   print $locale->text('To Account') . " : $toaccount<br/>" if $form->{toaccount};
+	   $form->header;
+	   print qq|<body><table class="noprint report-header" width=100%>|;
+	   print qq|<tr><th class="listtop">$form->{title}</th></tr>|;
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From') . qq| $form->{datefrom}</th></tr>| if $form->{datefrom};
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To') . qq| $form->{dateto}</th></tr>| if $form->{dateto};
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From Account') . qq| $fromaccount</th></tr>| if  $form->{fromaccount};
+	   print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To Account') . qq| $toaccount</th></tr>| if  $form->{$toaccount};
+	   print qq|</table>\n|;
+	   
+	   my $today = $form->today(\%myconfig);
+	   
+	   print qq|<div class="printonly"><span class="creation-date">$today</span></div>|;
 	
 	   # Subtotal and total variables
 	   my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
@@ -1338,7 +1345,13 @@ sub gl_list {
 	   # print data
 	   my $i = 1; my $no = 1;
 	   my $groupbreak = 'none';
-	   print qq|<table width=100%>|;
+	   my $period = '';
+	   $period .= $locale->text('From') . ' ' . $form->{datefrom} if $form->{datefrom};
+	   $period .= $locale->text('To') . ' ' . $form->{dateto} if $form->{dateto};
+	   
+	   print qq|<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {event: 'urlToPdf', url: window.location.href}}, '*')" class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+</button>|;
 	   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
 			if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
 			   if ($groupbreak ne 'none'){
@@ -1349,16 +1362,26 @@ sub gl_list {
 			      print "<tr valign=top class=listsubtotal>";
 			      for (@column_index) { print "\n$column_data{$_}" }
 			      print "</tr>";
+			      print "</table>";
+			      print "</br>";
 			   }
-			   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
-			   print qq|<tr valign=top>|;
-			   print qq|<th align=left colspan=7><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
-			   print qq|</tr>|;
-		
+
+	   		   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
+			   print qq|<div class="printonly">|;
+			   print qq|<span class="page-topleft">| . $form->{company} . qq|</span>|;
+			   print qq|<span class="page-topright">| . $period . qq|</span>|;
+			   print qq|</div>|;
+
+			   print qq|<table class="report-table" width=100%>|;
+		   	   
 		   	   # print header
+		   	   print qq|<thead>|;
+			   print qq|<tr class="listtop" valign=top>|;
+			   print qq|<th class=pb10 align=left colspan=7>|.$locale->text('Account') . qq| $groupbreak</th>|;
+			   print qq|</tr>|;
 		   	   print qq|<tr class=listheading>|;
 		   	   for (@column_index) { print "\n$column_header{$_}" }
-		   	   print qq|</tr>|; 
+		   	   print qq|</tr></thead>|; 
 		
 			   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
 			   if ($form->{datefrom} || $ref->{type} eq "empty"){
@@ -1442,6 +1465,8 @@ sub gl_list {
 	   print "</tr>";
 	
 	   print qq|</table>|;
+	   print qq|<script>resizeTables();</script>|;
+	   
    } # else not csv
    $sth->finish;
    $dbh->disconnect;
