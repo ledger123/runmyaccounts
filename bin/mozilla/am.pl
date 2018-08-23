@@ -2102,9 +2102,9 @@ sub display_taxes {
     <td>
       <table>
 	<tr>
-	  <th></th>
-	  <th>|.$locale->text('Account').qq| (%)</th>
-	  <th>|.$locale->text('Rate').qq| (%)</th>
+          <th>|.$locale->text('Account Number').qq|</th>
+          <th>|.$locale->text('Account').qq|</th>
+	  <th>|.$locale->text('Rate').qq|</th>
 	  <th>|.$locale->text('Number').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
 	</tr>
@@ -2122,12 +2122,12 @@ sub display_taxes {
     
     print qq|
 	<tr>
-	  <th align=right>|;
+	  <th align=left>|;
 	  
     if ($form->{"taxdescription_$i"} eq $sametax) {
-      print "";
+      print "</th><th align=left>";
     } else {
-      print qq|$form->{"taxaccno_$i"}--$form->{"taxdescription_$i"}|;
+      print qq|$form->{"taxaccno_$i"}</th><th align=left>$form->{"taxdescription_$i"}|;
     }
     
     print qq|</th>
