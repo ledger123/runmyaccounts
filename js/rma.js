@@ -92,3 +92,30 @@ $(document).ready(function() {
 	$('td:empty, th:empty').html('&nbsp;');
 	*/
 });
+
+function resizeTables()
+{
+    var tableArr = document.getElementsByTagName('table');
+    var cellWidths = new Array();
+
+    // get widest
+    for(i = 0; i < tableArr.length; i++)
+    {
+        for(j = 0; j < tableArr[i].rows[0].cells.length; j++)
+        {
+           var cell = tableArr[i].rows[0].cells[j];
+
+           if(!cellWidths[j] || cellWidths[j] < cell.clientWidth)
+                cellWidths[j] = cell.clientWidth;
+        }
+    }
+
+    // set all columns to the widest width found
+    for(i = 0; i < tableArr.length; i++)
+    {
+        for(j = 0; j < tableArr[i].rows[0].cells.length; j++)
+        {
+            tableArr[i].rows[0].cells[j].style.width = cellWidths[j]+'px';
+        }
+    }
+}

@@ -2414,7 +2414,7 @@ sub im_gl {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(reference department department_id description transdate notes accno accdescription debit credit source memo);
+  @column_index = qw(reference department department_id description transdate notes currency exchangerate accno accdescription debit credit source memo);
   @flds = @column_index;
   unshift @column_index, qw(runningnumber ndx);
 
@@ -2431,6 +2431,8 @@ sub im_gl {
   $column_data{description} = $locale->text('Description');
   $column_data{transdate} = $locale->text('Date');
   $column_data{notes} = $locale->text('Notes');
+  $column_data{currency} = $locale->text('Currency');
+  $column_data{exchangerate} = $locale->text('Exchange Rate');
   $column_data{accno} = $locale->text('Account');
   $column_data{accdescription} = $locale->text('Account Description');
   $column_data{debit} = $locale->text('Debit');
@@ -2572,6 +2574,9 @@ sub import_gl {
       $newform->{transdate} = $form->{"transdate_$i"};
       $newform->{department} = qq|$form->{"department_$i"}--$form->{"department_id_$i"}|;
       $newform->{description} = $form->{"description_$i"};
+      $newform->{currency} = $form->{"currency_$i"};
+      $newform->{oldcurrency} = $form->{"currency_$i"};
+      $newform->{exchangerate} = $form->{"exchangerate_$i"};
       $newform->{"accno_$linenum"} = qq|$form->{"accno_$i"}--$form->{"accdescription_$i"}|;
       $newform->{"debit_$linenum"} = $form->{"debit_$i"};
       $newform->{"credit_$linenum"} = $form->{"credit_$i"};

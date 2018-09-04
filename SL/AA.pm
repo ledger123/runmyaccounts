@@ -648,7 +648,7 @@ sub post_transaction {
                 VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2 * |.$multiplicator.qq| * $ml * $arapml, '$transdate', '$approved')|;
               } else {
                 $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
-                VALUES ($form->{id}, $defaults{fxloss_accno_id}, $invamount2 * |.$multiplicator.qq| * $ml * $arapml, '$transdate', '$approved')|;
+                VALUES ($form->{id}, $defaults{fxloss_accno_id}, $invamount2 * -1 * |.$multiplicator.qq| * $ml * $arapml, '$transdate', '$approved')|;
               }
               $dbh->do($query) || $form->dberror($query);
           }
@@ -999,9 +999,9 @@ sub transactions {
 		  dcn => 30,
 		  paymentmethod => 31,
 		  paymentdiff => 32,
-		  accno => 39,
-		  source => 40,
-		  project => 41
+		  accno => 38,
+		  source => 39,
+		  project => 40
 		);
 
   

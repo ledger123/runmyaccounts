@@ -1045,6 +1045,7 @@ sub search {
   push @a, $l_account if $l_account;
   push @a, $l_name if $l_name;
   push @a, $l_vcnumber if $l_vcnumber;
+  push @a, qq|<input name=l_business class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Type of Business');
   push @a, $l_curr if $l_curr;
   push @a, $l_employee if $l_employee;
   push @a, $l_serialnumber if $l_serialnumber;
@@ -1422,7 +1423,7 @@ sub generate_report {
     $form->{l_avgcostmarkup} = "Y" if $form->{l_avgcost};
   }
   # armaghan - added transdate
-  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name vcnumber employee serialnumber warehouse countryorigin tariff_hscode));
+  @columns = $form->sort_columns(qw(partnumber description notes assemblypartnumber partsgroup make model bin onhand perassembly rop unit sellprice linetotalsellprice listprice linetotallistprice lastcost linetotallastcost lastcostmarkup avgcost linetotalavgcost avgcostmarkup curr priceupdate weight image drawing toolnumber barcode microfiche invnumber transdate ordnumber quonumber name vcnumber business employee serialnumber warehouse countryorigin tariff_hscode));
   unshift @columns, "runningnumber";
 
   if ($form->{l_linetotal}) {
@@ -1540,6 +1541,7 @@ sub generate_report {
   $column_data{transdate} = qq|<th nowrap><a class=listheading href=$href&sort=transdate>|.$locale->text('Date').qq|</a></th>|;
   $column_data{name} = qq|<th nowrap><a class=listheading href=$href&sort=name>|.$locale->text('Name').qq|</a></th>|;
   $column_data{vcnumber} = qq|<th nowrap><a class=listheading href=$href&sort=vcnumber>|.$locale->text('Customer Number').qq|</a></th>|;
+  $column_data{business} = qq|<th nowrap><a class=listheading href=$href&sort=business>|.$locale->text('Type of Business').qq|</a></th>|;
   
   $column_data{employee} = qq|<th nowrap><a class=listheading href=$href&sort=employee>|.$locale->text('Employee').qq|</a></th>|;
   
@@ -1800,6 +1802,7 @@ sub generate_report {
 
     $column_data{name} = "<td>$ref->{name}&nbsp;</td>";
     $column_data{vcnumber} = "<td>$ref->{vcnumber}&nbsp;</td>";
+    $column_data{business} = "<td>$ref->{business}&nbsp;</td>";
     $column_data{transdate} = "<td align=right>$ref->{transdate}&nbsp;</td>";
     if ($ref->{vc_id}) {
       $column_data{name} = qq|<td><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{vc_id}&db=$ref->{vc}&callback=$callback>$ref->{name}</a></td>|;

@@ -42,16 +42,16 @@ sub alltaxes {
 
     $selectfrom = qq|
         <tr>
-	  <th align=right>|.$locale->text('Period').qq|</th>
-	  <td colspan=3>
-	  <select name=month>|.$form->select_option($selectaccountingmonth, $form->{month}, 1, 1).qq|</select>
-	  <select name=year>|.$form->select_option($selectaccountingyear, $form->{year}, 1).qq|</select>
-	  <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
-	  <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
-	  <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
-	  <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
-	  </td>
-	</tr>
+      <th align=right>|.$locale->text('Period').qq|</th>
+      <td colspan=3>
+      <select name=month>|.$form->select_option($selectaccountingmonth, $form->{month}, 1, 1).qq|</select>
+      <select name=year>|.$form->select_option($selectaccountingyear, $form->{year}, 1).qq|</select>
+      <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+      <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+      <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+      <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+      </td>
+    </tr>
 |;
 
   }
@@ -632,14 +632,14 @@ sub onhandvalue_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			warehouse => 2,
-			partnumber => 3,
-			description => 4,
-			partsgroup => 5,
-			unit => 6,
-			onhand_qty => 7,
-			onhand_amt => 8
+   my %ordinal = (  id => 1,
+            warehouse => 2,
+            partnumber => 3,
+            description => 4,
+            partsgroup => 5,
+            unit => 6,
+            onhand_qty => 7,
+            onhand_amt => 8
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -662,47 +662,47 @@ sub onhandvalue_list {
    $form->{callback} = $form->escape($callback,1);
 
    $query = qq|SELECT 
-		p.id,
-		p.partnumber,
-		p.description,
-		pg.partsgroup,
-		p.unit,
-		SUM(0-(i.qty+i.allocated)) AS onhand_qty,
-		  (SELECT SUM((0-(i2.qty+i2.allocated))*i2.sellprice) 
-		  FROM invoice i2 WHERE i2.parts_id = p.id AND i2.qty < 0) AS onhand_amt
-		FROM parts p
-		JOIN invoice i ON (i.parts_id = p.id)
-		LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
+        p.id,
+        p.partnumber,
+        p.description,
+        pg.partsgroup,
+        p.unit,
+        SUM(0-(i.qty+i.allocated)) AS onhand_qty,
+          (SELECT SUM((0-(i2.qty+i2.allocated))*i2.sellprice) 
+          FROM invoice i2 WHERE i2.parts_id = p.id AND i2.qty < 0) AS onhand_amt
+        FROM parts p
+        JOIN invoice i ON (i.parts_id = p.id)
+        LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
 
-		WHERE $where
-		AND (i.qty+i.allocated) <> 0
-		AND p.inventory_accno_id IS NOT NULL
-		$componentswhere
+        WHERE $where
+        AND (i.qty+i.allocated) <> 0
+        AND p.inventory_accno_id IS NOT NULL
+        $componentswhere
 
-		GROUP BY 1,2,3,4,5
-		HAVING SUM(0-(i.qty+i.allocated)) <> 0
+        GROUP BY 1,2,3,4,5
+        HAVING SUM(0-(i.qty+i.allocated)) <> 0
 
-		ORDER BY $form->{sort} $form->{direction}
-	|;
+        ORDER BY $form->{sort} $form->{direction}
+    |;
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   	= rpt_hdr('no', $locale->text('No.'));
-   $column_header{partnumber} 	= rpt_hdr('partnumber', $locale->text('Number'), $href);
-   $column_header{description} 	= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{partsgroup}  	= rpt_hdr('partsgroup', $locale->text('Group'), $href);
-   $column_header{unit}  	= rpt_hdr('unit', $locale->text('Unit'), $href);
-   $column_header{onhand_qty}  	= rpt_hdr('onhand_qty', $locale->text('Onhand Qty'));
-   $column_header{onhand_amt}  	= rpt_hdr('onhand_amt', $locale->text('Onhand Amount'));
+   $column_header{no}       = rpt_hdr('no', $locale->text('No.'));
+   $column_header{partnumber}   = rpt_hdr('partnumber', $locale->text('Number'), $href);
+   $column_header{description}  = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{partsgroup}   = rpt_hdr('partsgroup', $locale->text('Group'), $href);
+   $column_header{unit}     = rpt_hdr('unit', $locale->text('Unit'), $href);
+   $column_header{onhand_qty}   = rpt_hdr('onhand_qty', $locale->text('Onhand Qty'));
+   $column_header{onhand_amt}   = rpt_hdr('onhand_amt', $locale->text('Onhand Amount'));
 
    $dbh = $form->dbconnect(\%myconfig);
    my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'parts_onhand');
-	exit;
+    &export_to_csv($dbh, $query, 'parts_onhand');
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
@@ -726,29 +726,29 @@ sub onhandvalue_list {
    # print data
    my $i = 1; my $no = 1;
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=onhandvalue_detail&id=$ref->{id}&l_components=$form->{l_components}&l_sql=$form->{l_sql}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
+    $form->{link} = qq|$form->{script}?action=onhandvalue_detail&id=$ref->{id}&l_components=$form->{l_components}&l_sql=$form->{l_sql}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
 
-	$column_data{no}   		= rpt_txt($no);
-   	$column_data{partnumber}	= rpt_txt($ref->{partnumber});
-   	$column_data{description} 	= rpt_txt($ref->{description}, $form->{link});
-   	$column_data{partsgroup}    	= rpt_txt($ref->{partsgroup});
-   	$column_data{unit}    		= rpt_txt($ref->{unit});
-   	$column_data{onhand_qty}    	= rpt_dec($ref->{onhand_qty});
-   	$column_data{onhand_amt}    	= rpt_dec($ref->{onhand_amt});
+    $column_data{no}        = rpt_txt($no);
+    $column_data{partnumber}    = rpt_txt($ref->{partnumber});
+    $column_data{description}   = rpt_txt($ref->{description}, $form->{link});
+    $column_data{partsgroup}        = rpt_txt($ref->{partsgroup});
+    $column_data{unit}          = rpt_txt($ref->{unit});
+    $column_data{onhand_qty}        = rpt_dec($ref->{onhand_qty});
+    $column_data{onhand_amt}        = rpt_dec($ref->{onhand_amt});
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
-	$onhand_qty_total += $ref->{onhand_qty};
-	$onhand_amt_total += $ref->{onhand_amt};
+    $onhand_qty_total += $ref->{onhand_qty};
+    $onhand_amt_total += $ref->{onhand_amt};
    }
 
    # prepare data for footer
    for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') }
-   $column_data{onhand_qty}    	= rpt_dec($onhand_qty_total);
-   $column_data{onhand_amt}    	= rpt_dec($onhand_amt_total);
+   $column_data{onhand_qty}     = rpt_dec($onhand_qty_total);
+   $column_data{onhand_amt}     = rpt_dec($onhand_amt_total);
 
    # print footer
    print "<tr valign=top class=listtotal>";
@@ -779,11 +779,11 @@ sub onhandvalue_detail {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	invnumber => 1,
-			transdate => 2,
-			qty => 3,
-			sellprice => 4,
-			extended => 5
+   my %ordinal = (  invnumber => 1,
+            transdate => 2,
+            qty => 3,
+            sellprice => 4,
+            extended => 5
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -809,47 +809,47 @@ sub onhandvalue_detail {
    ($form->{partnumber}, $form->{description}) = $dbh->selectrow_array($query);
 
    $query = qq|SELECT
-		ap.id,
-		ap.invnumber,
-		ap.transdate,
-		(i.qty + i.allocated) * -1 AS qty,
-		'ir' AS module,
-		i.sellprice
+        ap.id,
+        ap.invnumber,
+        ap.transdate,
+        (i.qty + i.allocated) * -1 AS qty,
+        'ir' AS module,
+        i.sellprice
 
-		FROM ap
-		JOIN invoice i ON (i.trans_id = ap.id)
-		WHERE $where 
-		AND i.qty + i.allocated <> 0
-		$componentswhere
+        FROM ap
+        JOIN invoice i ON (i.trans_id = ap.id)
+        WHERE $where 
+        AND i.qty + i.allocated <> 0
+        $componentswhere
 
-	      UNION ALL
+          UNION ALL
 
-	      SELECT 
-		ar.id,
-		ar.invnumber,
-		ar.transdate,
-		(i.qty + i.allocated) * -1 AS qty,
-		'is' AS module,
-		i.sellprice
+          SELECT 
+        ar.id,
+        ar.invnumber,
+        ar.transdate,
+        (i.qty + i.allocated) * -1 AS qty,
+        'is' AS module,
+        i.sellprice
 
-		FROM ar
-		JOIN invoice i ON (i.trans_id = ar.id)
-		WHERE $where 
-		AND i.qty + i.allocated <> 0
-		$componentswhere
+        FROM ar
+        JOIN invoice i ON (i.trans_id = ar.id)
+        WHERE $where 
+        AND i.qty + i.allocated <> 0
+        $componentswhere
 
-	      ORDER BY $form->{sort} $form->{direction}
-	|;
+          ORDER BY $form->{sort} $form->{direction}
+    |;
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   	= rpt_hdr('no', $locale->text('No.'));
-   $column_header{invnumber} 	= rpt_hdr('invnumber', $locale->text('Invoice'), $href);
-   $column_header{transdate} 	= rpt_hdr('transdate', $locale->text('Date'), $href);
-   $column_header{qty}  	= rpt_hdr('qty', $locale->text('Qty'), $href);
-   $column_header{sellprice}  	= rpt_hdr('sellprice', $locale->text('Price'), $href);
-   $column_header{extended}  	= rpt_hdr('extended', $locale->text('Extended'));
+   $column_header{no}       = rpt_hdr('no', $locale->text('No.'));
+   $column_header{invnumber}    = rpt_hdr('invnumber', $locale->text('Invoice'), $href);
+   $column_header{transdate}    = rpt_hdr('transdate', $locale->text('Date'), $href);
+   $column_header{qty}      = rpt_hdr('qty', $locale->text('Qty'), $href);
+   $column_header{sellprice}    = rpt_hdr('sellprice', $locale->text('Price'), $href);
+   $column_header{extended}     = rpt_hdr('extended', $locale->text('Extended'));
 
    my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
@@ -874,27 +874,27 @@ sub onhandvalue_detail {
    # print data
    my $i = 1; my $no = 1;
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$ref->{module}.pl?readonly=1&action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    $form->{link} = qq|$ref->{module}.pl?readonly=1&action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
 
-	$column_data{no}   	= rpt_txt($no);
-   	$column_data{invnumber}	= rpt_txt($ref->{invnumber}, $form->{link});
-   	$column_data{transdate} = rpt_txt($ref->{transdate});
-   	$column_data{qty}    	= rpt_dec($ref->{qty});
-   	$column_data{sellprice} = rpt_dec($ref->{sellprice});
-   	$column_data{extended} 	= rpt_dec($ref->{qty} * $ref->{sellprice});
+    $column_data{no}    = rpt_txt($no);
+    $column_data{invnumber} = rpt_txt($ref->{invnumber}, $form->{link});
+    $column_data{transdate} = rpt_txt($ref->{transdate});
+    $column_data{qty}       = rpt_dec($ref->{qty});
+    $column_data{sellprice} = rpt_dec($ref->{sellprice});
+    $column_data{extended}  = rpt_dec($ref->{qty} * $ref->{sellprice});
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
-	$qty_total += $ref->{qty};
-	$extended_total += $ref->{qty} * $ref->{sellprice};
+    $qty_total += $ref->{qty};
+    $extended_total += $ref->{qty} * $ref->{sellprice};
    }
 
    # prepare data for footer
    for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') }
-   $column_data{qty}   	  = rpt_dec($qty_total);
+   $column_data{qty}      = rpt_dec($qty_total);
    $column_data{extended} = rpt_dec($extended_total);
 
    # print footer
@@ -950,8 +950,8 @@ sub gl_search {
    print qq|
 <body>
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
-<form method=post action=$form->{script}>
-
+<form method="get" action="$form->{script}">
+<input type="hidden" name="auth_token" value="<%auth_token%>" /> 
 <table>
 <tr>
   <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
@@ -1022,18 +1022,18 @@ sub gl_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			accno => 8,
-			transdate => 5,
-			reference => 3,
-			description => 4,
-			name => 10,
-			source => 6,
-			debit => 8,
-			credit => 9,
-			balance => 10
+   my %ordinal = (  id => 1,
+            accno => 8,
+            transdate => 5,
+            reference => 3,
+            description => 4,
+            name => 10,
+            source => 6,
+            debit => 8,
+            credit => 9,
+            balance => 10
    );
-   my $sort_order = $form->sort_order(\@columns, \%ordinal);	# 5, 3
+   my $sort_order = $form->sort_order(\@columns, \%ordinal);    # 5, 3
 
    # No. columns should always come first
    splice @columns, 0, 0, 'no';
@@ -1054,130 +1054,130 @@ sub gl_list {
    my $query;
    if ($form->{l_group}){
      $query = qq|SELECT c.accno, c.description AS accdescription, '' AS name,
-		 ac.transdate, g.reference, g.id AS id, 'gl' AS module,
-		 0 AS invoice,
-		 SUM(ac.amount) AS amount
+         ac.transdate, g.reference, g.id AS id, 'gl' AS module,
+         0 AS invoice,
+         SUM(ac.amount) AS amount
                  FROM gl g
-		 JOIN acc_trans ac ON (g.id = ac.trans_id)
-		 JOIN chart c ON (ac.chart_id = c.id)
-		 LEFT JOIN department d ON (d.id = g.department_id)
+         JOIN acc_trans ac ON (g.id = ac.trans_id)
+         JOIN chart c ON (ac.chart_id = c.id)
+         LEFT JOIN department d ON (d.id = g.department_id)
                  WHERE $glwhere
-		 GROUP BY 1,2,3,4,5,6,7
+         GROUP BY 1,2,3,4,5,6,7
 
-		 UNION ALL
+         UNION ALL
 
-	         SELECT c.accno, c.description AS accdescription, ct.name,
-		 ac.transdate, a.invnumber, a.id AS id, 'ar' AS module,
-		 SUM(CAST(a.invoice AS INTEGER)) AS invoice,
-		 SUM(ac.amount) AS amount
-		 FROM ar a
-		 JOIN acc_trans ac ON (a.id = ac.trans_id)
-		 JOIN chart c ON (ac.chart_id = c.id)
-		 JOIN customer ct ON (a.customer_id = ct.id)
-		 LEFT JOIN department d ON (d.id = a.department_id)
-		 WHERE $arwhere
-		 GROUP BY 1,2,3,4,5,6
+             SELECT c.accno, c.description AS accdescription, ct.name,
+         ac.transdate, a.invnumber, a.id AS id, 'ar' AS module,
+         SUM(CAST(a.invoice AS INTEGER)) AS invoice,
+         SUM(ac.amount) AS amount
+         FROM ar a
+         JOIN acc_trans ac ON (a.id = ac.trans_id)
+         JOIN chart c ON (ac.chart_id = c.id)
+         JOIN customer ct ON (a.customer_id = ct.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
+         WHERE $arwhere
+         GROUP BY 1,2,3,4,5,6
 
-		 UNION ALL
+         UNION ALL
 
-	         SELECT c.accno, c.description AS accdescription, ct.name,
-		 ac.transdate, a.invnumber, a.id AS id, 'ap' AS module, 
-		 SUM(CAST(a.invoice AS INTEGER)) AS invoice, 
-		 SUM(ac.amount) as amount
-		 FROM ap a
-		 JOIN acc_trans ac ON (a.id = ac.trans_id)
-		 JOIN chart c ON (ac.chart_id = c.id)
-		 JOIN vendor ct ON (a.vendor_id = ct.id)
-		 LEFT JOIN department d ON (d.id = a.department_id)
-		 WHERE $apwhere
-		 GROUP BY 1,2,3,4,5,6
+             SELECT c.accno, c.description AS accdescription, ct.name,
+         ac.transdate, a.invnumber, a.id AS id, 'ap' AS module, 
+         SUM(CAST(a.invoice AS INTEGER)) AS invoice, 
+         SUM(ac.amount) as amount
+         FROM ap a
+         JOIN acc_trans ac ON (a.id = ac.trans_id)
+         JOIN chart c ON (ac.chart_id = c.id)
+         JOIN vendor ct ON (a.vendor_id = ct.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
+         WHERE $apwhere
+         GROUP BY 1,2,3,4,5,6
 
-         	 ORDER BY 1,2,3,4,5,6|;
+             ORDER BY 1,2,3,4,5,6|;
    } else {
      $query = qq|SELECT g.id, 'gl' AS type, g.reference,
                  g.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, g.notes, '' AS name,
-		 ac.cleared, d.description AS department,
-		 ac.memo, '0' AS name_id, '' AS db,
-		 c.description AS accdescription,
-		 'gl' AS module, FALSE AS invoice
+         ac.amount, c.accno, g.notes, '' AS name,
+         ac.cleared, d.description AS department,
+         ac.memo, '0' AS name_id, '' AS db,
+         c.description AS accdescription,
+         'gl' AS module, FALSE AS invoice
                  FROM gl g
-		 JOIN acc_trans ac ON (g.id = ac.trans_id)
-		 JOIN chart c ON (ac.chart_id = c.id)
-		 LEFT JOIN department d ON (d.id = g.department_id)
+         JOIN acc_trans ac ON (g.id = ac.trans_id)
+         JOIN chart c ON (ac.chart_id = c.id)
+         LEFT JOIN department d ON (d.id = g.department_id)
                  WHERE $glwhere
 
-		 UNION ALL
+         UNION ALL
 
-	         SELECT a.id, 'ar' AS type, a.invnumber,
-		 a.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, a.notes, ct.name,
-		 ac.cleared, d.description AS department,
-		 ac.memo, ct.id AS name_id, 'customer' AS db,
-		 c.description AS accdescription,
-		 'ar' AS module, invoice
-		 FROM ar a
-		 JOIN acc_trans ac ON (a.id = ac.trans_id)
-		 JOIN chart c ON (ac.chart_id = c.id)
-		 JOIN customer ct ON (a.customer_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
-		 LEFT JOIN department d ON (d.id = a.department_id)
-		 WHERE $arwhere
+             SELECT a.id, 'ar' AS type, a.invnumber,
+         a.description, ac.transdate, ac.source,
+         ac.amount, c.accno, a.notes, ct.name,
+         ac.cleared, d.description AS department,
+         ac.memo, ct.id AS name_id, 'customer' AS db,
+         c.description AS accdescription,
+         'ar' AS module, invoice
+         FROM ar a
+         JOIN acc_trans ac ON (a.id = ac.trans_id)
+         JOIN chart c ON (ac.chart_id = c.id)
+         JOIN customer ct ON (a.customer_id = ct.id)
+         JOIN address ad ON (ad.trans_id = ct.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
+         WHERE $arwhere
 
-		 UNION ALL
+         UNION ALL
 
-	         SELECT a.id, 'ap' AS type, a.invnumber,
-		 a.description, ac.transdate, ac.source,
-		 ac.amount, c.accno, a.notes, ct.name,
-		 ac.cleared, d.description AS department,
-		 ac.memo, ct.id AS name_id, 'vendor' AS db,
-		 c.description AS accdescription,
-		 'ap' AS module, invoice
-		 FROM ap a
-		 JOIN acc_trans ac ON (a.id = ac.trans_id)
-		 JOIN chart c ON (ac.chart_id = c.id)
-		 JOIN vendor ct ON (a.vendor_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
-		 LEFT JOIN department d ON (d.id = a.department_id)
-		 WHERE $apwhere
-		|;
-	 	if ($form->{"l_notransactions"} eq "Y") {
-	 		$query .= qq|
-	 			UNION ALL
-	 			
-	 			SELECT 0, 'empty' AS type, '' as invnumber,
-		 		'' as description, null as transdate, '' as source,
-		 		0 as amount, c.accno, '' as notes, '' as name,
-		 		null as cleared, '' AS department,
-		 		'' as memo, 0 AS name_id, 'empty' AS db,
-		 		c.description AS accdescription,
-		 		'empty' AS module, false as invoice
-		 		FROM chart c
-					 WHERE NOT EXISTS (
-   							select chart_id from acc_trans ac where c.id = ac.chart_id
-   						|;
-   			$query .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
-   			$query .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};  						
-   			$query .= qq|)|;
-   			$query .= qq| AND c.accno >= '$fromaccount'| if $form->{fromaccount};
-   			$query .= qq| AND c.accno <= '$toaccount'| if $form->{toaccount};
-   			$query .= qq| AND c.charttype = 'A'|;
-	 	}
-	 	$query .= qq| ORDER BY 8, | . $sort_order;
+             SELECT a.id, 'ap' AS type, a.invnumber,
+         a.description, ac.transdate, ac.source,
+         ac.amount, c.accno, a.notes, ct.name,
+         ac.cleared, d.description AS department,
+         ac.memo, ct.id AS name_id, 'vendor' AS db,
+         c.description AS accdescription,
+         'ap' AS module, invoice
+         FROM ap a
+         JOIN acc_trans ac ON (a.id = ac.trans_id)
+         JOIN chart c ON (ac.chart_id = c.id)
+         JOIN vendor ct ON (a.vendor_id = ct.id)
+         JOIN address ad ON (ad.trans_id = ct.id)
+         LEFT JOIN department d ON (d.id = a.department_id)
+         WHERE $apwhere
+        |;
+        if ($form->{"l_notransactions"} eq "Y") {
+            $query .= qq|
+                UNION ALL
+                
+                SELECT 0, 'empty' AS type, '' as invnumber,
+                '' as description, null as transdate, '' as source,
+                0 as amount, c.accno, '' as notes, '' as name,
+                null as cleared, '' AS department,
+                '' as memo, 0 AS name_id, 'empty' AS db,
+                c.description AS accdescription,
+                'empty' AS module, false as invoice
+                FROM chart c
+                     WHERE NOT EXISTS (
+                            select chart_id from acc_trans ac where c.id = ac.chart_id
+                        |;
+            $query .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
+            $query .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};                        
+            $query .= qq|)|;
+            $query .= qq| AND c.accno >= '$fromaccount'| if $form->{fromaccount};
+            $query .= qq| AND c.accno <= '$toaccount'| if $form->{toaccount};
+            $query .= qq| AND c.charttype = 'A'|;
+        }
+        $query .= qq| ORDER BY 8, | . $sort_order;
    }
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   	= rpt_hdr('no', $locale->text('No.'));
-   $column_header{transdate} 	= rpt_hdr('transdate', $locale->text('Date'), $href);
-   $column_header{reference} 	= rpt_hdr('reference', $locale->text('Reference'), $href);
-   $column_header{description} 	= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{name} 	= rpt_hdr('name', $locale->text('Company Name'), $href);
-   $column_header{source}  	= rpt_hdr('source', $locale->text('Source'), $href);
-   $column_header{debit}  	= rpt_hdr('debit', $locale->text('Debit'));
-   $column_header{credit}  	= rpt_hdr('credit', $locale->text('Credit'));
-   $column_header{balance}  	= rpt_hdr('balance', $locale->text('Balance'));
+   $column_header{no}       = rpt_hdr('no', $locale->text('No.'));
+   $column_header{transdate}    = rpt_hdr('transdate', $locale->text('Date'), $href);
+   $column_header{reference}    = rpt_hdr('reference', $locale->text('Reference'), $href);
+   $column_header{description}  = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{name}     = rpt_hdr('name', $locale->text('Company Name'), $href);
+   $column_header{source}   = rpt_hdr('source', $locale->text('Source'), $href);
+   $column_header{debit}    = rpt_hdr('debit', $locale->text('Debit'), undef, 'right');
+   $column_header{credit}   = rpt_hdr('credit', $locale->text('Credit'), undef, 'right');
+   $column_header{balance}      = rpt_hdr('balance', $locale->text('Balance'), undef, 'right');
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -1185,263 +1185,288 @@ sub gl_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	# &export_to_csv($dbh, $query, 'gl');
-	# exit;
-	
-	$column_header{no}   	= '"' . $locale->text('No.') . '"';
-    $column_header{transdate} 	= '"' . $locale->text('Date') . '"';
-    $column_header{reference} 	= '"' . $locale->text('Reference') . '"';
+    # &export_to_csv($dbh, $query, 'gl');
+    # exit;
+    
+    $column_header{no}      = '"' . $locale->text('No.') . '"';
+    $column_header{transdate}   = '"' . $locale->text('Date') . '"';
+    $column_header{reference}   = '"' . $locale->text('Reference') . '"';
     $column_header{description} = '"' . $locale->text('Description') . '"';
-    $column_header{name} 	= '"' . $locale->text('Company Name') . '"';
-    $column_header{source}  	= '"' . $locale->text('Source') . '"';
-    $column_header{debit}  	= '"' . $locale->text('Debit') . '"';
-    $column_header{credit}  	= '"' . $locale->text('Credit') . '"';
-    $column_header{balance}  	= '"' . $locale->text('Balance') . '"';
-	
-	   $filename = 'gl';
-	   my $name;
-	   do { $name = tmpnam() }
-	   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+    $column_header{name}    = '"' . $locale->text('Company Name') . '"';
+    $column_header{source}      = '"' . $locale->text('Source') . '"';
+    $column_header{debit}   = '"' . $locale->text('Debit') . '"';
+    $column_header{credit}      = '"' . $locale->text('Credit') . '"';
+    $column_header{balance}     = '"' . $locale->text('Balance') . '"';
+    
+       $filename = 'gl';
+       my $name;
+       do { $name = tmpnam() }
+       until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
 
-	   open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
-	   my $sth = $dbh->prepare($query);
-	   $sth->execute or $form->dberror($query);
-	   
-	   # create csv data
-	   my $line;	   
-	   my $i = 1; my $no = 1;
-	   my $groupbreak = 'none';
-	   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-		if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
-		   if ($groupbreak ne 'none'){
-		      for (@column_index){ $column_data{$_} = " " }
-		      $column_data{debit} = $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0");
-		      $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
-		      $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
-		      for (@column_index) { print CSVFILE "$column_data{$_}," }
-		      print CSVFILE "\n";
-		   }
-		   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
-		   $line = $locale->text('Account') . " " . $groupbreak;
-	   	   print CSVFILE qq|"$line"\n|;
-	       
-	   	   # print header
-	   	   for (@column_index) { print CSVFILE "$column_header{$_}," }
-		      print CSVFILE "\n";
-	
-		   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-		   if ($form->{datefrom} || $ref->{type} eq "empty"){
-	   	      my $openingquery = qq|
-			SELECT SUM(amount) 
-			FROM acc_trans
-			WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
-			AND transdate < '$form->{datefrom}'
-		     |;
-		     ($balance) = $dbh->selectrow_array($openingquery);
-		     if ($balance != 0){
-		        for (@column_index){ $column_data{$_} = " " }
-	   		$column_data{debit} 	= '"0"';
-	   		$column_data{credit} 	= '"0"';
-	   		$column_data{balance} 	= '"' . (0 - $balance) . '"';
-	
-			# print footer
-			for (@column_index) { print CSVFILE "$column_data{$_}," }
-		    print CSVFILE "\n";
-		     }
-		   }
-	        }
-	        if ( $ref->{type} ne "empty") {
-		my $script;
-	        if ($ref->{module} eq 'ar'){
-		   $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
-		} elsif ($ref->{module} eq 'ap') {
-		   $script = ($ref->{invoice}) ? 'ir.pl' : 'ap.pl';
-		} else {
-	           $script = 'gl.pl';
-	        }
-		  
-	   	$link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
-		$column_data{no}   		= '"' . $no . '"';
-	   	$column_data{transdate}		= '"' . $ref->{transdate} . '"';
-	   	$column_data{reference} 	= '"' . &escape_csv($ref->{reference}) . '"';
-	   	$column_data{description} 	= '"' . &escape_csv($ref->{description}) . '"';
-	   	$column_data{name} 		= '"' . &escape_csv($ref->{name}) . '"';
-	   	$column_data{source}    	= '"' . &escape_csv($ref->{source}) . '"';
-		if ($ref->{amount} > 0){
-	  	  $column_data{debit}    	= '"0"';
-	   	  $column_data{credit}    	= '"' . $ref->{amount} . '"';
-		} else {
-	  	  $column_data{debit}    	= '"' . (0 - $ref->{amount}) . '"';
-	   	  $column_data{credit}    	= '"0"';
-		}
-		$balance += $ref->{amount};
-		$column_data{balance} 		= '"' . ($balance * -1) . '"';
-	
-		for (@column_index) { print CSVFILE "$column_data{$_}," }
-		print CSVFILE "\n";
-		$i++; $i %= 2; $no++;
-	
-		$debit_subtotal += $ref->{amount} if $ref->{amount} < 0;
-		$credit_subtotal += $ref->{amount} if $ref->{amount} > 0;
-		$debit_total += $ref->{amount} if $ref->{amount} < 0;
-		$credit_total += $ref->{amount} if $ref->{amount} > 0;
-	        }
-	   }
-	
-	   # prepare data for footer
-	   for (@column_index) { $column_data{$_} = ' ' }
-	
-	   # subtotal for last group
-	   $column_data{debit} = $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0");
-	   $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
-	   $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
-	
-	   for (@column_index) { print CSVFILE "$column_data{$_}," }
-		print CSVFILE "\n";
-	
-	   $column_data{debit} = $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}, "0");
-	   $column_data{credit} = $form->format_amount(\%myconfig, $credit_total, $form->{precision}, "0");
-	   $column_data{balance} = ' ';
-	
-	   # grand totals
-	   for (@column_index) { print CSVFILE "$column_data{$_}," }
-	   print CSVFILE "\n";
-		   
-	   # end of create csv data
-	   
-	   close (CSVFILE) || $form->error('Cannot close csv file');
-	
-	   my @fileholder;
-	   open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
-	   @fileholder = <DLFILE>;
-	   close (DLFILE) || $form->error('Cannot close file opened for download');
-	   my $dlfile = $filename . ".csv";
-	   print "Content-Type: application/csv\n";
-	   print "Content-Disposition:attachment; filename=$dlfile\n\n";
-	   print @fileholder;
-	   unlink($name) or die "Couldn't unlink $name : $!";
-	   exit;
+       open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
+       my $sth = $dbh->prepare($query);
+       $sth->execute or $form->dberror($query);
+       
+       # create csv data
+       my $line;       
+       my $i = 1; my $no = 1;
+       my $groupbreak = 'none';
+       while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+        if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
+           if ($groupbreak ne 'none'){
+              for (@column_index){ $column_data{$_} = " " }
+              $column_data{debit} = $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0");
+              $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
+              $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
+              for (@column_index) { print CSVFILE "$column_data{$_}," }
+              print CSVFILE "\n";
+           }
+           $groupbreak = "$ref->{accno}--$ref->{accdescription}";
+           $line = $locale->text('Account') . " " . $groupbreak;
+           print CSVFILE qq|"$line"\n|;
+           
+           # print header
+           for (@column_index) { print CSVFILE "$column_header{$_}," }
+              print CSVFILE "\n";
+    
+           $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
+           if ($form->{datefrom} || $ref->{type} eq "empty"){
+              my $openingquery = qq|
+            SELECT SUM(amount) 
+            FROM acc_trans
+            WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
+            AND transdate < '$form->{datefrom}'
+             |;
+             ($balance) = $dbh->selectrow_array($openingquery);
+             if ($balance != 0){
+                for (@column_index){ $column_data{$_} = " " }
+            $column_data{debit}     = '"0"';
+            $column_data{credit}    = '"0"';
+            $column_data{balance}   = '"' . (0 - $balance) . '"';
+    
+            # print footer
+            for (@column_index) { print CSVFILE "$column_data{$_}," }
+            print CSVFILE "\n";
+             }
+           }
+            }
+            if ( $ref->{type} ne "empty") {
+        my $script;
+            if ($ref->{module} eq 'ar'){
+           $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
+        } elsif ($ref->{module} eq 'ap') {
+           $script = ($ref->{invoice}) ? 'ir.pl' : 'ap.pl';
+        } else {
+               $script = 'gl.pl';
+            }
+          
+        $link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
+        $column_data{no}        = '"' . $no . '"';
+        $column_data{transdate}     = '"' . $ref->{transdate} . '"';
+        $column_data{reference}     = '"' . &escape_csv($ref->{reference}) . '"';
+        $column_data{description}   = '"' . &escape_csv($ref->{description}) . '"';
+        $column_data{name}      = '"' . &escape_csv($ref->{name}) . '"';
+        $column_data{source}        = '"' . &escape_csv($ref->{source}) . '"';
+        if ($ref->{amount} > 0){
+          $column_data{debit}       = '"0"';
+          $column_data{credit}      = '"' . $ref->{amount} . '"';
+        } else {
+          $column_data{debit}       = '"' . (0 - $ref->{amount}) . '"';
+          $column_data{credit}      = '"0"';
+        }
+        $balance += $ref->{amount};
+        $column_data{balance}       = '"' . ($balance * -1) . '"';
+    
+        for (@column_index) { print CSVFILE "$column_data{$_}," }
+        print CSVFILE "\n";
+        $i++; $i %= 2; $no++;
+    
+        $debit_subtotal += $ref->{amount} if $ref->{amount} < 0;
+        $credit_subtotal += $ref->{amount} if $ref->{amount} > 0;
+        $debit_total += $ref->{amount} if $ref->{amount} < 0;
+        $credit_total += $ref->{amount} if $ref->{amount} > 0;
+            }
+       }
+    
+       # prepare data for footer
+       for (@column_index) { $column_data{$_} = ' ' }
+    
+       # subtotal for last group
+       $column_data{debit} = $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0");
+       $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
+       $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
+    
+       for (@column_index) { print CSVFILE "$column_data{$_}," }
+        print CSVFILE "\n";
+    
+       $column_data{debit} = $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}, "0");
+       $column_data{credit} = $form->format_amount(\%myconfig, $credit_total, $form->{precision}, "0");
+       $column_data{balance} = ' ';
+    
+       # grand totals
+       for (@column_index) { print CSVFILE "$column_data{$_}," }
+       print CSVFILE "\n";
+           
+       # end of create csv data
+       
+       close (CSVFILE) || $form->error('Cannot close csv file');
+    
+       my @fileholder;
+       open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
+       @fileholder = <DLFILE>;
+       close (DLFILE) || $form->error('Cannot close file opened for download');
+       my $dlfile = $filename . ".csv";
+       print "Content-Type: application/csv\n";
+       print "Content-Disposition:attachment; filename=$dlfile\n\n";
+       print @fileholder;
+       unlink($name) or die "Couldn't unlink $name : $!";
+       exit;
    } else {
-	   $sth = $dbh->prepare($query);
-	   $sth->execute || $form->dberror($query);
+       $sth = $dbh->prepare($query);
+       $sth->execute || $form->dberror($query);
 
-	   $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
-	   &print_title;
-       print $locale->text('From') . ' : ' . $form->{datefrom} . '<br/>' if $form->{datefrom};
-       print $locale->text('To') . ' : ' . $form->{dateto}  . '<br/>' if $form->{dateto};
-	   print $locale->text('From Account') . " : $fromaccount<br/>" if $form->{fromaccount};
-	   print $locale->text('To Account') . " : $toaccount<br/>" if $form->{toaccount};
-	
-	   # Subtotal and total variables
-	   my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
-	
-	   # print data
-	   my $i = 1; my $no = 1;
-	   my $groupbreak = 'none';
-	   print qq|<table width=100%>|;
-	   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-			if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
-			   if ($groupbreak ne 'none'){
-			      for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
-			      $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
-			      $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
-			      $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
-			      print "<tr valign=top class=listsubtotal>";
-			      for (@column_index) { print "\n$column_data{$_}" }
-			      print "</tr>";
-			   }
-			   $groupbreak = "$ref->{accno}--$ref->{accdescription}";
-			   print qq|<tr valign=top>|;
-			   print qq|<th align=left colspan=7><br />|.$locale->text('Account') . qq| $groupbreak</th>|;
-			   print qq|</tr>|;
-		
-		   	   # print header
-		   	   print qq|<tr class=listheading>|;
-		   	   for (@column_index) { print "\n$column_header{$_}" }
-		   	   print qq|</tr>|; 
-		
-			   $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-			   if ($form->{datefrom} || $ref->{type} eq "empty"){
-		   	      my $openingquery = qq|
-				SELECT SUM(amount) 
-				FROM acc_trans
-				WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')|;
-			    $openingquery .= qq| AND transdate < '$form->{datefrom}'| if $form->{datefrom};
-			     ($balance) = $dbh->selectrow_array($openingquery);
-			     if ($balance != 0){
-			        for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
-		   		$column_data{debit} 	= rpt_dec(0, $form->{precision}, '0');
-		   		$column_data{credit} 	= rpt_dec(0, $form->{precision}, '0');
-		   		$column_data{balance} 	= rpt_dec(0 - $balance, $form->{precision}, '0');
-		
-				# print footer
-				print "<tr valign=top class=listrow0>";
-				for (@column_index) { print "\n$column_data{$_}" }
-				print "</tr>";
-			     }
-			   }
-		        }
-		        if ( $ref->{type} ne "empty" ) {
-			my $script;
-		        if ($ref->{module} eq 'ar'){
-			   $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
-			} elsif ($ref->{module} eq 'ap') {
-			   $script = ($ref->{invoice}) ? 'ir.pl' : 'ap.pl';
-			} else {
-		           $script = 'gl.pl';
-		        }
-			  
-		   	$link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
-			$column_data{no}   		= rpt_txt($no);
-		   	$column_data{transdate}		= rpt_txt($ref->{transdate});
-		   	$column_data{reference} 	= rpt_txt($ref->{reference}, $link);
-		   	$column_data{description} 	= rpt_txt($ref->{description});
-		   	$column_data{name} 		= rpt_txt($ref->{name});
-		   	$column_data{source}    	= rpt_txt($ref->{source});
-			if ($ref->{amount} > 0){
-		  	  $column_data{debit}    	= rpt_dec(0, $form->{precision}, '0');
-		   	  $column_data{credit}    	= rpt_dec($ref->{amount}, $form->{precision}, '0');
-			} else {
-		  	  $column_data{debit}    	= rpt_dec(0 - $ref->{amount}, $form->{precision}, '0');
-		   	  $column_data{credit}    	= rpt_dec(0, $form->{precision}, '0');
-			}
-			$balance += $ref->{amount};
-			$column_data{balance} 		= rpt_dec($balance * -1, $form->{precision}, '0');
-		
-			print "<tr valign=top class=listrow$i>";
-			for (@column_index) { print "\n$column_data{$_}" }
-			print "</tr>";
-			$i++; $i %= 2; $no++;
-		
-			$debit_subtotal += $ref->{amount} if $ref->{amount} < 0;
-			$credit_subtotal += $ref->{amount} if $ref->{amount} > 0;
-			$debit_total += $ref->{amount} if $ref->{amount} < 0;
-			$credit_total += $ref->{amount} if $ref->{amount} > 0;
-		        }
-	   } # while ($ref)
-	
-	   # prepare data for footer
-	   for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') }
-	
-	   # subtotal for last group
-	   $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
-	   $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
-	   $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
-	
-	   print "<tr valign=top class=listsubtotal>";
-	   for (@column_index) { print "\n$column_data{$_}" }
-	   print "</tr>";
-	
-	   $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}, "0") . qq|</th>|;
-	   $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_total, $form->{precision}, "0") . qq|</th>|;
-	   $column_data{balance} = rpt_txt('&nbsp;');
-	
-	   # grand totals
-	   print "<tr valign=top class=listtotal>";
-	   for (@column_index) { print "\n$column_data{$_}" }
-	   print "</tr>";
-	
-	   print qq|</table>|;
+       $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
+       $form->header;
+       print qq|<body><table class="noprint report-header" width=100%>|;
+       print qq|<tr><th class="listtop">$form->{title}</th></tr>|;
+       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From') . qq| $form->{datefrom}</th></tr>| if $form->{datefrom};
+       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To') . qq| $form->{dateto}</th></tr>| if $form->{dateto};
+       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From Account') . qq| $fromaccount</th></tr>| if  $form->{fromaccount};
+       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To Account') . qq| $toaccount</th></tr>| if  $form->{$toaccount};
+       print qq|</table>\n|;
+       
+       my $today = $form->today(\%myconfig);
+       
+       print qq|<div class="printonly"><span class="creation-date">$today</span></div>|;
+    
+       # Subtotal and total variables
+       my $debit_total, $credit_total, $debit_subtotal, $credit_subtotal, $balance;
+    
+       # print data
+       my $i = 1; my $no = 1;
+       my $groupbreak = 'none';
+       my $period = '';
+       $period .= $locale->text('From') . ' ' . $form->{datefrom} if $form->{datefrom};
+       $period .= $locale->text('To') . ' ' . $form->{dateto} if $form->{dateto};
+       
+       print qq|<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {event: 'urlToPdf', url: window.location.href}}, '*')" class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+</button>|;
+       while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+            if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
+               if ($groupbreak ne 'none'){
+                  for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
+                  $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
+                  $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
+                  $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
+                  print "<tr valign=top class=listsubtotal>";
+                  for (@column_index) { print "\n$column_data{$_}" }
+                  print "</tr>";
+                  print "</table>";
+                  print "</br>";
+               }
+
+               $groupbreak = "$ref->{accno}--$ref->{accdescription}";
+               print qq|<div class="printonly">|;
+               print qq|<span class="page-topleft">| . $form->{company} . qq|</span>|;
+               print qq|<span class="page-topright">| . $period . qq|</span>|;
+               print qq|</div>|;
+
+               print qq|<table class="report-table" width=100%>|;
+               
+               # print header
+               print qq|<thead>|;
+               print qq|<tr class="listtop" valign=top>|;
+               print qq|<th class=pb10 align=left colspan=7>|.$locale->text('Account') . qq| $groupbreak</th>|;
+               print qq|</tr>|;
+               print qq|<tr class=listheading>|;
+               for (@column_index) { print "\n$column_header{$_}" }
+               print qq|</tr></thead>|; 
+        
+               $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
+               if ($form->{datefrom} || $ref->{type} eq "empty"){
+                  my $openingquery = qq|
+                SELECT SUM(amount) 
+                FROM acc_trans
+                WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')|;
+                $openingquery .= qq| AND transdate < '$form->{datefrom}'| if $form->{datefrom};
+                 ($balance) = $dbh->selectrow_array($openingquery);
+                 if ($balance != 0){
+                    for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
+                $column_data{debit}     = rpt_dec(0, $form->{precision}, '0');
+                $column_data{credit}    = rpt_dec(0, $form->{precision}, '0');
+                $column_data{balance}   = rpt_dec(0 - $balance, $form->{precision}, '0');
+        
+                # print footer
+                print "<tr valign=top class=listrow0>";
+                for (@column_index) { print "\n$column_data{$_}" }
+                print "</tr>";
+                 }
+               }
+                }
+                if ( $ref->{type} ne "empty" ) {
+            my $script;
+                if ($ref->{module} eq 'ar'){
+               $script = ($ref->{invoice}) ? 'is.pl' : 'ar.pl';
+            } elsif ($ref->{module} eq 'ap') {
+               $script = ($ref->{invoice}) ? 'ir.pl' : 'ap.pl';
+            } else {
+                   $script = 'gl.pl';
+                }
+              
+            $link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
+            $column_data{no}        = rpt_txt($no);
+            $column_data{transdate}     = rpt_txt($ref->{transdate});
+            $column_data{reference}     = rpt_txt($ref->{reference}, $link);
+            $column_data{description}   = rpt_txt($ref->{description});
+            $column_data{name}      = rpt_txt($ref->{name});
+            $column_data{source}        = rpt_txt($ref->{source});
+            if ($ref->{amount} > 0){
+              $column_data{debit}       = rpt_dec(0, $form->{precision}, '0');
+              $column_data{credit}      = rpt_dec($ref->{amount}, $form->{precision}, '0');
+            } else {
+              $column_data{debit}       = rpt_dec(0 - $ref->{amount}, $form->{precision}, '0');
+              $column_data{credit}      = rpt_dec(0, $form->{precision}, '0');
+            }
+            $balance += $ref->{amount};
+            $column_data{balance}       = rpt_dec($balance * -1, $form->{precision}, '0');
+        
+            print "<tr valign=top class=listrow$i>";
+            for (@column_index) { print "\n$column_data{$_}" }
+            print "</tr>";
+            $i++; $i %= 2; $no++;
+        
+            $debit_subtotal += $ref->{amount} if $ref->{amount} < 0;
+            $credit_subtotal += $ref->{amount} if $ref->{amount} > 0;
+            $debit_total += $ref->{amount} if $ref->{amount} < 0;
+            $credit_total += $ref->{amount} if $ref->{amount} > 0;
+                }
+       } # while ($ref)
+    
+       # prepare data for footer
+       for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') }
+    
+       # subtotal for last group
+       $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0") . qq|</th>|;
+       $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0") . qq|</th>|;
+       $column_data{balance} = qq|<th align=right>|. $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0") . qq|</th>|;
+    
+       print "<tr valign=top class=listsubtotal>";
+       for (@column_index) { print "\n$column_data{$_}" }
+       print "</tr>";
+    
+       $column_data{debit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}, "0") . qq|</th>|;
+       $column_data{credit} = qq|<th align=right>|. $form->format_amount(\%myconfig, $credit_total, $form->{precision}, "0") . qq|</th>|;
+       $column_data{balance} = rpt_txt('&nbsp;');
+    
+       # grand totals
+       print "<tr valign=top class=listtotal>";
+       for (@column_index) { print "\n$column_data{$_}" }
+       print "</tr>";
+    
+       print qq|</table>|;
+       print qq|<script>resizeTables();</script>|;
+       
    } # else not csv
    $sth->finish;
    $dbh->disconnect;
@@ -1529,13 +1554,13 @@ sub audit_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	trans_id => 1,
-			tablename => 2,
-			reference => 3,
-			formname => 4,
-			action => 5,
-			transdate => 6,
-			name => 7
+   my %ordinal = (  trans_id => 1,
+            tablename => 2,
+            reference => 3,
+            formname => 4,
+            action => 5,
+            transdate => 6,
+            name => 7
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -1556,38 +1581,38 @@ sub audit_list {
    $form->{callback} = $form->escape($callback,1);
 
    $query = qq|SELECT 
-		a.trans_id, 
-		a.tablename, 
-		a.reference, 
-		a.formname,
-		a.action,
-		a.transdate,
-		e.name
-		FROM audittrail a
-		LEFT JOIN employee e ON (e.id = a.employee_id)
-		WHERE $where
-		ORDER BY $form->{sort} $form->{direction}|;
-		#ORDER BY $sort_order|;
+        a.trans_id, 
+        a.tablename, 
+        a.reference, 
+        a.formname,
+        a.action,
+        a.transdate,
+        e.name
+        FROM audittrail a
+        LEFT JOIN employee e ON (e.id = a.employee_id)
+        WHERE $where
+        ORDER BY $form->{sort} $form->{direction}|;
+        #ORDER BY $sort_order|;
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{trans_id} 		= rpt_hdr('trans_id', $locale->text('Trans ID'), $href);
-   $column_header{tablename} 		= rpt_hdr('tablename', $locale->text('Table'), $href);
-   $column_header{reference}  		= rpt_hdr('reference', $locale->text('Reference'), $href);
-   $column_header{formname}  		= rpt_hdr('formname', $locale->text('Form'), $href);
-   $column_header{action}  		= rpt_hdr('action', $locale->text('Action'), $href);
-   $column_header{transdate}  		= rpt_hdr('transdate', $locale->text('Date'), $href);
-   $column_header{name}  		= rpt_hdr('name', $locale->text('Employee'), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{trans_id}         = rpt_hdr('trans_id', $locale->text('Trans ID'), $href);
+   $column_header{tablename}        = rpt_hdr('tablename', $locale->text('Table'), $href);
+   $column_header{reference}        = rpt_hdr('reference', $locale->text('Reference'), $href);
+   $column_header{formname}         = rpt_hdr('formname', $locale->text('Form'), $href);
+   $column_header{action}       = rpt_hdr('action', $locale->text('Action'), $href);
+   $column_header{transdate}        = rpt_hdr('transdate', $locale->text('Date'), $href);
+   $column_header{name}         = rpt_hdr('name', $locale->text('Employee'), $href);
 
    $form->error($query) if $form->{l_sql};
    my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'audit_trail');
-	exit;
+    &export_to_csv($dbh, $query, 'audit_trail');
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
@@ -1611,21 +1636,21 @@ sub audit_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    $form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
 
-	$column_data{no}   		= rpt_txt($no);
-   	$column_data{trans_id}		= rpt_txt($ref->{trans_id});
-   	$column_data{tablename}		= rpt_txt($ref->{tablename});
-   	$column_data{reference} 	= rpt_txt($ref->{reference});
-   	$column_data{formname}    	= rpt_txt($ref->{formname});
-   	$column_data{action}   		= rpt_txt($ref->{action});
-   	$column_data{transdate}    	= rpt_txt($ref->{transdate});
-   	$column_data{name}    		= rpt_txt($ref->{name});
+    $column_data{no}        = rpt_txt($no);
+    $column_data{trans_id}      = rpt_txt($ref->{trans_id});
+    $column_data{tablename}     = rpt_txt($ref->{tablename});
+    $column_data{reference}     = rpt_txt($ref->{reference});
+    $column_data{formname}      = rpt_txt($ref->{formname});
+    $column_data{action}        = rpt_txt($ref->{action});
+    $column_data{transdate}     = rpt_txt($ref->{transdate});
+    $column_data{name}          = rpt_txt($ref->{name});
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
    }
    print qq|</table>|;
@@ -1654,16 +1679,16 @@ sub income_statement {
 
     $selectfrom = qq|
       <tr>
-	<th align=right>|.$locale->text('Period').qq|</th>
-	<td>
-	<select name=month>$selectaccountingmonth</select>
-	<select name=year>$selectaccountingyear</select>
-	<br>
-	<input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
-	<input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
-	<input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
-	<input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
-	</td>
+    <th align=right>|.$locale->text('Period').qq|</th>
+    <td>
+    <select name=month>$selectaccountingmonth</select>
+    <select name=year>$selectaccountingyear</select>
+    <br>
+    <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+    <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+    <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+    <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+    </td>
       </tr>
 |;
   }
@@ -1783,15 +1808,15 @@ sub income_statement_by_project {
             c.accno, 
             c.description, 
             SUM(ac.amount) amount
-		FROM acc_trans ac
-		JOIN chart c ON (c.id = ac.chart_id)
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
         JOIN project p ON (p.id = ac.project_id)
         WHERE $where 
-		GROUP BY p.projectnumber, c.accno, c.description
-		ORDER BY p.projectnumber, c.accno
+        GROUP BY p.projectnumber, c.accno, c.description
+        ORDER BY p.projectnumber, c.accno
     |;
     export_to_csv($dbh, $query, "income_statement");
-	exit;
+    exit;
    }
 
   $form->header;
@@ -1806,35 +1831,39 @@ sub income_statement_by_project {
   $sth->execute || $form->dberror($query);
 
   my %projects;
-  my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
-  while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+  while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
     if ($form->{"p_$ref->{id}"}){
-	$projects{"p_$ref->{id}"} = $ref->{projectnumber};
-        $is_query .= qq|SUM(CASE WHEN ac.project_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{id},\n|
+        $projects{"$ref->{projectnumber}"} = $ref;
     }
   }
+
+  my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
+  foreach my $key (sort keys %projects){
+    $is_query .= qq|SUM(CASE WHEN ac.project_id = $projects{$key}->{id} THEN ac.amount ELSE 0 END) AS p_$projects{$key}->{id},\n|
+  }
+  
   $sth->finish;
   chop $is_query;
   chop $is_query;
 
   $is_query .= qq| 
-		FROM acc_trans ac
-		JOIN chart c ON (c.id = ac.chart_id)
-		WHERE $where
-		GROUP BY c.accno, c.description, c.category, c.charttype
-		ORDER BY c.accno
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        WHERE $where
+        GROUP BY c.accno, c.description, c.category, c.charttype
+        ORDER BY c.accno
   |;
 
   $sth = $dbh->prepare($is_query) || $form->dberror($is_query);
   $sth->execute || $form->dberror($is_query);
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-	$form->{$ref->{category}}{$ref->{accno}}{accno} = "$ref->{accno}";
-	$form->{$ref->{category}}{$ref->{accno}}{charttype} = "$ref->{charttype}";
-	$form->{$ref->{category}}{$ref->{accno}}{category} = "$ref->{category}";
-	$form->{$ref->{category}}{$ref->{accno}}{description} = "$ref->{description}";
-	for (keys %projects){
-	   $form->{$ref->{category}}{$ref->{accno}}{$_} = "$ref->{$_}";
-	}
+    $form->{$ref->{category}}{$ref->{accno}}{accno} = "$ref->{accno}";
+    $form->{$ref->{category}}{$ref->{accno}}{charttype} = "$ref->{charttype}";
+    $form->{$ref->{category}}{$ref->{accno}}{category} = "$ref->{category}";
+    $form->{$ref->{category}}{$ref->{accno}}{description} = "$ref->{description}";
+    for (sort keys %projects){
+       $form->{$ref->{category}}{$ref->{accno}}{$_}= $ref->{"p_$projects{$_}->{id}"};
+    }
   }
   $sth->finish;
 
@@ -1844,7 +1873,7 @@ sub income_statement_by_project {
 <th>&nbsp;</th><th>&nbsp;</th>
 |;
 
-  for (keys %projects){ print qq|<th>$projects{$_}</th>| }
+  for (sort keys %projects){ print qq|<th>$_</th>| }
   print qq|<th>|.$locale->text('Total').qq|</th>
 </tr>
 |;
@@ -1857,10 +1886,10 @@ sub income_statement_by_project {
      print qq|<td>$form->{I}{$accno}{accno}</td>|;
      print qq|<td>$form->{I}{$accno}{description}</td>|;
      $line_total = 0;
-     for (keys %projects){
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
-	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
-	$line_total += $form->{I}{$accno}{$_};
+     for (sort keys %projects){
+    print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
+    $form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
+    $line_total += $form->{I}{$accno}{$_};
      }
      print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
@@ -1871,9 +1900,9 @@ sub income_statement_by_project {
 
   $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
-  for (keys %projects){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|;
-	$line_total += $form->{I}{$_}{totalincome};
+  for (sort keys %projects){ 
+    print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|;
+    $line_total += $form->{I}{$_}{totalincome};
   }
   print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
   print qq|</tr>|;
@@ -1889,10 +1918,10 @@ sub income_statement_by_project {
      print qq|<td>$form->{E}{$accno}{accno}</td>|;
      print qq|<td>$form->{E}{$accno}{description}</td>|;
      $line_total = 0;
-     for (keys %projects){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
-	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
-	$line_total += ($form->{E}{$accno}{$_} * -1);
+     for (sort keys %projects){ 
+    print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
+    $form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
+    $line_total += ($form->{E}{$accno}{$_} * -1);
      }
      print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
@@ -1903,9 +1932,9 @@ sub income_statement_by_project {
 
   $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
-  for (keys %projects){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; 
-	$line_total += $form->{E}{$_}{totalexpenses}; 
+  for (sort keys %projects){ 
+    print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; 
+    $line_total += $form->{E}{$_}{totalexpenses}; 
   }
   print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
   print qq|</tr>|;
@@ -1916,9 +1945,9 @@ sub income_statement_by_project {
 
   $line_total = 0;
   print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
-  for (keys %projects){
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; 
-	$line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
+  for (sort keys %projects){
+    print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; 
+    $line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
   }
   print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|; 
   print qq|</tr>|;
@@ -1958,16 +1987,16 @@ sub income_statement_by_department {
             c.accno, 
             c.description, 
             SUM(ac.amount) amount
-		FROM acc_trans ac
-		JOIN chart c ON (c.id = ac.chart_id)
-		JOIN dpt_trans dt ON (dt.trans_id = ac.trans_id)
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN dpt_trans dt ON (dt.trans_id = ac.trans_id)
         JOIN department d ON (d.id = dt.department_id)
         WHERE $where 
-		GROUP BY d.description, c.accno, c.description
-		ORDER BY d.description, c.accno
+        GROUP BY d.description, c.accno, c.description
+        ORDER BY d.description, c.accno
     |;
     export_to_csv($dbh, $query, "income_statement");
-	exit;
+    exit;
    }
 
   $form->header;
@@ -1996,7 +2025,7 @@ sub income_statement_by_department {
   my $is_query = qq|SELECT c.accno, c.description, c.category, charttype,\n|;
   for my $ref (@sorted){
      if ($form->{"p_$ref->{id}"}){
-	    $departments{"p_$ref->{no}"} = $ref->{description};
+        $departments{"p_$ref->{no}"} = $ref->{description};
         $is_query .= qq|SUM(CASE WHEN d.department_id = $ref->{id} THEN ac.amount ELSE 0 END) AS p_$ref->{no},\n|
      }
   }
@@ -2005,24 +2034,24 @@ sub income_statement_by_department {
   chop $is_query;
   chop $is_query;
   $is_query .= qq| 
-		FROM acc_trans ac
-		JOIN chart c ON (c.id = ac.chart_id)
-		JOIN dpt_trans d ON (d.trans_id = ac.trans_id)
-		WHERE $where
-		GROUP BY c.accno, c.description, c.category, c.charttype
-		ORDER BY c.accno
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN dpt_trans d ON (d.trans_id = ac.trans_id)
+        WHERE $where
+        GROUP BY c.accno, c.description, c.category, c.charttype
+        ORDER BY c.accno
   |;
 
   $sth = $dbh->prepare($is_query) || $form->dberror($is_query);
   $sth->execute || $form->dberror($is_query);
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-	$form->{$ref->{category}}{$ref->{accno}}{accno} = "$ref->{accno}";
-	$form->{$ref->{category}}{$ref->{accno}}{charttype} = "$ref->{charttype}";
-	$form->{$ref->{category}}{$ref->{accno}}{category} = "$ref->{category}";
-	$form->{$ref->{category}}{$ref->{accno}}{description} = "$ref->{description}";
-	for (keys %departments){
-	   $form->{$ref->{category}}{$ref->{accno}}{$_} = "$ref->{$_}";
-	}
+    $form->{$ref->{category}}{$ref->{accno}}{accno} = "$ref->{accno}";
+    $form->{$ref->{category}}{$ref->{accno}}{charttype} = "$ref->{charttype}";
+    $form->{$ref->{category}}{$ref->{accno}}{category} = "$ref->{category}";
+    $form->{$ref->{category}}{$ref->{accno}}{description} = "$ref->{description}";
+    for (keys %departments){
+       $form->{$ref->{category}}{$ref->{accno}}{$_} = "$ref->{$_}";
+    }
   }
   $sth->finish;
 
@@ -2047,9 +2076,9 @@ sub income_statement_by_department {
      print qq|<td>$form->{I}{$accno}{description}</td>|;
      $line_total = 0;
      for (sort keys %departments){ 
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
-	$form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
-	$line_total += $form->{I}{$accno}{$_};
+    print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$accno}{$_}, 0) . qq|</td>|;
+    $form->{I}{$_}{totalincome} += $form->{I}{$accno}{$_};
+    $line_total += $form->{I}{$accno}{$_};
      }
      print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
@@ -2058,8 +2087,8 @@ sub income_statement_by_department {
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('Income').qq|</th>|;
   $line_total = 0;
   for (sort keys %departments){ 
-	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</th>|; 
-	$line_total += $form->{I}{$_}{totalincome}; 
+    print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</th>|; 
+    $line_total += $form->{I}{$_}{totalincome}; 
   }
   print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</th>|;
   print qq|</tr>|;
@@ -2073,9 +2102,9 @@ sub income_statement_by_department {
      print qq|<td>$form->{E}{$accno}{description}</td>|;
      $line_total = 0;
      for (sort keys %departments){
-	print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
-	$form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
-	$line_total += $form->{E}{$accno}{$_} * -1;
+    print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$accno}{$_} * -1, 0) . qq|</td>|; 
+    $form->{E}{$_}{totalexpenses} += $form->{E}{$accno}{$_} * -1;
+    $line_total += $form->{E}{$accno}{$_} * -1;
      }
      print qq|<td align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</td>|;
      print qq|</tr>|;
@@ -2084,8 +2113,8 @@ sub income_statement_by_department {
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Total').qq| |.$locale->text('COGS').qq|</th>|;
   $line_total = 0;
   for (sort keys %departments){ 
-	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</th>|; 
-	$line_total += $form->{E}{$_}{totalexpenses};
+    print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</th>|; 
+    $line_total += $form->{E}{$_}{totalexpenses};
   }
   print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</th>|;
   print qq|</tr>|;
@@ -2093,8 +2122,8 @@ sub income_statement_by_department {
   print qq|<tr><th colspan=2 align=left>|.$locale->text('Income/(Loss)').qq|</th>|;
   $line_total = 0;
   for (sort keys %departments){
-	print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</th>|; 
-	$line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
+    print qq|<th align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</th>|; 
+    $line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
   }
   print qq|<th align=right>| . $form->format_amount(\%myconfig, $line_total, 0) . qq|</th>|;
   print qq|</tr>|;
@@ -2119,7 +2148,7 @@ sub aa_qty_search {
 
     $partsgroup = qq| 
         <th align=right nowrap>|.$locale->text('Group').qq|</th>
-	<td><select name=partsgroup>$partsgroup</select></td>
+    <td><select name=partsgroup>$partsgroup</select></td>
 |;
 
     $l_partsgroup = qq|<input name=l_partsgroup class=checkbox type=checkbox value=Y> |.$locale->text('Group');
@@ -2128,37 +2157,37 @@ sub aa_qty_search {
   if (@{ $form->{all_years} }) {
     $selectfrom = qq|
         <tr>
- 	  <th align=right>|.$locale->text('Include Months').qq|</th>
-	  <td colspan=3>
-	    <table>
-	      <tr>
-		<td>
-		  <table>
-		    <tr>
+      <th align=right>|.$locale->text('Include Months').qq|</th>
+      <td colspan=3>
+        <table>
+          <tr>
+        <td>
+          <table>
+            <tr>
 |;
 
     for (sort keys %{ $form->{all_month} }) {
       $i = ($_ * 1) - 1;
       if (($i % 3) == 0) {
-	$selectfrom .= qq|
-		    </tr>
-		    <tr>
+    $selectfrom .= qq|
+            </tr>
+            <tr>
 |;
       }
 
       $i = $_ * 1;
-	
+    
       $selectfrom .= qq|
-		      <td nowrap><input name="l_month_$i" class checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text($form->{all_month}{$_}).qq|</td>\n|;
+              <td nowrap><input name="l_month_$i" class checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text($form->{all_month}{$_}).qq|</td>\n|;
     }
-		
+        
     $selectfrom .= qq|
-		    </tr>
-		  </table>
-		</td>
-	      </tr>
-	    </table>
-	  </td>
+            </tr>
+          </table>
+        </td>
+          </tr>
+        </table>
+      </td>
         </tr>
 |;
   } else {
@@ -2167,9 +2196,9 @@ sub aa_qty_search {
 
 
    if ($form->{vc} eq 'customer'){
-	$form->{title} = $locale->text('Sale Qty Summary');
+    $form->{title} = $locale->text('Sale Qty Summary');
    } else {
-   	$form->{title} = $locale->text('Purchase Qty Summary');
+    $form->{title} = $locale->text('Purchase Qty Summary');
    }
    &print_title;
    &start_form;
@@ -2271,13 +2300,13 @@ sub aa_qty_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	
-			partnumber => 1,
-			category => 2,
-			description => 3,
-			onhand => $months_count + 4,
-			lastcost => $months_count + 5,
-			extended => $months_count + 6
+   my %ordinal = (  
+            partnumber => 1,
+            category => 2,
+            description => 3,
+            onhand => $months_count + 4,
+            lastcost => $months_count + 5,
+            extended => $months_count + 6
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -2287,25 +2316,25 @@ sub aa_qty_list {
    $form->{callback} = $form->escape($callback,1);
 
    $query = qq|SELECT
-		p.id,
-		p.partnumber,
-		substring(p.partnumber from 5) as category,
-		p.description,
-		p.onhand,
-		p.lastcost,
-		p.onhand * p.lastcost AS extended,
-		EXTRACT (MONTH FROM aa.transdate) AS month,
-		SUM(i.qty) AS qty
+        p.id,
+        p.partnumber,
+        substring(p.partnumber from 5) as category,
+        p.description,
+        p.onhand,
+        p.lastcost,
+        p.onhand * p.lastcost AS extended,
+        EXTRACT (MONTH FROM aa.transdate) AS month,
+        SUM(i.qty) AS qty
 
-		FROM invoice i
-		JOIN $aa aa ON (aa.id = i.trans_id)
-		JOIN customer cv ON (cv.id = aa.customer_id)
-		JOIN parts p ON (p.id = i.parts_id)
+        FROM invoice i
+        JOIN $aa aa ON (aa.id = i.trans_id)
+        JOIN customer cv ON (cv.id = aa.customer_id)
+        JOIN parts p ON (p.id = i.parts_id)
 
-		WHERE $where
-		GROUP BY 1,2,3,4,5,6,7,8
-		ORDER BY $form->{sort} $form->{direction}|;
-		#ORDER BY $sort_order|;
+        WHERE $where
+        GROUP BY 1,2,3,4,5,6,7,8
+        ORDER BY $form->{sort} $form->{direction}|;
+        #ORDER BY $sort_order|;
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -2318,20 +2347,20 @@ sub aa_qty_list {
    my %parts;
    if ($form->{l_allitems}){
       my $allitemsquery = qq|
-	SELECT 
-	  p.id,
-	  p.partnumber,
-	  substring(p.partnumber from 5) as category,
-	  p.description,
-	  p.onhand,
-	  p.lastcost,
-	  p.onhand * p.lastcost AS extended
-	FROM parts p
-	ORDER BY 1|;
+    SELECT 
+      p.id,
+      p.partnumber,
+      substring(p.partnumber from 5) as category,
+      p.description,
+      p.onhand,
+      p.lastcost,
+      p.onhand * p.lastcost AS extended
+    FROM parts p
+    ORDER BY 1|;
       my $allitemssth = $dbh->prepare($allitemsquery);
       $allitemssth->execute;
       while (my $ref = $allitemssth->fetchrow_hashref(NAME_lc)){
-	$parts{$ref->{id}} = $ref;
+    $parts{$ref->{id}} = $ref;
       }
    }
    while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
@@ -2365,26 +2394,26 @@ sub aa_qty_list {
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{partnumber} 		= rpt_hdr('partnumber', $locale->text('Number'), $href);
-   $column_header{category} 		= rpt_hdr('category', $locale->text('Category'), $href);
-   $column_header{description} 		= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{onhand} 		= rpt_hdr('onhand', $locale->text('Onhand'), $href);
-   $column_header{lastcost} 		= rpt_hdr('lastcost', $locale->text('Last Cost'), $href);
-   $column_header{extended} 		= rpt_hdr('extended', $locale->text('Extended'), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{partnumber}       = rpt_hdr('partnumber', $locale->text('Number'), $href);
+   $column_header{category}         = rpt_hdr('category', $locale->text('Category'), $href);
+   $column_header{description}      = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{onhand}       = rpt_hdr('onhand', $locale->text('Onhand'), $href);
+   $column_header{lastcost}         = rpt_hdr('lastcost', $locale->text('Last Cost'), $href);
+   $column_header{extended}         = rpt_hdr('extended', $locale->text('Extended'), $href);
 
    $form->all_years(\%myconfig);
    for (1 .. 12) { $column_header{$_} = qq|<th class=listheading nowrap>|.$locale->text($locale->{SHORT_MONTH}[$_-1]).qq|</th>| }
 
    if ($form->{l_csv} eq 'Y'){
-	&ref_to_csv('parts', "qty_summary", \@column_index);
-	exit;
+    &ref_to_csv('parts', "qty_summary", \@column_index);
+    exit;
    }
 
    if ($form->{vc} eq 'customer'){
-	$form->{title} = $locale->text('Sale Qty Summary');
+    $form->{title} = $locale->text('Sale Qty Summary');
    } else {
-   	$form->{title} = $locale->text('Purchase Qty Summary');
+    $form->{title} = $locale->text('Purchase Qty Summary');
    }
    &print_title;
 
@@ -2411,61 +2440,61 @@ sub aa_qty_list {
    my $groupbreak = 'none';
 
    foreach $ref (@{ $form->{parts} }) {
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
-	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   if ($groupbreak ne $ref->{$form->{sort}}){
-		$groupbreak = $ref->{$form->{sort}};
-		# prepare data for footer
+    $form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       if ($groupbreak ne $ref->{$form->{sort}}){
+        $groupbreak = $ref->{$form->{sort}};
+        # prepare data for footer
 
-   		$column_data{no}   			= rpt_txt('&nbsp;');
-   		$column_data{partnumber}  		= rpt_txt('&nbsp;');
-   		$column_data{description}  		= rpt_txt('&nbsp;');
-   		$column_data{jan} 			= rpt_dec('&nbsp;');
+        $column_data{no}            = rpt_txt('&nbsp;');
+        $column_data{partnumber}        = rpt_txt('&nbsp;');
+        $column_data{description}       = rpt_txt('&nbsp;');
+        $column_data{jan}           = rpt_dec('&nbsp;');
 
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
 
-		$balance_subtotal = 0;
-	   }
-	}
+        $balance_subtotal = 0;
+       }
+    }
 
-	$column_data{no}   		= rpt_txt($no);
-   	$column_data{partnumber}	= rpt_txt($ref->{partnumber});
-   	$column_data{category}		= rpt_txt($ref->{category});
-   	$column_data{description}	= rpt_txt($ref->{description}, $form->{link});
-   	$column_data{onhand}		= rpt_dec($ref->{onhand},0);
-   	$column_data{lastcost}		= rpt_dec($ref->{lastcost},2);
-   	$column_data{extended}		= rpt_dec($ref->{extended},2);
+    $column_data{no}        = rpt_txt($no);
+    $column_data{partnumber}    = rpt_txt($ref->{partnumber});
+    $column_data{category}      = rpt_txt($ref->{category});
+    $column_data{description}   = rpt_txt($ref->{description}, $form->{link});
+    $column_data{onhand}        = rpt_dec($ref->{onhand},0);
+    $column_data{lastcost}      = rpt_dec($ref->{lastcost},2);
+    $column_data{extended}      = rpt_dec($ref->{extended},2);
 
-	for (1 .. 12){
-	    $column_data{$_} = rpt_dec($ref->{$_},0);
-	    $total{$_} += $ref->{$_};
+    for (1 .. 12){
+        $column_data{$_} = rpt_dec($ref->{$_},0);
+        $total{$_} += $ref->{$_};
         }
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
-	$onhand_total += $ref->{onhand};
-	$extended_total += $ref->{extended};
+    $onhand_total += $ref->{onhand};
+    $extended_total += $ref->{extended};
    }
 
    # prepare data for footer
-   $column_data{no}   			= rpt_txt('&nbsp;');
-   $column_data{partnumber}  		= rpt_txt('&nbsp;');
-   $column_data{category}  		= rpt_txt('&nbsp;');
-   $column_data{description}   		= rpt_txt('&nbsp;');
-   $column_data{lastcost}   		= rpt_txt('&nbsp;');
+   $column_data{no}             = rpt_txt('&nbsp;');
+   $column_data{partnumber}         = rpt_txt('&nbsp;');
+   $column_data{category}       = rpt_txt('&nbsp;');
+   $column_data{description}        = rpt_txt('&nbsp;');
+   $column_data{lastcost}           = rpt_txt('&nbsp;');
 
    if ($form->{l_subtotal}){
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
 
    # grand total
@@ -2474,8 +2503,8 @@ sub aa_qty_list {
       $total{$_} += $ref->{$_};
    }
 
-   $column_data{onhand}   		= rpt_dec($onhand_total,0);
-   $column_data{extended}   		= rpt_dec($extended_total,2);
+   $column_data{onhand}         = rpt_dec($onhand_total,0);
+   $column_data{extended}           = rpt_dec($extended_total,2);
 
    # print footer
    print "<tr valign=top class=listtotal>";
@@ -2496,9 +2525,9 @@ sub aa_qty_list {
 #-------------------------------
 sub vc_search {
    if ($form->{vc} eq 'customer'){
-	$form->{title} = $locale->text('Customer Balances');
+    $form->{title} = $locale->text('Customer Balances');
    } else {
-   	$form->{title} = $locale->text('Vendor Balances');
+    $form->{title} = $locale->text('Vendor Balances');
    }
    &print_title;
 
@@ -2558,10 +2587,10 @@ sub vc_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			"$form->{vc}number" => 2,
-			name => 3,
-			balance => 4
+   my %ordinal = (  id => 1,
+            "$form->{vc}number" => 2,
+            name => 3,
+            balance => 4
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -2583,28 +2612,28 @@ sub vc_list {
    $form->{callback} = $form->escape($callback,1);
 
    $query = qq|SELECT 
-		ct.id, 
-		ct.$form->{vc}number, 
-		ct.name, 
-		(SUM(0 - ac.amount) * $sign) AS balance
+        ct.id, 
+        ct.$form->{vc}number, 
+        ct.name, 
+        (SUM(0 - ac.amount) * $sign) AS balance
 
-		FROM $form->{vc} ct
-		JOIN $aa aa ON (ct.id = aa.$form->{vc}_id)
-		JOIN acc_trans ac ON (aa.id = ac.trans_id)
-		JOIN chart c ON (c.id = ac.chart_id)
+        FROM $form->{vc} ct
+        JOIN $aa aa ON (ct.id = aa.$form->{vc}_id)
+        JOIN acc_trans ac ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
 
-		WHERE $where
-		GROUP BY 1,2,3
-		ORDER BY $form->{sort} $form->{direction}|;
-		#ORDER BY $sort_order|;
+        WHERE $where
+        GROUP BY 1,2,3
+        ORDER BY $form->{sort} $form->{direction}|;
+        #ORDER BY $sort_order|;
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{"$form->{vc}number"} 	= rpt_hdr("$form->{vc}number", $locale->text('Number'), $href);
-   $column_header{name}    		= rpt_hdr('name', $locale->text('Name'), $href);
-   $column_header{balance}  		= rpt_hdr('balance', $locale->text('Balance'), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{"$form->{vc}number"}  = rpt_hdr("$form->{vc}number", $locale->text('Number'), $href);
+   $column_header{name}         = rpt_hdr('name', $locale->text('Name'), $href);
+   $column_header{balance}          = rpt_hdr('balance', $locale->text('Balance'), $href);
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -2612,17 +2641,17 @@ sub vc_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, "$form->{vc}_balances");
-	exit;
+    &export_to_csv($dbh, $query, "$form->{vc}_balances");
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
 
 
    if ($form->{vc} eq 'customer'){
-   	$form->{title} = $locale->text('Customer Balances');
+    $form->{title} = $locale->text('Customer Balances');
    } else {
-   	$form->{title} = $locale->text('Vendor Balances');
+    $form->{title} = $locale->text('Vendor Balances');
    }
    &print_title;
 
@@ -2642,52 +2671,52 @@ sub vc_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|ct.pl?action=edit&db=$form->{vc}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
-	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   if ($groupbreak ne $ref->{$form->{sort}}){
-		$groupbreak = $ref->{$form->{sort}};
-		# prepare data for footer
+    $form->{link} = qq|ct.pl?action=edit&db=$form->{vc}&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       if ($groupbreak ne $ref->{$form->{sort}}){
+        $groupbreak = $ref->{$form->{sort}};
+        # prepare data for footer
 
-   		$column_data{no}   			= rpt_txt('&nbsp;');
-   		$column_data{"$form->{vc}number"}  	= rpt_txt('&nbsp;');
-   		$column_data{name}    			= rpt_txt('&nbsp;');
-   		$column_data{balance} 			= rpt_dec('&nbsp;');
+        $column_data{no}            = rpt_txt('&nbsp;');
+        $column_data{"$form->{vc}number"}   = rpt_txt('&nbsp;');
+        $column_data{name}              = rpt_txt('&nbsp;');
+        $column_data{balance}           = rpt_dec('&nbsp;');
 
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
 
-		$balance_subtotal = 0;
-	   }
-	}
+        $balance_subtotal = 0;
+       }
+    }
 
-	$column_data{no}   			= rpt_txt($no);
-   	$column_data{"$form->{vc}number"}	= rpt_txt($ref->{"$form->{vc}number"});
-   	$column_data{name} 			= rpt_txt($ref->{name}, $form->{link});
-   	$column_data{balance}    		= rpt_dec($ref->{balance});
+    $column_data{no}            = rpt_txt($no);
+    $column_data{"$form->{vc}number"}   = rpt_txt($ref->{"$form->{vc}number"});
+    $column_data{name}          = rpt_txt($ref->{name}, $form->{link});
+    $column_data{balance}           = rpt_dec($ref->{balance});
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
-	$balance_subtotal += $ref->{balance};
-	$balance_total += $ref->{balance};
+    $balance_subtotal += $ref->{balance};
+    $balance_total += $ref->{balance};
    }
 
    # prepare data for footer
-   $column_data{no}   			= rpt_txt('&nbsp;');
-   $column_data{"$form->{vc}number"}  	= rpt_txt('&nbsp;');
-   $column_data{name}    		= rpt_txt('&nbsp;');
-   $column_data{balance} 		= rpt_txt('&nbsp;');
+   $column_data{no}             = rpt_txt('&nbsp;');
+   $column_data{"$form->{vc}number"}    = rpt_txt('&nbsp;');
+   $column_data{name}           = rpt_txt('&nbsp;');
+   $column_data{balance}        = rpt_txt('&nbsp;');
 
    if ($form->{l_subtotal}){
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
 
    # grand total
@@ -2713,9 +2742,9 @@ sub vc_list {
 #-------------------------------
 sub vcactivity_search {
    if ($form->{vc} eq 'customer'){
-	$form->{title} = $locale->text('Customer Activity');
+    $form->{title} = $locale->text('Customer Activity');
    } else {
-   	$form->{title} = $locale->text('Vendor Activity');
+    $form->{title} = $locale->text('Vendor Activity');
    }
    &print_title;
    &start_form;
@@ -2778,15 +2807,15 @@ sub vcactivity_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			"$form->{vc}number" => 2,
-			name => 3,
-			transdate => 4,
-			invnumber => 5,
-			description => 6,
-			debit => 7,
-			credit => 8,
-			balance => 9
+   my %ordinal = (  id => 1,
+            "$form->{vc}number" => 2,
+            name => 3,
+            transdate => 4,
+            invnumber => 5,
+            description => 6,
+            debit => 7,
+            credit => 8,
+            balance => 9
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -2803,41 +2832,41 @@ sub vcactivity_list {
      }
    }
    for ("l_subtotal", "$form->{vc}number", "name", "todate", "vc"){
-	$callback .= qq|&$_=$form->{$_}|;
+    $callback .= qq|&$_=$form->{$_}|;
    }
    my $href = $callback;
    $form->{callback} = $form->escape($callback,1);
 
    $query = qq|SELECT 
-		ct.$form->{vc}number, 
-		ct.name, 
-		ac.transdate,
-		aa.invnumber,
-		aa.description,
-		CASE WHEN ac.amount * $sign < 0 THEN  0 - ac.amount ELSE 0 END AS debit,
-		CASE WHEN ac.amount * $sign > 0 THEN  ac.amount ELSE 0 END AS credit
+        ct.$form->{vc}number, 
+        ct.name, 
+        ac.transdate,
+        aa.invnumber,
+        aa.description,
+        CASE WHEN ac.amount * $sign < 0 THEN  0 - ac.amount ELSE 0 END AS debit,
+        CASE WHEN ac.amount * $sign > 0 THEN  ac.amount ELSE 0 END AS credit
 
-		FROM $aa aa
-		JOIN $form->{vc} ct ON (ct.id = aa.$form->{vc}_id)
-		JOIN acc_trans ac ON (aa.id = ac.trans_id)
-		JOIN chart c ON (c.id = ac.chart_id)
+        FROM $aa aa
+        JOIN $form->{vc} ct ON (ct.id = aa.$form->{vc}_id)
+        JOIN acc_trans ac ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
 
-		WHERE $where
-		ORDER BY $form->{sort} $form->{direction}|;
-		#ORDER BY $sort_order|;
+        WHERE $where
+        ORDER BY $form->{sort} $form->{direction}|;
+        #ORDER BY $sort_order|;
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{"$form->{vc}number"} 	= rpt_hdr("$form->{vc}number", $locale->text('Number'), $href);
-   $column_header{name}    		= rpt_hdr('name', $locale->text('Name'), $href);
-   $column_header{transdate}    	= rpt_hdr('transdate', $locale->text('Date'), $href);
-   $column_header{invnumber}    	= rpt_hdr('invnumber', $locale->text('Invoice Number'), $href);
-   $column_header{description}    	= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{debit}  		= rpt_hdr('debit', $locale->text('Debit'), $href);
-   $column_header{credit}  		= rpt_hdr('credit', $locale->text('Credit'), $href);
-   $column_header{balance}  		= rpt_hdr('balance', $locale->text('Balance'), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{"$form->{vc}number"}  = rpt_hdr("$form->{vc}number", $locale->text('Number'), $href);
+   $column_header{name}         = rpt_hdr('name', $locale->text('Name'), $href);
+   $column_header{transdate}        = rpt_hdr('transdate', $locale->text('Date'), $href);
+   $column_header{invnumber}        = rpt_hdr('invnumber', $locale->text('Invoice Number'), $href);
+   $column_header{description}      = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{debit}        = rpt_hdr('debit', $locale->text('Debit'), $href);
+   $column_header{credit}       = rpt_hdr('credit', $locale->text('Credit'), $href);
+   $column_header{balance}          = rpt_hdr('balance', $locale->text('Balance'), $href);
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -2845,16 +2874,16 @@ sub vcactivity_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, "$form->{vc}_activity");
-	exit;
+    &export_to_csv($dbh, $query, "$form->{vc}_activity");
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
 
    if ($form->{vc} eq 'customer'){
-   	$form->{title} = $locale->text('Customer Activity');
+    $form->{title} = $locale->text('Customer Activity');
    } else {
-   	$form->{title} = $locale->text('Vendor Activity');
+    $form->{title} = $locale->text('Vendor Activity');
    }
    &print_title;
 
@@ -2880,81 +2909,81 @@ sub vcactivity_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
-	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   if ($groupbreak ne $ref->{$form->{sort}}){
-		$groupbreak = $ref->{$form->{sort}};
-		# prepare data for footer
+    $form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       if ($groupbreak ne $ref->{$form->{sort}}){
+        $groupbreak = $ref->{$form->{sort}};
+        # prepare data for footer
 
-   		$column_data{no}   			= rpt_txt('&nbsp;');
-   		$column_data{"$form->{vc}number"}  	= rpt_txt('&nbsp;');
-   		$column_data{name}    			= rpt_txt('&nbsp;');
-   		$column_data{transdate}  		= rpt_txt('&nbsp;');
-   		$column_data{invnumber} 		= rpt_txt('&nbsp;');
-   		$column_data{description} 		= rpt_txt('&nbsp;');
-   		$column_data{debit} 			= rpt_dec($debit_subtotal);
-   		$column_data{credit} 			= rpt_dec($credit_subtotal);
-   		$column_data{balance} 			= rpt_dec('&nbsp;');
+        $column_data{no}            = rpt_txt('&nbsp;');
+        $column_data{"$form->{vc}number"}   = rpt_txt('&nbsp;');
+        $column_data{name}              = rpt_txt('&nbsp;');
+        $column_data{transdate}         = rpt_txt('&nbsp;');
+        $column_data{invnumber}         = rpt_txt('&nbsp;');
+        $column_data{description}       = rpt_txt('&nbsp;');
+        $column_data{debit}             = rpt_dec($debit_subtotal);
+        $column_data{credit}            = rpt_dec($credit_subtotal);
+        $column_data{balance}           = rpt_dec('&nbsp;');
 
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
 
-		$debit_subtotal = 0;
-		$credit_subtotal = 0;
-		$balance_subtotal = 0;
-	   }
-	}
+        $debit_subtotal = 0;
+        $credit_subtotal = 0;
+        $balance_subtotal = 0;
+       }
+    }
 
-	$column_data{no}   			= rpt_txt($no);
-   	$column_data{"$form->{vc}number"}	= rpt_txt($ref->{"$form->{vc}number"});
-   	$column_data{name} 			= rpt_txt($ref->{name});
-   	$column_data{transdate} 		= rpt_txt($ref->{transdate});
-   	$column_data{invnumber} 		= rpt_txt($ref->{invnumber});
-   	$column_data{description} 		= rpt_txt($ref->{description});
-   	$column_data{debit}  	  		= rpt_dec($ref->{debit});
-   	$column_data{credit}    		= rpt_dec($ref->{credit});
-   	$column_data{balance} 			= rpt_txt('&nbsp;');
+    $column_data{no}            = rpt_txt($no);
+    $column_data{"$form->{vc}number"}   = rpt_txt($ref->{"$form->{vc}number"});
+    $column_data{name}          = rpt_txt($ref->{name});
+    $column_data{transdate}         = rpt_txt($ref->{transdate});
+    $column_data{invnumber}         = rpt_txt($ref->{invnumber});
+    $column_data{description}       = rpt_txt($ref->{description});
+    $column_data{debit}             = rpt_dec($ref->{debit});
+    $column_data{credit}            = rpt_dec($ref->{credit});
+    $column_data{balance}           = rpt_txt('&nbsp;');
 
-	$debit_subtotal += $ref->{debit};
-	$credit_subtotal += $ref->{credit};
-	$balance_subtotal += $ref->{debit} - $ref->{credit};
+    $debit_subtotal += $ref->{debit};
+    $credit_subtotal += $ref->{credit};
+    $balance_subtotal += $ref->{debit} - $ref->{credit};
 
-	$debit_total += $ref->{debit};
-	$credit_total += $ref->{credit};
-	$balance_total += $ref->{debit} - $ref->{credit};
+    $debit_total += $ref->{debit};
+    $credit_total += $ref->{credit};
+    $balance_total += $ref->{debit} - $ref->{credit};
 
-   	$column_data{balance}    		= rpt_dec($balance_subtotal);
+    $column_data{balance}           = rpt_dec($balance_subtotal);
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
    }
 
    # prepare data for footer
-   $column_data{no}   			= rpt_txt('&nbsp;');
-   $column_data{"$form->{vc}number"}  	= rpt_txt('&nbsp;');
-   $column_data{name}    		= rpt_txt('&nbsp;');
-   $column_data{transdate}  		= rpt_txt('&nbsp;');
-   $column_data{invnumber} 		= rpt_txt('&nbsp;');
-   $column_data{description} 		= rpt_txt('&nbsp;');
-   $column_data{debit} 			= rpt_dec($debit_subtotal);
-   $column_data{credit} 		= rpt_dec($credit_subtotal);
-   $column_data{balance} 		= rpt_dec('&nbsp;');
+   $column_data{no}             = rpt_txt('&nbsp;');
+   $column_data{"$form->{vc}number"}    = rpt_txt('&nbsp;');
+   $column_data{name}           = rpt_txt('&nbsp;');
+   $column_data{transdate}          = rpt_txt('&nbsp;');
+   $column_data{invnumber}      = rpt_txt('&nbsp;');
+   $column_data{description}        = rpt_txt('&nbsp;');
+   $column_data{debit}          = rpt_dec($debit_subtotal);
+   $column_data{credit}         = rpt_dec($credit_subtotal);
+   $column_data{balance}        = rpt_dec('&nbsp;');
 
    if ($form->{l_subtotal}){
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
 
    # grand total
-   $column_data{debit} 			= rpt_dec($debit_total);
-   $column_data{credit} 		= rpt_dec($credit_total);
+   $column_data{debit}          = rpt_dec($debit_total);
+   $column_data{credit}         = rpt_dec($credit_total);
 
    # print footer
    print "<tr valign=top class=listtotal>";
@@ -3050,13 +3079,13 @@ sub onhand_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			warehouse => 2,
-			partnumber => 3,
-			description => 4,
-			partsgroup => 5,
-			unit => 6,
-			onhand => 7
+   my %ordinal = (  id => 1,
+            warehouse => 2,
+            partnumber => 3,
+            description => 4,
+            partsgroup => 5,
+            unit => 6,
+            onhand => 7
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -3079,50 +3108,50 @@ sub onhand_list {
    $form->{callback} = $form->escape($callback,1);
 
    if ($form->{summary}){
-   	$query = qq|SELECT 
-			p.id, 
-			p.partnumber, 
-			p.description, 
-			pg.partsgroup,
-			p.unit, 
-			SUM(i.qty) AS onhand
-			FROM inventory i
-			JOIN parts p ON (p.id = i.parts_id)
-			LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
-			WHERE $where
-			AND (p.inventory_accno_id IS NOT NULL OR (p.inventory_accno_id IS NULL AND p.expense_accno_id IS NULL))
-			GROUP BY 1, 2, 3, 4, 5
-			ORDER BY $form->{sort} $form->{direction}|;
+    $query = qq|SELECT 
+            p.id, 
+            p.partnumber, 
+            p.description, 
+            pg.partsgroup,
+            p.unit, 
+            SUM(i.qty) AS onhand
+            FROM inventory i
+            JOIN parts p ON (p.id = i.parts_id)
+            LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
+            WHERE $where
+            AND (p.inventory_accno_id IS NOT NULL OR (p.inventory_accno_id IS NULL AND p.expense_accno_id IS NULL))
+            GROUP BY 1, 2, 3, 4, 5
+            ORDER BY $form->{sort} $form->{direction}|;
    } else {
-   	$query = qq|SELECT 
-			p.id,
-			i.warehouse_id,
-			w.description AS warehouse,
-			p.partnumber, 
-			p.description, 
-			pg.partsgroup,
-			p.unit, 
-			SUM(i.qty) AS onhand
-			FROM inventory i
-			JOIN parts p ON (p.id = i.parts_id)
-			LEFT JOIN warehouse w ON (w.id = i.warehouse_id)
-			LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
-			WHERE $where
-			AND (p.inventory_accno_id IS NOT NULL OR (p.inventory_accno_id IS NULL AND p.expense_accno_id IS NULL))
-			GROUP BY 1, 2, 3, 4, 5, 6, 7
-			ORDER BY $form->{sort} $form->{direction}|;
+    $query = qq|SELECT 
+            p.id,
+            i.warehouse_id,
+            w.description AS warehouse,
+            p.partnumber, 
+            p.description, 
+            pg.partsgroup,
+            p.unit, 
+            SUM(i.qty) AS onhand
+            FROM inventory i
+            JOIN parts p ON (p.id = i.parts_id)
+            LEFT JOIN warehouse w ON (w.id = i.warehouse_id)
+            LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
+            WHERE $where
+            AND (p.inventory_accno_id IS NOT NULL OR (p.inventory_accno_id IS NULL AND p.expense_accno_id IS NULL))
+            GROUP BY 1, 2, 3, 4, 5, 6, 7
+            ORDER BY $form->{sort} $form->{direction}|;
 
    }
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{warehouse} 		= rpt_hdr('warehouse', $locale->text('Warehouse'), $href);
-   $column_header{partnumber} 		= rpt_hdr('partnumber', $locale->text('Number'), $href);
-   $column_header{description} 		= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{partsgroup}  		= rpt_hdr('partsgroup', $locale->text('Group'), $href);
-   $column_header{unit}  		= rpt_hdr('unit', $locale->text('Unit'), $href);
-   $column_header{onhand}  		= rpt_hdr('onhand', $locale->text('Onhand'), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{warehouse}        = rpt_hdr('warehouse', $locale->text('Warehouse'), $href);
+   $column_header{partnumber}       = rpt_hdr('partnumber', $locale->text('Number'), $href);
+   $column_header{description}      = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{partsgroup}       = rpt_hdr('partsgroup', $locale->text('Group'), $href);
+   $column_header{unit}         = rpt_hdr('unit', $locale->text('Unit'), $href);
+   $column_header{onhand}       = rpt_hdr('onhand', $locale->text('Onhand'), $href);
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -3130,8 +3159,8 @@ sub onhand_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'parts_onhand');
-	exit;
+    &export_to_csv($dbh, $query, 'parts_onhand');
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
@@ -3158,70 +3187,70 @@ sub onhand_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|ic.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
-	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   if ($groupbreak ne $ref->{$form->{sort}}){
-		$groupbreak = $ref->{$form->{sort}};
-		# prepare data for footer
+    $form->{link} = qq|ic.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       if ($groupbreak ne $ref->{$form->{sort}}){
+        $groupbreak = $ref->{$form->{sort}};
+        # prepare data for footer
 
-   		$column_data{no}   		= rpt_txt('&nbsp;');
-   		$column_data{warehouse}  	= rpt_txt('&nbsp;');
-   		$column_data{partnumber}  	= rpt_txt('&nbsp;');
-   		$column_data{description} 	= rpt_txt('&nbsp;');
-   		$column_data{partsgroup} 	= rpt_txt('&nbsp;');
-   		$column_data{unit} 		= rpt_txt('&nbsp;');
-   		$column_data{onhand} 		= rpt_dec($qty_subtotal);
+        $column_data{no}        = rpt_txt('&nbsp;');
+        $column_data{warehouse}     = rpt_txt('&nbsp;');
+        $column_data{partnumber}    = rpt_txt('&nbsp;');
+        $column_data{description}   = rpt_txt('&nbsp;');
+        $column_data{partsgroup}    = rpt_txt('&nbsp;');
+        $column_data{unit}      = rpt_txt('&nbsp;');
+        $column_data{onhand}        = rpt_dec($qty_subtotal);
 
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
 
-		$qty_subtotal = 0;
-		$amount_subtotal = 0;
-	   }
-	}
+        $qty_subtotal = 0;
+        $amount_subtotal = 0;
+       }
+    }
 
-	$column_data{no}   		= rpt_txt($no);
-   	$column_data{warehouse}		= rpt_txt($ref->{warehouse});
+    $column_data{no}        = rpt_txt($no);
+    $column_data{warehouse}     = rpt_txt($ref->{warehouse});
         if ($form->{summary}){
-   	    $column_data{partnumber}	= rpt_txt($ref->{partnumber}, "$link&partnumber=$ref->{partnumber}&warehouse=$form->{warehouse}");
-	} else {
-   	    $column_data{partnumber}	= rpt_txt($ref->{partnumber}, "$link&partnumber=$ref->{partnumber}&warehouse=$ref->{warehouse}--$ref->{warehouse_id}");
-	}
-   	$column_data{description} 	= rpt_txt($ref->{description});
-   	$column_data{partsgroup}    	= rpt_txt($ref->{partsgroup});
-   	$column_data{unit}    		= rpt_txt($ref->{unit});
-   	$column_data{onhand}    	= rpt_dec($ref->{onhand});
+        $column_data{partnumber}    = rpt_txt($ref->{partnumber}, "$link&partnumber=$ref->{partnumber}&warehouse=$form->{warehouse}");
+    } else {
+        $column_data{partnumber}    = rpt_txt($ref->{partnumber}, "$link&partnumber=$ref->{partnumber}&warehouse=$ref->{warehouse}--$ref->{warehouse_id}");
+    }
+    $column_data{description}   = rpt_txt($ref->{description});
+    $column_data{partsgroup}        = rpt_txt($ref->{partsgroup});
+    $column_data{unit}          = rpt_txt($ref->{unit});
+    $column_data{onhand}        = rpt_dec($ref->{onhand});
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
-	$qty_subtotal += $ref->{onhand};
-	$qty_total += $ref->{onhand};
+    $qty_subtotal += $ref->{onhand};
+    $qty_total += $ref->{onhand};
 
-	$amount_subtotal += $ref->{amount};
-	$amount_total += $ref->{amount};
+    $amount_subtotal += $ref->{amount};
+    $amount_total += $ref->{amount};
    }
 
    # prepare data for footer
-   $column_data{no}   		= rpt_txt('&nbsp;');
-   $column_data{warehouse}  	= rpt_txt('&nbsp;');
-   $column_data{partnumber}  	= rpt_txt('&nbsp;');
-   $column_data{description} 	= rpt_txt('&nbsp;');
-   $column_data{partsgroup} 	= rpt_txt('&nbsp;');
-   $column_data{unit} 		= rpt_txt('&nbsp;');
-   $column_data{onhand} 	= rpt_dec($qty_subtotal);
+   $column_data{no}         = rpt_txt('&nbsp;');
+   $column_data{warehouse}      = rpt_txt('&nbsp;');
+   $column_data{partnumber}     = rpt_txt('&nbsp;');
+   $column_data{description}    = rpt_txt('&nbsp;');
+   $column_data{partsgroup}     = rpt_txt('&nbsp;');
+   $column_data{unit}       = rpt_txt('&nbsp;');
+   $column_data{onhand}     = rpt_dec($qty_subtotal);
 
 
    if ($form->{l_subtotal}){
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
 
    # grand total
@@ -3310,25 +3339,25 @@ sub iactivity_list {
    my $openingwhere;
 
    if ($form->{partnumber}){
-   	$where .= qq| AND (LOWER(p.partnumber) LIKE '$partnumber')|;
-	$callback .= "&partnumber=".$form->escape($form->{partnumber});
+    $where .= qq| AND (LOWER(p.partnumber) LIKE '$partnumber')|;
+    $callback .= "&partnumber=".$form->escape($form->{partnumber});
    }
    if ($form->{description}){
-   	$where .= qq| AND (LOWER(i.description) LIKE '$name')|;
-	$callback .= "&description=".$form->escape($form->{description});
+    $where .= qq| AND (LOWER(i.description) LIKE '$name')|;
+    $callback .= "&description=".$form->escape($form->{description});
    }
    if ($form->{partsgroup}){
-   	$where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})|;
-	$callback .= "&partsgroup=".$form->escape($form->{partsgroup});
+    $where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})|;
+    $callback .= "&partsgroup=".$form->escape($form->{partsgroup});
    }
    if ($form->{datefrom}){
-   	$where .= qq| AND (i.shippingdate >= '$form->{datefrom}')|;
-	$callback .= "&datefrom=$form->{datefrom}";
-   	$openingwhere .= qq| AND (shippingdate < '$form->{datefrom}')|;
+    $where .= qq| AND (i.shippingdate >= '$form->{datefrom}')|;
+    $callback .= "&datefrom=$form->{datefrom}";
+    $openingwhere .= qq| AND (shippingdate < '$form->{datefrom}')|;
    }
    if ($form->{dateto}){
-   	$where .= qq| AND (i.shippingdate <= '$form->{dateto}')|;
-	$callback .= "&dateto=$form->{dateto}";
+    $where .= qq| AND (i.shippingdate <= '$form->{dateto}')|;
+    $callback .= "&dateto=$form->{dateto}";
    }
 
    if ($form->{department}){
@@ -3352,19 +3381,19 @@ sub iactivity_list {
    @columns = $form->sort_columns(@columns);
 
    my %ordinal = (
-			partnumber => 1,
-			description => 2,
-			shippingdate => 3,
-			reference => 4,
-			department => 5,
-			warehouse => 6,
-			warehouse2 => 7,
-			in => 8,
-			out => 9,
-			onhand => 10,
-			cost => 11,
-			cogs => 12,
-			cogs_balance => 13
+            partnumber => 1,
+            description => 2,
+            shippingdate => 3,
+            reference => 4,
+            department => 5,
+            warehouse => 6,
+            warehouse2 => 7,
+            in => 8,
+            out => 9,
+            onhand => 10,
+            cost => 11,
+            cogs => 12,
+            cogs_balance => 13
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -3387,49 +3416,49 @@ sub iactivity_list {
    $form->{callback} = $form->escape($callback,1);
 
    $query = qq/SELECT
-		i.parts_id,
-		p.partnumber, 
-		i.description, 
-		i.trans_id, 
-		i.shippingdate,
-		i.qty,
-		i.cogs,
-		i.cost,
-		d.description AS department,
-		w.description AS warehouse, 
-		w2.description AS warehouse2,
-		trf.trfnumber AS reference,
-		ap.invnumber AS ap_reference,
-		ar.invnumber AS ar_reference
-	      FROM inventory i
-		JOIN parts p ON (p.id = i.parts_id)
-		LEFT JOIN department d ON (i.department_id = d.id)
-		LEFT JOIN warehouse w ON (i.warehouse_id = w.id)
-		LEFT JOIN warehouse w2 ON (i.warehouse_id2 = w2.id)
-		LEFT JOIN trf ON (i.trans_id = trf.id)
-		LEFT JOIN ap ON (i.trans_id = ap.id)
-		LEFT JOIN ar ON (i.trans_id = ar.id)
-		WHERE $where
-		ORDER BY p.partnumber, i.shippingdate/;
-		#ORDER BY $form->{sort} $form->{direction}|;
+        i.parts_id,
+        p.partnumber, 
+        i.description, 
+        i.trans_id, 
+        i.shippingdate,
+        i.qty,
+        i.cogs,
+        i.cost,
+        d.description AS department,
+        w.description AS warehouse, 
+        w2.description AS warehouse2,
+        trf.trfnumber AS reference,
+        ap.invnumber AS ap_reference,
+        ar.invnumber AS ar_reference
+          FROM inventory i
+        JOIN parts p ON (p.id = i.parts_id)
+        LEFT JOIN department d ON (i.department_id = d.id)
+        LEFT JOIN warehouse w ON (i.warehouse_id = w.id)
+        LEFT JOIN warehouse w2 ON (i.warehouse_id2 = w2.id)
+        LEFT JOIN trf ON (i.trans_id = trf.id)
+        LEFT JOIN ap ON (i.trans_id = ap.id)
+        LEFT JOIN ar ON (i.trans_id = ar.id)
+        WHERE $where
+        ORDER BY p.partnumber, i.shippingdate/;
+        #ORDER BY $form->{sort} $form->{direction}|;
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{shippingdate} 	= rpt_hdr('shippingdate', $locale->text('Date'), $href);
-   $column_header{reference} 		= rpt_hdr('reference', $locale->text('Reference'), $href);
-   $column_header{department} 		= rpt_hdr('department', $locale->text('Department'), $href);
-   $column_header{warehouse} 		= rpt_hdr('warehouse', $locale->text('Warehouse'), $href);
-   $column_header{warehouse2} 		= rpt_hdr('warehouse2', $locale->text('Warehouse2'), $href);
-   $column_header{partnumber} 		= rpt_hdr('partnumber', $locale->text('Number'), $href);
-   $column_header{description} 		= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{in}  			= rpt_hdr('in', $locale->text('In'), $href);
-   $column_header{out}  		= rpt_hdr('out', $locale->text('Out'), $href);
-   $column_header{onhand}  		= rpt_hdr('onhand', $locale->text('Onhand'), $href);
-   $column_header{cost}  		= rpt_hdr('cost', $locale->text('Last Cost'), $href);
-   $column_header{cogs}  		= rpt_hdr('cogs', $locale->text('Total Cost'), $href);
-   $column_header{cogs_balance}  	= rpt_hdr('cogs_balance', $locale->text('Cost Balance'), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{shippingdate}     = rpt_hdr('shippingdate', $locale->text('Date'), $href);
+   $column_header{reference}        = rpt_hdr('reference', $locale->text('Reference'), $href);
+   $column_header{department}       = rpt_hdr('department', $locale->text('Department'), $href);
+   $column_header{warehouse}        = rpt_hdr('warehouse', $locale->text('Warehouse'), $href);
+   $column_header{warehouse2}       = rpt_hdr('warehouse2', $locale->text('Warehouse2'), $href);
+   $column_header{partnumber}       = rpt_hdr('partnumber', $locale->text('Number'), $href);
+   $column_header{description}      = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{in}           = rpt_hdr('in', $locale->text('In'), $href);
+   $column_header{out}          = rpt_hdr('out', $locale->text('Out'), $href);
+   $column_header{onhand}       = rpt_hdr('onhand', $locale->text('Onhand'), $href);
+   $column_header{cost}         = rpt_hdr('cost', $locale->text('Last Cost'), $href);
+   $column_header{cogs}         = rpt_hdr('cogs', $locale->text('Total Cost'), $href);
+   $column_header{cogs_balance}     = rpt_hdr('cogs_balance', $locale->text('Cost Balance'), $href);
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -3437,8 +3466,8 @@ sub iactivity_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'inventory_activity');
-	exit;
+    &export_to_csv($dbh, $query, 'inventory_activity');
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
@@ -3466,117 +3495,117 @@ sub iactivity_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
-	#$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	#$groupbreak = $ref->{partnumber} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   #if ($groupbreak ne $ref->{$form->{sort}}){
-	   if ($groupbreak ne $ref->{partnumber}){
-		#$groupbreak = $ref->{$form->{sort}};
-		$groupbreak = $ref->{partnumber};
+    $form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    #$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    #$groupbreak = $ref->{partnumber} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       #if ($groupbreak ne $ref->{$form->{sort}}){
+       if ($groupbreak ne $ref->{partnumber}){
+        #$groupbreak = $ref->{$form->{sort}};
+        $groupbreak = $ref->{partnumber};
 
-		# prepare data for footer
-   		$column_data{no}   		= rpt_txt('&nbsp;');
-   		$column_data{shippingdate} 	= rpt_txt('&nbsp;');
-   		$column_data{reference} 	= rpt_txt('&nbsp;');
-   		$column_data{department} 	= rpt_txt('&nbsp;');
-   		$column_data{warehouse} 	= rpt_txt('&nbsp;');
-   		$column_data{warehouse2} 	= rpt_txt('&nbsp;');
-   		$column_data{partnumber}  	= rpt_txt('&nbsp;');
-   		$column_data{description} 	= rpt_txt('&nbsp;');
-   		$column_data{unit} 		= rpt_txt('&nbsp;');
-   		$column_data{in} 		= rpt_dec($in_subtotal);
-   		$column_data{out} 		= rpt_dec($out_subtotal);
-   		$column_data{onhand} 		= rpt_txt('&nbsp;');
-   		$column_data{cost} 		= rpt_txt('&nbsp;');
-   		$column_data{cogs} 		= rpt_txt('&nbsp;');
-   		$column_data{cogs_balance} 	= rpt_txt('&nbsp;');
+        # prepare data for footer
+        $column_data{no}        = rpt_txt('&nbsp;');
+        $column_data{shippingdate}  = rpt_txt('&nbsp;');
+        $column_data{reference}     = rpt_txt('&nbsp;');
+        $column_data{department}    = rpt_txt('&nbsp;');
+        $column_data{warehouse}     = rpt_txt('&nbsp;');
+        $column_data{warehouse2}    = rpt_txt('&nbsp;');
+        $column_data{partnumber}    = rpt_txt('&nbsp;');
+        $column_data{description}   = rpt_txt('&nbsp;');
+        $column_data{unit}      = rpt_txt('&nbsp;');
+        $column_data{in}        = rpt_dec($in_subtotal);
+        $column_data{out}       = rpt_dec($out_subtotal);
+        $column_data{onhand}        = rpt_txt('&nbsp;');
+        $column_data{cost}      = rpt_txt('&nbsp;');
+        $column_data{cogs}      = rpt_txt('&nbsp;');
+        $column_data{cogs_balance}  = rpt_txt('&nbsp;');
 
-	        $in_subtotal = 0;
-		$out_subtotal = 0;
-		$onhand = 0;
-		$cogs_balance = 0;
+            $in_subtotal = 0;
+        $out_subtotal = 0;
+        $onhand = 0;
+        $cogs_balance = 0;
 
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
-		if ($form->{datefrom}){
-   		   my $openingquery = qq|
-			SELECT SUM(qty) 
-			FROM inventory 
-			WHERE parts_id = $ref->{parts_id}
-			$openingwhere
-		   |;
-		   my $openingqty = $dbh->selectrow_array($openingquery);
-		   if ($openingqty != 0){
-		      $onhand = $openingqty;
-   		      $column_data{in} 		= rpt_dec($in_subtotal);
-   		      $column_data{out} 	= rpt_dec($out_subtotal);
-   		      $column_data{onhand} 	= rpt_dec($onhand);
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
+        if ($form->{datefrom}){
+           my $openingquery = qq|
+            SELECT SUM(qty) 
+            FROM inventory 
+            WHERE parts_id = $ref->{parts_id}
+            $openingwhere
+           |;
+           my $openingqty = $dbh->selectrow_array($openingquery);
+           if ($openingqty != 0){
+              $onhand = $openingqty;
+              $column_data{in}      = rpt_dec($in_subtotal);
+              $column_data{out}     = rpt_dec($out_subtotal);
+              $column_data{onhand}  = rpt_dec($onhand);
 
-		      # print footer
-		      print "<tr valign=top class=listrow0>";
-		      for (@column_index) { print "\n$column_data{$_}" }
-		      print "</tr>";
-		   }
-		}
-	   }
-	}
-	$in  = ($ref->{qty} > 0) ? $ref->{qty} : 0;
-	$out = ($ref->{qty} < 0) ? 0 - $ref->{qty} : 0;
+              # print footer
+              print "<tr valign=top class=listrow0>";
+              for (@column_index) { print "\n$column_data{$_}" }
+              print "</tr>";
+           }
+        }
+       }
+    }
+    $in  = ($ref->{qty} > 0) ? $ref->{qty} : 0;
+    $out = ($ref->{qty} < 0) ? 0 - $ref->{qty} : 0;
 
-	$in_subtotal += $in;
-	$in_total += $in;
-	$out_subtotal += $out;
-	$out_total += $out;
+    $in_subtotal += $in;
+    $in_total += $in;
+    $out_subtotal += $out;
+    $out_total += $out;
         $onhand += ($in - $out);
-	$cogs_balance += $ref->{cogs};
+    $cogs_balance += $ref->{cogs};
 
-	$column_data{no}   		= rpt_txt($no);
-   	$column_data{shippingdate}    	= rpt_txt($ref->{shippingdate});
-   	$column_data{reference}    	= rpt_txt($ref->{reference} . $ref->{ap_reference} . $ref->{ar_reference});
-   	$column_data{department}    	= rpt_txt($ref->{department});
-   	$column_data{warehouse}    	= rpt_txt($ref->{warehouse});
-   	$column_data{warehouse2}    	= rpt_txt($ref->{warehouse2});
-   	$column_data{partnumber}	= rpt_txt($ref->{partnumber});
-   	$column_data{description} 	= rpt_txt($ref->{description});
-   	$column_data{unit}    		= rpt_txt($ref->{unit});
-   	$column_data{in}    		= rpt_dec($in);
-   	$column_data{out}    		= rpt_dec($out);
-   	$column_data{onhand}    	= rpt_dec($onhand);
-   	$column_data{cost}    		= rpt_dec($ref->{cost});
-   	$column_data{cogs}    		= rpt_dec($ref->{cogs});
-   	$column_data{cogs_balance}    	= rpt_dec($cogs_balance);
+    $column_data{no}        = rpt_txt($no);
+    $column_data{shippingdate}      = rpt_txt($ref->{shippingdate});
+    $column_data{reference}     = rpt_txt($ref->{reference} . $ref->{ap_reference} . $ref->{ar_reference});
+    $column_data{department}        = rpt_txt($ref->{department});
+    $column_data{warehouse}     = rpt_txt($ref->{warehouse});
+    $column_data{warehouse2}        = rpt_txt($ref->{warehouse2});
+    $column_data{partnumber}    = rpt_txt($ref->{partnumber});
+    $column_data{description}   = rpt_txt($ref->{description});
+    $column_data{unit}          = rpt_txt($ref->{unit});
+    $column_data{in}            = rpt_dec($in);
+    $column_data{out}           = rpt_dec($out);
+    $column_data{onhand}        = rpt_dec($onhand);
+    $column_data{cost}          = rpt_dec($ref->{cost});
+    $column_data{cogs}          = rpt_dec($ref->{cogs});
+    $column_data{cogs_balance}      = rpt_dec($cogs_balance);
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
    }
 
    # prepare data for footer
-   $column_data{no}   		= rpt_txt('&nbsp;');
-   $column_data{shippingdate} 	= rpt_txt('&nbsp;');
-   $column_data{reference} 	= rpt_txt('&nbsp;');
-   $column_data{department} 	= rpt_txt('&nbsp;');
-   $column_data{warehouse} 	= rpt_txt('&nbsp;');
-   $column_data{warehouse2} 	= rpt_txt('&nbsp;');
-   $column_data{partnumber}  	= rpt_txt('&nbsp;');
-   $column_data{description} 	= rpt_txt('&nbsp;');
-   $column_data{unit} 		= rpt_txt('&nbsp;');
-   $column_data{in} 		= rpt_dec($in_subtotal);
-   $column_data{out} 		= rpt_dec($out_subtotal);
-   $column_data{onhand} 	= rpt_txt('&nbsp;');
-   $column_data{cost} 		= rpt_txt('&nbsp;');
-   $column_data{cogs} 		= rpt_txt('&nbsp;');
-   $column_data{cogs_balance} 	= rpt_txt('&nbsp;');
+   $column_data{no}         = rpt_txt('&nbsp;');
+   $column_data{shippingdate}   = rpt_txt('&nbsp;');
+   $column_data{reference}  = rpt_txt('&nbsp;');
+   $column_data{department}     = rpt_txt('&nbsp;');
+   $column_data{warehouse}  = rpt_txt('&nbsp;');
+   $column_data{warehouse2}     = rpt_txt('&nbsp;');
+   $column_data{partnumber}     = rpt_txt('&nbsp;');
+   $column_data{description}    = rpt_txt('&nbsp;');
+   $column_data{unit}       = rpt_txt('&nbsp;');
+   $column_data{in}         = rpt_dec($in_subtotal);
+   $column_data{out}        = rpt_dec($out_subtotal);
+   $column_data{onhand}     = rpt_txt('&nbsp;');
+   $column_data{cost}       = rpt_txt('&nbsp;');
+   $column_data{cogs}       = rpt_txt('&nbsp;');
+   $column_data{cogs_balance}   = rpt_txt('&nbsp;');
 
    if ($form->{l_subtotal}){
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
 
    # grand total
@@ -3638,13 +3667,13 @@ sub trans_search {
 
 
    print qq|
-	      <tr>
-		<th align=right>|.$locale->text('Include in Report').qq|</th>
-		<td><table>
-		<tr>
-		  <td><input name=summary type=radio class=radio value=1 checked> |.$locale->text('Summary').qq|</td>
-		  <td><input name=summary type=radio class=radio value=0> |.$locale->text('Detail').qq|</td>
-	        </tr>
+          <tr>
+        <th align=right>|.$locale->text('Include in Report').qq|</th>
+        <td><table>
+        <tr>
+          <td><input name=summary type=radio class=radio value=1 checked> |.$locale->text('Summary').qq|</td>
+          <td><input name=summary type=radio class=radio value=0> |.$locale->text('Detail').qq|</td>
+            </tr>
 |;
 
    @a = ();
@@ -3683,7 +3712,7 @@ sub trans_search {
    }
 
    print qq|
-	</table></td></tr>
+    </table></td></tr>
 |;
    &end_table;
    print('<hr size=3 noshade>');
@@ -3733,9 +3762,9 @@ sub trans_list {
 
    my $fifowhere;
    if ($form->{warehouse}){
-	$fifowhere = qq| AND f.warehouse_id = $form->{warehouse_id}|;
+    $fifowhere = qq| AND f.warehouse_id = $form->{warehouse_id}|;
    } else {
-	$fifowhere = qq| AND f.warehouse_id = 0|;
+    $fifowhere = qq| AND f.warehouse_id = 0|;
    }
 
    if (!$form->{summary}){
@@ -3747,7 +3776,7 @@ sub trans_list {
          $where .= qq| AND aa.invoice| unless $form->{trans};
       }
       if ($form->{trans}){
-	 $where .= qq| AND NOT aa.invoice | unless $form->{invoices};
+     $where .= qq| AND NOT aa.invoice | unless $form->{invoices};
       }
    }
    @columns = (qw(id invnumber transdate customernumber vendornumber name partnumber description qty sellprice amount tax total cogs markup employee));
@@ -3758,21 +3787,21 @@ sub trans_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			invnumber => 2,
-			transdate => 3,
-			customernumber => 4,
-			vendornumber => 4,
-			name => 5,
-			partnumber => 6,
-			description => 7,
-			qty => 8,
-			sellprice => 9,
-			amount => 10,
-			tax => 11,
-			total => 12,
-			cogs => 13,
-			markup => 14
+   my %ordinal = (  id => 1,
+            invnumber => 2,
+            transdate => 3,
+            customernumber => 4,
+            vendornumber => 4,
+            name => 5,
+            partnumber => 6,
+            description => 7,
+            qty => 8,
+            sellprice => 9,
+            amount => 10,
+            tax => 11,
+            total => 12,
+            cogs => 13,
+            markup => 14
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -3802,91 +3831,91 @@ sub trans_list {
    $form->{callback} = $form->escape($callback,1);
 
    if ($form->{summary}){
-   	$query = qq|
-		SELECT 
-		  aa.id, 
-		  aa.invnumber,
-		  aa.transdate,
-		  ct.${db}number, 
-		  ct.name, 
-		  e.name AS employee,
-		  aa.netamount AS amount,
-		  aa.amount - aa.netamount AS tax,
-		  aa.amount AS total,
+    $query = qq|
+        SELECT 
+          aa.id, 
+          aa.invnumber,
+          aa.transdate,
+          ct.${db}number, 
+          ct.name, 
+          e.name AS employee,
+          aa.netamount AS amount,
+          aa.amount - aa.netamount AS tax,
+          aa.amount AS total,
 
-	(SELECT SUM(0-ac.amount) 
-	FROM acc_trans ac 
-	JOIN chart c ON (c.id = ac.chart_id) 
-	WHERE ac.trans_id = aa.id 
-	AND c.link LIKE '%IC_cogs%') AS cogs,
+    (SELECT SUM(0-ac.amount) 
+    FROM acc_trans ac 
+    JOIN chart c ON (c.id = ac.chart_id) 
+    WHERE ac.trans_id = aa.id 
+    AND c.link LIKE '%IC_cogs%') AS cogs,
 
-		aa.invoice,
-		aa.till
+        aa.invoice,
+        aa.till
 
-		FROM $table aa
-		JOIN $db ct ON (ct.id = aa.${db}_id)
-		LEFT JOIN employee e ON (e.id = aa.employee_id)
+        FROM $table aa
+        JOIN $db ct ON (ct.id = aa.${db}_id)
+        LEFT JOIN employee e ON (e.id = aa.employee_id)
 
-		WHERE $where
-		ORDER BY $form->{sort} $form->{direction}|;
+        WHERE $where
+        ORDER BY $form->{sort} $form->{direction}|;
    } else {
-   	$query = qq|
-		SELECT 
-		  aa.id, 
-		  aa.invnumber,
-		  aa.transdate,
-		  ct.${db}number, 
-		  ct.name, 
-		  e.name AS employee,
-		  p.partnumber,
-		  p.description,
-		  i.qty * $sign AS qty,
-		  i.sellprice,
-		  i.qty * i.sellprice * $sign AS amount,
+    $query = qq|
+        SELECT 
+          aa.id, 
+          aa.invnumber,
+          aa.transdate,
+          ct.${db}number, 
+          ct.name, 
+          e.name AS employee,
+          p.partnumber,
+          p.description,
+          i.qty * $sign AS qty,
+          i.sellprice,
+          i.qty * i.sellprice * $sign AS amount,
 
-	(SELECT SUM(taxamount)
-	FROM invoicetax it
-	WHERE it.invoice_id = i.id) AS tax,
+    (SELECT SUM(taxamount)
+    FROM invoicetax it
+    WHERE it.invoice_id = i.id) AS tax,
 
-		  0 AS total,
+          0 AS total,
 
-	(SELECT SUM(qty * costprice)
-	FROM fifo f
-	WHERE f.trans_id = aa.id
-	AND f.parts_id = i.parts_id 
-	$fifowhere) AS cogs,
+    (SELECT SUM(qty * costprice)
+    FROM fifo f
+    WHERE f.trans_id = aa.id
+    AND f.parts_id = i.parts_id 
+    $fifowhere) AS cogs,
 
-		aa.invoice,
-		aa.till
+        aa.invoice,
+        aa.till
 
-		FROM $table aa
-		JOIN invoice i ON (i.trans_id = aa.id)
-		JOIN parts p ON (p.id = i.parts_id)
-		JOIN $db ct ON (ct.id = aa.${db}_id)
-		LEFT JOIN employee e ON (e.id = aa.employee_id)
+        FROM $table aa
+        JOIN invoice i ON (i.trans_id = aa.id)
+        JOIN parts p ON (p.id = i.parts_id)
+        JOIN $db ct ON (ct.id = aa.${db}_id)
+        LEFT JOIN employee e ON (e.id = aa.employee_id)
 
-		WHERE $where
-		ORDER BY $form->{sort} $form->{direction}|;
+        WHERE $where
+        ORDER BY $form->{sort} $form->{direction}|;
    }
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{invnumber}    	= rpt_hdr('invnumber', $locale->text('Invoice Number'), $href);
-   $column_header{transdate}    	= rpt_hdr('transdate', $locale->text('Invoice Date'), $href);
-   $column_header{"${db}number"} 	= rpt_hdr("${db}number", $locale->text('Number'), $href);
-   $column_header{name}    		= rpt_hdr('name', $locale->text('Name'), $href);
-   $column_header{partnumber}    	= rpt_hdr('partnumber', $locale->text('Number'), $href);
-   $column_header{description}  	= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{qty}  		= rpt_hdr('qty', $locale->text('Qty'), $href);
-   $column_header{sellprice}  		= rpt_hdr('sellprice', $locale->text('Price'), $href);
-   $column_header{amount}  		= rpt_hdr('amount', $locale->text('Amount'), $href);
-   $column_header{tax}  		= rpt_hdr('tax', $locale->text('Tax'), $href);
-   $column_header{total}  		= rpt_hdr('total', $locale->text('Total'), $href);
-   $column_header{cogs}  		= rpt_hdr('cogs', $locale->text('COGS'), $href);
-   $column_header{markup}  		= rpt_hdr('markup', $locale->text('%'));
-   $column_header{employee}  		= rpt_hdr('employee', $locale->text($employee_caption), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{invnumber}        = rpt_hdr('invnumber', $locale->text('Invoice Number'), $href);
+   $column_header{transdate}        = rpt_hdr('transdate', $locale->text('Invoice Date'), $href);
+   $column_header{"${db}number"}    = rpt_hdr("${db}number", $locale->text('Number'), $href);
+   $column_header{name}         = rpt_hdr('name', $locale->text('Name'), $href);
+   $column_header{partnumber}       = rpt_hdr('partnumber', $locale->text('Number'), $href);
+   $column_header{description}      = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{qty}          = rpt_hdr('qty', $locale->text('Qty'), $href);
+   $column_header{sellprice}        = rpt_hdr('sellprice', $locale->text('Price'), $href);
+   $column_header{amount}       = rpt_hdr('amount', $locale->text('Amount'), $href);
+   $column_header{tax}          = rpt_hdr('tax', $locale->text('Tax'), $href);
+   $column_header{total}        = rpt_hdr('total', $locale->text('Total'), $href);
+   $column_header{cogs}         = rpt_hdr('cogs', $locale->text('COGS'), $href);
+   $column_header{markup}       = rpt_hdr('markup', $locale->text('%'));
+   $column_header{employee}         = rpt_hdr('employee', $locale->text($employee_caption), $href);
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -3894,8 +3923,8 @@ sub trans_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, "${table}_transactions");
-	exit;
+    &export_to_csv($dbh, $query, "${table}_transactions");
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
@@ -3942,134 +3971,134 @@ sub trans_list {
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
         $module = ($ref->{invoice}) ? ($form->{aa} eq 'AR') ? "is.pl" : "ir.pl" : "$table.pl";
         $module = ($ref->{till}) ? "ps.pl" : $module;
-   	$form->{link} = qq|$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
-	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   if ($groupbreak ne $ref->{$form->{sort}}){
-		$oldgroupbreak = $groupbreak;
-		$groupbreak = $ref->{$form->{sort}};
-		# prepare data for footer
+    $form->{link} = qq|$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
+    $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       if ($groupbreak ne $ref->{$form->{sort}}){
+        $oldgroupbreak = $groupbreak;
+        $groupbreak = $ref->{$form->{sort}};
+        # prepare data for footer
 
-   		$column_data{no}   			= rpt_txt('&nbsp;');
-   		$column_data{invnumber}   		= rpt_txt('&nbsp;');
-   		$column_data{transdate}   		= rpt_txt('&nbsp;');
-   		$column_data{"${db}number"}  		= rpt_txt('&nbsp;');
-   		$column_data{name}    			= rpt_txt('&nbsp;');
-   		$column_data{partnumber}    		= rpt_txt('&nbsp;');
-   		$column_data{description}    		= rpt_txt('&nbsp;');
-   		$column_data{qty} 			= rpt_dec($qty_subtotal);
-   		$column_data{sellprice} 		= rpt_txt('&nbsp;');
-   		$column_data{amount} 			= rpt_dec($amount_subtotal);
-   		$column_data{tax} 			= rpt_dec($tax_subtotal);
-   		$column_data{total} 			= rpt_dec($total_subtotal);
-   		$column_data{cogs} 			= rpt_dec($cogs_subtotal);
-   		$column_data{employee}   		= rpt_txt('&nbsp;');
-		# Print subtotal value of sorted column as heading
-		$column_data{$form->{sort}}		= rpt_txt($oldgroupbreak) if $form->{l_subtotalonly};
-		my $markup = 0;
-		if ($amount_subtotal > 0){
-		   $markup = (($amount_subtotal - $cogs_subtotal) * 100)/$amount_subtotal;
-		}
-   		$column_data{markup} 			= rpt_dec($markup);
+        $column_data{no}            = rpt_txt('&nbsp;');
+        $column_data{invnumber}         = rpt_txt('&nbsp;');
+        $column_data{transdate}         = rpt_txt('&nbsp;');
+        $column_data{"${db}number"}         = rpt_txt('&nbsp;');
+        $column_data{name}              = rpt_txt('&nbsp;');
+        $column_data{partnumber}            = rpt_txt('&nbsp;');
+        $column_data{description}           = rpt_txt('&nbsp;');
+        $column_data{qty}           = rpt_dec($qty_subtotal);
+        $column_data{sellprice}         = rpt_txt('&nbsp;');
+        $column_data{amount}            = rpt_dec($amount_subtotal);
+        $column_data{tax}           = rpt_dec($tax_subtotal);
+        $column_data{total}             = rpt_dec($total_subtotal);
+        $column_data{cogs}          = rpt_dec($cogs_subtotal);
+        $column_data{employee}          = rpt_txt('&nbsp;');
+        # Print subtotal value of sorted column as heading
+        $column_data{$form->{sort}}     = rpt_txt($oldgroupbreak) if $form->{l_subtotalonly};
+        my $markup = 0;
+        if ($amount_subtotal > 0){
+           $markup = (($amount_subtotal - $cogs_subtotal) * 100)/$amount_subtotal;
+        }
+        $column_data{markup}            = rpt_dec($markup);
 
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
 
-   		$qty_subtotal = 0;
-   		$amount_subtotal = 0;
-   		$tax_subtotal = 0;
-   		$total_subtotal = 0;
-   		$cogs_subtotal = 0;
-	   }
-	}
+        $qty_subtotal = 0;
+        $amount_subtotal = 0;
+        $tax_subtotal = 0;
+        $total_subtotal = 0;
+        $cogs_subtotal = 0;
+       }
+    }
 
-	$column_data{no}   			= rpt_txt($no);
-   	$column_data{invnumber} 		= rpt_txt($ref->{invnumber}, $form->{link});
-   	$column_data{transdate} 		= rpt_txt($ref->{transdate});
-   	$column_data{"${db}number"}		= rpt_txt($ref->{"${db}number"});
-   	$column_data{name} 			= rpt_txt($ref->{name});
-   	$column_data{partnumber} 		= rpt_txt($ref->{partnumber});
-   	$column_data{description} 		= rpt_txt($ref->{description});
-   	$column_data{qty}    			= rpt_dec($ref->{qty});
-   	$column_data{sellprice}    		= rpt_dec($ref->{sellprice});
-   	$column_data{amount}    		= rpt_dec($ref->{amount});
-   	$column_data{tax}    			= rpt_dec($ref->{tax});
-   	$column_data{total}    			= rpt_dec($ref->{total});
-   	$column_data{cogs}    			= rpt_dec($ref->{cogs});
-	if ($ref->{amount} > 0){
-   	  $column_data{markup}    		= rpt_dec((($ref->{amount} - $ref->{cogs})* 100)/$ref->{amount});
-	} else {
-   	  $column_data{markup}    		= rpt_dec(0);
-	}
-   	$column_data{employee} 			= rpt_txt($ref->{employee});
+    $column_data{no}            = rpt_txt($no);
+    $column_data{invnumber}         = rpt_txt($ref->{invnumber}, $form->{link});
+    $column_data{transdate}         = rpt_txt($ref->{transdate});
+    $column_data{"${db}number"}     = rpt_txt($ref->{"${db}number"});
+    $column_data{name}          = rpt_txt($ref->{name});
+    $column_data{partnumber}        = rpt_txt($ref->{partnumber});
+    $column_data{description}       = rpt_txt($ref->{description});
+    $column_data{qty}               = rpt_dec($ref->{qty});
+    $column_data{sellprice}         = rpt_dec($ref->{sellprice});
+    $column_data{amount}            = rpt_dec($ref->{amount});
+    $column_data{tax}               = rpt_dec($ref->{tax});
+    $column_data{total}             = rpt_dec($ref->{total});
+    $column_data{cogs}              = rpt_dec($ref->{cogs});
+    if ($ref->{amount} > 0){
+      $column_data{markup}          = rpt_dec((($ref->{amount} - $ref->{cogs})* 100)/$ref->{amount});
+    } else {
+      $column_data{markup}          = rpt_dec(0);
+    }
+    $column_data{employee}          = rpt_txt($ref->{employee});
 
-	if (!$form->{l_subtotalonly}){
-	   print "<tr valign=top class=listrow$i>";
-	   for (@column_index) { print "\n$column_data{$_}" };
-	   print "</tr>";
-	}
-	$i++; $i %= 2; $no++;
+    if (!$form->{l_subtotalonly}){
+       print "<tr valign=top class=listrow$i>";
+       for (@column_index) { print "\n$column_data{$_}" };
+       print "</tr>";
+    }
+    $i++; $i %= 2; $no++;
 
-   	$qty_subtotal += $ref->{qty};
-   	$amount_subtotal += $ref->{amount};
-   	$tax_subtotal += $ref->{tax};
-   	$total_subtotal += $ref->{total};
-   	$cogs_subtotal += $ref->{cogs};
+    $qty_subtotal += $ref->{qty};
+    $amount_subtotal += $ref->{amount};
+    $tax_subtotal += $ref->{tax};
+    $total_subtotal += $ref->{total};
+    $cogs_subtotal += $ref->{cogs};
 
-   	$qty_total += $ref->{qty};
-   	$amount_total += $ref->{amount};
-   	$tax_total += $ref->{tax};
-   	$total_total += $ref->{total};
-   	$cogs_total += $ref->{cogs};
+    $qty_total += $ref->{qty};
+    $amount_total += $ref->{amount};
+    $tax_total += $ref->{tax};
+    $total_total += $ref->{total};
+    $cogs_total += $ref->{cogs};
    }
 
    # prepare data for footer
-   $column_data{no}   			= rpt_txt('&nbsp;');
-   $column_data{invnumber}   		= rpt_txt('&nbsp;');
-   $column_data{transdate}   		= rpt_txt('&nbsp;');
-   $column_data{"${db}number"}  	= rpt_txt('&nbsp;');
-   $column_data{name}    		= rpt_txt('&nbsp;');
-   $column_data{partnumber}    		= rpt_txt('&nbsp;');
-   $column_data{description}   		= rpt_txt('&nbsp;');
+   $column_data{no}             = rpt_txt('&nbsp;');
+   $column_data{invnumber}          = rpt_txt('&nbsp;');
+   $column_data{transdate}          = rpt_txt('&nbsp;');
+   $column_data{"${db}number"}      = rpt_txt('&nbsp;');
+   $column_data{name}           = rpt_txt('&nbsp;');
+   $column_data{partnumber}         = rpt_txt('&nbsp;');
+   $column_data{description}        = rpt_txt('&nbsp;');
 
-   $column_data{qty} 			= rpt_dec($qty_subtotal);
-   $column_data{sellprice} 		= rpt_txt('&nbsp;');
-   $column_data{amount} 		= rpt_dec($amount_subtotal);
-   $column_data{tax} 			= rpt_dec($tax_subtotal);
-   $column_data{total} 			= rpt_dec($total_subtotal);
-   $column_data{cogs} 			= rpt_dec($cogs_subtotal);
-   $column_data{employee}    		= rpt_txt('&nbsp;');
+   $column_data{qty}            = rpt_dec($qty_subtotal);
+   $column_data{sellprice}      = rpt_txt('&nbsp;');
+   $column_data{amount}         = rpt_dec($amount_subtotal);
+   $column_data{tax}            = rpt_dec($tax_subtotal);
+   $column_data{total}          = rpt_dec($total_subtotal);
+   $column_data{cogs}           = rpt_dec($cogs_subtotal);
+   $column_data{employee}           = rpt_txt('&nbsp;');
 
    # Print subtotal value of sorted column as heading
-   $column_data{$form->{sort}}		= rpt_txt($groupbreak) if $form->{l_subtotalonly};
-	
+   $column_data{$form->{sort}}      = rpt_txt($groupbreak) if $form->{l_subtotalonly};
+    
    my $markup = 0;
    if ($form->{l_subtotal}){
-   	if ($amount_subtotal > 0){
-     	   $markup = (($amount_subtotal - $cogs_subtotal) * 100)/$amount_subtotal;
-   	}
-   	$column_data{markup} 		= rpt_dec($markup);
+    if ($amount_subtotal > 0){
+           $markup = (($amount_subtotal - $cogs_subtotal) * 100)/$amount_subtotal;
+    }
+    $column_data{markup}        = rpt_dec($markup);
 
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
 
    # grand total
-   $column_data{qty} 			= rpt_dec($qty_total);
-   $column_data{sellprice} 		= rpt_txt('&nbsp;');
-   $column_data{amount} 		= rpt_dec($amount_total);
-   $column_data{tax} 			= rpt_dec($tax_total);
-   $column_data{total} 			= rpt_dec($total_total);
-   $column_data{cogs} 			= rpt_dec($cogs_total);
+   $column_data{qty}            = rpt_dec($qty_total);
+   $column_data{sellprice}      = rpt_txt('&nbsp;');
+   $column_data{amount}         = rpt_dec($amount_total);
+   $column_data{tax}            = rpt_dec($tax_total);
+   $column_data{total}          = rpt_dec($total_total);
+   $column_data{cogs}           = rpt_dec($cogs_total);
    $markup = 0;
    if ($amount_total > 0){
       $markup = (($amount_total - $cogs_total) * 100)/$amount_total;
    }
-   $column_data{markup} 		= rpt_dec($markup);
+   $column_data{markup}         = rpt_dec($markup);
 
    # print footer
    print "<tr valign=top class=listtotal>";
@@ -4160,14 +4189,14 @@ sub build_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			reference => 2,
-			transdate => 3,
-			department => 4,
-			warehouse => 5,
-			partnumber => 6,
-			description => 7,
-			amount => 8
+   my %ordinal = (  id => 1,
+            reference => 2,
+            transdate => 3,
+            department => 4,
+            warehouse => 5,
+            partnumber => 6,
+            description => 7,
+            amount => 8
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -4188,54 +4217,54 @@ sub build_list {
    $form->{callback} = $form->escape($callback,1);
 
    if ($form->{summary}){
-   	$query = qq|SELECT 
-			b.id, 
-			b.reference,
-			b.transdate,
-			w.description AS warehouse,	
-			d.description AS department,
-			p.partnumber,
-			p.description,
-			i.qty,
-			p.unit
-			FROM build b
-			LEFT JOIN department d ON (d.id = b.department_id)
-			LEFT JOIN warehouse w ON (w.id = b.warehouse_id)
-			JOIN inventory i ON (i.trans_id = b.id)
-			JOIN parts p ON (p.id = i.parts_id)
-			WHERE $where AND assembly
-			ORDER BY $form->{sort} $form->{direction}, i.linetype DESC|;
+    $query = qq|SELECT 
+            b.id, 
+            b.reference,
+            b.transdate,
+            w.description AS warehouse, 
+            d.description AS department,
+            p.partnumber,
+            p.description,
+            i.qty,
+            p.unit
+            FROM build b
+            LEFT JOIN department d ON (d.id = b.department_id)
+            LEFT JOIN warehouse w ON (w.id = b.warehouse_id)
+            JOIN inventory i ON (i.trans_id = b.id)
+            JOIN parts p ON (p.id = i.parts_id)
+            WHERE $where AND assembly
+            ORDER BY $form->{sort} $form->{direction}, i.linetype DESC|;
    } else {
-   	$query = qq|SELECT 
-			b.id, 
-			b.reference,
-			b.transdate,
-			w.description AS warehouse,	
-			d.description AS department,
-			p.partnumber,
-			p.description,
-			i.qty,
-			p.unit
-			FROM build b
-			LEFT JOIN department d ON (d.id = b.department_id)
-			LEFT JOIN warehouse w ON (w.id = b.warehouse_id)
-			JOIN inventory i ON (i.trans_id = b.id)
-			JOIN parts p ON (p.id = i.parts_id)
-			WHERE $where
-			ORDER BY $form->{sort} $form->{direction}, i.linetype DESC|;
+    $query = qq|SELECT 
+            b.id, 
+            b.reference,
+            b.transdate,
+            w.description AS warehouse, 
+            d.description AS department,
+            p.partnumber,
+            p.description,
+            i.qty,
+            p.unit
+            FROM build b
+            LEFT JOIN department d ON (d.id = b.department_id)
+            LEFT JOIN warehouse w ON (w.id = b.warehouse_id)
+            JOIN inventory i ON (i.trans_id = b.id)
+            JOIN parts p ON (p.id = i.parts_id)
+            WHERE $where
+            ORDER BY $form->{sort} $form->{direction}, i.linetype DESC|;
    }
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{reference} 		= rpt_hdr('reference', $locale->text('Reference'), $href);
-   $column_header{transdate} 		= rpt_hdr('transdate', $locale->text('Date'), $href);
-   $column_header{department} 		= rpt_hdr('department', $locale->text('Department'), $href);
-   $column_header{warehouse} 		= rpt_hdr('warehouse', $locale->text('Warehouse'), $href);
-   $column_header{partnumber} 		= rpt_hdr('partnumber', $locale->text('Number'), $href);
-   $column_header{description} 		= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{qty}  		= rpt_hdr('qty', $locale->text('Qty'), $href);
-   $column_header{unit}  		= rpt_hdr('unit', $locale->text('Unit'), $href);
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{reference}        = rpt_hdr('reference', $locale->text('Reference'), $href);
+   $column_header{transdate}        = rpt_hdr('transdate', $locale->text('Date'), $href);
+   $column_header{department}       = rpt_hdr('department', $locale->text('Department'), $href);
+   $column_header{warehouse}        = rpt_hdr('warehouse', $locale->text('Warehouse'), $href);
+   $column_header{partnumber}       = rpt_hdr('partnumber', $locale->text('Number'), $href);
+   $column_header{description}      = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{qty}          = rpt_hdr('qty', $locale->text('Qty'), $href);
+   $column_header{unit}         = rpt_hdr('unit', $locale->text('Unit'), $href);
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -4243,8 +4272,8 @@ sub build_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'stock_assembly');
-	exit;
+    &export_to_csv($dbh, $query, 'stock_assembly');
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
@@ -4269,63 +4298,63 @@ sub build_list {
    my $i = 1; my $no = 1;
    my $groupbreak = 'none';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
-	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   if ($groupbreak ne $ref->{$form->{sort}}){
-		$groupbreak = $ref->{$form->{sort}};
-		# prepare data for footer
-   		$column_data{no}   		= rpt_txt('&nbsp;');
-   		$column_data{reference}  	= rpt_txt('&nbsp;');
-   		$column_data{transdate}  	= rpt_txt('&nbsp;');
-   		$column_data{department}  	= rpt_txt('&nbsp;');
-   		$column_data{warehouse}  	= rpt_txt('&nbsp;');
-   		$column_data{partnumber}  	= rpt_txt('&nbsp;');
-   		$column_data{description} 	= rpt_txt('&nbsp;');
-   		$column_data{qty} 		= rpt_dec($qty_subtotal);
-   		$column_data{unit} 		= rpt_txt('&nbsp;');
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
-		$qty_subtotal = 0;
-	   }
-	}
-	$column_data{no}   		= rpt_txt($no);
-   	$column_data{reference}		= rpt_txt($ref->{reference});
-   	$column_data{transdate}		= rpt_txt($ref->{transdate});
-   	$column_data{department}	= rpt_txt($ref->{department});
-   	$column_data{warehouse}		= rpt_txt($ref->{warehouse});
-   	$column_data{partnumber}	= rpt_txt($ref->{partnumber});
-   	$column_data{description} 	= rpt_txt($ref->{description});
-   	$column_data{qty}    		= rpt_dec($ref->{qty});
-   	$column_data{unit}    		= rpt_txt($ref->{unit});
+    $form->{link} = qq|$form->{script}?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&sessionid=$form->{sessionid}&callback=$form->{callback}|;
+    $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       if ($groupbreak ne $ref->{$form->{sort}}){
+        $groupbreak = $ref->{$form->{sort}};
+        # prepare data for footer
+        $column_data{no}        = rpt_txt('&nbsp;');
+        $column_data{reference}     = rpt_txt('&nbsp;');
+        $column_data{transdate}     = rpt_txt('&nbsp;');
+        $column_data{department}    = rpt_txt('&nbsp;');
+        $column_data{warehouse}     = rpt_txt('&nbsp;');
+        $column_data{partnumber}    = rpt_txt('&nbsp;');
+        $column_data{description}   = rpt_txt('&nbsp;');
+        $column_data{qty}       = rpt_dec($qty_subtotal);
+        $column_data{unit}      = rpt_txt('&nbsp;');
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
+        $qty_subtotal = 0;
+       }
+    }
+    $column_data{no}        = rpt_txt($no);
+    $column_data{reference}     = rpt_txt($ref->{reference});
+    $column_data{transdate}     = rpt_txt($ref->{transdate});
+    $column_data{department}    = rpt_txt($ref->{department});
+    $column_data{warehouse}     = rpt_txt($ref->{warehouse});
+    $column_data{partnumber}    = rpt_txt($ref->{partnumber});
+    $column_data{description}   = rpt_txt($ref->{description});
+    $column_data{qty}           = rpt_dec($ref->{qty});
+    $column_data{unit}          = rpt_txt($ref->{unit});
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
-	$qty_subtotal += $ref->{qty};
-	$qty_total += $ref->{qty};
+    $qty_subtotal += $ref->{qty};
+    $qty_total += $ref->{qty};
    }
 
    # prepare data for footer
-   $column_data{no}   		= rpt_txt('&nbsp;');
-   $column_data{reference}  	= rpt_txt('&nbsp;');
-   $column_data{transdate}  	= rpt_txt('&nbsp;');
-   $column_data{department}  	= rpt_txt('&nbsp;');
-   $column_data{warehouse}  	= rpt_txt('&nbsp;');
-   $column_data{partnumber}  	= rpt_txt('&nbsp;');
-   $column_data{description} 	= rpt_txt('&nbsp;');
-   $column_data{qty} 		= rpt_dec($qty_subtotal);
-   $column_data{unit} 		= rpt_txt('&nbsp;');
+   $column_data{no}         = rpt_txt('&nbsp;');
+   $column_data{reference}      = rpt_txt('&nbsp;');
+   $column_data{transdate}      = rpt_txt('&nbsp;');
+   $column_data{department}     = rpt_txt('&nbsp;');
+   $column_data{warehouse}      = rpt_txt('&nbsp;');
+   $column_data{partnumber}     = rpt_txt('&nbsp;');
+   $column_data{description}    = rpt_txt('&nbsp;');
+   $column_data{qty}        = rpt_dec($qty_subtotal);
+   $column_data{unit}       = rpt_txt('&nbsp;');
 
    if ($form->{l_subtotal}){
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
 
    # grand total
@@ -4417,14 +4446,14 @@ sub projects_list {
    $form->{direction} = 'ASC' if !$form->{direction};
    @columns = $form->sort_columns(@columns);
 
-   my %ordinal = (	id => 1,
-			projectnumber => 2,
-			description => 3,
-			startdate => 4,
-			enddate => 5,
-			income => 6,
-			expenses => 7,
-			net => 8,
+   my %ordinal = (  id => 1,
+            projectnumber => 2,
+            description => 3,
+            startdate => 4,
+            enddate => 5,
+            income => 6,
+            expenses => 7,
+            net => 8,
    );
    my $sort_order = $form->sort_order(\@columns, \%ordinal);
 
@@ -4445,41 +4474,41 @@ sub projects_list {
    $form->{callback} = $form->escape($callback,1);
 
    $query = qq|SELECT 
-		p.id, 
-		p.projectnumber, 
-		p.description, 
-		p.startdate,
-		p.enddate,
+        p.id, 
+        p.projectnumber, 
+        p.description, 
+        p.startdate,
+        p.enddate,
 
-		(SELECT SUM(amount) 
-		 FROM acc_trans ac
-		 JOIN chart c ON (c.id = ac.chart_id)
-		 WHERE c.category = 'I'
-		 AND ac.project_id = p.id
-		 $subwhere) AS income,
+        (SELECT SUM(amount) 
+         FROM acc_trans ac
+         JOIN chart c ON (c.id = ac.chart_id)
+         WHERE c.category = 'I'
+         AND ac.project_id = p.id
+         $subwhere) AS income,
 
-		(SELECT SUM(0-amount) 
-		 FROM acc_trans ac
-		 JOIN chart c ON (c.id = ac.chart_id)
-		 WHERE c.category = 'E'
-		 AND ac.project_id = p.id
-		 $subwhere) AS expenses
+        (SELECT SUM(0-amount) 
+         FROM acc_trans ac
+         JOIN chart c ON (c.id = ac.chart_id)
+         WHERE c.category = 'E'
+         AND ac.project_id = p.id
+         $subwhere) AS expenses
 
-		FROM project p
-		WHERE $where
-		ORDER BY $form->{sort} $form->{direction}|;
+        FROM project p
+        WHERE $where
+        ORDER BY $form->{sort} $form->{direction}|;
 
    # store oldsort/direction information
    $href .= "&direction=$form->{direction}&oldsort=$form->{sort}";
 
-   $column_header{no}   		= rpt_hdr('no', $locale->text('No.'));
-   $column_header{projectnumber} 	= rpt_hdr('projectnumber', $locale->text('Number'), $href);
-   $column_header{description} 		= rpt_hdr('description', $locale->text('Description'), $href);
-   $column_header{startdate}  		= rpt_hdr('startdate', $locale->text('Startdate'), $href);
-   $column_header{enddate}  		= rpt_hdr('enddate', $locale->text('Enddate'), $href);
-   $column_header{income}  		= rpt_hdr('income', $locale->text('Income'), $href);
-   $column_header{expenses}  		= rpt_hdr('expenses', $locale->text('Expenses'), $href);
-   $column_header{net}  		= rpt_hdr('net', $locale->text('Income/(Loss)'));
+   $column_header{no}           = rpt_hdr('no', $locale->text('No.'));
+   $column_header{projectnumber}    = rpt_hdr('projectnumber', $locale->text('Number'), $href);
+   $column_header{description}      = rpt_hdr('description', $locale->text('Description'), $href);
+   $column_header{startdate}        = rpt_hdr('startdate', $locale->text('Startdate'), $href);
+   $column_header{enddate}          = rpt_hdr('enddate', $locale->text('Enddate'), $href);
+   $column_header{income}       = rpt_hdr('income', $locale->text('Income'), $href);
+   $column_header{expenses}         = rpt_hdr('expenses', $locale->text('Expenses'), $href);
+   $column_header{net}          = rpt_hdr('net', $locale->text('Income/(Loss)'));
 
    $form->error($query) if $form->{l_sql};
    $dbh = $form->dbconnect(\%myconfig);
@@ -4487,8 +4516,8 @@ sub projects_list {
    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
    if ($form->{l_csv} eq 'Y'){
-	&export_to_csv($dbh, $query, 'parts_onhand');
-	exit;
+    &export_to_csv($dbh, $query, 'parts_onhand');
+    exit;
    }
    $sth = $dbh->prepare($query);
    $sth->execute || $form->dberror($query);
@@ -4518,66 +4547,66 @@ sub projects_list {
    my $groupbreak = 'none';
    $form->{accounttype} = 'standard';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-   	$form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&projectnumber=$ref->{projectnumber}--$ref->{id}|;
+    $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&projectnumber=$ref->{projectnumber}--$ref->{id}|;
         for (qw(accounttype datefrom dateto l_subtotal path login)){ $form->{link} .= "&$_=$form->{$_}" }
-	$groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
-	if ($form->{l_subtotal}){
-	   if ($groupbreak ne $ref->{$form->{sort}}){
-		$groupbreak = $ref->{$form->{sort}};
-		# prepare data for footer
+    $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
+    if ($form->{l_subtotal}){
+       if ($groupbreak ne $ref->{$form->{sort}}){
+        $groupbreak = $ref->{$form->{sort}};
+        # prepare data for footer
 
-		for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') };
-   		$column_data{income} 	= rpt_dec($income_subtotal);
-   		$column_data{expenses} 	= rpt_dec($expenses_subtotal);
-   		$column_data{net} 	= rpt_dec($income_subtotal - $expenses_subtotal);
+        for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') };
+        $column_data{income}    = rpt_dec($income_subtotal);
+        $column_data{expenses}  = rpt_dec($expenses_subtotal);
+        $column_data{net}   = rpt_dec($income_subtotal - $expenses_subtotal);
 
-		# print footer
-		print "<tr valign=top class=listsubtotal>";
-		for (@column_index) { print "\n$column_data{$_}" }
-		print "</tr>";
+        # print footer
+        print "<tr valign=top class=listsubtotal>";
+        for (@column_index) { print "\n$column_data{$_}" }
+        print "</tr>";
 
-		$income_subtotal = 0;
-		$expenses_subtotal = 0;
-		$net_subtotal = 0;
-	   }
-	}
+        $income_subtotal = 0;
+        $expenses_subtotal = 0;
+        $net_subtotal = 0;
+       }
+    }
 
-	$column_data{no}   		= rpt_txt($no);
-   	$column_data{projectnumber}	= rpt_txt($ref->{projectnumber}, $form->{link});
-   	$column_data{description}	= rpt_txt($ref->{description});
-   	$column_data{startdate} 	= rpt_txt($ref->{startdate});
-   	$column_data{enddate}    	= rpt_txt($ref->{enddate});
-   	$column_data{income}    	= rpt_dec($ref->{income});
-   	$column_data{expenses}    	= rpt_dec($ref->{expenses});
-   	$column_data{net}    		= rpt_dec($ref->{income} - $ref->{expenses});
+    $column_data{no}        = rpt_txt($no);
+    $column_data{projectnumber} = rpt_txt($ref->{projectnumber}, $form->{link});
+    $column_data{description}   = rpt_txt($ref->{description});
+    $column_data{startdate}     = rpt_txt($ref->{startdate});
+    $column_data{enddate}       = rpt_txt($ref->{enddate});
+    $column_data{income}        = rpt_dec($ref->{income});
+    $column_data{expenses}      = rpt_dec($ref->{expenses});
+    $column_data{net}           = rpt_dec($ref->{income} - $ref->{expenses});
 
-	print "<tr valign=top class=listrow$i>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
-	$i++; $i %= 2; $no++;
+    print "<tr valign=top class=listrow$i>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
+    $i++; $i %= 2; $no++;
 
-	$income_subtotal += $ref->{income};
-	$income_total += $ref->{income};
-	$expenses_subtotal += $ref->{expenses};
-	$expenses_total += $ref->{expenses};
+    $income_subtotal += $ref->{income};
+    $income_total += $ref->{income};
+    $expenses_subtotal += $ref->{expenses};
+    $expenses_total += $ref->{expenses};
    }
 
    # prepare data for footer
    for (@column_index) { $column_data{$_} = rpt_txt('&nbsp;') };
    $column_data{income}   = rpt_dec($income_subtotal);
    $column_data{expenses} = rpt_dec($expenses_subtotal);
-   $column_data{net} 	  = rpt_dec($income_subtotal - $expenses_subtotal);
+   $column_data{net}      = rpt_dec($income_subtotal - $expenses_subtotal);
 
    if ($form->{l_subtotal}){
-	# print last subtotal
-	print "<tr valign=top class=listsubtotal>";
-	for (@column_index) { print "\n$column_data{$_}" }
-	print "</tr>";
+    # print last subtotal
+    print "<tr valign=top class=listsubtotal>";
+    for (@column_index) { print "\n$column_data{$_}" }
+    print "</tr>";
    }
    # grand total
    $column_data{income}   = rpt_dec($income_total);
    $column_data{expenses} = rpt_dec($expenses_total);
-   $column_data{net} 	  = rpt_dec($income_total - $expenses_total);
+   $column_data{net}      = rpt_dec($income_total - $expenses_total);
 
    # print footer
    print "<tr valign=top class=listtotal>";
@@ -4610,16 +4639,16 @@ sub search_reminders {
 
     $selectfrom = qq|
         <tr>
-	  <th align=right>|.$locale->text('Period').qq|</th>
-	  <td colspan=3>
-	  <select name=month>$selectaccountingmonth</select>
-	  <select name=year>$selectaccountingyear</select>
-	  <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
-	  <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
-	  <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
-	  <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
-	  </td>
-	</tr>
+      <th align=right>|.$locale->text('Period').qq|</th>
+      <td colspan=3>
+      <select name=month>$selectaccountingmonth</select>
+      <select name=year>$selectaccountingyear</select>
+      <input name=interval class=radio type=radio value=0 checked>&nbsp;|.$locale->text('Current').qq|
+      <input name=interval class=radio type=radio value=1>&nbsp;|.$locale->text('Month').qq|
+      <input name=interval class=radio type=radio value=3>&nbsp;|.$locale->text('Quarter').qq|
+      <input name=interval class=radio type=radio value=12>&nbsp;|.$locale->text('Year').qq|
+      </td>
+    </tr>
 |;
     }
 
@@ -4631,45 +4660,45 @@ sub search_reminders {
     if (@{ $form->{"all_$form->{vc}"} }) {
       $vc = qq|
            <tr>
-	     <th align=right nowrap>$vclabel</th>
-	     <td colspan=2><select name=$form->{vc}><option>\n|;
-	     
+         <th align=right nowrap>$vclabel</th>
+         <td colspan=2><select name=$form->{vc}><option>\n|;
+         
       for (@{ $form->{"all_$form->{vc}"} }) { $vc .= qq|<option value="|.$form->quote($_->{name}).qq|--$_->{id}">$_->{name}\n| }
 
       $vc .= qq|</select>
              </td>
-	   </tr>
+       </tr>
 |;
     } else {
       $vc = qq|
                 <tr>
-		  <th align=right nowrap>$vclabel</th>
-		  <td colspan=2><input name=$form->{vc} size=35>
-		  </td>
-		</tr>
-		<tr>
-		  <th align=right nowrap>$vcnumber</th>
-		  <td colspan=3><input name="$form->{vc}number" size=35>
-		  </td>
-		</tr>
+          <th align=right nowrap>$vclabel</th>
+          <td colspan=2><input name=$form->{vc} size=35>
+          </td>
+        </tr>
+        <tr>
+          <th align=right nowrap>$vcnumber</th>
+          <td colspan=3><input name="$form->{vc}number" size=35>
+          </td>
+        </tr>
 |;
    }
 
    # departments
    if (@{ $form->{all_department} }) {
      if ($myconfig{department_id} and $myconfig{role} eq 'user'){
-	$form->{selectdepartment} = qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{department}\n|;
+    $form->{selectdepartment} = qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{department}\n|;
      } else {
-	$form->{selectdepartment} = "<option>\n";
-	for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|<option value="|.$form->quote($_->{description}).qq|--$_->{id}">$_->{description}\n| }
+    $form->{selectdepartment} = "<option>\n";
+    for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|<option value="|.$form->quote($_->{description}).qq|--$_->{id}">$_->{description}\n| }
      }
    }
  
    $department = qq|
-	<tr>
-	  <th align=right nowrap>|.$locale->text('Department').qq|</th>
-	  <td colspan=3><select name=department>$form->{selectdepartment}</select></td>
-	</tr>
+    <tr>
+      <th align=right nowrap>|.$locale->text('Department').qq|</th>
+      <td colspan=3><select name=department>$form->{selectdepartment}</select></td>
+    </tr>
 | if $form->{selectdepartment};
 
 
@@ -4693,9 +4722,9 @@ sub search_reminders {
     </tr>
     $selectfrom
     <tr>
-	<th align=right nowrap>|.$locale->text('Include in Report').qq|</th>
-	<td>
-	<table width=100%>
+    <th align=right nowrap>|.$locale->text('Include in Report').qq|</th>
+    <td>
+    <table width=100%>
 |;
 
     @a = ();
@@ -4712,8 +4741,8 @@ sub search_reminders {
     while (@a) {
       print qq|<tr>\n|;
       for (1 .. 5) {
-	print qq|<td nowrap>|. shift @a;
-	print qq|</td>\n|;
+    print qq|<td nowrap>|. shift @a;
+    print qq|</td>\n|;
       }
       print qq|</tr>\n|;
     }
@@ -4793,16 +4822,16 @@ sub list_reminders {
   my $dbh = $form->dbconnect(\%myconfig);
 
   $query = qq|
-	SELECT cast(a.transdate as date) as transdate, a.reference, vc.name,
-		vc.customernumber, ar.invnumber, ar.ordnumber,
-		ar.duedate, ar.amount - ar.paid as due
-	FROM audittrail a
-	JOIN ar ON (ar.id = a.trans_id)
-	JOIN customer vc ON (vc.id = ar.customer_id)
-	WHERE a.formname = 'reminder'
-	AND a.action = 'level-change'
-	$where
-	ORDER BY a.transdate
+    SELECT cast(a.transdate as date) as transdate, a.reference, vc.name,
+        vc.customernumber, ar.invnumber, ar.ordnumber,
+        ar.duedate, ar.amount - ar.paid as due
+    FROM audittrail a
+    JOIN ar ON (ar.id = a.trans_id)
+    JOIN customer vc ON (vc.id = ar.customer_id)
+    WHERE a.formname = 'reminder'
+    AND a.action = 'level-change'
+    $where
+    ORDER BY a.transdate
   |;
   @columns = (qw(transdate reference name customernumber invnumber ordnumber duedate due));
   $form->sort_order();
@@ -4872,7 +4901,7 @@ sub list_reminders {
    for (@column_index) { print "$column_data{$_}\n" }
 
    print qq|
-	</tr>
+    </tr>
 |;
   }
 
