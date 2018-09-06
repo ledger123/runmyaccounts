@@ -55,7 +55,11 @@ sub ref_to_csv {
    print CSVFILE "\n";
 
    foreach $ref (@{ $form->{$data} }) {
-      for (@$column_index) { print CSVFILE qq|"$ref->{$_}",| }
+   	  my $cellValue = '';
+      for (@$column_index) {
+      	$cellValue = &escape_double_quotes_with_two_double_quotes($ref->{$_});
+      	print CSVFILE qq|"$cellValue",|;
+      }
       print CSVFILE "\n";
    }
 
@@ -119,6 +123,12 @@ sub escape_csv {
    my $str = shift;
    $str =~ s/"/""/g;
    $str =~ s/\n/ /g;
+   return $str;
+}
+
+sub escape_double_quotes_with_two_double_quotes {
+   my $str = shift;
+   $str =~ s/"/""/g;
    return $str;
 }
 
