@@ -2577,6 +2577,7 @@ sub import_gl {
       $newform->{currency} = $form->{"currency_$i"};
       $newform->{oldcurrency} = $form->{"currency_$i"};
       $newform->{exchangerate} = $form->{"exchangerate_$i"};
+      $newform->{notes} = $form->{"notes_$i"};
       $newform->{"accno_$linenum"} = qq|$form->{"accno_$i"}--$form->{"accdescription_$i"}|;
       $newform->{"debit_$linenum"} = $form->{"debit_$i"};
       $newform->{"credit_$linenum"} = $form->{"credit_$i"};
