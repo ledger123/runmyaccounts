@@ -1862,7 +1862,8 @@ sub search {
     print qq|
 <body>
 
-<form method=post action=$form->{script}>
+<form method=get action=$form->{script}>
+<input type="hidden" name="auth_token" value="<%auth_token%>" />
 
 <table width=100%>
   <tr><th class=listtop>$form->{title}</th></tr>
@@ -2211,11 +2212,11 @@ sub transactions {
     $column_data{name}          = "<th><a class=listheading href=$href&sort=name>$name</a></th>";
     $column_data{$namefld}      = "<th><a class=listheading href=$href&sort=$namefld>$namenumber</a></th>";
     $column_data{address}       = "<th class=listheading>" . $locale->text('Address') . "</th>";
-    $column_data{netamount}     = "<th class=listheading>" . $locale->text('Amount') . "</th>";
-    $column_data{tax}           = "<th class=listheading>" . $locale->text('Tax') . "</th>";
-    $column_data{amount}        = "<th class=listheading>" . $locale->text('Total') . "</th>";
-    $column_data{paid}          = "<th class=listheading>" . $locale->text('Paid') . "</th>";
-    $column_data{paid}          = "<th><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
+    $column_data{netamount}     = "<th align=right class=listheading>" . $locale->text('Amount') . "</th>";
+    $column_data{tax}           = "<th align=right class=listheading>" . $locale->text('Tax') . "</th>";
+    $column_data{amount}        = "<th align=right class=listheading>" . $locale->text('Total') . "</th>";
+    $column_data{paid}          = "<th align=right class=listheading>" . $locale->text('Paid') . "</th>";
+    $column_data{paid}          = "<th align=right><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
     $column_data{paymentmethod} = "<th><a class=listheading href=$href&sort=paymentmethod>" . $locale->text('Payment Method') . "</a></th>";
     $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
     $column_data{due}           = "<th class=listheading>" . $locale->text('Due') . "</th>";
@@ -2252,29 +2253,41 @@ sub transactions {
 
     $form->header;
 
+    my $today = $form->today(\%myconfig);
+
     print qq|
 <body>
 
-<div align="center" class="redirectmsg">$form->{redirectmsg}</div>
+<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {event: 'urlToPdf', url: window.location.href}}, '*')" class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+</button>
+
+<div align="center" class="redirectmsg noprint">$form->{redirectmsg}</div>
+<div class="printonly"><span class="creation-date">$today</span></div>
+
+<div class="printonly">
+<span class="page-topleft">$form->{company}</span>
+<span class="page-topright">$option</span>
+</div>
 
 <table width=100%>
   <tr>
     <th class=listtop>$form->{title}</th>
   </tr>
-  <tr height="5"></tr>
-  <tr>
+  <tr class="noprint" height="5"></tr>
+  <tr class="noprint" >
     <td>$option</td>
   </tr>
   <tr>
     <td>
-      <table width=100%>
-	<tr class=listheading>
+      <table class="report-table" width=100%>
+	<thead><tr class=listheading>
 |;
 
     for (@column_index) { print "\n$column_data{$_}" }
 
     print qq|
-	</tr>
+	</tr></thead>
 |;
 
     # add sort and escape callback, this one we use for the add sub
@@ -2319,7 +2332,7 @@ sub transactions {
 
         }
 
-        $column_data{runningnumber} = "<td>$i</td>";
+        $column_data{runningnumber} = "<td align=left>$i</td>";
 
         for (qw(netamount amount paid debit credit)) { $column_data{$_} = "<td align=right>" . $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision}, "&nbsp;" ) . "</td>" }
 
@@ -2341,14 +2354,14 @@ sub transactions {
         $module = ( $ref->{invoice} ) ? ( $form->{ARAP} eq 'AR' ) ? "is.pl" : "ir.pl" : $form->{script};
         $module = ( $ref->{till} ) ? "ps.pl" : $module;
 
-        $column_data{invnumber} = "<td><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</a></td>";
+        $column_data{invnumber} = "<td align=left><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</a></td>";
 
         for (qw(notes intnotes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
-        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td nowrap>$ref->{$_}&nbsp;</td>" }
+        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}&nbsp;</td>" }
         for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
-            $column_data{$_} = "<td>$ref->{$_}&nbsp;</td>";
+            $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>";
         }
-        $column_data{$namefld} = "<td>$ref->{$namefld}&nbsp;</td>";
+        $column_data{$namefld} = "<td align=left>$ref->{$namefld}&nbsp;</td>";
 
         if ( $ref->{paymentdiff} <= 0 ) {
             $column_data{paymentdiff} = qq|<td class="plus1" align=right>$ref->{paymentdiff}&nbsp;</td>|;
@@ -2357,12 +2370,12 @@ sub transactions {
             $column_data{paymentdiff} = qq|<td class="plus0" align=right>+$ref->{paymentdiff}&nbsp;</td>|;
         }
 
-        for (qw(id curr)) { $column_data{$_} = "<td>$ref->{$_}</td>" }
+        for (qw(id curr)) { $column_data{$_} = "<td align=left>$ref->{$_}</td>" }
 
         $column_data{accno} =
-qq|<td><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=list_transactions&accounttype=standard&accno=$ref->{accno}&fromdate=$form->{transdatefrom}&todate=$form->{transdateto}&sort=transdate&l_subtotal=$form->{l_subtotal}&prevreport=$callback>$ref->{accno}</a></td>|;
+qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=list_transactions&accounttype=standard&accno=$ref->{accno}&fromdate=$form->{transdatefrom}&todate=$form->{transdateto}&sort=transdate&l_subtotal=$form->{l_subtotal}&prevreport=$callback>$ref->{accno}</a></td>|;
 
-        $column_data{name} = qq|<td><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a></td>|;
+        $column_data{name} = qq|<td align=left><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a></td>|;
 
         if ( $ref->{id} != $sameid ) {
             $j++;
@@ -2414,15 +2427,15 @@ qq|<td><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=list_transac
     if ( $myconfig{acs} !~ /$form->{ARAP}--$form->{ARAP}/ ) {
         $i = 1;
         if ( $form->{ARAP} eq 'AR' ) {
-            $button{'AR--Add Transaction'}{code}  = qq|<input class=submit type=submit name=action value="| . $locale->text('AR Transaction') . qq|"> |;
+            $button{'AR--Add Transaction'}{code}  = qq|<input class="submit noprint" type=submit name=action value="| . $locale->text('AR Transaction') . qq|"> |;
             $button{'AR--Add Transaction'}{order} = $i++;
-            $button{'AR--Sales Invoice'}{code}    = qq|<input class=submit type=submit name=action value="| . $locale->text('Sales Invoice.') . qq|"> |;
+            $button{'AR--Sales Invoice'}{code}    = qq|<input class="submit noprint" type=submit name=action value="| . $locale->text('Sales Invoice.') . qq|"> |;
             $button{'AR--Sales Invoice'}{order}   = $i++;
         }
         else {
-            $button{'AP--Add Transaction'}{code}  = qq|<input class=submit type=submit name=action value="| . $locale->text('AP Transaction') . qq|"> |;
+            $button{'AP--Add Transaction'}{code}  = qq|<input class="submit noprint" type=submit name=action value="| . $locale->text('AP Transaction') . qq|"> |;
             $button{'AP--Add Transaction'}{order} = $i++;
-            $button{'AP--Vendor Invoice'}{code}   = qq|<input class=submit type=submit name=action value="| . $locale->text('Vendor Invoice.') . qq|"> |;
+            $button{'AP--Vendor Invoice'}{code}   = qq|<input class="submit noprint" type=submit name=action value="| . $locale->text('Vendor Invoice.') . qq|"> |;
             $button{'AP--Vendor Invoice'}{order}  = $i++;
         }
 
