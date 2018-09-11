@@ -8,6 +8,7 @@ $self{subs} = {
   'continue'                    => 'continue',
   'just_do_it'                  => 'just_do_it',
   'list_trans'                  => 'list_trans',
+  'deselect_all'				=> 'deselect_all',
 };
 
 1;
