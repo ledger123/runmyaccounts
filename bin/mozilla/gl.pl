@@ -381,6 +381,8 @@ sub search {
 
     $form->header;
 
+	my $title = $locale->text('General Ledger');
+
     #JS->change_report(\%$form, \@input, \@checked, \%radio);
 
     print qq|
@@ -389,7 +391,8 @@ sub search {
 
     print qq|
 <form method=get action=$form->{script}>
-<input type="hidden" name="auth_token" value="<%auth_token%>" /> 
+<input type="hidden" name="auth_token" value="<%auth_token%>" />
+<input type="hidden" name="title" value="$title" /> 
 
 <table width=100%>
   <tr>
@@ -623,6 +626,8 @@ sub transactions {
         'E' => $locale->text('Expense'),
     );
 
+    $href .= "&title=" . $form->escape( $locale->text('General Ledger') );
+    
     $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
 
     $ml = ( $form->{category} =~ /(A|E)/ ) ? -1 : 1;
@@ -880,6 +885,7 @@ sub transactions {
     $callback .= "&column_index=" . $form->escape( $form->{column_index} );
 
     $href     .= "&category=$form->{category}";
+    
     $callback .= "&category=$form->{category}";
 
     $form->helpref( "list_gl_transactions", $myconfig{countrycode} );
