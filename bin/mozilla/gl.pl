@@ -946,10 +946,10 @@ sub transactions {
             $sort = "";
             if ( $form->{sort} eq $column_sort{ $column_index[$_] } ) {
                 if ( $form->{direction} eq 'ASC' ) {
-                    $sort = qq|<img src=$images/up.png class="noprint" >&nbsp;&nbsp;&nbsp;|;
+                    $sort = qq|<span class="noprint"><img src=$images/up.png>&nbsp;&nbsp;&nbsp;</span>|;
                 }
                 else {
-                    $sort = qq|<img src=$images/down.png class="noprint" >&nbsp;&nbsp;&nbsp;|;
+                    $sort = qq|<span class="noprint"><img src=$images/down.png class="noprint" >&nbsp;&nbsp;&nbsp;</span>|;
                 }
             }
             print qq|\n<th align=$column_align{$column_index[$_]} nowrap>$sort<a class=listheading href=$href&sort=$column_sort{$column_index[$_]}>$column_data{$column_index[$_]}</a></th>|;
