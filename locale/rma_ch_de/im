@@ -57,6 +57,7 @@ $self{texts} = {
   'Import AR Transactions'      => 'Import Debitoren Transaktion',
   'Import Accounts'             => 'Import Kontenplan',
   'Import File missing!'        => 'Importdatei nicht gefunden',
+  'Import customers'			=> 'Import Kundenstamm',
   'Import GL'                   => 'Import Hauptbuch',
   'Import General Ledger'       => 'Import Hauptbuch',
   'Import Parts'                => 'Import Teile',
