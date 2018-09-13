@@ -1407,19 +1407,23 @@ sub save_defaults {
   my $dbh = $form->dbconnect_noauto($myconfig);
 
   my $query;
-
-  $query = qq|DELETE FROM defaults|;
-  $dbh->do($query) || $form->dberror($query);
+  my $delquery;
 
   $query = qq|INSERT INTO defaults (fldname, fldvalue)
               VALUES (?, ?)|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
+  
+  $delquery = qq|DELETE FROM defaults WHERE fldname = ?|;
+  $delsth = $dbh->prepare($delquery) || $form->dberror($delquery);
 
   # must be present
+  $delsth->execute('version') || $form->dberror;
   $sth->execute('version', $form->{dbversion}) || $form->dberror;
   $sth->finish;
 
   for (qw(inventory income expense fxgain fxloss)) {
+    $delsth->execute(${_} . '_accno_id') || $form->dberror;
+  
     $query = qq|INSERT INTO defaults (fldname, fldvalue)
                 VALUES ('${_}_accno_id', (SELECT id
 		                FROM chart
@@ -1428,6 +1432,8 @@ sub save_defaults {
   }
 
   for (qw(transitionaccount selectedaccount glnumber sinumber vinumber batchnumber vouchernumber sonumber ponumber sqnumber rfqnumber partnumber employeenumber customernumber vendornumber projectnumber precision)) {
+    $delsth->execute($_) || $form->dberror;
+    
     $sth->execute($_, $form->{$_}) || $form->dberror;
     $sth->finish;
   }
@@ -1435,6 +1441,7 @@ sub save_defaults {
   # optional
   for (split / /, $form->{optional}) {
     if ($form->{$_}) {
+      $delsth->execute($_) || $form->dberror;
       $sth->execute($_, $form->{$_}) || $form->dberror;
       $sth->finish;
     }
