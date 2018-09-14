@@ -459,6 +459,10 @@ sub just_do_it {
    my $payment_date;
    my $arap_date;
    my $adjustment_total;
+   my $adjustment_available = $dbs->query("SELECT 0-amount FROM acc_trans WHERE chart_id = ?  AND trans_id = ?",
+      $clearing_accno_id, $form->{trans_id}
+   )->list;
+
    my $ml;
    for (@rows){
       my $arap = $_->{tbl};
@@ -470,19 +474,26 @@ sub just_do_it {
       } else {
           $payment_date = $gl_date;
       }
+      if ($adjustment_available < $_->{due}){
+         $amount_to_be_adjusted = $adjustment_available;
+         $adjustment_available = 0;
+      } else {
+         $amount_to_be_adjusted = $_->{due};
+         $adjustment_available -= $_->{due};
+      }
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $_->{due} * $ml * -1
+        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * $ml * -1
       ) or $form->error($dbs->error);
       $dbs->query("
         INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
         VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due} * $ml
       ) or $form->error($dbs->error);
-      $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $_->{due}, $payment_date, $_->{id}) or $form->error($dbs->error);
-      $adjustment_total += $_->{due};
+      $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $amount_to_be_adjusted, $payment_date, $_->{id}) or $form->error($dbs->error);
+      $adjustment_total += $amount_to_be_adjusted;
    }
 
    # Update GL transaction and replace clearing account with transition account
