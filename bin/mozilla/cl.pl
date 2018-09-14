@@ -428,7 +428,7 @@ sub just_do_it {
            $form->{gl_account_id}, $clearing_accno_id, $form->{trans_id}
       );
       $dbs->commit;
-      $form->info("GL entry updated ...");
+      $form->redirect($locale->text("GL entry updated ..."));
       return;
    }
 
