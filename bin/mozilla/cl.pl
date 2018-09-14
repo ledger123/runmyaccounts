@@ -139,6 +139,25 @@ sub list_trans {
         push @bind, $form->{todate};
     }
 
+    my $sort = $form->{sort} ? $form->{sort} : 'transdate';
+    my $sortorder = 'asc' if !$form->{sortorder};
+    if ($form->{sort} eq $form->{oldsort}){
+       $sortorder = $form->{sortorder} eq 'asc' ? 'desc' : 'asc';
+    } else {
+       $sortorder = 'asc';
+    }
+
+    my %sort_positions = {
+        invnumber   => 2,
+        transdate   => 3,
+        description => 4,
+        ordnumber   => 5,
+        name        => 6,
+        amount      => 7,
+        paid        => 8,
+        due         => 9,
+    };
+
     $arap = $form->{arap};
     my $vc = $arap eq 'ar' ? 'customer' : 'vendor';
     my $query = qq|
@@ -148,14 +167,17 @@ sub list_trans {
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
         WHERE aa.amount - aa.paid != 0
         $where
-        ORDER BY aa.transdate|;
+        ORDER BY $sort_positions($sort) $sortorder
+    |;
     my @allrows = $dbs->query( $query, @bind )->hashes or die( 'No transactions found ...' );
 
     my @report_columns = qw(x invnumber transdate description ordnumber name amount paid due);
     my @total_columns = qw(amount paid due);
     my ( %tabledata, %totals, %subtotals );
 
-    for (@report_columns) { $tabledata{$_} = qq|<th><a class="listheading">| . ucfirst $_ . qq|</th>\n| }
+    $href = qq|$form->{script}?action=list_trans|;
+    for (qw(fromdate todate arap path login accno trans_id)){ $href .= "&$_=$form->{$_}" }
+    for (@report_columns) { $tabledata{$_} = qq|<th><a href="$href&sort=$_&oldsort=$sort&sortorder=$sortorder" class="listheading">| . ucfirst $_ . qq|</th>\n| }
 
     print qq|
 <form action="$form->{script}" method="post">
@@ -169,7 +191,6 @@ sub list_trans {
         </tr>
 |;
 
-    my $sort = 'transdate';
     $form->{l_subtotal} = 0;
     my $groupvalue;
     my $i = 0;
