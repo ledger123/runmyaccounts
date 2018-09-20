@@ -2730,6 +2730,23 @@ sub backup {
 
 }
 
+sub backup_templates {
+
+  if ($form->{media} eq 'email') {
+    $form->error($locale->text('No email address for')." $myconfig{name}") unless ($myconfig{email});
+    
+    $form->{OUT} = "$sendmail";
+
+  }
+
+  $SIG{INT} = 'IGNORE';
+  AM->backup_templates(\%myconfig, \%$form, $userspath, $gzip);
+
+  if ($form->{media} eq 'email') {
+    $form->redirect($locale->text('Backup sent to').qq| $myconfig{email}|);
+  }
+
+}
 
 
 sub audit_control {

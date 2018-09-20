@@ -1644,6 +1644,59 @@ sub backup {
     unlink "$tmpfile";
 }
 
+sub backup_templates {
+    my ( $self, $myconfig, $form ) = @_;
+
+    my $mail;
+    my $err;
+
+    my @t = localtime(time);
+    $t[4]++;
+    $t[5] += 1900;
+    $t[3] = substr( "0$t[3]", -2 );
+    $t[4] = substr( "0$t[4]", -2 );
+
+    my $boundary = time;
+    my $tmpfile = "/tmp/$myconfig->{dbname}-$t[5]-$t[4]-$t[3].tar.gz";
+
+    my $out = $form->{OUT};
+    $form->{OUT} = "$tmpfile";
+
+    open( OUT, '>:raw', "$form->{OUT}" ) or $form->error("$form->{OUT} : $!");
+
+    my $today = scalar localtime;
+
+    if ( $form->{media} eq 'email' ) {
+        print OUT qx(tar -czf - $myconfig->{templates});
+        close OUT;
+
+        use SL::Mailer;
+        $mail = new Mailer;
+
+        $mail->{charset} = $form->{charset};
+        $mail->{to} = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+        $mail->{from} = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+        $mail->{subject} = "Run my Accounts Templates Backup / $myconfig->{dbname}-$form->{version}-$t[5]$t[4]$t[3]-templates.tar.gz";
+        @{ $mail->{attachments} } = ($tmpfile);
+        $mail->{version} = $form->{version};
+        $mail->{fileid} = "$boundary.";
+
+        $myconfig->{signature} =~ s/\\n/\n/g;
+        $mail->{message} = "-- \n$myconfig->{signature}";
+
+        $err = $mail->send($out);
+    }
+    if ( $form->{media} eq 'file' ) {
+        open( IN, '<:raw', "$tmpfile" ) or $form->error("$tmpfile : $!");
+        open( OUT, ">-" ) or $form->error("STDOUT : $!");
+        binmode( OUT, ':raw' );
+
+        print OUT qq|Content-Type: application/file;\n| . qq|Content-Disposition: attachment; filename="$myconfig->{dbname}-$t[5]-$t[4]-$t[3]-templates.tar.gz"\n\n|;
+        print OUT qx(tar -czf - $myconfig->{templates});
+    }
+    unlink "$tmpfile";
+}
+
 
 sub closedto {
   my ($self, $myconfig, $form) = @_;
