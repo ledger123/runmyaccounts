@@ -1119,6 +1119,7 @@ sub create_form {
     $dec = length $dec;
     $decimalplaces = ($dec > $form->{precision}) ? $dec : $form->{precision};
 
+    for (qw(sellprice listprice)) { $form->{"${_}_$i"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
     for (qw(sellprice listprice)) { $form->{"${_}_$i"} = $form->format_amount(\%myconfig, $form->{"${_}_$i"}, $decimalplaces) }
 
     ($dec) = ($form->{"lastcost_$i"} =~ /\.(\d+)/);
