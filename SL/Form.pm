@@ -1404,7 +1404,7 @@ sub format_line {
 			}
 		}
 		
-		if ( $pipe =~ /yyyy-MM-dd/) {
+		if ( $pipe =~ /yyyy-mm-dd/) {
 			my $time = Time::Piece->strptime($newstr, $self->get_dateformatx($myconfig));
 			$newstr = $time->strftime('%Y-%M-%d');
 		}
@@ -1431,17 +1431,17 @@ sub today {
 sub get_dateformatx {
 	my ($self, $myconfig) = @_;
 	if ($myconfig->{dateformat} eq 'dd.mm.yy') {
-		return '%d.%m.%Y';		
+		return '%d.%M.%Y';		
 	} elsif ($myconfig->{dateformat} eq 'mm-dd-yy') {
-		return '%m-%d-%Y';		
+		return '%M-%d-%Y';		
 	} elsif ($myconfig->{dateformat} eq 'mm/dd/yy') {
-		return '%m/%d/%Y';		
+		return '%M/%d/%Y';		
 	} elsif ($myconfig->{dateformat} eq 'dd-mm-yy') {
-		return '%d-%m-%Y';		
+		return '%d-%M-%Y';		
 	} elsif ($myconfig->{dateformat} eq 'dd/mm/yy') {
-		return '%d/%m/%Y';		
+		return '%d/%M/%Y';		
 	} elsif ($myconfig->{dateformat} eq 'yyyy-mm-dd') {
-		return '%Y-%m-%d';		
+		return '%Y-%M-%d';		
 	}
 	return '';
 }
