@@ -485,8 +485,9 @@ sub just_do_it {
    )->list;
 
    my $ml;
+   my $arap;
    for (@rows){
-      my $arap = $_->{tbl};
+      $arap = $_->{tbl};
       $ml = ($arap eq 'ap') ? 1 : -1;
       my $ARAP = uc $arap;
       $arap_date = $dbs->query("SELECT transdate FROM $arap WHERE id = ?", $_->{id})->list;
