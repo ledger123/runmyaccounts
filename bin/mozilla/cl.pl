@@ -505,14 +505,25 @@ sub just_do_it {
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
-      $dbs->query("
-        INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * $ml * -1
-      ) or $form->error($dbs->error);
-      $dbs->query("
-        INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-        VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due} * $ml
-      ) or $form->error($dbs->error);
+      if ($arap eq 'ap'){
+        $dbs->query("
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
+          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted
+        ) or $form->error($dbs->error);
+        $dbs->query("
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
+          VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due} * -1
+        ) or $form->error($dbs->error);
+      } else {
+        $dbs->query("
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
+          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * -1
+        ) or $form->error($dbs->error);
+        $dbs->query("
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
+          VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due}
+        ) or $form->error($dbs->error);
+      }
       $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $amount_to_be_adjusted, $payment_date, $_->{id}) or $form->error($dbs->error);
       $adjustment_total += $amount_to_be_adjusted;
    }
