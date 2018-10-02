@@ -517,11 +517,11 @@ sub just_do_it {
       } else {
         $dbs->query("
           INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * -1
+          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted
         ) or $form->error($dbs->error);
         $dbs->query("
           INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-          VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due}
+		  VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due}
         ) or $form->error($dbs->error);
       }
       $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $amount_to_be_adjusted, $payment_date, $_->{id}) or $form->error($dbs->error);
@@ -529,7 +529,7 @@ sub just_do_it {
    }
 
    # Update GL transaction and replace clearing account with transition account
-   $adjustment_total *= $ml;
+   $adjustment_total *= -1;
 
    $dbs->query("
      INSERT INTO acc_trans (trans_id, chart_id, amount, transdate)
