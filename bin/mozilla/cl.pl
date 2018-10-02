@@ -487,7 +487,7 @@ sub just_do_it {
    my $ml;
    for (@rows){
       my $arap = $_->{tbl};
-      $ml = ($arap eq 'ap') ? -1 : 1;
+      $ml = ($arap eq 'ap') ? 1 : -1;
       my $ARAP = uc $arap;
       $arap_date = $dbs->query("SELECT transdate FROM $arap WHERE id = ?", $_->{id})->list;
       if ($form->datediff(\%myconfig, $gl_date, $arap_date) > 0 ){
@@ -495,7 +495,7 @@ sub just_do_it {
       } else {
           $payment_date = $gl_date;
       }
-      if ($adjustment_available < $_->{due}){
+      if ($adjustment_available * $ml < $_->{due}){
          $amount_to_be_adjusted = $adjustment_available;
          $adjustment_available = 0;
       } else {
@@ -517,7 +517,7 @@ sub just_do_it {
       } else {
         $dbs->query("
           INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted
+          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * -1
         ) or $form->error($dbs->error);
         $dbs->query("
           INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
@@ -529,7 +529,9 @@ sub just_do_it {
    }
 
    # Update GL transaction and replace clearing account with transition account
-   $adjustment_total *= -1;
+   if ($arap eq 'ap'){
+      $adjustment_total *= -1;
+   }
 
    $dbs->query("
      INSERT INTO acc_trans (trans_id, chart_id, amount, transdate)
