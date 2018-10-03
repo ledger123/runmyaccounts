@@ -626,8 +626,8 @@ sub post_transaction {
   }
 
   # armaghan 13/05/2015 Fix for rounding issue
+  # philipp_kroll overworked rounding issue fix 2018-09-26 ignoring credit, debit, credit_note, debit_note in calculation of amount.
   if ($invamount eq $paid){
-          $multiplicator = ($form->{vc} eq 'vendor') ? -1 : 1;
           my $invamount2 = $dbh->selectrow_array("
               SELECT round(sum(amount)::numeric,2)
               FROM acc_trans ac
@@ -635,20 +635,23 @@ sub post_transaction {
               WHERE trans_id=$form->{id}
               AND c.link LIKE '$ARAP'
           ");
-          $invamount2 *= 1;
+          $invamount2 *= 1; # IMO this line is obsolete but I leave it anyway.
           if ($invamount2){
               my ($transdate) = $dbh->selectrow_array("select max(transdate) from acc_trans where trans_id = $form->{id}");
               ($accno) = split /--/, $form->{$ARAP};
+              # this acc_trans entry shall always be the opposite of the follow up query, so we multiply by -1 no matter if creadit, debit, credit_note, debit_note.
               $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
                     VALUES ($form->{id}, (SELECT id FROM chart WHERE accno = '$accno'),
-                    $invamount2 * $ml * $arapml, '$transdate', '$approved')|;
+                    $invamount2 * -1, '$transdate', '$approved')|;
               $dbh->do($query) || $form->dberror($query);
+              # no matter if ar - or ar + or ap - or ap +, amount > 0 means it's a win, while amount < 0 means it's a loss
+              # that implies, amount > 0 go to fx gain while amount < 0 go to fx loss, if credit, debit, credit_note or debit_note doesn't matter.
               if ($invamount2 > 0) {
                 $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
-                VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2 * |.$multiplicator.qq| * $ml * $arapml, '$transdate', '$approved')|;
+                VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2, '$transdate', '$approved')|;
               } else {
                 $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
-                VALUES ($form->{id}, $defaults{fxloss_accno_id}, $invamount2 * |.$multiplicator.qq| * $ml * $arapml, '$transdate', '$approved')|;
+                VALUES ($form->{id}, $defaults{fxloss_accno_id}, $invamount2, '$transdate', '$approved')|;
               }
               $dbh->do($query) || $form->dberror($query);
           }
