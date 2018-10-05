@@ -2687,6 +2687,15 @@ sub do_print_reminder {
       }
       for (@a) { $form->{$_} = $ref->{$_} }
 
+      if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
+        $query = qq|SELECT dcn FROM ar
+              WHERE id = $form->{id}|;
+        my $sth = $dbh->prepare($query);
+        $sth->execute || $form->dberror($query);
+        $form->{dcn} = $sth->fetchrow_array;
+        $sth->finish;    	
+      }
+
       $form->{rvc} = $form->format_dcn($form->{rvc});
       $form->{dcn} = $form->format_dcn($form->{dcn});
 
