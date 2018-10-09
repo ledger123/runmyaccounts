@@ -363,40 +363,87 @@ sub book_selected_transactions {
        my $module = $dbs->query($query)->list;
 
        $query = "
-          SELECT id, ar.invnumber, ar.description, ar.ordnumber, ar.transdate, ar.amount
+          SELECT id, 'is.pl' module, ar.invnumber, ar.description, ar.ordnumber, ar.transdate, ar.amount
           FROM ar
           WHERE id IN ($trans)
+          AND invoice
 
           UNION ALL
 
-          SELECT id, ap.invnumber, ap.description, ap.ordnumber, ap.transdate, ap.amount
+          SELECT id, 'ar.pl' module, ar.invnumber, ar.description, ar.ordnumber, ar.transdate, ar.amount
+          FROM ar
+          WHERE id IN ($trans)
+          AND NOT invoice
+
+          UNION ALL
+
+          SELECT id, 'ir.pl' module, ap.invnumber, ap.description, ap.ordnumber, ap.transdate, ap.amount
           FROM ap
           WHERE id IN ($trans)
+          AND invoice
+
+          UNION ALL
+
+          SELECT id, 'ap.pl' module, ap.invnumber, ap.description, ap.ordnumber, ap.transdate, ap.amount
+          FROM ap
+          WHERE id IN ($trans)
+          AND NOT invoice
 
           ORDER BY 1";
 
-        $table = $dbs->query( $query )->xto();
-        $table->modify( table => { cellpadding => "3", cellspacing => "2" } );
-        $table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
-        $table->modify( th => { class => 'listheading' }, 'head' );
-        $table->modify( th => { class => 'listtotal' },   'foot' );
-        $table->modify( th => { class => 'listsubtotal' } );
-        $table->modify( th => { align => 'center' },      'head' );
-        $table->modify( th => { align => 'right' },       'foot' );
-        $table->modify( th => { align => 'right' } );
+          #$table = $dbs->query( $query )->xto();
+          #$table->modify( table => { cellpadding => "3", cellspacing => "2" } );
+          #$table->modify( tr => { class => [ 'listrow0', 'listrow1' ] } );
+          #$table->modify( th => { class => 'listheading' }, 'head' );
+          #$table->modify( th => { class => 'listtotal' },   'foot' );
+          #$table->modify( th => { class => 'listsubtotal' } );
+          #$table->modify( th => { align => 'center' },      'head' );
+          #$table->modify( th => { align => 'right' },       'foot' );
+          #$table->modify( th => { align => 'right' } );
 
-        $table->modify( td => { align => 'right' }, [qw(amount)] );
-        $table->calc_totals( [qw(amount)] );
+          #$table->modify( td => { align => 'right' }, [qw(amount)] );
+          #$table->calc_totals( [qw(amount)] );
         print qq|<h3>Transactions to be adjusted ...</h3>|;
 
-        $table->map_cell(
-            sub {
-                my $datum = shift;
-                return qq|<a href="$module?action=edit&id=$datum&path=$form->{path}&login=$form->{login}">$datum</a>|;
-            },
-            'id'
-        );
-        print $table->output;
+        #$table->map_cell(
+        #    sub {
+        #        my $datum = shift;
+        #        return qq|<a href="$module?action=edit&id=$datum&path=$form->{path}&login=$form->{login}">$datum</a>|;
+        #    },
+        #    'id'
+        #);
+        #print $table->output;
+        my @rows = $dbs->query($query)->hashes;
+        print qq|<table>|;
+        print qq|<tr>
+        <th>|.$locale->text("Invoice").qq|</th>
+        <th>|.$locale->text("Description").qq|</th>
+        <th>|.$locale->text("Order Number").qq|</th>
+        <th>|.$locale->text("Date").qq|</th>
+        <th>|.$locale->text("Amount").qq|</th>
+        </tr>
+        |;
+        my $total_amount;
+        for (@rows){
+           $link = "$_->{module}?id=$_->{id}&action=edit&path=$form->{path}&login=$form->{login}";
+           print qq|<tr class="listrow0">
+          <td><a href=$link target=_blank>$_->{invnumber}</a></td>
+          <td>$_->{description}</td>
+          <td>$_->{ordnumber}</td>
+          <td>$_->{transdate}</td>
+          <td align="right">|.$form->format_amount(\%myconfig, $_->{amount}, 2).qq|</td>
+          </tr>|;
+          $total_amount += $_->{amount};
+        }
+        print qq|<tr class="listtotal">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">|.$form->format_amount(\%myconfig, $total_amount, 2).qq|</td>
+          </tr>|;
+        print qq|</table>|;
+
    } elsif ($form->{gl_account_id}) {
         my $query = qq|SELECT accno, description FROM chart WHERE id = ?|;
         $table = $dbs->query( $query, $form->{gl_account_id} )->xto();
