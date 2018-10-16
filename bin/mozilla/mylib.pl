@@ -57,7 +57,7 @@ sub ref_to_csv {
    foreach $ref (@{ $form->{$data} }) {
    	  my $cellValue = '';
       for (@$column_index) {
-      	$cellValue = &escape_double_quotes_with_two_double_quotes($ref->{$_});
+      	$cellValue = &escape_csv($ref->{$_});
       	print CSVFILE qq|"$cellValue",|;
       }
       print CSVFILE "\n";
