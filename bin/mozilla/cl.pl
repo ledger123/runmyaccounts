@@ -40,7 +40,7 @@ sub list_trans {
     $form->header;
     print qq|<h1>Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo,
+      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo, fx_transaction fx,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
@@ -162,7 +162,8 @@ sub list_trans {
     my $vc = $arap eq 'ar' ? 'customer' : 'vendor';
     my $query = qq|
         SELECT
-           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.amount, aa.paid, aa.amount - aa.paid due, aa.invoice
+           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.curr, aa.amount, aa.paid, aa.amount - aa.paid due, aa.invoice,
+           fxamount, fxpaid
         FROM $arap aa
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
         WHERE aa.amount - aa.paid != 0
@@ -171,8 +172,8 @@ sub list_trans {
     |;
     my @allrows = $dbs->query( $query, @bind )->hashes or die( 'No transactions found ...' );
 
-    my @report_columns = qw(x invnumber transdate description ordnumber name amount paid due);
-    my @total_columns = qw(amount paid due);
+    my @report_columns = qw(x invnumber transdate description ordnumber name curr amount fxamount paid fxpaid due);
+    my @total_columns = qw(amount fxamount paid fxpaid due);
     my ( %tabledata, %totals, %subtotals );
 
     $href = qq|$form->{script}?action=list_trans|;
