@@ -40,7 +40,7 @@ sub list_trans {
     $form->header;
     print qq|<h1>Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo, fx_transaction fx,
+      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo, fx_transaction fx, gl.curr,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
