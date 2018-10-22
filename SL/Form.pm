@@ -1424,7 +1424,9 @@ sub today {
 	my $self = shift;
 	my $myconfig = shift;
 	my $t = Time::Piece->localtime();
-	my $time = $t->strftime($self->get_dateformatx($myconfig));
+	my $format = $self->get_dateformatx($myconfig);
+	$format =~ s/M/m/;
+	my $time = $t->strftime($format);
 	return $time;
 }
 
