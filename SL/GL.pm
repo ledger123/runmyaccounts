@@ -678,6 +678,9 @@ sub transactions {
         FROM acc_trans ac
         WHERE ac.chart_id IN (SELECT id FROM chart WHERE accno = '$form->{accno}')
      |;
+     $query .= " AND ac.transdate >= '$form->{datefrom}'" if $form->{datefrom};
+     $query .= " AND ac.transdate <= '$form->{dateto}'" if $form->{dateto};
+
      $dbh->do($query);
      $query = "SELECT * FROM filtered WHERE credit > 0";
      my $sth = $dbh->prepare($query);
