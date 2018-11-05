@@ -1949,6 +1949,27 @@ sub reminder {
 
   $vcnumber = $locale->text('Customer Number');
 
+  if ($form->{department}) {
+      $option .= "\n<br>" if $option;
+      ($department) = split /--/, $form->{department};
+      $option .= $locale->text('Department')." : $department";
+      $department = $form->escape($form->{department},1);
+      $form->{callback} .= "&department=$department";
+  }
+
+  if ($form->{customer}) {
+    $option .= "\n<br>" if $option;
+    $option .= $form->{customer};
+    $form->{callback} .= "&customer=$form->{customer}";
+  }
+  if ($form->{duedateto}) {
+    $option .= "\n<br>" if $option;
+    $option .= $locale->text("Due Date") . " : " . $form->{duedateto};
+    $form->{callback} .= "&duedateto=$form->{duedateto}";
+  }
+
+  $callback = $form->escape($form->{callback},1);
+
   $form->{allbox} = ($form->{allbox}) ? "checked" : "";
   $action = ($form->{deselect}) ? "deselect_all" : "select_all";
   $column_header{ndx} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;
@@ -1956,13 +1977,13 @@ sub reminder {
   $column_header{"$form->{vc}number"} = qq|<th class=listheading>$vcnumber</th>|;
   $column_header{level} = qq|<th class=listheading>|.$locale->text('Level').qq|</th>|;
   $column_header{language} = qq|<th class=listheading>|.$locale->text('Language').qq|</th>|;
-  $column_header{invnumber} = qq|<th class=listheading>|.$locale->text('Invoice').qq|</th>|;
-  $column_header{invdescription} = qq|<th class=listheading>|.$locale->text('Description').qq|</th>|;
-  $column_header{ordnumber} = qq|<th class=listheading>|.$locale->text('Order').qq|</th>|;
-  $column_header{transdate} = qq|<th class=listheading nowrap>|.$locale->text('Date').qq|</th>|;
-  $column_header{duedate} = qq|<th class=listheading nowrap>|.$locale->text('Due Date').qq|</th>|;
-  $column_header{duedays} = qq|<th class=listheading nowrap>|.$locale->text('Due Days').qq|</th>|;
-  $column_header{due} = qq|<th class=listheading nowrap>|.$locale->text('Due').qq|</th>|;
+  $column_header{invnumber} = qq|<th class=listheading><a href="$form->{callback}&sort2=invnumber">|.$locale->text('Invoice').qq|</a></th>|;
+  $column_header{invdescription} = qq|<th class=listheading><a href="$form->{callback}&sort2=invdescription">|.$locale->text('Description').qq|</th>|;
+  $column_header{ordnumber} = qq|<th class=listheading><a href="$form->{callback}&sort2=ordnumber">|.$locale->text('Order').qq|</th>|;
+  $column_header{transdate} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=transdate">|.$locale->text('Date').qq|</th>|;
+  $column_header{duedate} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=duedate">|.$locale->text('Due Date').qq|</th>|;
+  $column_header{duedays} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=duedays">|.$locale->text('Due Days').qq|</th>|;
+  $column_header{due} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=due">|.$locale->text('Due').qq|</th>|;
 
   @column_index = qw(ndx vc);
   push @column_index, "$form->{vc}number";
@@ -1979,23 +2000,6 @@ sub reminder {
   }
 
   push @column_index, qw(invnumber invdescription ordnumber transdate duedate duedays due);
-
-  if ($form->{department}) {
-      $option .= "\n<br>" if $option;
-      ($department) = split /--/, $form->{department};
-      $option .= $locale->text('Department')." : $department";
-      $department = $form->escape($form->{department},1);
-      $form->{callback} .= "&department=$department";
-  }
-
-  if ($form->{customer}) {
-    $option .= "\n<br>" if $option;
-    $option .= $form->{customer};
-  }
-  if ($form->{duedateto}) {
-    $option .= "\n<br>" if $option;
-    $option .= $locale->text("Due Date") . " : " . $form->{duedateto};
-  }
 
   $title = "$form->{title} / $form->{company}";
 
@@ -2041,7 +2045,6 @@ function CheckAll() {
   $curr = "";
   $form->{ids} = "";
 
-  $callback = $form->escape($form->{callback},1);
 
   for $ref (@{ $form->{AG} }) {
 

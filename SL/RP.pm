@@ -1742,7 +1742,30 @@ sub reminder {
 	  $where .= qq| AND ((a.amount > 0 AND a.paid < a.amount) OR (a.amount < 0 AND a.paid > a.amount))|;
   }
 
+  $form->{sort2} = 'transdate' if !$form->{sort2};
+  my %ordinals2  = (
+       invnumber => 21,
+       invdescription => 17,
+       ordnumber => 24,
+       transdate => 22,
+       duedate => 28,
+       duedays => 37, 
+       due => 27, 
+  );
+  
   $exclude_credits = 'AND a.amount > 0' if $form->{exclude_credits};
+  # 1,2,3,4
+  # 5,6,7,8,9,10,
+  # 11,12,
+  # 13,14,
+  # 15,16,
+  # invdescription:17,18,19,20
+  # invnumber:21,transdate:22,23,ordnunmber:24,25,26
+  # due:27,
+  # duedate:28,29,30,31
+  # 32,
+  # 33,34,35,36,
+  # duedays:37
   $query = qq|SELECT c.id AS vc_id, c.$form->{vc}number, c.name, c.terms,
               ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
 	      c.contact, c.email,
@@ -1772,7 +1795,7 @@ sub reminder {
 	      WHERE a.duedate <= '$form->{duedateto}'
 	      AND $where
 	      $exclude_credits
-	      ORDER BY vc_id, transdate, invnumber|;
+	      ORDER BY vc_id, $ordinals2{$form->{sort2}}|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
 
   $form->{AG} = ();
