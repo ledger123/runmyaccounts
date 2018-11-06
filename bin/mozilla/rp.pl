@@ -1843,6 +1843,9 @@ sub generate_reminder {
 
   $form->{initcallback} = qq|$form->{script}?action=generate_reminder|;
 
+  $form->{sort2} = 'transdate' if !$form->{sort2};
+  $form->{sort2order} = 'asc' if !$form->{sort2order};
+
   RP->reminder(\%myconfig, \%$form);
 
   &reminder;
@@ -1970,6 +1973,17 @@ sub reminder {
 
   $callback = $form->escape($form->{callback},1);
 
+  $form->{sort2order} = 'asc' if !$form->{sort2order};
+  if ($form->{oldsort2}){
+      if ($form->{sort2} eq $form->{oldsort2}){
+          if ($form->{sort2order} eq 'asc'){
+             $form->{sort2order} = 'desc';
+          } else {
+             $form->{sort2order} = 'asc';
+          }
+      }
+  }
+
   $form->{allbox} = ($form->{allbox}) ? "checked" : "";
   $action = ($form->{deselect}) ? "deselect_all" : "select_all";
   $column_header{ndx} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;
@@ -1977,13 +1991,13 @@ sub reminder {
   $column_header{"$form->{vc}number"} = qq|<th class=listheading>$vcnumber</th>|;
   $column_header{level} = qq|<th class=listheading>|.$locale->text('Level').qq|</th>|;
   $column_header{language} = qq|<th class=listheading>|.$locale->text('Language').qq|</th>|;
-  $column_header{invnumber} = qq|<th class=listheading><a href="$form->{callback}&sort2=invnumber">|.$locale->text('Invoice').qq|</a></th>|;
-  $column_header{invdescription} = qq|<th class=listheading><a href="$form->{callback}&sort2=invdescription">|.$locale->text('Description').qq|</th>|;
-  $column_header{ordnumber} = qq|<th class=listheading><a href="$form->{callback}&sort2=ordnumber">|.$locale->text('Order').qq|</th>|;
-  $column_header{transdate} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=transdate">|.$locale->text('Date').qq|</th>|;
-  $column_header{duedate} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=duedate">|.$locale->text('Due Date').qq|</th>|;
-  $column_header{duedays} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=duedays">|.$locale->text('Due Days').qq|</th>|;
-  $column_header{due} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=due">|.$locale->text('Due').qq|</th>|;
+  $column_header{invnumber} = qq|<th class=listheading><a href="$form->{callback}&sort2=invnumber&oldsort2=$form->{sort2}&sort2order=$form->{sort2order}">|.$locale->text('Invoice').qq|</a></th>|;
+  $column_header{invdescription} = qq|<th class=listheading><a href="$form->{callback}&sort2=invdescription&oldsort2=$form->{sort2}&sort2order=$form->{sort2order}">|.$locale->text('Description').qq|</th>|;
+  $column_header{ordnumber} = qq|<th class=listheading><a href="$form->{callback}&sort2=ordnumber&oldsort2=$form->{sort2}&sort2order=$form->{sort2order}">|.$locale->text('Order').qq|</th>|;
+  $column_header{transdate} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=transdate&oldsort2=$form->{sort2}&sort2order=$form->{sort2order}">|.$locale->text('Date').qq|</th>|;
+  $column_header{duedate} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=duedate&oldsort2=$form->{sort2}&sort2order=$form->{sort2order}">|.$locale->text('Due Date').qq|</th>|;
+  $column_header{duedays} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=duedays&oldsort2=$form->{sort2}&sort2order=$form->{sort2order}">|.$locale->text('Due Days').qq|</th>|;
+  $column_header{due} = qq|<th class=listheading nowrap><a href="$form->{callback}&sort2=due&oldsort2=$form->{sort2}&sort2order=$form->{sort2order}">|.$locale->text('Due').qq|</th>|;
 
   @column_index = qw(ndx vc);
   push @column_index, "$form->{vc}number";
