@@ -2153,16 +2153,9 @@ sub transactions {
 
     @columns = qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department);
 
-    @columns = $form->sort_columns(@columns);
-
-    # Don't change column positions if it 'paid' or 'due';
-    if ($form->{sort} eq 'paid'){
-       shift @columns;
-       push @columns, 'paid';
-    }
-    if ($form->{sort} eq 'due'){
-       shift @columns;
-       push @columns, 'due';
+    # Don't change column positions if it 'amount', 'paid' or 'due';
+    if ($form->{sort} !~ /(amount|paid|due)/){
+       @columns = $form->sort_columns(@columns);
     }
 
     pop @columns if $form->{department};
@@ -2218,8 +2211,7 @@ sub transactions {
     $column_data{address}       = "<th class=listheading>" . $locale->text('Address') . "</th>";
     $column_data{netamount}     = "<th align=right class=listheading>" . $locale->text('Amount') . "</th>";
     $column_data{tax}           = "<th align=right class=listheading>" . $locale->text('Tax') . "</th>";
-    $column_data{amount}        = "<th align=right class=listheading>" . $locale->text('Total') . "</th>";
-    $column_data{paid}          = "<th align=right class=listheading>" . $locale->text('Paid') . "</th>";
+    $column_data{amount}        = "<th align=right><a class=listheading href=$href&sort=amount>" . $locale->text('Total') . "</a></th>";
     $column_data{paid}          = "<th align=right><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
     $column_data{paymentmethod} = "<th><a class=listheading href=$href&sort=paymentmethod>" . $locale->text('Payment Method') . "</a></th>";
     $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
