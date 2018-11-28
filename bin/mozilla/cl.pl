@@ -90,6 +90,7 @@ sub list_trans {
       JOIN gl ON gl.id = ac.trans_id
       WHERE ac.trans_id = ?
       AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)
+      AND NOT fx_transaction
     ";
     my ($debit, $credit) = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->list or $form->error($dbs->error);
     $search_amount = $debit + $credit; # one value will be always 0
@@ -163,7 +164,7 @@ sub list_trans {
     my $query = qq|
         SELECT
            aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.curr, aa.amount, aa.paid, aa.amount - aa.paid due, aa.invoice,
-           fxamount, fxpaid
+           fxamount, fxpaid, fxamount - fxpaid fxdue
         FROM $arap aa
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
         WHERE aa.amount - aa.paid != 0
@@ -172,7 +173,7 @@ sub list_trans {
     |;
     my @allrows = $dbs->query( $query, @bind )->hashes or die( 'No transactions found ...' );
 
-    my @report_columns = qw(x invnumber transdate description ordnumber name curr amount fxamount paid fxpaid due);
+    my @report_columns = qw(x invnumber transdate description ordnumber name curr amount fxamount paid fxpaid due fxdue);
     my @total_columns = qw(amount fxamount paid fxpaid due);
     my ( %tabledata, %totals, %subtotals );
 
@@ -220,7 +221,7 @@ sub list_trans {
 
         $row->{amount} *= 1;
         $checked = '';
-        if ($row->{amount} == $search_amount or $row->{amount}*-1 == $search_amount){
+        if ($row->{fxamount} == $search_amount or $row->{fxamount}*-1 == $search_amount){
             $checked = 'checked';
         }
 

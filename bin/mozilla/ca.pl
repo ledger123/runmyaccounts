@@ -425,16 +425,16 @@ sub list_transactions {
            SELECT '*'
            FROM acc_trans ac
            JOIN ap ON (ap.id = ac.trans_id)
-           WHERE ap.amount - ap.paid <> 0
-           AND ((ap.amount - ap.paid = $ca->{debit}) OR (ap.paid - ap.amount = $ca->{credit}))
+           WHERE ap.fxamount - ap.fxpaid <> 0
+           AND ((ap.fxamount - ap.fxpaid = $ca->{debit}) OR (ap.fxpaid - ap.fxamount = $ca->{credit}))
 
            UNION ALL
 
            SELECT '*'
            FROM acc_trans ac
            JOIN ar ON (ar.id = ac.trans_id)
-           WHERE ar.amount - ar.paid <> 0
-           AND ((ar.amount - ar.paid = $ca->{credit}) OR (ar.paid - ar.amount = $ca->{debit}))
+           WHERE ar.fxamount - ar.fxpaid <> 0
+           AND ((ar.fxamount - ar.fxpaid = $ca->{credit}) OR (ar.fxpaid - ar.fxamount = $ca->{debit}))
 
            LIMIT 1
          ";
