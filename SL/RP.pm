@@ -2422,7 +2422,8 @@ sub payments {
 		  'till' => 8,
 		  'customernumber' => 14,
 		  'vendornumber' => 14,
-		  'reference' => 15
+		  'reference' => 15,
+		  'variance' => 16
 		);
 
   my @a = qw(name transdate employee);
@@ -2448,7 +2449,7 @@ sub payments {
                 sum(ac.amount) * $ml AS paid,
                 ac.source, ac.memo, e.name AS employee, a.till, a.curr,
 		'$form->{db}' AS module, ac.trans_id, c.id AS vcid, a.invoice,
-		c.$form->{vc}number, a.invnumber AS reference
+		c.$form->{vc}number, a.invnumber AS reference, (-1)*(a.duedate - ac.transdate) as variance
 		FROM acc_trans ac
 	        JOIN $form->{db} a ON (ac.trans_id = a.id)
 	        JOIN $form->{vc} c ON (c.id = a.$form->{vc}_id)
@@ -2470,7 +2471,7 @@ sub payments {
     $query .= qq|
                 GROUP BY a.description, c.name, ac.transdate, ac.source,
 		ac.memo, e.name, a.till, a.curr, ac.trans_id, c.id, a.invoice,
-		c.$form->{vc}number, a.invnumber
+		c.$form->{vc}number, a.invnumber, variance
 		|;
 
     if ($gl) {
@@ -2482,7 +2483,7 @@ sub payments {
 		sum(ac.amount) * $ml AS paid, ac.source,
 		ac.memo, e.name AS employee, '' AS till, '' AS curr,
 		'gl' AS module, ac.trans_id, '0' AS vcid, '0' AS invoice,
-		'' AS $form->{vc}number, a.reference
+		'' AS $form->{vc}number, a.reference, 0 as variance
 		FROM acc_trans ac
 	        JOIN gl a ON (a.id = ac.trans_id)
 		LEFT JOIN employee e ON (a.employee_id = e.id)
@@ -2492,7 +2493,7 @@ sub payments {
 		AND a.approved = '1'
 		AND (ac.amount * $ml) > 0
 	GROUP BY a.description, ac.transdate, ac.source, ac.memo, e.name,
-	        ac.trans_id, a.reference
+	        ac.trans_id, a.reference, variance
 		|;
 
     }
