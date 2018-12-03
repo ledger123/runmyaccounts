@@ -592,7 +592,12 @@ sub just_do_it {
         ) or $form->error($dbs->error);
         $dbs->query("INSERT INTO payment (id, trans_id, exchangerate) VALUES (?, ?, ?)", $payment_id, $_->{id}, $fxrate);
       }
-      $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $amount_to_be_adjusted, $payment_date, $_->{id}) or $form->error($dbs->error);
+      $dbs->query("UPDATE $arap SET paid = paid + ?, fxpaid = ?, datepaid = ? WHERE id = ?",
+          $amount_to_be_adjusted + $fx_amount_to_be_adjusted,
+          $amount_to_be_adjusted,
+          $payment_date,
+          $_->{id}
+      ) or $form->error($dbs->error);
       $adjustment_total += $amount_to_be_adjusted;
    }
 
