@@ -2234,7 +2234,7 @@ sub transactions {
     $column_data{dcn}           = "<th><a class=listheading href=$href&sort=dcn>" . $locale->text('DCN') . "</a></th>";
     $column_data{paymentdiff}   = "<th><a class=listheading href=$href&sort=paymentdiff>" . $locale->text('+/-') . "</a></th>";
 
-    $column_data{curr} = "<th><a class=listheading href=$href&sort=curr>" . $locale->text('C.') . "</a></th>";
+    $column_data{curr} = "<th><a class=listheading href=$href&sort=curr>" . $locale->text('Curr.') . "</a></th>";
     for (qw(amount tax netamount paid due)) { $column_data{"fx_$_"} = "<th>&nbsp;</th>" }
 
     $column_data{department} = "<th><a class=listheading href=$href&sort=department>" . $locale->text('Department') . "</a></th>";
