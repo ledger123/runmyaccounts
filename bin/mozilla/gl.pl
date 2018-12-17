@@ -1544,7 +1544,7 @@ sub transactions_to_csv {
         $ref->{reference} ||= "";
         $column_data{reference} = "$ref->{reference}";
 
-        for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "$ref->{$_}" }
+        for (qw(department projectnumber name vcnumber address exchangerate curr)) { $column_data{$_} = "$ref->{$_}" }
 
         for (qw(lineitem description source memo notes intnotes)) {
             $column_data{$_} = &escape_csv( $ref->{$_} );
