@@ -223,7 +223,7 @@ sub list {
 	  <td colspan=3>
 	  <input name=l_accno class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('AR/AP').qq|
 	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
-      <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|
+      <input type=checkbox class=checkbox name=fx_transaction value=1> |.$locale->text('Include Exchange Rate Difference').qq|
       <input type=checkbox class=checkbox name=filter_marked value=1> |.$locale->text('Filter marked transactions').qq|</td>
 	  </td>
 	</tr>
