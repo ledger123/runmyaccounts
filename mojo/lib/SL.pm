@@ -44,79 +44,52 @@ sub startup {
     );
 
 
-    $auth ->get('/testing')   ->to('Testing#index');
-    $auth ->get('/docs')      ->to('Docs#index');
+    $auth ->any('/testing/:type')->to('Testing#index');
     
     $auth ->any('/gobd')                ->to('GoBD#index');
     $auth ->get('/gobd/show/#filename') ->to('GoBD#show');
     $auth ->get('/gobd/download')       ->to('GoBD#download');
-
-
-    # Here we get when called from menu.pl:
-    $r->any(
-        '/' => sub {
-            my $c = shift;
-
-            my ($run, $login);
-            
-            unless ($run =  $c->param('run')) {
-                $c->render(text => "No run parameter", status => 400);
-                return undef;
-            }
-            unless ($login =  $c->param('login')) {
-                $c->render(text => "No login parameter", status => 400);
-                return undef;
-            }
-
-            my $url = $c->url_for("/$run")->query(login => $login);
-            $c->redirect_to($url);
-        }
-    );
 }
 
 
 
 sub logged_in {
     my $self = shift;
-
+    
     my ($controller, $username) = @_;
-
-    my $cookies = $controller->req->cookies;
-
-    my $user_has_cookie = 0;
-    my $cookievalue;
-
-    foreach (@$cookies) {
-        if ($_->name eq "SL-$username") {
-            $user_has_cookie = 1;
-            $cookievalue = $_->value;
-            last;
-        }
-    }
-
+    
+    my $cookievalue = $controller->cookies->{"SL-$username"};
+    
     my $sessionkey = $controller->userconfig->val("sessionkey");
 
-	my $s = "";
-	my %ndx = ();
-	my $l = length $cookievalue;
+    # say STDERR "*** cookievalue: $cookievalue";
+    # say STDERR "*** sesssionkey: $sessionkey";
+    # say STDERR "*** password:    ", $controller->userconfig->val("password");
+    
+    my $s = "";
+    my %ndx = ();
+    my $l = length $cookievalue;
     my $j;
-
+    
     for my $i (0 .. $l - 1) {
         $j = substr($sessionkey, $i * 2, 2);
-	    $ndx{$j} = substr($cookievalue, $i, 1);
+        $ndx{$j} = substr($cookievalue, $i, 1);
     }
-
+    
     for (sort keys %ndx) {
-	    $s .= $ndx{$_};
+        $s .= $ndx{$_};
     }
-
+    
     $l = length $username;
     my $login = substr($s, 0, $l);
     my $password = substr($s, $l, (length $s) - ($l + 10));
-
+    
     # validate cookie
     my $ok = 1;
-    if (($login ne $username) || ($controller->userconfig->val("password") ne crypt $password, substr($username, 0, 2))) {
+    if (($login ne $username) ||
+            ($controller->userconfig->val("password")
+             ne
+             crypt $password, substr($username, 0, 2))) {
         $ok = 0;
     }
 

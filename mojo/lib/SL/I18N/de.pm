@@ -2,8 +2,8 @@ package SL::I18N::de;
 use Mojo::Base 'SL::I18N';
 
 our %Lexicon = (
-    From => 'Von',
-    To   => 'Bis',
+    'From' => 'Von',
+    'To'   => 'Bis',
     
     'Datafile extension' => 'Datenfile-Suffix',
     'Include DTD file'   => 'DTD-Datei mitliefern',
@@ -21,6 +21,12 @@ our %Lexicon = (
 
     # Fehler:
     'Incorrect date format' => 'Falsches Datumsformat',
+
+    # Testseite:
+    'Testpage'              => 'Testseite',
+    'type'                  =>     'Typ',
+    'Configuration'         => 'Konfiguration',
+    'Environment variables' => 'Umgebungsvariablen',
 );
 
 

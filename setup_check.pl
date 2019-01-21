@@ -9,19 +9,22 @@ use CPAN::Version;
 
 
 # At the moment, we only take care of Debian.
-# The dist.json only contains Debian packages.
+# The dist.json only contains hints for Debian packages.
+
+# Tipp for finding non-standard modules of SL:
+
+# grep -rh "^use " | grep -v SL | awk '{print $2}' | grep '^[A-Z]' | sed 's/;//' | sort -u | xargs corelist | grep 'not in CORE'
+
+
+my @fully_supported_linuxes = qw(debian);
 
 
 my %pkg_manager_map = (
     debian   => "aptitude",
-    ubuntu   => "aptitude",
-    opensuse => "zypper",
 );
 
 my %cpanm_packages = (
     debian   => "cpanminus make",
-    ubuntu   => "cpanminus make",
-    opensuse => "perl-App-cpanminus make",
 );
 
 my $cpan_install_cmd = "cpanm";
@@ -103,35 +106,45 @@ as Perl modules / distribution packages / executables).
 |;
 
 
-my ($os_pretty_name, $os_name, $os_version) = get_os_release();
+my ($os_pretty_name, $os_id, $os_version_id) = get_os_release();
+# PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+# ID=debian
+# VERSION_ID="9"
 
 
 say "<p>Your operating system: <b>$os_pretty_name</b>.</p>";
 
-if ($os_name eq "unknown") {
+if ($os_id eq "unknown") {
 
     say "<p>Sorry, we cannot handle unknown Linuxes :-(</p>";
     exit 1;
 }
 
 
+if (grep { $_ eq $os_id } @fully_supported_linuxes) {
+
 say qq|
 <p>
 In case of missing requirements we make suggestions based on:
 <ul>
 <li>
-<b>$pkg_manager_map{$os_name}</b> for installation of distribution packages
+<b>$pkg_manager_map{$os_id}</b> for installation of distribution packages
 </li>
 <li>
   <b>$cpan_install_cmd</b> for installation of Perl modules via CPAN &nbsp;
 (
 <span class="tt">
-$pkg_manager_map{$os_name} install $cpanm_packages{$os_name}
+$pkg_manager_map{$os_id} install $cpanm_packages{$os_id}
 </span>
 )
 </li>
 </ul>
 </p>
+|;
+}
+
+
+say qq|
 
 <p>
 When all requirements are met, you should add &nbsp;
@@ -155,7 +168,7 @@ my @missing_dist_packages;
 
 say "<table  class='result'>";
 
-foreach my $r (@$dist) {
+foreach my $r (sort { $a->{name} cmp $b->{name} }  @$dist) {
 
     my $result = check_requirement($r);
     
@@ -184,7 +197,7 @@ if (@missing_dist_packages) {
     say qq|
 <p>Install missing distribution packages with:</p>
 <div class='install_hint'>
-$pkg_manager_map{$os_name} install @missing_dist_packages
+$pkg_manager_map{$os_id} install @missing_dist_packages
 </div>
 |;
 }
@@ -192,7 +205,7 @@ $pkg_manager_map{$os_name} install @missing_dist_packages
 if (@missing_cpan_modules) {
 
     say qq|
-<p>Install missing CPAN modules with:</p>
+<p>If your distro does not provide suitable packages, install missing CPAN modules with:</p>
 <div class='install_hint'>
 $cpan_install_cmd @missing_cpan_modules
 </div>
@@ -282,6 +295,7 @@ sub check_requirement {
         }
         else {
             $info = "Not installed";
+            $info .= " (required version: $r->{version})" if $r->{version};
         }
 
         if (!$loadable || !$version_ok) {
@@ -343,7 +357,7 @@ sub get_package {
     my $r = shift;
 
     if ( $r->{package} ) {
-        return $r->{package}{"$os_name$os_version"}
-            // $r->{package}{$os_name};
+        return $r->{package}{"$os_id$os_version_id"}
+            // $r->{package}{$os_id};
     }
 }
