@@ -146,6 +146,7 @@ $selectfrom
 <hr/>
 <input type=hidden name=runit value=1>
 <input type=submit name=action class="submit noprint" value="Continue">
+<input type="submit" class="submit noprint" formmethod="get" formaction="mojo.pl/ustva/download" value="Download Preliminary VAT Return">
 </form>
 |;
 
@@ -414,6 +415,10 @@ $selectfrom
     ~;
 
     my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
+
+    # use Data::Dumper;
+    # $Data::Dumper::Sortkeys = 1;
+    # print "<pre>", Dumper(\@allrows), "</pre>";
 
     #-- Report summary starts
     if ($form->{runit}){

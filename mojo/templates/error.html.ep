@@ -1,0 +1,22 @@
+% layout 'bootstrap';
+% languages userconfig->val('x_language');
+% title l 'Error';
+
+<div class="alert alert-danger">
+  <p>
+    <strong><%= l 'Error' %>!</strong>
+  </p>
+  <p>
+    <%= l $short %>
+  </p>
+
+  % if ($long) {
+  <p>
+    <a href="#collapse1" class="btn btn-primary" data-toggle="collapse">Details</a>
+    <div id="collapse1" class="collapse">
+      <%= l $long %>
+      <%== $additional %>
+    </div>
+  </p>
+  % }
+</div>

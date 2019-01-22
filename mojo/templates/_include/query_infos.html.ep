@@ -1,0 +1,40 @@
+<h2><%= l 'Server time' %>:</h2>
+<pre>
+  <%= qx(TZ=Europe/Berlin date) %>
+</pre>
+
+<h2>Session:</h2>
+<pre>
+<%= dumper($c->session) %>
+</pre>
+
+
+<h2>Cookies:</h2>
+<pre>
+<%= dumper($c->cookies) %>
+</pre>
+
+
+<h2><%= l 'Parameters' %>:</h2>
+<pre>
+<%= dumper($c->req->params->to_hash) %>
+</pre>
+
+
+<h2>URLs:</h2>
+
+<pre>
+%= url_for;
+</pre>
+
+
+<h2><%= l 'Configuration' %>:</h2>
+<pre>
+<%= dumper(userconfig) %>
+</pre>
+
+
+<h2><%= l 'Environment variables' %>:</h2>
+<pre>
+<%= dumper(\%ENV) %>
+</pre>

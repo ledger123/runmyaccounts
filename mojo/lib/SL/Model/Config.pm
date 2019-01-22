@@ -9,6 +9,7 @@ use Cwd 'abs_path';
 use File::Basename;
 use File::Spec;
 use Data::Dumper;
+use Mojo::Home;
 
 my $_self;
 
@@ -22,15 +23,24 @@ sub new {
 
     bless $_self, $class;
 
-    my $this_module_dir = dirname abs_path __FILE__;
-    
-    # -> e.g. /home/user1/projects/runmyaccounts/mojo/lib/SL/Model
-    
-    # Throw away last 4 components to get the project root:
-    my @dirs = File::Spec->splitdir($this_module_dir);
-    splice @dirs, -4;
-    my $pr = File::Spec->catdir(@dirs);
+    # Detect application home:
+    my $pr = Mojo::Home->new->detect->to_string;
 
+    # Do we really have the project root? If not, try another method:
+    if (! -e "$pr/mojo.pl") {
+        my @path = File::Spec->splitdir( __FILE__ );
+        splice @path, -5;
+
+        $pr = File::Spec->catfile(@path);
+
+        if (! -e "$pr/mojo.pl") {
+            die "Cannot detect project root\n";
+        }
+    }
+
+
+    
+    
     $_self->{globalconfig}{x_project_root} = $pr;
 
     my $global_configfile = "$pr/sql-ledger.conf";
@@ -168,5 +178,21 @@ sub val {
 }
 
 
+sub pg_connstr {
+    my $self = shift;
+
+    my $connstr = "";
+    $connstr .= "postgresql://";
+    $connstr .= $self->val('dbuser');
+    $connstr .= ':';
+    $connstr .= $self->val('dbpasswd');
+    $connstr .= '@';
+    $connstr .= $self->val('dbhost');
+    $connstr .= (':' . $self->val('dbport')) if $self->val('dbport');
+    $connstr .= '/';
+    $connstr .= $self->val('dbname');
+
+    return $connstr;
+}
 
 1;

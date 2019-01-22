@@ -1,0 +1,19 @@
+% layout 'admin';
+% title l('Backup') . '/' . l('Restore');
+% languages userconfig->val('x_language');
+
+<h2><%= l 'Restore successful' %>!</h2>
+
+<p>
+  <%= l 'Dataset' %> '<%= $dataset_name %>' <%= l 'is now ready for use' %>.
+</p>
+<hr>
+
+%= form_for backup_restore => (method => 'post') => begin
+<input type="hidden" name="login" value="root login">
+
+%= tag 'button', class => 'submit', l 'Continue'
+
+% end
+
+</form>

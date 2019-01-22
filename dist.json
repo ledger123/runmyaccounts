@@ -8,56 +8,116 @@
 
     {
 	"type":    "perlmodule",
+	"name":    "Mojo::Pg",
+	"version": "2.35",
+	"package": { "debian9": "libmojo-pg-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
 	"name":    "Mojolicious::Plugin::I18N",
-	"version": "0"
+	"version": "1.6",
+	"package": { "debian9": "libmojolicious-plugin-i18n-perl" }
     },
 
     {
 	"type":    "perlmodule",
 	"name":    "DBI",
 	"version": "0",
-	"package": { "debian": "libdbi-perl" }
+	"package": { "debian9": "libdbi-perl" }
     },
 
     {
 	"type":    "perlmodule",
 	"name":    "DBD::Pg",
 	"version": "0",
-	"package": { "debian": "libdbd-pg-perl" }
+	"package": { "debian9": "libdbd-pg-perl" }
     },
 
     {
 	"type":    "perlmodule",
 	"name":    "DBIx::Simple",
 	"version": "0",
-	"package": { "debian": "libdbix-simple-perl" }
+	"package": { "debian9": "libdbix-simple-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "Date::Parse",
+	"version": "0",
+	"package": { "debian9": "libtimedate-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "OpenOffice::OODoc",
+	"version": "2.125",
+	"package": { "debian9": "libopenoffice-oodoc-perl" }
     },
 
     {
 	"type":    "perlmodule",
 	"name":    "File::pushd",
 	"version": "0",
-	"package": { "debian": "libfile-pushd-perl" }
+	"package": { "debian9": "libfile-pushd-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "GD::Graph",
+	"version": "0",
+	"package": { "debian9": "libgd-graph-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "CGI::FormBuilder",
+	"version": "0",
+	"package": { "debian9": "libcgi-formbuilder-perl" }
     },
 
     {
 	"type":    "perlmodule",
 	"name":    "Text::CSV_XS",
 	"version": "0",
-	"package": { "debian": "libtext-csv-xs-perl" }
+	"package": { "debian9": "libtext-csv-xs-perl" }
     },
 
     {
 	"type":    "perlmodule",
 	"name":    "XML::LibXML",
 	"version": "0",
-	"package": { "debian": "libxml-libxml-perl" }
+	"package": { "debian9": "libxml-libxml-perl" }
+    },
+
+    {
+	"type":    "perlmodule",
+	"name":    "YAML::Tiny",
+	"version": "0",
+	"package": { "debian9": "libyaml-tiny-perl" }
     },
 
     {
 	"type": "executable",
 	"name": "zip",
-	"package": { "debian": "zip" }
-    }
+	"package": { "debian9": "zip" }
+    },
 
+    {
+	"type": "executable",
+	"name": "pg_dump",
+	"package": { "debian9": "postgresql-client" }
+    },
+
+    {
+	"type": "executable",
+	"name": "latex",
+	"package": { "debian9": "texlive" }
+    },
+    
+    {
+	"type": "executable",
+	"name": "pdftk",
+	"package": { "debian9": "pdftk" }
+    }
 ]

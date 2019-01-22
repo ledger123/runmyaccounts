@@ -18,6 +18,12 @@
 </pre>
 
 
+<h2><%= l 'Parameters' %>:</h2>
+<pre>
+<%= dumper($self->req->params->to_hash) %>
+</pre>
+
+
 %# <h2>Cookies (parsed by Mojolicious):</h2>
 %# <pre>
 %# <%= dumper($self->req->cookies) %>
@@ -40,7 +46,4 @@
 <pre>
 <%= dumper(\%ENV) %>
 </pre>
-
-
-
 % }
