@@ -1734,8 +1734,8 @@ $selectfrom
       $query = qq|
       SELECT id, projectnumber, description FROM project
       UNION
-      SELECT 0, '(blank)', '(blank)'
-      ORDER BY description
+      SELECT 0, '', '(Blank)'
+      ORDER BY description 
       |;
    } else {
       $query = qq|SELECT id, description FROM department ORDER BY 2|;
@@ -1744,16 +1744,19 @@ $selectfrom
       UNION
       SELECT 0, '(blank)'
       ORDER BY description
-  |;
-
+      |;
    }
-
-   my $dbh = $form->dbconnect(\%myconfig);
-   my $sth = $dbh->prepare($query) || $form->dberror($query);
-   $sth->execute || $form->dberror($query);
-   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description}<br>\n|;
-   }
+   
+   	   my $dbh = $form->dbconnect(\%myconfig);
+	   my $sth = $dbh->prepare($query) || $form->dberror($query);
+	   $sth->execute || $form->dberror($query);
+	   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+	      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description}|;
+	      if ($ref->{projectnumber}) {
+	        print qq| ($ref->{projectnumber})|;	
+	      }
+	      print qq|<br>\n|;
+	   }
 
 print qq|
 </td></tr>
@@ -1821,8 +1824,8 @@ sub income_statement_by_project {
 
   $form->header;
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
-  print qq|<h4>INCOME STATEMENT</h4>|;
-  print qq|<h4>for Period</h4>|;
+  print qq|<h4>|.$locale->text('Income Statement Projects').qq|</h4>|;
+  print qq|<h4>|.$locale->text('For Period').qq|</h4>|;
   print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
   print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
@@ -1880,7 +1883,7 @@ sub income_statement_by_project {
 
   my $line_total = 0;
   # Print INCOME
-  print qq|<tr><td colspan=2><b>INCOME<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  print qq|<tr><td colspan=2><b>|.$locale->text('INCOME').qq|<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
   foreach $accno (sort keys %{ $form->{I} }){
      print qq|<tr>|;
      print qq|<td>$form->{I}{$accno}{accno}</td>|;
@@ -1899,7 +1902,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   $line_total = 0;
-  print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
+  print qq|<tr><td colspan=2 align=right><b>|.$locale->text('TOTAL INCOME').qq|</b></td>|;
   for (sort keys %projects){ 
     print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|;
     $line_total += $form->{I}{$_}{totalincome};
@@ -1912,7 +1915,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   # Print EXPENSES
-  print qq|<tr><td colspan=2><b>EXPENSES<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  print qq|<tr><td colspan=2><b>|.$locale->text('EXPENSES').qq|<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
   foreach $accno (sort keys %{ $form->{E} }){
      print qq|<tr>|;
      print qq|<td>$form->{E}{$accno}{accno}</td>|;
@@ -1931,7 +1934,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   $line_total = 0;
-  print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
+  print qq|<tr><td colspan=2 align=right><b>|.$locale->text('TOTAL EXPENSES').qq|</b></td>|;
   for (sort keys %projects){ 
     print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; 
     $line_total += $form->{E}{$_}{totalexpenses}; 
@@ -1944,7 +1947,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   $line_total = 0;
-  print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
+  print qq|<tr><td colspan=2 align=right><b>|.$locale->text('INCOME (LOSS)').qq|</b></td>|;
   for (sort keys %projects){
     print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; 
     $line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
