@@ -1118,6 +1118,7 @@ sub search {
         <tr>
           <td></td>
           <td colspan=3>
+          	<input name=itemstatus class=radio type=radio value=all checked>&nbsp;|.$locale->text('All').qq|
             <input name=itemstatus class=radio type=radio value=active checked>&nbsp;|.$locale->text('Active').qq|
 	    $onhand
             <input name=itemstatus class=radio type=radio value=obsolete>&nbsp;|.$locale->text('Obsolete').qq|
@@ -1233,7 +1234,9 @@ sub generate_report {
     }
   }
 
- 
+  if ($form->{itemstatus} eq 'all') {
+    $option .= $locale->text('All')." : ";
+  }
   if ($form->{itemstatus} eq 'active') {
     $option .= $locale->text('Active')." : ";
   }
