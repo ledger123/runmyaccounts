@@ -280,11 +280,11 @@ input {
   font-size: 13px;
 }
 
-table input, table textarea {
+table input, table textarea, table button  {
     border-radius: 3px 3px 3px 3px;
 }
 
-table input:hover, table input:focus, table textarea:hover, table textarea:focus {
+table input:hover, table input:focus, table textarea:hover, table textarea:focus, table button:hover, table button:focus, button:hover, button:focus {
 
 	background: #EEEEEE;
     
@@ -296,12 +296,13 @@ table input:hover, table input:focus, table textarea:hover, table textarea:focus
     /* MSIE */
     filter: progid:DXImageTransform.Microsoft.Gradient(
                 StartColorStr='#DDDDDD', EndColorStr='#EEEEEE', GradientType=0);
-                
-    border: 1px solid #009FE3;
+
+    /* Disabled this border (annoying flashing): */
+    /* border: 1px solid #009FE3; */
     color: #000000;
 }
 
-input, textarea {
+input, textarea, button {
     border: 1px solid #888888;
     padding: 2px;
 }
