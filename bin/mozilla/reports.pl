@@ -4547,7 +4547,7 @@ sub projects_list {
    my $groupbreak = 'none';
    $form->{accounttype} = 'standard';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-    $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&projectnumber=$ref->{projectnumber}--$ref->{id}|;
+    $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&fx_transaction=1&projectnumber=$ref->{projectnumber}--$ref->{id}|;
         for (qw(accounttype datefrom dateto l_subtotal path login)){ $form->{link} .= "&$_=$form->{$_}" }
     $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
     if ($form->{l_subtotal}){
