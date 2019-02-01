@@ -1179,12 +1179,12 @@ sub generate_balance_sheet {
 	$form->{endbold} = "</strong>";
 	$form->{br}      = "<br>\n";
 
-	RP->balance_sheet( \%myconfig, \%$form );
-
 	$form->{asofdate} = $form->current_date( \%myconfig )
 	  unless $form->{asofdate};
 	$form->{period} =
 	  $locale->date( \%myconfig, $form->current_date( \%myconfig ), 1 );
+
+	RP->balance_sheet( \%myconfig, \%$form );
 
 	( $form->{department} ) = split /--/, $form->{department};
 
