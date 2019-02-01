@@ -1,30 +1,49 @@
-% layout 'default';
+% layout 'default' if $type eq 'user';
+% layout 'admin'   if $type eq 'admin';
 % title 'Testing';
 % languages userconfig->val('x_language');
 
-<h1 class='listtop'>Testing</h1>
-
-<h2><%= $msg %></h2>
-
-<p> Cookies:
-<pre>
-<%= dumper($self->req->cookies) %>
-</pre>
-</p>
+<h1 class='listtop'><%= l 'Testpage' %> (<%= l 'type' %> '<%= $type %>')</h1>
 
 
-<p> Session:
+<h2>Session:</h2>
 <pre>
 <%= dumper($self->session) %>
 </pre>
-</p>
 
-<p> Config:
+
+<h2>Cookies:</h2>
+<pre>
+<%= dumper($self->cookies) %>
+</pre>
+
+
+<h2><%= l 'Parameters' %>:</h2>
+<pre>
+<%= dumper($self->req->params->to_hash) %>
+</pre>
+
+
+%# <h2>Cookies (parsed by Mojolicious):</h2>
+%# <pre>
+%# <%= dumper($self->req->cookies) %>
+%# </pre>
+
+
+
+<h2><%= l 'Configuration' %>:</h2>
 <pre>
 <%= dumper(userconfig) %>
 </pre>
-</p>
 
-<hr/>
-<br/>
-%= submit_button l('Continue'), class => 'submit'
+%# <hr/>
+%# <br/>
+%# %= submit_button l('Continue'), class => 'submit'
+
+
+% if ($type eq 'admin') {
+<h2><%= l 'Environment variables' %>:</h2>
+<pre>
+<%= dumper(\%ENV) %>
+</pre>
+% }

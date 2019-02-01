@@ -4,24 +4,31 @@ use strict;
 use feature ':5.10';
 use JSON::PP;
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+use Cwd;
 use Module::Load;
+use Module::CoreList;
 use CPAN::Version;
+use File::Find;
 
 
 # At the moment, we only take care of Debian.
-# The dist.json only contains Debian packages.
+# The dist.json only contains hints for Debian packages.
+
+# Tipp for finding non-standard modules of SL:
+
+# grep -rh "^use " | grep -v SL | awk '{print $2}' | grep '^[A-Z]' | sed 's/;//' | sort -u | xargs corelist | grep 'not in CORE'
+
+
+my @fully_supported_linuxes = qw(debian);
 
 
 my %pkg_manager_map = (
     debian   => "aptitude",
-    ubuntu   => "aptitude",
-    opensuse => "zypper",
 );
 
 my %cpanm_packages = (
     debian   => "cpanminus make",
-    ubuntu   => "cpanminus make",
-    opensuse => "perl-App-cpanminus make",
 );
 
 my $cpan_install_cmd = "cpanm";
@@ -103,35 +110,45 @@ as Perl modules / distribution packages / executables).
 |;
 
 
-my ($os_pretty_name, $os_name, $os_version) = get_os_release();
+my ($os_pretty_name, $os_id, $os_version_id) = get_os_release();
+# PRETTY_NAME="Debian GNU/Linux 9 (stretch)"
+# ID=debian
+# VERSION_ID="9"
 
 
 say "<p>Your operating system: <b>$os_pretty_name</b>.</p>";
 
-if ($os_name eq "unknown") {
+if ($os_id eq "unknown") {
 
     say "<p>Sorry, we cannot handle unknown Linuxes :-(</p>";
     exit 1;
 }
 
 
+if (grep { $_ eq $os_id } @fully_supported_linuxes) {
+
 say qq|
 <p>
 In case of missing requirements we make suggestions based on:
 <ul>
 <li>
-<b>$pkg_manager_map{$os_name}</b> for installation of distribution packages
+<b>$pkg_manager_map{$os_id}</b> for installation of distribution packages
 </li>
 <li>
   <b>$cpan_install_cmd</b> for installation of Perl modules via CPAN &nbsp;
 (
 <span class="tt">
-$pkg_manager_map{$os_name} install $cpanm_packages{$os_name}
+$pkg_manager_map{$os_id} install $cpanm_packages{$os_id}
 </span>
 )
 </li>
 </ul>
 </p>
+|;
+}
+
+
+say qq|
 
 <p>
 When all requirements are met, you should add &nbsp;
@@ -143,10 +160,11 @@ to &nbsp;<span class="tt">sql-ledger.conf</span>!
 
 
 
-
-
-
 my $dist = parse_config();
+
+
+
+
 
 
 my @missing_cpan_modules;
@@ -155,7 +173,7 @@ my @missing_dist_packages;
 
 say "<table  class='result'>";
 
-foreach my $r (@$dist) {
+foreach my $r (sort { $a->{name} cmp $b->{name} }  @$dist) {
 
     my $result = check_requirement($r);
     
@@ -170,11 +188,25 @@ foreach my $r (@$dist) {
     say "</tr>";
 }
 
-say "</table>";
+say "</table><br/>";
+
+
+if (my @somehow_used_modules = get_somehow_used_modules()) {
+    say "<hr/>";
+
+    say "<p>FYI: Other somehow used modules:";
+
+    say "<pre>";
+    
+    say foreach  @somehow_used_modules;
+
+    say "</pre></p>";
+}
+
 
 
 if (@missing_dist_packages || @missing_cpan_modules) {
-    say "<br/><hr/>";
+    say "<hr/>";
 }
 
 
@@ -184,7 +216,7 @@ if (@missing_dist_packages) {
     say qq|
 <p>Install missing distribution packages with:</p>
 <div class='install_hint'>
-$pkg_manager_map{$os_name} install @missing_dist_packages
+$pkg_manager_map{$os_id} install @missing_dist_packages
 </div>
 |;
 }
@@ -192,7 +224,7 @@ $pkg_manager_map{$os_name} install @missing_dist_packages
 if (@missing_cpan_modules) {
 
     say qq|
-<p>Install missing CPAN modules with:</p>
+<p>If your distro does not provide suitable packages, install missing CPAN modules with:</p>
 <div class='install_hint'>
 $cpan_install_cmd @missing_cpan_modules
 </div>
@@ -282,6 +314,7 @@ sub check_requirement {
         }
         else {
             $info = "Not installed";
+            $info .= " (required version: $r->{version})" if $r->{version};
         }
 
         if (!$loadable || !$version_ok) {
@@ -343,7 +376,52 @@ sub get_package {
     my $r = shift;
 
     if ( $r->{package} ) {
-        return $r->{package}{"$os_name$os_version"}
-            // $r->{package}{$os_name};
+        return $r->{package}{"$os_id$os_version_id"}
+            // $r->{package}{$os_id};
     }
+}
+
+
+
+##############################
+sub get_somehow_used_modules {
+##############################
+
+    my %overall_used_modules;
+    my @whitelist = (
+        qr/^\$0$/,
+        qr/^(strict|warnings|utf8|v5\.10)$/,
+        qr/^SL::.*/,
+        qr/^GD::Graph::.*/,
+        qr/^Mojo::(File|Home|Base)$/,
+        qr/^Mojolicious::(Commands|Static)$/,
+    );
+
+
+    my @known_required_modules =
+        map { $_->{name} } grep { $_->{type} eq 'perlmodule' } @$dist;
+
+
+    my $wanted = sub {
+        return unless -f;
+
+        open(my $file, "<", $_) || warn $!;
+        
+        while (<$file>) {
+            chomp;
+            if (my ($used) = m/^use\s+(\S+)(\s+|;)/) {
+                if ((!grep { $used =~ $_ } @whitelist)
+                     && (!grep { $used eq $_ } @known_required_modules)
+                     && (!Module::CoreList::is_core($used))
+                    ) {
+                    $overall_used_modules{$1} = 1;
+                }
+            }
+        }
+        close $file;
+    };
+    
+    find($wanted, getcwd);
+    
+    return sort keys %overall_used_modules;
 }

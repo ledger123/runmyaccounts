@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Administration</title>
+    <link
+       rel="stylesheet"
+       href="<%= url_for('/')->path->to_dir->to_abs_string . 'css/sql-ledger.css' %>"
+       type="text/css" title="SQL-Ledger stylesheet" />
+    %= javascript '/jquery.min.js'
+
+    <style>
+    </style>
+  </head>
+  <body class="admin">
+    <%= content %>
+  </body>
+</html>

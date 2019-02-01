@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    %= stylesheet '/bootstrap.min.css'
+
+    <style>
+      .alert { margin: 5ex; }
+    </style>
+  
+  </head>
+  <body>
+    <%= content %>
+    
+    %= javascript '/jquery.min.js'
+    %= javascript '/bootstrap.min.js'
+  </body>
+</html>

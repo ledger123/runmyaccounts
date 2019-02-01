@@ -1,0 +1,41 @@
+% layout 'default';
+% title 'Preliminary VAT Return';
+% languages userconfig->val('x_language');
+
+<h1 class='listtop'><%= l 'Preliminary VAT Return' %></h1>
+
+
+
+
+
+%= form_for ustva => (method => 'GET') => begin
+
+<input type="radio" name="type" value="month" id="month" checked="1">
+<label for="month"><%= l 'Month' %></label>
+<select name="month">
+  <option value="1"><%= l 'January' %></option>
+  <option value="2"><%= l 'February' %></option>
+  <option value="3" selected="1"><%= l 'March' %></option>
+  <option value="4"><%= l 'April' %></option>
+  <option value="5"><%= l 'May' %></option>
+  <option value="6"><%= l 'June' %></option>
+</select>
+<select name="year">
+  <option value="2018">2018</option>
+  <option value="2017" selected="1">2017</option>
+  <option value="2016">2016</option>
+  <option value="2015">2015</option>
+</select>
+<br>
+<input type="radio" name="type" value="quarter" id="quarter">
+<label for="quarter"><%= l 'Quarter' %></label>
+<br>
+<input type="radio" name="type" value="year" id="year">
+<label for="year"><%= l 'Year' %></label>
+
+
+<hr/>
+<br/>
+%= submit_button l('Continue'), class => 'submit'
+  
+% end

@@ -1,0 +1,112 @@
+% layout 'admin';
+% title l('Backup') . '/' . l('Restore');
+% languages userconfig->val('x_language');
+
+<center>
+
+  <h1><%= l('Backup') . '/' . l('Restore') %></h1>
+  <hr>
+
+
+  <h2><%= l 'Backup' %></h2>
+
+
+  <form>
+    %= tag 'hidden', name => 'login', value => 'root login';
+    
+  % if (@$dbinfos) {
+  <table>
+    %= tag 'tr', class => 'listheading', begin
+    %=     tag 'th', l 'Dataset'
+    %=     tag 'th', l('Size') . ' (live)'
+    %=     tag 'th', l 'Action'
+    %= end
+    %  foreach my $row (@$dbinfos) {
+    %= tag 'tr', class => 'listrow0', => begin
+    %=     tag 'td', $row->[0]
+    %=     tag 'td', align => 'right', $row->[1]
+    %=     tag td => begin
+    %=         tag 'button', class => 'submit', formaction => url_for('dbbackup') . "/$row->[0]", l 'Download dump'
+    %=     end
+    %= end
+    %  }
+  </table>
+  % } else {
+  <%= l 'No Datasets available' %>.<br/>
+  % }
+  </form>
+
+
+  <br/>
+  <hr>
+
+  
+  <h2><%= l 'Restore' %></h2>
+
+  %= form_for dbrestore => (method => 'post') => (enctype => 'multipart/form-data') => begin
+  <table>
+    <tr>
+      <th colspan="2">
+	<input type="file" name="upload" value="foo">
+      </th>
+    </tr>
+    <tr>
+      <th colspan="2">&nbsp;</th>
+    </tr>
+    <tr>
+      <th  colspan="2"><%= l 'Name of dataset to create (must not exist yet)' %>:</th>
+    </tr>
+    <tr>
+      <td align="right">
+	<input type="radio" name="naming_strategy" value="derive" id="derived" checked="1">
+      </td>
+      <td align="left">
+	<label for="derived"><%= l 'Derive from filename' %></label>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">
+	<input type="radio" name="naming_strategy" value="static" id="static">
+      </td>
+      <td align="left">
+	<label for="static"><%= l 'Use this name' %></label>:&nbsp;
+	<input type="text" name="dataset_name">
+      </td>
+    </tr>
+  </table>
+
+  
+  <br/>
+  %= tag 'button', class => 'submit', l 'Restore'
+  &nbsp;(<%= l 'can take a while' %>)
+  % end
+  
+  <br/>
+  <hr>
+</center>
+
+
+% our $admin_button;
+%= include '_include/admin_button'
+
+% use File::Basename;
+% my $prefix = dirname(url_for('/')); 
+
+<form method="post" action="<%= $prefix %>/admin.pl">
+<input type="hidden" name="login" value="root login">
+
+<%= $admin_button->('pg_database_administration', l 'Back to database administration') %>
+<%= $admin_button->('list_users', l 'Main Menu') %>
+
+</form>
+
+
+
+
+
+
+
+
+
+
+%#%= include '_include/query_infos'

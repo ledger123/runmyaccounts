@@ -1,0 +1,373 @@
+---
+
+drop_view_inline_tax: |
+  DROP VIEW IF EXISTS v_inline_tax
+  
+
+# Out of bin/mozilla/reports.pl:
+create_view_inline_tax: |
+        CREATE OR REPLACE VIEW  v_inline_tax
+        AS
+        -- 1. AR Invoices
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount) amount, SUM(it.taxamount) AS tax
+        FROM invoicetax it
+        JOIN chart c ON (c.id = it.chart_id)
+        JOIN ar aa ON (aa.id = it.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE 1 = 1
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 2. AR Transactions with line tax
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.tax_chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE c.link LIKE '%tax%'
+        AND NOT invoice
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 2b. AR Transactions with line tax
+        SELECT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE 1 = 1
+        AND NOT invoice
+        AND aa.linetax
+        AND ac.taxamount = 0
+        AND (c.link like '%AR_amount%' OR c.link like '%IC_sale%' OR c.link like '%IC_income%')
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 3. AR Transactions cumulative tax
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '*' f,
+        aa.netamount amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE c.link LIKE '%tax%'
+        AND NOT invoice
+        AND NOT aa.linetax
+        AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        -- 4. AR Transactions without tax
+        SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '*' f,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE aa.netamount = aa.amount
+        AND NOT aa.invoice
+        AND NOT aa.linetax
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        -- 5. AP Invoices
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ir.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount)*-1 amount, SUM(it.taxamount)*-1 AS tax
+        FROM invoicetax it
+        JOIN chart c ON (c.id = it.chart_id)
+        JOIN ap aa ON (aa.id = it.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 5b. AP Invoices
+        SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ir.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount)*-1 amount, SUM(it.taxamount)*-1 AS tax
+        FROM invoicetax it
+        JOIN ap aa ON (aa.id = it.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE 1 = 1
+        AND it.taxamount = 0
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 6. AP Transactions with line tax
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.tax_chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        AND NOT invoice
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 6b. AP Transactions with line tax
+        SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE 1 = 1
+        AND NOT invoice
+        AND aa.linetax
+        AND ac.taxamount = 0
+        AND (c.link like '%AP_amount%' OR c.link like '%IC_cogs%' OR c.link like '%IC_expense%')
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '*' f,
+        0-aa.netamount amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        AND NOT invoice
+        AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        SELECT DISTINCT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '' f,
+        0-aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE aa.netamount = aa.amount
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        SELECT 3 AS ordr, 'GL' module, c.accno || '--' || c.description account,
+        aa.id, aa.reference, aa.transdate,
+        aa.description, '', '', 'gl.pl' script, 0 as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.tax_chart_id)
+        JOIN gl aa ON (aa.id = ac.trans_id)
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        ORDER BY 1, 2, 3, 6
+
+
+
+
+41: |
+  SELECT sum(amount) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AR'
+  AND
+  account LIKE '3823%'
+  
+43: |
+  SELECT trunc(sum(amount)) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AR'
+  AND
+  account LIKE '3825%'
+  
+81: |
+  SELECT trunc(sum(amount)) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AR'
+  AND
+  account LIKE '3806%'
+  
+86: |
+  SELECT trunc(sum(amount)) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AR'
+  AND
+  account LIKE '3801%'
+  
+89: |
+  SELECT round(round(sum(tax)::NUMERIC, 2) / 19 * 100, 2) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AP'
+  AND
+  account LIKE '3804%'
+
+21: |
+  SELECT sum(amount) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AR'
+  AND
+  account LIKE '3824%'
+
+45: |
+  SELECT trunc(sum(amount)) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AR'
+  AND
+  account LIKE '3826%'
+
+46: |
+  SELECT round(round(sum(tax)::NUMERIC, 2) / 19 * 100, 2) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AP'
+  AND
+  account LIKE '3837%'
+
+52: |
+  SELECT round(round(sum(tax)::NUMERIC, 2) / 19 * 100, 2) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AP'
+  AND
+  account LIKE '3838%'
+
+66: |
+  -- TODO: Zusammenfasssen (siehe page2) ?
+  SELECT round(sum(value)::NUMERIC, 2) from (
+    SELECT sum(tax) as value FROM v_inline_tax
+    WHERE
+    transdate BETWEEN $1 AND $2
+    AND
+    module = 'AP'
+    AND
+    account LIKE '1401%'
+      UNION ALL
+    SELECT sum(tax) FROM v_inline_tax
+    WHERE
+    transdate BETWEEN $1 AND $2
+    AND
+    module = 'AP'
+    AND
+    account LIKE '1406%'
+  ) dummy
+
+61: |
+  SELECT round(sum(tax)::NUMERIC, 2) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AP'
+  AND
+  account LIKE '1404%'
+ 
+62: |
+  SELECT round(sum(tax)::NUMERIC, 2) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AP'
+  AND
+  account LIKE '1433%'
+ 
+67: |
+  SELECT round(sum(tax)::NUMERIC, 2) FROM v_inline_tax
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AP'
+  AND
+  account LIKE '1407%'
+
+
+# Rows 65: B, C, F, I
+page2: |
+  SELECT
+  CASE coalesce(taxnumber,'')
+  WHEN '' THEN '*_FEHLT_IN_DATENBANK_*'
+  ELSE taxnumber
+  END as tn,
+  amount,
+  CASE
+    WHEN account LIKE '3823%' THEN 2
+    WHEN account LIKE '3824%' THEN 3
+  END AS type_123,
+  transdate
+  FROM
+    v_inline_tax INNER JOIN customer on v_inline_tax.vc_id = customer.id
+  WHERE
+  transdate BETWEEN $1 AND $2
+  AND
+  module = 'AR'
+  AND
+  (account LIKE '3823%' or account LIKE '3824%')
+  ORDER BY type_123, tn, transdate
+
+
+finanzamt: |
+  SELECT
+    name,
+    address1,
+    zipcode || ' ' || city,
+    iban,
+    bic
+  FROM
+    vendor INNER JOIN address ON vendor.id = address.trans_id
+  WHERE vendornumber = $1  -- Should be 'Finanzamt'
+  UNION ALL
+  SELECT
+    '*_KEIN_KREDITOR_MIT_KENNUNG_' || $1 || '_VORHANDEN_*'
+    , NULL, NULL, NULL, NULL
+  LIMIT 1

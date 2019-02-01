@@ -1,0 +1,5 @@
+<% our $admin_button = begin %>
+<% my ($action, $text) = @_; =%>
+
+<button type="submit" class="submit" name="action" value="<%= $action %>"><%= l $text %></button>
+<% end %>
