@@ -1179,8 +1179,8 @@ sub generate_balance_sheet {
 	$form->{endbold} = "</strong>";
 	$form->{br}      = "<br>\n";
 
-	$form->{asofdate} = $form->current_date( \%myconfig )
-	  unless $form->{asofdate};
+    $form->{asofdate} = $form->current_date( \%myconfig )
+      unless $form->{asofdate} or ($form->{asofmonth} and $form->{asofyear});
 	$form->{period} =
 	  $locale->date( \%myconfig, $form->current_date( \%myconfig ), 1 );
 
