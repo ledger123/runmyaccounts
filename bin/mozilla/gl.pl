@@ -555,6 +555,12 @@ sub transactions {
 
     for (qw(amountfrom amountto)){ $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
 
+    # currencies
+    $form->{currencies} = $form->get_currencies(0, \%myconfig);
+    @curr = split /:/, $form->{currencies};
+    $form->{defaultcurrency} = $curr[0];
+    chomp $form->{defaultcurrency};
+
     $form->{amountfrom} *= 1;
     $form->{amountto} *= 1;
 
@@ -1054,7 +1060,11 @@ sub transactions {
 
         $column_data{accno}          = "<td align=left><a href=$href&accno=$ref->{accno}&callback=$callback>$ref->{accno}</a></td>";
         $column_data{accdescription} = "<td align=left>$ref->{accdescription}</td>";
-        $column_data{curr} = "<td>$ref->{curr}</td>";
+        if ($ref->{fx_transaction}){
+           $column_data{curr} = "<td>$ref->{curr}</td>";
+        } else {
+           $column_data{curr} = "<td>$form->{defaultcurrency}</td>";
+        }
         $column_data{contra}         = "<td align=left>";
         for ( split / /, $ref->{contra} ) {
             $column_data{contra} .= qq|<a href=$href&accno=$_&callback=$callback>$_</a>&nbsp;|;
