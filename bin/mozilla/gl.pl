@@ -1061,9 +1061,9 @@ sub transactions {
         $column_data{accno}          = "<td align=left><a href=$href&accno=$ref->{accno}&callback=$callback>$ref->{accno}</a></td>";
         $column_data{accdescription} = "<td align=left>$ref->{accdescription}</td>";
         if ($ref->{fx_transaction}){
-           $column_data{curr} = "<td>$ref->{curr}</td>";
-        } else {
            $column_data{curr} = "<td>$form->{defaultcurrency}</td>";
+        } else {
+           $column_data{curr} = "<td>$ref->{curr}</td>";
         }
         $column_data{contra}         = "<td align=left>";
         for ( split / /, $ref->{contra} ) {
