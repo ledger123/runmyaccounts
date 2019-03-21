@@ -2168,6 +2168,7 @@ sub yes {
 sub post {
 
     $form->isblank( "transdate", $locale->text('Transaction Date missing!') );
+    $form->isblank( "department", $locale->text('Department missing!') );
 
     $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
 
