@@ -363,6 +363,10 @@ sub search {
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_curr" class=checkbox type=checkbox value=Y $form->{l_curr}>|, label => $locale->text('Currency') };
     $includeinreport{exchangerate} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_exchangerate" class=checkbox type=checkbox value=Y $form->{l_exchangerate}>|, label => $locale->text('Exchange rate') };
+    $includeinreport{tax} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_tax" class=checkbox type=checkbox value=Y $form->{l_tax}>|, label => $locale->text('Tax') };
+    $includeinreport{taxamount} =
+      { ndx => $i++, checkbox => 1, html => qq|<input name="l_taxamount" class=checkbox type=checkbox value=Y $form->{l_taxamount}>|, label => $locale->text('Tax Amount') };
 
 
     @f = ();
@@ -1026,6 +1030,7 @@ sub transactions {
 
         $ref->{debit}  = $form->format_amount( \%myconfig, $ref->{debit},  $form->{precision}, "&nbsp;" );
         $ref->{credit} = $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision}, "&nbsp;" );
+        $ref->{taxamount} = $form->format_amount( \%myconfig, $ref->{taxamount}, $form->{precision}, "&nbsp;" );
         $ref->{exchangerate} = $form->format_amount( \%myconfig, $ref->{exchangerate}, 8, "&nbsp;" );
 
         $column_data{id}        = "<td align=left>$ref->{id}</td>";
@@ -1037,7 +1042,7 @@ sub transactions {
             $column_data{reference} = "<td align=left><a href=$ref->{module}.pl?action=view&id=$ref->{id}&ts=".$form->escape($ref->{ts})."&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
         }
 
-        for (qw(department projectnumber name vcnumber address)) { $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>" }
+        for (qw(tax department projectnumber name vcnumber address)) { $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>" }
 
         for (qw(lineitem description source memo notes intnotes)) {
             $ref->{$_} =~ s/\r?\n/<br>/g;
@@ -1050,6 +1055,7 @@ sub transactions {
 
         $column_data{debit}  = "<td align=right>$ref->{debit}</td>";
         $column_data{credit} = "<td align=right>$ref->{credit}</td>";
+        $column_data{taxamount} = "<td align=right>$ref->{taxamount}</td>";
         $column_data{exchangerate} = "<td align=right>$ref->{exchangerate}</td>";
 
         $column_data{accno}          = "<td align=left><a href=$href&accno=$ref->{accno}&callback=$callback>$ref->{accno}</a></td>";
