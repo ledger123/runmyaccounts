@@ -364,10 +364,9 @@ sub search {
     $includeinreport{exchangerate} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_exchangerate" class=checkbox type=checkbox value=Y $form->{l_exchangerate}>|, label => $locale->text('Exchange rate') };
     $includeinreport{tax} =
-      { ndx => $i++, checkbox => 1, html => qq|<input name="l_tax" class=checkbox type=checkbox value=Y $form->{l_tax}>|, label => $locale->text('Tax') };
+      { ndx => $i++, sort => tax, checkbox => 1, html => qq|<input name="l_tax" class=checkbox type=checkbox value=Y $form->{l_tax}>|, label => $locale->text('Tax') };
     $includeinreport{taxamount} =
       { ndx => $i++, checkbox => 1, html => qq|<input name="l_taxamount" class=checkbox type=checkbox value=Y $form->{l_taxamount}>|, label => $locale->text('Tax Amount') };
-
 
     @f = ();
     $form->{flds} = "";
