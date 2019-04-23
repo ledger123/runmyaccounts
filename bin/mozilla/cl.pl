@@ -40,7 +40,7 @@ sub list_trans {
     $form->header;
     print qq|<h1>Clearing Account Adjustment</h1>|;
     my $query = "
-      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo,
+      SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo, fx_transaction fx, gl.curr,
       (case when ac.amount < 0 then 0 - ac.amount else 0 end) debit,
       (case when ac.amount > 0 then ac.amount else 0 end) credit
       FROM acc_trans ac
@@ -90,6 +90,7 @@ sub list_trans {
       JOIN gl ON gl.id = ac.trans_id
       WHERE ac.trans_id = ?
       AND ac.chart_id = (SELECT id FROM chart WHERE accno = ?)
+      AND NOT fx_transaction
     ";
     my ($debit, $credit) = $dbs->query( $query, $form->{trans_id}, $form->{accno} )->list or $form->error($dbs->error);
     $search_amount = $debit + $credit; # one value will be always 0
@@ -162,7 +163,8 @@ sub list_trans {
     my $vc = $arap eq 'ar' ? 'customer' : 'vendor';
     my $query = qq|
         SELECT
-           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.amount, aa.paid, aa.amount - aa.paid due, aa.invoice
+           aa.id, aa.invnumber, aa.transdate, aa.description, aa.ordnumber, vc.name, aa.curr, aa.amount, aa.paid, aa.amount - aa.paid due, aa.invoice,
+           fxamount, fxpaid, fxamount - fxpaid fxdue
         FROM $arap aa
         JOIN $vc vc ON (vc.id = aa.${vc}_id)
         WHERE aa.amount - aa.paid != 0
@@ -171,8 +173,8 @@ sub list_trans {
     |;
     my @allrows = $dbs->query( $query, @bind )->hashes or die( 'No transactions found ...' );
 
-    my @report_columns = qw(x invnumber transdate description ordnumber name amount paid due);
-    my @total_columns = qw(amount paid due);
+    my @report_columns = qw(x invnumber transdate description ordnumber name curr amount fxamount paid fxpaid due fxdue);
+    my @total_columns = qw(amount fxamount paid fxpaid due);
     my ( %tabledata, %totals, %subtotals );
 
     $href = qq|$form->{script}?action=list_trans|;
@@ -219,7 +221,7 @@ sub list_trans {
 
         $row->{amount} *= 1;
         $checked = '';
-        if ($row->{amount} == $search_amount or $row->{amount}*-1 == $search_amount){
+        if ($row->{fxamount} == $search_amount or $row->{fxamount}*-1 == $search_amount){
             $checked = 'checked';
         }
 
@@ -501,22 +503,22 @@ sub just_do_it {
    }
 
    # Amount to be adjusted from GL
-   my $gl_amount = $dbs->query("SELECT amount FROM acc_trans WHERE chart_id = ? AND trans_id = ? ",
+   my $gl_amount = $dbs->query("SELECT amount FROM acc_trans WHERE chart_id = ? AND trans_id = ? AND NOT fx_transaction",
        $clearing_accno_id, $form->{trans_id}
    )->list;
 
    # Get payment date from GL transaction
-   my $gl_date = $dbs->query("SELECT transdate FROM gl WHERE id = ?", $form->{trans_id})->list;
+   my ($gl_date, $curr, $fxrate) = $dbs->query("SELECT transdate, curr, exchangerate FROM gl WHERE id = ?", $form->{trans_id})->list;
 
    # Add payment row to each AR/AP transactions which are to be updated
    $query = "
-      SELECT id, 'ar' tbl, ar.invnumber, ar.transdate, ar.amount-ar.paid due
+      SELECT id, 'ar' tbl, ar.invnumber, ar.transdate, ar.fxamount-ar.fxpaid fxdue
       FROM ar
       WHERE id IN ($form->{trans})
 
       UNION ALL
 
-      SELECT id, 'ap' tbl, ap.invnumber, ap.transdate, ap.amount-ap.paid due
+      SELECT id, 'ap' tbl, ap.invnumber, ap.transdate, ap.amount-ap.paid fxdue
       FROM ap
       WHERE id IN ($form->{trans})
 
@@ -527,7 +529,7 @@ sub just_do_it {
    my $payment_date;
    my $arap_date;
    my $adjustment_total;
-   my $adjustment_available = $dbs->query("SELECT 0-amount FROM acc_trans WHERE chart_id = ?  AND trans_id = ?",
+   my $adjustment_available = $dbs->query("SELECT 0-amount FROM acc_trans WHERE chart_id = ?  AND trans_id = ? AND NOT fx_transaction",
       $clearing_accno_id, $form->{trans_id}
    )->list;
 
@@ -543,36 +545,59 @@ sub just_do_it {
       } else {
           $payment_date = $gl_date;
       }
-      if ($adjustment_available * $ml < $_->{due}){
+      if ($adjustment_available * $ml < $_->{fxdue}){
          $amount_to_be_adjusted = $adjustment_available;
          $adjustment_available = 0;
       } else {
-         $amount_to_be_adjusted = $_->{due};
-         $adjustment_available -= $_->{due};
+         $amount_to_be_adjusted = $_->{fxdue};
+         $adjustment_available -= $_->{fxdue};
+      }
+      $fx_amount_to_be_adjusted = $amount_to_be_adjusted * $fxrate - $amount_to_be_adjusted;
+      if ($fxrate != 1){
+          $payment_id = $dbs->query("SELECT MAX(id)+1 FROM payment")->list;
+          $payment_id = 1 if !$payment_id;
       }
       my $arap_accno_id = $dbs->query("
          SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE '$ARAP') LIMIT 1", $_->{id}
       )->list;
       if ($arap eq 'ap'){
         $dbs->query("
-          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount, id)
+          VALUES (?, ?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted, $payment_id
         ) or $form->error($dbs->error);
         $dbs->query("
-          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-          VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due} * -1
+          INSERT INTO acc_trans(trans_id, chart_id, fx_transaction, transdate, amount)
+          VALUES (?, ?, ?, ?, ?)", $_->{id}, $transition_accno_id, '1', $payment_date, $fx_amount_to_be_adjusted
         ) or $form->error($dbs->error);
+
+        $dbs->query("
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
+          VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, ($_->{fxdue} * -1) + (($_->{fxdue} * $fxrate - $_->{fxdue}) * -1)
+        ) or $form->error($dbs->error);
+        $dbs->query("INSERT INTO payment (id, trans_id, exchangerate) VALUES (?, ?, ?)", $payment_id, $_->{id}, $fxrate);
+
       } else {
         $dbs->query("
-          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-          VALUES (?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * -1
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount, id)
+          VALUES (?, ?, ?, ?, ?)", $_->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * -1, $payment_id
         ) or $form->error($dbs->error);
         $dbs->query("
-          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
-		  VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, $_->{due}
+          INSERT INTO acc_trans(trans_id, chart_id, fx_transaction, transdate, amount)
+          VALUES (?, ?, ?, ?, ?)", $_->{id}, $transition_accno_id, '1', $payment_date, $fx_amount_to_be_adjusted * -1
         ) or $form->error($dbs->error);
+
+        $dbs->query("
+          INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
+		  VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, ($_->{fxdue}) + ($_->{fxdue} * $fxrate - $_->{fxdue})
+        ) or $form->error($dbs->error);
+        $dbs->query("INSERT INTO payment (id, trans_id, exchangerate) VALUES (?, ?, ?)", $payment_id, $_->{id}, $fxrate);
       }
-      $dbs->query("UPDATE $arap SET paid = paid + ?, datepaid = ? WHERE id = ?", $amount_to_be_adjusted, $payment_date, $_->{id}) or $form->error($dbs->error);
+      $dbs->query("UPDATE $arap SET paid = paid + ?, fxpaid = ?, datepaid = ? WHERE id = ?",
+          $amount_to_be_adjusted + $fx_amount_to_be_adjusted,
+          $amount_to_be_adjusted,
+          $payment_date,
+          $_->{id}
+      ) or $form->error($dbs->error);
       $adjustment_total += $amount_to_be_adjusted;
    }
 
@@ -586,6 +611,12 @@ sub just_do_it {
      VALUES (?, ?, ?, ?)",
      $form->{trans_id}, $transition_accno_id, $adjustment_total, $gl_date
    );
+   $dbs->query("
+     INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, fx_transaction)
+     VALUES (?, ?, ?, ?, ?)",
+     $form->{trans_id}, $transition_accno_id, ($adjustment_total*$fxrate - $adjustment_total), $gl_date, '1'
+   );
+
    $dbs->query("
       UPDATE acc_trans
       SET amount =  amount - ?
