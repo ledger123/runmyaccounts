@@ -3750,6 +3750,9 @@ sub process_transactions {
 	      $ok = IR->post_invoice(\%myconfig, \%$form);
 	    }
 	  } else {
+      for (1 .. $form->{rowcount}) {
+        $form->{"linetaxamount_$_"} = $form->format_amount(\%myconfig, $form->{"linetaxamount_$_"});
+      }
 	    $form->info("\n".$locale->text('Posting')." ".$locale->text('Transaction')." $form->{invnumber} ... ");
 	    $ok = AA->post_transaction(\%myconfig, \%$form);
 	  }
