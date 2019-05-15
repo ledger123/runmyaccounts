@@ -147,3 +147,8 @@ ALTER TABLE acc_trans ADD tax_chart_id INTEGER;
 ALTER TABLE ar ADD linetax BOOLEAN DEFAULT false;
 ALTER TABLE ap ADD linetax BOOLEAN DEFAULT false;
 
+-- DATEV export 
+create table debits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2));
+create table credits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2));
+create table debitscredits (id serial, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2));
+

@@ -1760,6 +1760,63 @@ sub display_form {
     &display_rows($init);
     &form_footer;
 
+  use DBIx::Simple;
+  $form->{dbh} = $form->dbconnect(\%myconfig);
+  $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+  $form->{dbs}->query('delete from debits');
+  $form->{dbs}->query('delete from credits');
+  $form->{dbs}->query('delete from debitscredits');
+
+  my %debits; my %credits;
+  for my $i (1 .. $form->{rowcount}){
+     $form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
+     $form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
+     $form->{dbs}->query(qq|insert into debits (accno, amount) values ('$form->{"accno_$i"}', $form->{"debit_$i"})|) if $form->{"debit_$i"} > 0;
+     $form->{dbs}->query(qq|insert into credits (accno, amount) values ('$form->{"accno_$i"}', $form->{"credit_$i"})|) if $form->{"credit_$i"} > 0;
+  }
+
+  for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
+     for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} limit 1|)->hashes)){
+        $form->{dbs}->query('insert into debitscredits (debit_accno, credit_accno, amount) values (?, ?, ?)',
+            $row->{accno}, $row2->{accno}, $row->{amount});
+        $form->{dbs}->query('delete from debits where id = ?', $row->{id});
+        $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
+     }
+  }
+
+  while (1){
+      $debitrow = $form->{dbs}->query(qq|select * from debits order by amount DESC limit 1|)->hash;
+      $creditrow = $form->{dbs}->query(qq|select * from credits order by amount DESC limit 1|)->hash;
+      if ($debitrow->{amount} and $creditrow->{amount}){
+          if ($debitrow->{amount} > $creditrow->{amount}){
+              $form->{dbs}->query('insert into debitscredits (debit_accno, credit_accno, amount) values (?, ?, ?)',
+                    $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount});
+              $form->{dbs}->query(qq|delete from credits where id = $creditrow->{id}|);
+              $form->{dbs}->query(qq|update debits set amount = amount - $creditrow->{amount} where id = $debitrow->{id}|);
+          } else {
+              $form->{dbs}->query('insert into debitscredits (debit_accno, credit_accno, amount) values (?, ?, ?)',
+                    $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount});
+              $form->{dbs}->query(qq|delete from debits where id = $debitrow->{id}|);
+              $form->{dbs}->query(qq|update credits set amount = amount - $debitrow->{amount} where id = $creditrow->{id}|);
+          }
+      } else {
+        last;
+      }
+  }
+
+  $form->{dbs}->commit;
+
+  if ($form->{id}){
+  	$table1 = $form->{dbs}->query(qq|SELECT * FROM debitscredits ORDER BY reference, amount DESC|)->xto(
+            tr => { class => [ 'listrow0', 'listrow1' ] },
+            th => { class => ['listheading'] },
+  	);
+  	$table1->modify( td => { align => 'right' }, 'amount' );
+  	$table1->calc_totals( 'amount' );
+  	print $table1->output;
+  }
+
 }
 
 sub display_rows {
