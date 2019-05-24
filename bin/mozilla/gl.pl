@@ -1764,6 +1764,10 @@ sub display_form {
   $form->{dbh} = $form->dbconnect(\%myconfig);
   $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
+  $form->{dbh}->do("create table debits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2))");
+  $form->{dbh}->do("create table credits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2))");
+  $form->{dbh}->do("create table debitscredits (id serial, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2))");
+
   $form->{dbs}->query('delete from debits');
   $form->{dbs}->query('delete from credits');
   $form->{dbs}->query('delete from debitscredits');
@@ -1804,8 +1808,6 @@ sub display_form {
         last;
       }
   }
-
-  $form->{dbs}->commit;
 
   if ($form->{id}){
   	$table1 = $form->{dbs}->query(qq|SELECT * FROM debitscredits ORDER BY reference, amount DESC|)->xto(
