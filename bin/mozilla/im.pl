@@ -2797,12 +2797,15 @@ sub prepare_datev {
         exit;
     }
 
-
     $form->info("Started ...\n");
 
     use DBIx::Simple;
     $form->{dbh} = $form->dbconnect(\%myconfig);
     $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+    $form->{dbh}->do("drop table debits");
+    $form->{dbh}->do("drop table credits");
+    $form->{dbh}->do("drop table debitscredits");
 
     $form->{dbh}->do("create table debits (id serial, trans_id integer, reference text, description text, transdate date, accno text, amount numeric(12,2))");
     $form->{dbh}->do("create table credits (id serial, trans_id integer, reference text, description text, transdate date, accno text, amount numeric(12,2))");
