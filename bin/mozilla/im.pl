@@ -3034,14 +3034,20 @@ sub export_datev {
     if ($form->{runit}){
         if ($form->{accounttype} eq 'standard'){
            $query = qq|
-            SELECT trans_id, reference, description, transdate, debit_accno, credit_accno, amount,
+            SELECT dc.trans_id, dc.reference, c.name customer, v.name vendor, dc.description, dc.transdate, dc.debit_accno, dr.description debit_description, dc.credit_accno, cr.description credit_description, dc.amount,
                 CASE
                     WHEN debit_accno = credit_accno THEN
                     'ERROR'
                     ELSE
                     ''
                 END error
-            FROM debitscredits 
+            FROM debitscredits dc
+            JOIN chart dr ON dr.accno = dc.debit_accno
+            JOIN chart cr ON cr.accno = dc.credit_accno
+            LEFT JOIN ar ON ar.id = dc.trans_id
+            LEFT JOIN customer c ON ar.customer_id = c.id
+            LEFT JOIN ap ON ap.id = dc.trans_id
+            LEFT JOIN vendor v ON ap.vendor_id = v.id
             WHERE $where
             ORDER BY reference, amount DESC
             |;
