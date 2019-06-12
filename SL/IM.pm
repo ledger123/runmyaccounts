@@ -1711,5 +1711,46 @@ sub vendor_payment {
   chop $form->{ndx};
 }
 
+
+sub import_generic {
+  my ($self, $myconfig, $form) = @_;
+
+  my $reportid = $form->{dbs}->query('SELECT reportid FROM report WHERE reportcode = ?', $form->{reportcode})->list;
+
+  my $newform = new Form;
+
+  $query = qq|SELECT * FROM reportvars
+              WHERE reportid = $reportid
+	      AND reportvariable LIKE ?|;
+  my $sth = $form->{dbh}->prepare($query) || $form->dberror($query);
+
+  $form->{dbs}->query('delete from generic_import') or die($form->{dbs}->error);
+
+  for my $i (1 .. $form->{rowcount}) {
+    if ($form->{"ndx_$i"}) {
+
+      for (keys %$newform) { delete $newform->{$_} }
+
+      $sth->execute("%\\_$i");
+      while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+        $ref->{reportvariable} =~ s/_(\d+)//;
+        if ($1 == $i) {
+          $newform->{$ref->{reportvariable}} = $ref->{reportvalue};
+        }
+      }
+      $sth->finish;
+
+      $form->{dbs}->query('
+               INSERT INTO generic_import (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', $newform->{c1}, $newform->{c2}, $newform->{c3}, $newform->{c4}, $newform->{c5}, $newform->{c6}, $newform->{c7},
+        $newform->{c8}, $newform->{c9}, $newform->{c10}, $newform->{c11}, $newform->{c12}, $newform->{c13}, $newform->{c14}, $newform->{c15}, $newform->{c16}, $newform->{c17}, $newform->{c18},
+        $newform->{c19}, $newform->{c20});
+    }
+    $i++;
+  }
+  $form->{dbs}->commit;
+}
+
 1;
+
 

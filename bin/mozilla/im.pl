@@ -369,6 +369,193 @@ print qq|
 }
 
 
+sub im_generic {
+
+   use DBIx::Simple;
+   $form->{dbh} = $form->dbconnect(\%myconfig);
+   $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+   $form->{dbs}->query('
+	CREATE TABLE generic_import (
+	    id integer NOT NULL,
+	    c1 text,
+	    c2 text,
+	    c3 text,
+	    c4 text,
+	    c5 text,
+	    c6 text,
+	    c7 text,
+	    c8 text,
+	    c9 text,
+	    c10 text,
+	    c11 text,
+	    c12 text,
+	    c13 text,
+	    c14 text,
+	    c15 text,
+	    c16 text,
+	    c17 text,
+	    c18 text,
+	    c19 text,
+	    c20 text
+  )');
+
+  $form->{dbs}->query('DELETE FROM report');
+  $form->{dbs}->query('DELETE FROM reportvars');
+
+  &import_file;
+
+  $form->{callback} = "$form->{script}?action=import";
+  for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
+
+  @columns = qw(c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20);
+  for (@columns) {
+    $form->{$form->{type}}{$_} = {field => $_, length => "", ndx => $i++};
+  }
+
+  @column_index = qw(runningnumber ndx);
+
+  for (sort { $form->{$form->{type}}{$a}{ndx} <=> $form->{$form->{type}}{$b}{ndx} } keys %{$form->{$form->{type}}}) {
+    push @column_index, $_;
+  }
+
+  $column_data{runningnumber} = "&nbsp;";
+  $column_data{ndx}           = "&nbsp;";
+  for (@columns) { $column_data{$_} = $locale->text($_) }
+
+  $form->helpref("import_$form->{type}", $myconfig{countrycode});
+
+  $form->header;
+
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{helpref}$form->{title}</a></th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+  for (@column_index) { print "\n<th>$column_data{$_}</th>" }
+
+  print qq|
+        </tr>
+|;
+
+  $form->{reportcode} = "import_$form->{type}";
+  IM->prepare_import_data(\%myconfig, \%$form);
+
+  for $i (1 .. $form->{rowcount}) {
+
+    $j++;
+    $j %= 2;
+
+    print qq|
+      <tr class=listrow$j>
+|;
+
+    for (@column_index) {
+      $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>|;
+    }
+
+    $column_data{runningnumber} = qq|<td align=right>$i</td>|;
+    $column_data{ndx}           = qq|<td><input name="ndx_$i" type=checkbox class=checkbox checked></td>|;
+
+    for (@column_index) { print $column_data{$_} }
+
+    print qq|
+	</tr>
+|;
+  }
+
+  print qq|
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+
+</table>
+|;
+
+  $form->hide_form(qw(rowcount reportcode type login path callback));
+
+  print qq|
+<input name=action class=submit type=submit value="| . $locale->text('Import Generic') . qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+sub import_generic {
+
+  IM->import_generic(\%myconfig, \%$form);
+
+  $form->info($locale->text('Import successful!'));
+
+}
+
+sub process_generic_ar_ksf {
+  my @rows = $form->{dbs}->query('SELECT * FROM generic_import ORDER BY c4')->hashes;
+
+  use SL::AA;
+
+  for my $row (@rows) {
+    my $newform = new Form;
+
+    $newform->{ARAP}      = 'AR';
+    $newform->{vc}        = 'customer';
+    $newform->{type}      = 'transaction';
+    $newform->{invnumber} = $newform->update_defaults(\%myconfig, 'sinumber');
+
+    $newform->{paidaccounts}    = 2;
+    $newform->{rowcount}        = 1;
+    $newform->{currency}        = 'PKR';
+    $newform->{oldcurrency}     = 'PKR';
+    $newform->{defaultcurrency} = 'PKR';
+
+    $newform->{customernumber} = $row->{c2};
+    ($newform->{customer_id}, $newform->{name}) = $form->{dbs}->query('SELECT id, name FROM customer WHERE customernumber = ?', $newform->{customernumber})->list;
+    $newform->{oldcustomer} = "$newform->{name}--$newform->{customernumber}";
+
+    ($newform->{department_id}) = $form->{dbs}->query('SELECT id FROM department WHERE description = ?', $row->{c10})->list;
+    $newform->{department} = "$row->{c10}--$newform->{department_id}";
+
+    $newform->{transdate}    = $row->{c3};
+    $newform->{oldtransdate} = $newform->{transdate};
+    $newform->{duedate}      = $newform->{transdate};
+    $newform->{description}  = $row->{c7};
+    $newform->{AR}           = $row->{c5};
+    $newform->{AR_paid_1}    = $row->{c4};
+    $newform->{datepaid_1}   = $row->{c3};
+    $newform->{source_1}     = $row->{c8};
+    $newform->{memo_1}       = $row->{c9};
+    $newform->{paid_1}       = $row->{c6};
+    $rc = AA->post_transaction(\%myconfig, \%$newform);
+    $form->info("$row->{c4} -- $row->{c8} -- $row->{c9}\n");
+
+    #$newform->debug;
+    #$newform->error;
+  }
+  $form->info('Imported successfully ...');
+  $form->{dbs}->query('DELETE FROM generic_import');
+  $form->{dbs}->commit;
+}
+
+
+
 sub export {
 
   %title = ( payment => 'Payments'
@@ -1411,6 +1598,20 @@ sub im_payment {
 </body>
 </html>
 |;
+
+}
+
+sub import_file {
+
+  open(FH, "$userspath/$form->{tmpfile}") or $form->error("$userspath/$form->{tmpfile} : $!");
+  while (<FH>) {
+    $form->{data} .= $_;
+  }
+  close(FH);
+  unlink "$userspath/$form->{tmpfile}";
+
+  $form->error($locale->text('Import File missing!')) unless $form->{filename};
+  $form->error($locale->text('No data!'))             unless $form->{data};
 
 }
 
