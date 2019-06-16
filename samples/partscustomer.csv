@@ -1,0 +1,5 @@
+partnumber,customernumber,pricegroup,pricebreak,sellprice,validfrom,validto,curr
+B001,AE001,PG1,10,11,03-01-2008,,GBP
+B002,BP011,,20,12,,03-01-2009,GBP
+M004,CP002,,15,20,03-01-2008,03-05-2008,GBP
+D08,CP002,test,25,25,,,GBP

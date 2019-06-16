@@ -1,0 +1,4 @@
+partnumber,description,unit,partsgroup,listprice,sellprice,lastcost,rop,bin,image,drawing,notes
+10001,"Brush Set",NOS,IMPORTED GROUP,9.99,9.99,7,150,TOP,noimage,brush.jpg,notes about brush set 
+10002,"Deluxe Hand Saw",NOS,IMPORTED GROUP,17.99,17.99,16,50,TOP,saw.jpg,nodrawing,notes about hand saw 
+10003,"Digger Hand Trencher",NOS,IMPORTED GROUP,18.99,18.99,15,200,TOP,,nodrawing,notes about hand saw

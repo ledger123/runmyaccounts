@@ -1,0 +1,10 @@
+accno,description,charttype,category,link 
+1000,"CURRENT ASSETS",H,A, 
+1060,"Checking Account",A,A,AR_paid:AP_paid 
+1065,"Petty Cash",A,A,AR_paid:AP_paid 
+1200,"Accounts Receivables",A,A,AR 
+1205,"Allowance for doubtful accounts",A,A, 
+1500,"INVENTORY ASSETS",H,A, 
+1520,"Inventory / General",A,A,IC 
+1530,"Inventory / Aftermarket Parts",A,A,IC 
+1800,"CAPITAL ASSETS",H,A,

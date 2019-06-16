@@ -1,0 +1,4 @@
+partnumber,vendornumber,vendorpartnumber,lastcost,curr,leadtime
+B001,CB001,V-CB001,10,GBP,15
+B002,ES002,,14,GBP,45 
+M004,SA003,,21,GBP,30
