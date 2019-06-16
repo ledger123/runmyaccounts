@@ -368,7 +368,6 @@ print qq|
 
 }
 
-
 sub im_generic {
 
    use DBIx::Simple;
@@ -377,7 +376,7 @@ sub im_generic {
 
    $form->{dbs}->query('
 	CREATE TABLE generic_import (
-	    id integer NOT NULL,
+	    id serial, 
 	    c1 text,
 	    c2 text,
 	    c3 text,
@@ -409,6 +408,7 @@ sub im_generic {
   for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
 
   @columns = qw(c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16 c17 c18 c19 c20);
+  $i = 1;
   for (@columns) {
     $form->{$form->{type}}{$_} = {field => $_, length => "", ndx => $i++};
   }
@@ -506,55 +506,6 @@ sub import_generic {
   $form->info($locale->text('Import successful!'));
 
 }
-
-sub process_generic_ar_ksf {
-  my @rows = $form->{dbs}->query('SELECT * FROM generic_import ORDER BY c4')->hashes;
-
-  use SL::AA;
-
-  for my $row (@rows) {
-    my $newform = new Form;
-
-    $newform->{ARAP}      = 'AR';
-    $newform->{vc}        = 'customer';
-    $newform->{type}      = 'transaction';
-    $newform->{invnumber} = $newform->update_defaults(\%myconfig, 'sinumber');
-
-    $newform->{paidaccounts}    = 2;
-    $newform->{rowcount}        = 1;
-    $newform->{currency}        = 'PKR';
-    $newform->{oldcurrency}     = 'PKR';
-    $newform->{defaultcurrency} = 'PKR';
-
-    $newform->{customernumber} = $row->{c2};
-    ($newform->{customer_id}, $newform->{name}) = $form->{dbs}->query('SELECT id, name FROM customer WHERE customernumber = ?', $newform->{customernumber})->list;
-    $newform->{oldcustomer} = "$newform->{name}--$newform->{customernumber}";
-
-    ($newform->{department_id}) = $form->{dbs}->query('SELECT id FROM department WHERE description = ?', $row->{c10})->list;
-    $newform->{department} = "$row->{c10}--$newform->{department_id}";
-
-    $newform->{transdate}    = $row->{c3};
-    $newform->{oldtransdate} = $newform->{transdate};
-    $newform->{duedate}      = $newform->{transdate};
-    $newform->{description}  = $row->{c7};
-    $newform->{AR}           = $row->{c5};
-    $newform->{AR_paid_1}    = $row->{c4};
-    $newform->{datepaid_1}   = $row->{c3};
-    $newform->{source_1}     = $row->{c8};
-    $newform->{memo_1}       = $row->{c9};
-    $newform->{paid_1}       = $row->{c6};
-    $rc = AA->post_transaction(\%myconfig, \%$newform);
-    $form->info("$row->{c4} -- $row->{c8} -- $row->{c9}\n");
-
-    #$newform->debug;
-    #$newform->error;
-  }
-  $form->info('Imported successfully ...');
-  $form->{dbs}->query('DELETE FROM generic_import');
-  $form->{dbs}->commit;
-}
-
-
 
 sub export {
 
@@ -1610,7 +1561,7 @@ sub import_file {
   close(FH);
   unlink "$userspath/$form->{tmpfile}";
 
-  $form->error($locale->text('Import File missing!')) unless $form->{filename};
+  #$form->error($locale->text('Import File missing!')) unless $form->{filename};
   $form->error($locale->text('No data!'))             unless $form->{data};
 
 }
