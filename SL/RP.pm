@@ -1095,9 +1095,6 @@ sub trial_balance {
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
-  $form->{oldprecision} = $form->{precision};
-  $form->{precision} = 3;
-
   my $where = "ac.approved = '1'";
   my $invwhere = $where;
   
@@ -1400,7 +1397,6 @@ sub trial_balance {
       }
     }
   }
-  $form->{precision} = $form->{oldprecision};
 
 }
 
