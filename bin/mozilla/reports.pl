@@ -414,7 +414,7 @@ $selectfrom
         ORDER BY 1, 2, 3, 6
     ~;
 
-    my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
+    my @allrows = $form->{dbs}->query($query)->hashes if $form->{runit};
 
     # use Data::Dumper;
     # $Data::Dumper::Sortkeys = 1;
