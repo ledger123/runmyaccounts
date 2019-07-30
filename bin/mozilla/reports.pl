@@ -27,10 +27,11 @@ sub alltaxes {
     $form->{title} = $locale->text('All Taxes Report');
     &print_title;
 
-    ( $null, $department_id ) = split( /--/, $form->{department} );
-    &bld_department( 'selectdepartment', 1, $department_id );
-
     $form->all_departments(\%myconfig);
+    if (@{ $form->{all_department} }) {
+      $form->{selectdepartment} = "\n";
+      for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
 
 
   if (@{ $form->{all_years} }) {
@@ -107,7 +108,10 @@ sub alltaxes {
 <table>
 <tr>
     <th align=right>| . $locale->text('Department') . qq|</th>
-    <td><select name=department>$form->{selectdepartment}</select></td>
+    <td><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+</td>
 </tr>
 <tr>
     <th align="right">| . $locale->text('From date') . qq|</th>
@@ -167,6 +171,11 @@ $selectfrom
     if ( $form->{todate} ) {
         $aawhere .= qq| AND aa.transdate <= '$form->{todate}'|;
     }
+    if ( $form->{department} ) {
+        my ($null, $department_id) = split /--/, $form->{department};
+        $aawhere .= qq| AND aa.department_id = $department_id|;
+    }
+
 
 #    if ( $form->{method} eq 'cash' ) {
 #        $transdate = "aa.datepaid";
