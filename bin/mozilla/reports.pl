@@ -22,23 +22,44 @@ sub incomestatementchart {
     $form->{dbh} = $form->dbconnect(\%myconfig);
     $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
-    $form->{title} = $locale->text('All Taxes Report');
+    my @dbdata = $form->{dbs}->query(qq|
+        SELECT DISTINCT TO_CHAR(ac.transdate, 'YYYY') yr, SUM(ac.amount) amount
+        FROM acc_trans ac
+        JOIN chart c ON c.id = ac.chart_id
+        WHERE c.category IN ('I', 'E')
+        GROUP BY 1
+        ORDER BY 1
+    |)->hashes;
+    print $form->dumper(\@dbdata);
+
+    my $labels;
+    for (@dbdata){ 
+       $labels .= "'$_->{yr}',";
+    }
+    chop $labels;
+
+    my $data;
+    for (@dbdata){ 
+       $data .= "'$_->{amount}',";
+    }
+    chop $data;
+ 
     &print_title;
     print q|
 <script type="text/javascript" src=https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js></script>
 |;
 
-   print q|
-<canvas id="myChart" width="400" height="400"></canvas>
+   print qq|
+<canvas id="myChart" width="300px" height="300px"></canvas>
 <script>
 var ctx = document.getElementById('myChart').getContext('2d');
 var myChart = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+        labels: [$labels],
         datasets: [{
-            label: '# of Votes',
-            data: [12, 19, 3, 5, 2, 3],
+            label: 'Income over the years',
+            data: [$data],
             backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
                 'rgba(54, 162, 235, 0.2)',
@@ -59,6 +80,8 @@ var myChart = new Chart(ctx, {
         }]
     },
     options: {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: {
             yAxes: [{
                 ticks: {
