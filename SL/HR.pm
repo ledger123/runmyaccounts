@@ -131,6 +131,7 @@ sub save_employee {
 	      homephone = |.$dbh->quote($form->{homephone}).qq|,
 	      startdate = |.$form->dbquote($form->dbclean($form->{startdate}), SQL_DATE).qq|,
 	      enddate = |.$form->dbquote($form->dbclean($form->{enddate}), SQL_DATE).qq|,
+	      closedto = |.$form->dbquote($form->dbclean($form->{closedto}), SQL_DATE).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      role = |.$dbh->quote($form->{role}).qq|,
 	      sales = |.$dbh->quote($form->{sales}).qq|,

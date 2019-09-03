@@ -2698,6 +2698,21 @@ sub all_years {
 
 }
 
+sub closedto_user {
+	my ( $self, $myconfig, $dbh ) = @_;
+    $login = $self->{login};
+    $login =~ s/@.*//;
+    $self->{closedto_user} = $dbh->selectrow_array("SELECT closedto FROM employee WHERE login = '$login'");
+    if ($self->{closedto_user}){
+        $self->{closedto_user} = $self->datetonum($myconfig, $self->{closedto_user});
+        if ($self->{closedto}){
+           $self->{closedto} = $self->{closedto_user} if $self->{closedto} < $self->{closedto_user};
+        } else {
+           $self->{closedto} = $self->{closedto_user};
+        }
+    }
+}
+
 sub create_links {
 	my ( $self, $module, $myconfig, $vc, $job ) = @_;
 
@@ -2714,6 +2729,7 @@ sub create_links {
 	  $self->get_defaults( $dbh,
 		\@{ [qw(closedto revtrans weightunit cdt precision)] } );
 	for ( keys %defaults ) { $self->{$_} = $defaults{$_} }
+    $self->closedto_user($myconfig, $dbh);
 
 	# now get the account numbers
 	$query = qq|SELECT c.accno, c.description, c.link,
