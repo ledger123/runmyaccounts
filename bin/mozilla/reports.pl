@@ -24,7 +24,10 @@ sub alltaxes {
     $form->{dbh} = $form->dbconnect(\%myconfig);
     $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
-    $form->{title} = $locale->text('All Taxes Report');
+    my %defaults = $form->get_defaults($form->{dbh}, \@{['precision', 'company']});
+    for (keys %defaults) { $form->{$_} = $defaults{$_} }
+
+    $form->{title} = $locale->text('All Taxes Report' . ' - ' . $form->{company});
     &print_title;
 
     $form->all_departments(\%myconfig);
