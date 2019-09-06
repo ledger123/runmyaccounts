@@ -1157,6 +1157,7 @@ sub transaction {
   
   my %defaults = $form->get_defaults($dbh, \@{[qw(closedto revtrans precision)]});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
+  $form->closedto_user($myconfig, $dbh);
 
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
   

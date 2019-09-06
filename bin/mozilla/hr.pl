@@ -569,6 +569,10 @@ sub employee_header {
 		<th align=right nowrap>|.$locale->text('Enddate').qq|</th>
 		<td><input name=enddate size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{enddate}></td>
 	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Closed To').qq|</th>
+		<td><input name=closedto size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{closedto}></td>
+	      </tr>
 
 	      <tr>
 		<th align=right nowrap>|.$locale->text('SSN').qq|</th>
