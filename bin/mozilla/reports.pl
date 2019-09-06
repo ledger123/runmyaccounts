@@ -1561,7 +1561,7 @@ sub audit_list {
    $where .= qq| AND (a.transdate <= '$form->{totransdate}')| if $form->{totransdate};
    $where .= qq| AND (a.employee_id = $form->{employee_id})| if $form->{employee};
 
-   @columns = qw(trans_id tablename reference formname action transdate employee_id);
+   @columns = qw(trans_id tablename reference formname action transdate name);
    # if this is first time we are running this report.
    $form->{sort} = 'tablename' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};
