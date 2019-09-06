@@ -1,0 +1,4 @@
+datepaid,memo,debit,credit,dcn
+2008/11/03,"payment ref 2121",,38.76,
+2008/10/04,"cash payment",,527.5, 2008/10/10,"CC Receipt",,243.08,
+2009/11/01,"Payment matched by DCN",,1401.72,1122

@@ -1,0 +1,6 @@
+ordnumber,transdate,vendornumber,curr,orderdescription,partnumber,description,qty,unit,sellprice,employeenumber,department,warehouse,projectnumber
+PO100,10/12/2008,CB001,GBP,Order description comes here,B001,,10,,102,E-001,HARDWARE,LONDON,PROJECT1
+PO100,10/12/2008,CB001,GBP,Order description comes here,F003,,6,,69,E-001,HARDWARE,LONDON,PROJECT2
+PO101,10/12/2008,ES002,GBP,Test description,F003,,2,,32,E-002,SERVICES,PARIS,PROJECT2
+PO102,10/13/2008,SA003,GBP,Order of goods,T007,,6,,12,E-003,SERVICES,LONDON,PROJECT1
+PO103,10/14/2008,ES002,GBP,Order,K001,,12,,32,E-004,HARDWARE,PARIS,PROJECT1

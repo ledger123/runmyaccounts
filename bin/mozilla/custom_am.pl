@@ -519,7 +519,11 @@ WHERE trans_id NOT IN
      	print qq|</tr>|;
      }
   }
+  print qq|</table>|;
 
+  print qq|<h3>Updating null linetax column to blank ('') in acc_trans for correcting sorting in GL report.</h3>|;
+  $dbh->do("update acc_trans set tax='' where tax is null");
+  print qq|<p>... done.</p>|;
   $dbh->disconnect;
 }
 

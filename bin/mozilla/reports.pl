@@ -24,13 +24,17 @@ sub alltaxes {
     $form->{dbh} = $form->dbconnect(\%myconfig);
     $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
-    $form->{title} = $locale->text('All Taxes Report');
+    my %defaults = $form->get_defaults($form->{dbh}, \@{['precision', 'company']});
+    for (keys %defaults) { $form->{$_} = $defaults{$_} }
+
+    $form->{title} = $locale->text('All Taxes Report' . ' - ' . $form->{company});
     &print_title;
 
-    ( $null, $department_id ) = split( /--/, $form->{department} );
-    &bld_department( 'selectdepartment', 1, $department_id );
-
     $form->all_departments(\%myconfig);
+    if (@{ $form->{all_department} }) {
+      $form->{selectdepartment} = "\n";
+      for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
 
 
   if (@{ $form->{all_years} }) {
@@ -107,7 +111,10 @@ sub alltaxes {
 <table>
 <tr>
     <th align=right>| . $locale->text('Department') . qq|</th>
-    <td><select name=department>$form->{selectdepartment}</select></td>
+    <td><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+</td>
 </tr>
 <tr>
     <th align="right">| . $locale->text('From date') . qq|</th>
@@ -167,6 +174,11 @@ $selectfrom
     if ( $form->{todate} ) {
         $aawhere .= qq| AND aa.transdate <= '$form->{todate}'|;
     }
+    if ( $form->{department} ) {
+        my ($null, $department_id) = split /--/, $form->{department};
+        $aawhere .= qq| AND aa.department_id = $department_id|;
+    }
+
 
 #    if ( $form->{method} eq 'cash' ) {
 #        $transdate = "aa.datepaid";
@@ -414,7 +426,7 @@ $selectfrom
         ORDER BY 1, 2, 3, 6
     ~;
 
-    my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
+    my @allrows = $form->{dbs}->query($query)->hashes if $form->{runit};
 
     # use Data::Dumper;
     # $Data::Dumper::Sortkeys = 1;
@@ -1552,7 +1564,7 @@ sub audit_list {
    $where .= qq| AND (a.transdate <= '$form->{totransdate}')| if $form->{totransdate};
    $where .= qq| AND (a.employee_id = $form->{employee_id})| if $form->{employee};
 
-   @columns = qw(trans_id tablename reference formname action transdate employee_id);
+   @columns = qw(trans_id tablename reference formname action transdate name);
    # if this is first time we are running this report.
    $form->{sort} = 'tablename' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};

@@ -1,0 +1,4 @@
+invnumber,vendornumber,transdate,duedate,apaccount,expenseaccount,amount,description,notes,source,memo 
+00003,CB001,10-10-08,10-10-08,2100,5001,2030,"desc1","notes1","source1","memo1" 
+00004,ES002,10-12-08,10-10-08,2100,5002,3213,"desc2","notes2","source2","memo2" 
+00005,SA003,12-12-08,10-10-08,2100,5020,-200,"desc3","notes3","source3","memo3"
