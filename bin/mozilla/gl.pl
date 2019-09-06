@@ -1023,9 +1023,11 @@ sub transactions {
 
         $subtotaldebit  += $ref->{debit};
         $subtotalcredit += $ref->{credit};
+        $subtotaltaxamount += $ref->{taxamount};
 
         $totaldebit  += $ref->{debit};
         $totalcredit += $ref->{credit};
+        $totaltaxamount += $ref->{taxamount};
 
         $ref->{debit}  = $form->format_amount( \%myconfig, $ref->{debit},  $form->{precision}, "&nbsp;" );
         $ref->{credit} = $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision}, "&nbsp;" );
@@ -1095,6 +1097,7 @@ sub transactions {
 
     $column_data{debit}   = "<th align=right class=listtotal>" . $form->format_amount( \%myconfig, $totaldebit,                   $form->{precision}, "&nbsp;" ) . "</th>";
     $column_data{credit}  = "<th align=right class=listtotal>" . $form->format_amount( \%myconfig, $totalcredit,                  $form->{precision}, "&nbsp;" ) . "</th>";
+    $column_data{taxamount}  = "<th align=right class=listtotal>" . $form->format_amount( \%myconfig, $totaltaxamount,                  $form->{precision}, "&nbsp;" ) . "</th>";
     $column_data{balance} = "<th align=right class=listtotal>" . $form->format_amount( \%myconfig, $form->{balance} * $ml * $cml, $form->{precision}, 0 ) . "</th>";
 
     print qq|
@@ -1186,11 +1189,13 @@ sub gl_subtotal {
 
     $subtotaldebit  = $form->format_amount( \%myconfig, $subtotaldebit,  $form->{precision}, "&nbsp;" );
     $subtotalcredit = $form->format_amount( \%myconfig, $subtotalcredit, $form->{precision}, "&nbsp;" );
+    $subtotaltaxamount = $form->format_amount( \%myconfig, $subtotaltaxamount, $form->{precision}, "&nbsp;" );
 
     for (@column_index) { $column_data{$_} = "<td>&nbsp;</td>" }
 
     $column_data{debit}  = "<th align=right class=listsubtotal>$subtotaldebit</td>";
     $column_data{credit} = "<th align=right class=listsubtotal>$subtotalcredit</td>";
+    $column_data{taxamount} = "<th align=right class=listsubtotal>$subtotaltaxamount</td>";
 
     print "<tr class=listsubtotal>";
     for (@column_index) { print "$column_data{$_}\n" }
@@ -1198,6 +1203,7 @@ sub gl_subtotal {
 
     $subtotaldebit  = 0;
     $subtotalcredit = 0;
+    $subtotaltaxamount = 0;
 
     $sameitem = $ref->{ $form->{sort} };
 
@@ -1536,12 +1542,15 @@ sub transactions_to_csv {
 
         $subtotaldebit  += $ref->{debit};
         $subtotalcredit += $ref->{credit};
+        $subtotaltaxamount += $ref->{taxamount};
 
         $totaldebit  += $ref->{debit};
         $totalcredit += $ref->{credit};
+        $totaltaxamount += $ref->{taxmount};
 
         $ref->{debit}  = $ref->{debit};
         $ref->{credit} = $ref->{credit};
+        $ref->{taxamount} = $ref->{taxamount};
 
         $column_data{id}        = "$ref->{id}";
         $column_data{transdate} = "$ref->{transdate}";
@@ -1656,12 +1665,14 @@ sub gl_subtotal_to_csv {
 
     $column_data{debit}  = $subtotaldebit;
     $column_data{credit} = $subtotalcredit;
+    $column_data{taxamount} = $subtotaltaxamount;
 
     for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
     print CSVFILE qq|\n|;
 
     $subtotaldebit  = 0;
     $subtotalcredit = 0;
+    $subtotaltaxamount = 0;
 
     $sameitem = $ref->{ $form->{sort} };
 
