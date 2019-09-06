@@ -4402,6 +4402,7 @@ sub projects_search {
    &print_checkbox('l_income', $locale->text('Income'), 'checked', '');
    &print_checkbox('l_expenses', $locale->text('Expenses'), 'checked', '');
    &print_checkbox('l_net', $locale->text('Net'), 'checked', '<br>');
+   &print_checkbox('fx_transaction', $locale->text('Include Exchange Rate Difference'), 'checked', '');
    &print_checkbox('l_subtotal', $locale->text('Subtotal'), '', '');
    &print_checkbox('l_csv', $locale->text('CSV'), '', '');
    #&print_checkbox('l_sql', $locale->text('SQL'), '');
@@ -4422,6 +4423,7 @@ sub projects_list {
 
    &split_combos('department,warehouse,partsgroup');
    $form->{department_id} *= 1;
+   $form->{fx_transaction} = 1 if $form->{fx_transaction};
    $projectnumber = $form->like(lc $form->{projectnumber});
    $description = $form->like(lc $form->{description});
  
@@ -4547,7 +4549,7 @@ sub projects_list {
    my $groupbreak = 'none';
    $form->{accounttype} = 'standard';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-    $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&projectnumber=$ref->{projectnumber}--$ref->{id}|;
+    $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&fx_transaction=$form->{fx_transaction}&projectnumber=$ref->{projectnumber}--$ref->{id}|;
         for (qw(accounttype datefrom dateto l_subtotal path login)){ $form->{link} .= "&$_=$form->{$_}" }
     $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
     if ($form->{l_subtotal}){
