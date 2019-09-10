@@ -728,7 +728,7 @@ sub transactions {
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl g
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -745,7 +745,7 @@ sub transactions {
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ar a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -765,7 +765,7 @@ sub transactions {
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -792,7 +792,7 @@ sub transactions {
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl g
 		 JOIN acc_trans_log ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -809,7 +809,7 @@ sub transactions {
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ar a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -829,7 +829,7 @@ sub transactions {
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -855,7 +855,7 @@ sub transactions {
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl_log_deleted g
 		 JOIN acc_trans_log_deleted ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -872,7 +872,7 @@ sub transactions {
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id,
 		 FROM ar_log_deleted a
 		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
@@ -893,7 +893,7 @@ sub transactions {
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
-         ac.tax, ac.taxamount
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap_log_deleted a
 		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
 		 $invoicejoin

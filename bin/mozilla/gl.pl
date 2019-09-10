@@ -553,6 +553,10 @@ sub search {
 
 sub transactions {
 
+    use DBIx::Simple;
+    $form->{dbh} = $form->dbconnect(\%myconfig);
+    $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
     $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
     $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
 
@@ -1038,6 +1042,17 @@ sub transactions {
         $ref->{debit}  = $form->format_amount( \%myconfig, $ref->{debit},  $form->{precision}, "&nbsp;" );
         $ref->{credit} = $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision}, "&nbsp;" );
         $ref->{taxamount} = $form->format_amount( \%myconfig, $ref->{taxamount}, $form->{precision}, "&nbsp;" );
+        if ($form->{l_exchangerate}){
+           if ($ref->{payment_id}){
+              $ref->{exchangerate} = $form->{dbs}->query("
+                  SELECT exchangerate
+                  FROM payment
+                  WHERE trans_id = ?
+                  AND id = ?",
+                  $ref->{id}, $ref->{payment_id}
+              )->list;
+           }
+        }
         $ref->{exchangerate} = $form->format_amount( \%myconfig, $ref->{exchangerate}, 8, "&nbsp;" );
 
         $column_data{id}        = "<td align=left>$ref->{id}</td>";
