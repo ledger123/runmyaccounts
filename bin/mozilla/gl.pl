@@ -1044,13 +1044,14 @@ sub transactions {
         $ref->{taxamount} = $form->format_amount( \%myconfig, $ref->{taxamount}, $form->{precision}, "&nbsp;" );
         if ($form->{l_exchangerate}){
            if ($ref->{payment_id}){
-              $ref->{exchangerate} = $form->{dbs}->query("
+              my $exchangerate = $form->{dbs}->query("
                   SELECT exchangerate
                   FROM payment
                   WHERE trans_id = ?
                   AND id = ?",
                   $ref->{id}, $ref->{payment_id}
               )->list;
+              $ref->{exchangerate} = $exchangerate if $exchangerate;
            }
         }
         $ref->{exchangerate} = $form->format_amount( \%myconfig, $ref->{exchangerate}, 8, "&nbsp;" );
