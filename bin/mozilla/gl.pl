@@ -2168,7 +2168,12 @@ sub yes {
 sub post {
 
     $form->isblank( "transdate", $locale->text('Transaction Date missing!') );
-    $form->isblank( "department", $locale->text('Department missing!') );
+
+    my $dbh = $form->dbconnect( \%myconfig );
+    my ($gldepartment) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='gldepartment'"); 
+    if ($gldepartment){
+       $form->isblank( "department", $locale->text('Department missing!') );
+    }
 
     $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
 

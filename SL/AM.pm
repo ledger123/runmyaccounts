@@ -1440,8 +1440,8 @@ sub save_defaults {
 
   # optional
   for (split / /, $form->{optional}) {
+    $delsth->execute($_) || $form->dberror;
     if ($form->{$_}) {
-      $delsth->execute($_) || $form->dberror;
       $sth->execute($_, $form->{$_}) || $form->dberror;
       $sth->finish;
     }
