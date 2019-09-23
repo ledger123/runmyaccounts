@@ -153,7 +153,6 @@ $selectfrom
 <hr/>
 <input type=hidden name=runit value=1>
 <input type=submit name=action class="submit noprint" value="Continue">
-<input type="submit" class="submit noprint" formmethod="get" formaction="mojo.pl/ustva/download" value="Download Preliminary VAT Return">
 </form>
 |;
 
