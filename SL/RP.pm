@@ -1382,7 +1382,9 @@ sub trial_balance {
       $trb{$accno}{credit} += $ref->{credit};
     }
 
+    if (($ref->{debit} != 0) or ($ref->{credit} != 0) or ($ref->{balance} != 0)){
     push @{ $form->{TB} }, $ref;
+    }
 
   }
 
