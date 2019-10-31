@@ -4003,7 +4003,7 @@ sub list_payments {
 		$href     .= "&fromdate=$form->{fromdate}";
 		$option   .= "\n<br>" if ($option);
 		$option .=
-		    $locale->text('From') 
+		    $locale->text('From')
 		  . "&nbsp;"
 		  . $locale->date( \%myconfig, $form->{fromdate}, 1 );
 	}
@@ -4012,7 +4012,7 @@ sub list_payments {
 		$href     .= "&todate=$form->{todate}";
 		$option   .= "\n<br>" if ($option);
 		$option .=
-		    $locale->text('To') 
+		    $locale->text('To')
 		  . "&nbsp;"
 		  . $locale->date( \%myconfig, $form->{todate}, 1 );
 	}
