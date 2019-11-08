@@ -1349,6 +1349,9 @@ sub list_accounts {
 
            $ref->{begbalance} = $ref->{balance} * $ml;
            $ref->{endbalance} = ($ref->{balance} + $ref->{amount}) * $ml;
+           for (qw(begbalance debit credit endbalance)){
+              $ref->{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision} );
+           }
 
            $line = '';
            for (@column_index) { $line .= qq|"$ref->{$_}",| }
