@@ -1639,7 +1639,7 @@ sub backup {
         binmode( OUT, ':raw' );
 
         print OUT qq|Content-Type: application/file;\n| . qq|Content-Disposition: attachment; filename="$myconfig->{dbname}-$t[5]-$t[4]-$t[3].sql.gz"\n\n|;
-        print OUT qx(PGPASSWORD="$myconfig->{dbpasswd}" /usr/bin/pg_dump -U $myconfig->{dbuser} $myconfig->{dbname} | gzip -c );
+        print OUT qx(PGPASSWORD="$myconfig->{dbpasswd}" /usr/bin/pg_dump -C -U $myconfig->{dbuser} $myconfig->{dbname} | gzip -c );
     }
     unlink "$tmpfile";
 }
