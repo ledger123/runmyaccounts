@@ -106,7 +106,7 @@ sub logtofile {
 }
 
 sub debug {
-	my ( $self, $file ) = @_;
+	my ( $self, $file, $vars ) = @_;
 
 	if ($file) {
 		open( FH, "> $file" ) or die $!;
@@ -118,10 +118,13 @@ sub debug {
 			&header unless $self->{header};
 			print "<pre>";
 		}
-		for ( sort keys %$self ) { print "$_ = $self->{$_}\n" }
+        if ($vars){
+		   for ( sort @$vars ) { print "$_ = $self->{$_}\n" }
+        } else {
+		   for ( sort keys %$self ) { print "$_ = $self->{$_}\n" }
+        }
 		print "</pre>" if $ENV{HTTP_USER_AGENT};
 	}
-
 }
 
 # Dump hash values for debugging
