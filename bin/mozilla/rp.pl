@@ -3166,6 +3166,7 @@ sub do_print_reminder {
 				$sth->finish;
 			}
 
+            $form->{bankrvc} = $ref->{rvc};
 			$form->{rvc} = $form->format_dcn( $form->{rvc} );
 			$form->{dcn} = $form->format_dcn( $form->{dcn} );
 
