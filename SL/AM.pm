@@ -1412,7 +1412,7 @@ sub save_defaults {
   $query = qq|INSERT INTO defaults (fldname, fldvalue)
               VALUES (?, ?)|;
   $sth = $dbh->prepare($query) || $form->dberror($query);
-  
+
   $delquery = qq|DELETE FROM defaults WHERE fldname = ?|;
   $delsth = $dbh->prepare($delquery) || $form->dberror($delquery);
 
@@ -1423,7 +1423,7 @@ sub save_defaults {
 
   for (qw(inventory income expense fxgain fxloss)) {
     $delsth->execute(${_} . '_accno_id') || $form->dberror;
-  
+
     $query = qq|INSERT INTO defaults (fldname, fldvalue)
                 VALUES ('${_}_accno_id', (SELECT id
 		                FROM chart
@@ -1433,7 +1433,7 @@ sub save_defaults {
 
   for (qw(transitionaccount selectedaccount glnumber sinumber vinumber batchnumber vouchernumber sonumber ponumber sqnumber rfqnumber partnumber employeenumber customernumber vendornumber projectnumber precision)) {
     $delsth->execute($_) || $form->dberror;
-    
+
     $sth->execute($_, $form->{$_}) || $form->dberror;
     $sth->finish;
   }
@@ -1812,12 +1812,21 @@ sub post_yearend {
 
   $form->{reference} = $form->update_defaults($myconfig, 'glnumber', $dbh) unless $form->{reference};
 
+  my ($null, $department_id) = split(/--/, $form->{department});
+  $department_id *= 1;
+
+  if ($department_id){
+    $query = qq|INSERT INTO dpt_trans (trans_id, department_id) VALUES ($form->{id}, $department_id)|;
+    $dbh->do($query) || $form->dberror($query);
+  }
+
+    # if there is an amount, add the record
   $query = qq|UPDATE gl SET
 	      reference = |.$dbh->quote($form->{reference}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      transdate = '$form->{transdate}',
-	      department_id = 0
+	      department_id = $department_id,
 	      WHERE id = $form->{id}|;
 
   $dbh->do($query) || $form->dberror($query);
@@ -1837,7 +1846,6 @@ sub post_yearend {
     if ($form->{"debit_$i"}) {
       $amount = $form->{"debit_$i"} * -1;
     }
-
 
     # if there is an amount, add the record
     if ($amount) {
