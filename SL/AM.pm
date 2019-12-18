@@ -1826,7 +1826,7 @@ sub post_yearend {
 	      description = |.$dbh->quote($form->{description}).qq|,
 	      notes = |.$dbh->quote($form->{notes}).qq|,
 	      transdate = '$form->{transdate}',
-	      department_id = $department_id,
+	      department_id = $department_id
 	      WHERE id = $form->{id}|;
 
   $dbh->do($query) || $form->dberror($query);
