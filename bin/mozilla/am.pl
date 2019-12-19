@@ -3108,6 +3108,13 @@ sub delete_warehouse {
 
 sub yearend {
 
+  use DBIx::Simple;
+  $form->{dbh} = $form->dbconnect(\%myconfig);
+  $form->{dbh}->do( $myconfig{dboptions} );
+  $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+  my $last_closing_id = $form->{dbs}->query("SELECT MAX(trans_id) FROM yearend")->list;
+  my ($last_closing_date, $last_closing_date2) = $form->{dbs}->query("SELECT transdate, transdate+1 FROM yearend WHERE trans_id = ?", $last_closing_id)->list;
+
   AM->earningsaccounts(\%myconfig, \%$form);
 
   for (@{ $form->{chart} }) { $form->{selectchart} .= "$_->{accno}--$_->{description}\n" }
@@ -3157,6 +3164,11 @@ sub yearend {
   <tr>
     <td>
       <table>
+      <tr>
+        <th align="right">|.$locale->text('Last closing date').qq|</th>
+        <td>$last_closing_date</td>
+        <input type=hidden name=fromdate value="$last_closing_date2">
+      </tr>
 	<tr>
 	  <th align=right>|.$locale->text('Date').qq| <font color=red>*</font></th>
 	  <td><input name=todate size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$todate></td>
