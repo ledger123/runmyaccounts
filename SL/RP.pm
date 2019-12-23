@@ -47,14 +47,19 @@ sub yearend_statement {
               WHERE trans_id = ?|;
   my $ath = $dbh->prepare($query) || $form->dberror($query);
 
+  $query = qq|DELETE FROM yearend
+              WHERE trans_id = ?|;
+  my $yth = $dbh->prepare($query) || $form->dberror($query);
+
   foreach $id (@trans_id) {
     $sth->execute($id);
     $ath->execute($id);
+    $yth->execute($id);
 
     $sth->finish;
     $ath->finish;
+    $yth->finish;
   }
-
 
   my $last_period = 0;
   my @categories = qw(I E);
