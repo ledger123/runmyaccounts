@@ -3216,6 +3216,36 @@ sub generate_yearend {
 
   $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid date ...'));
 
+
+  use DBIx::Simple;
+  $form->{dbh} = $form->dbconnect(\%myconfig);
+  $form->{dbh}->do( $myconfig{dboptions} );
+  $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+  my $last_closing_id = $form->{dbs}->query("SELECT MAX(trans_id) FROM yearend")->list;
+  my ($null, $department_id) = split /--/, $form->{department};
+  $department_id *= 1;
+  #$form->error($department_id);
+  if ($department_id){
+     $last_closing_id = $form->{dbs}->query("
+         SELECT MAX(trans_id)
+         FROM yearend
+         JOIN gl
+         WHERE gl.id = yearend.trans_id
+         AND gl.department_id = ?", $form->{department_id}
+     )->list;
+     if (!$last_closing_id){
+         $last_closing_id = $form->{dbs}->query("
+             SELECT MAX(trans_id)
+             FROM yearend
+             JOIN gl ON gl.id = yearend.trans_id
+             WHERE gl.department_id = 0
+          ")->list;
+     }
+  }
+
+  ($form->{fromdate}) = $form->{dbs}->query("SELECT transdate+1 FROM yearend WHERE trans_id = ?", $last_closing_id)->list;
+
+
   RP->yearend_statement(\%myconfig, \%$form);
 
   $form->{transdate} = $form->{todate};
