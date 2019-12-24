@@ -17,12 +17,18 @@ package RP;
 sub yearend_statement {
   my ($self, $myconfig, $form) = @_;
 
+  my ($null, $department_id) = split(/--/, $form->{department});
+  $department_id *= 1;
+
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
   # if todate < existing yearends, delete GL and yearends
   my $query = qq|SELECT trans_id FROM yearend
                  WHERE transdate >= |.$dbh->quote($form->{todate}).qq||;
+  if ($department_id){
+     $query .= " AND trans_id IN (SELECT trans_id FROM dpt_trans WHERE department_id = $department_id)";
+  }
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
 
@@ -41,14 +47,19 @@ sub yearend_statement {
               WHERE trans_id = ?|;
   my $ath = $dbh->prepare($query) || $form->dberror($query);
 
+  $query = qq|DELETE FROM yearend
+              WHERE trans_id = ?|;
+  my $yth = $dbh->prepare($query) || $form->dberror($query);
+
   foreach $id (@trans_id) {
     $sth->execute($id);
     $ath->execute($id);
+    $yth->execute($id);
 
     $sth->finish;
     $ath->finish;
+    $yth->finish;
   }
-
 
   my $last_period = 0;
   my @categories = qw(I E);
