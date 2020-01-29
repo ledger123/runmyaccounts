@@ -34,11 +34,6 @@ sub send {
   
   $self->{charset} ||= "ISO-8859-1";
   
-  if ( $self->{cc} && $self->{bcc} ) {
-    $self->{bcc} = $self->{cc} . "," . $self->{bcc};
-    $self->{cc} = "";
-  }
-	
   if ($out) {
     open(OUT, $out) or return "$out : $!";
   } else {
