@@ -427,10 +427,6 @@ $selectfrom
 
     my @allrows = $form->{dbs}->query($query)->hashes if $form->{runit};
 
-    # use Data::Dumper;
-    # $Data::Dumper::Sortkeys = 1;
-    # print "<pre>", Dumper(\@allrows), "</pre>";
-
     #-- Report summary starts
     if ($form->{runit}){
         my %summary;
