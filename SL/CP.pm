@@ -125,7 +125,7 @@ sub get_openvc {
 
   my $dbh = $form->dbconnect($myconfig);
 
-  my $where = qq|a.fxamount != a.fxpaid
+  my $where = qq|ROUND(a.fxamount::numeric,2) != ROUND(a.fxpaid::numeric,2)
                  AND a.approved = '1'
 		 AND a.onhold = '0'
 		 AND NOT a.id IN (SELECT id
@@ -428,7 +428,7 @@ sub get_openinvoices {
   $form->remove_locks($myconfig, $dbh, $form->{arap});
   
   my $where = qq|WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
-	         AND a.fxamount != a.fxpaid
+	         AND ROUND(a.fxamount::numeric,2) != ROUND(a.fxpaid::numeric,2)
 		 AND a.approved = '1'
 		 AND a.onhold = '0'
 		 AND NOT a.id IN (SELECT id
@@ -441,7 +441,7 @@ sub get_openinvoices {
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   if ($form->{payment} eq 'payments') {
-    $where = qq|WHERE a.fxamount != a.fxpaid
+    $where = qq|WHERE ROUND(a.fxamount::numeric,2) != ROUND(a.fxpaid::numeric,2)
                 AND a.approved = '1'
 		AND a.onhold = '0'
 		AND NOT a.id IN (SELECT id
