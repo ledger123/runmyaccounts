@@ -472,6 +472,8 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 		  . $locale->text('Subtotal') . qq|
 	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;|
 		  . $locale->text('All Accounts') . qq|
+	  <input name=empty_accounts class=checkbox type=checkbox value=Y>&nbsp;|
+		  . $locale->text('Empty Accounts') . qq|
 	  <input name=l_name class=checkbox type=checkbox value=Y checked>&nbsp;|
 		  . $locale->text('Company Name') . qq|
       <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |
