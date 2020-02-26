@@ -1388,9 +1388,6 @@ sub print_options {
 
 sub print {
 
-  $form->info('<pre>');
-  $form->debug($vars => [qw(dcn rvc bankstate bankzipcode bankcity out_decimal bankname integer_out_amount membernumber bic iban)]);
-
   # if this goes to the printer pass through
   if ($form->{media} !~ /(screen|email)/) {
     $form->error($locale->text('Select txt, postscript or PDF!')) if ($form->{format} !~ /(txt|postscript|pdf)/);
