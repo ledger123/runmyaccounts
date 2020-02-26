@@ -1393,10 +1393,13 @@ sub trial_balance {
       $trb{$accno}{credit} += $ref->{credit};
     }
 
-    if (($ref->{debit} != 0) or ($ref->{credit} != 0) or ($ref->{balance} != 0)){
-    push @{ $form->{TB} }, $ref;
+    if ($form->{empty_accounts}) {
+       push @{ $form->{TB} }, $ref;
+    } else {
+        if (($ref->{debit} != 0) or ($ref->{credit} != 0) or ($ref->{balance} != 0)){
+           push @{ $form->{TB} }, $ref;
+        }
     }
-
   }
 
   $dbh->disconnect;
