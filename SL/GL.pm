@@ -147,6 +147,7 @@ sub post_transaction {
 
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
   $form->{precision} = $defaults{precision};
+  $form->{precision} = 8; # Override to fix fx calculations rounding error.
 
   if ($form->{id} *= 1 and $defaults{extendedlog}) {
         $query = qq|INSERT INTO gl_log SELECT * FROM gl WHERE id = $form->{id}|;
