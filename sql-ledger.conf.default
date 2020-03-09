@@ -1,4 +1,20 @@
-use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzip);
+use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzipi $debuglatex $dump_variables $debits_credits_footer $ip_whitelist $menufile);
+
+$ip_whitelist = "31.216.40.164";
+
+$release = "27.03.2018 (16KW19-01)";
+$roadmap = "http://www.runmyaccounts.ch/buchhaltungs-hilfe/doku.php/roadmap";
+$provider = "Run my Accounts AG ";
+
+$dbencoding = "iso-8859-1";
+
+#$debuglatex = 1;
+$debits_credits_footer = 0;
+
+$menufile = 'menu.ini';
+
+# This will dump form variable instead of creating pdf. Useful to view available variables and values
+$dump_variables = 1;
 
 # path to user configuration files
 $userspath = "users";
@@ -16,7 +32,7 @@ $memberfile = "users/members";
 $sendmail = "| /usr/sbin/sendmail -t";
 
 # set language for login and admin
-$language = "";
+$language = "ch";
 
 # Oracle
 #$sid = "T80509";
@@ -26,15 +42,14 @@ $language = "";
 $latex = 1;
 
 # available printers
-%printer = ( Laser	=> 'lpr -Plaser',
-             Epson	=> 'lpr -PEpson',
-	     );
+#%printer = ( Laser	=> 'lpr -BrotherMFC',
+#	     );
 
 # program to use for file compression
 $gzip = "gzip -S .gz";
 
 # if the server can't find gzip, latex, dvips or pdflatex, add the path
-$ENV{PATH} .= ":/usr/local/bin";
+$ENV{PATH} .= ":/usr/local/bin:/opt/local/bin/";
 
 # on mac os X using Fink's Perl libs, add the path
 #$ENV{PERL5LIB} .= ":/sw/lib/perl5";
@@ -45,6 +60,9 @@ $ENV{PATH} .= ":/usr/local/bin";
 
 # Folders with read and write access
 @accessfolders = qw|templates css|;
+
+# Preferences to customize sql-ledger. Currently only one.
+%pref = ( remove_payment_on_post_as_new => 1 );
 
 1;
 

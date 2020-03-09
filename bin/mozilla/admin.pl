@@ -12,7 +12,8 @@
 #
 #======================================================================
 
-$menufile = "menu.ini";
+#$menufile is not configured in sql-ledger.conf
+#$menufile = "menu.ini";
 
 use SL::Form;
 use SL::User;
