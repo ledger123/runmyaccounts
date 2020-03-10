@@ -569,13 +569,14 @@ sub just_do_it {
           INSERT INTO acc_trans(trans_id, chart_id, fx_transaction, transdate, amount)
           VALUES (?, ?, ?, ?, ?)", $_->{id}, $transition_accno_id, '1', $payment_date, $fx_amount_to_be_adjusted
         ) or $form->error($dbs->error);
-
         $dbs->query("
           INSERT INTO acc_trans(trans_id, chart_id, transdate, amount)
           VALUES (?, ?, ?, ?)", $_->{id}, $arap_accno_id, $payment_date, ($_->{fxdue} * -1) + (($_->{fxdue} * $fxrate - $_->{fxdue}) * -1)
         ) or $form->error($dbs->error);
-        $dbs->query("INSERT INTO payment (id, trans_id, exchangerate) VALUES (?, ?, ?)", $payment_id, $_->{id}, $fxrate);
-
+        if ($payment_id){
+            $dbs->query("INSERT INTO payment (id, trans_id, exchangerate) VALUES (?, ?, ?)", $payment_id, $_->{id}, $fxrate
+            ) or $form->error($dbs->error);
+        }
       } else {
         $dbs->query("
           INSERT INTO acc_trans(trans_id, chart_id, transdate, amount, id)
