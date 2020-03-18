@@ -1021,6 +1021,7 @@ sub parse_template {
 		$self->{errfile} = $self->{tmpfile};
 		$self->{errfile} =~ s/tex$/err/;
 
+        $self->{debuglatex} = 1;
 		my $r = 1;
 		if ( $self->{format} eq 'postscript' ) {
 
