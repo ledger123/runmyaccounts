@@ -2396,10 +2396,12 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 	if ( $form->{customer} ) {
 		$option .= "\n<br>" if $option;
 		$option .= $form->{customer};
+		$form->{callback} .= "&customer=" . $form->{customer} . '--' . $form->{customer_id};
 	}
 	if ( $form->{duedateto} ) {
 		$option .= "\n<br>" if $option;
 		$option .= $locale->text("Due Date") . " : " . $form->{duedateto};
+		$form->{callback} .= "&duedateto=" . $form->{duedateto};
 	}
 
 	$title = "$form->{title} / $form->{company}";
