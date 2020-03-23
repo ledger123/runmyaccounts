@@ -281,20 +281,21 @@ sub list_transactions {
   $column_header{name} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Company Name').qq|</a></th>|;
   $column_header{cleared} = qq|<th class=listheading>|.$locale->text('R').qq|</th>|;
   $column_header{source} = qq|<th class=listheading>|.$locale->text('Source').qq|</th>|;
+  $column_header{curr} = qq|<th class=listheading>|.$locale->text('Currency').qq|</th>|;
   $column_header{debit} = qq|<th class=listheading>|.$locale->text('Debit').qq|</th>|;
   $column_header{credit} = qq|<th class=listheading>|.$locale->text('Credit').qq|</th>|;
   $column_header{balance} = qq|<th class=listheading>|.$locale->text('Balance').qq|</th>|;
   $column_header{accno} = qq|<th class=listheading>|.$locale->text('AR/AP').qq|</th>|;
 
-  @columns = qw(transdate reference description debit credit);
+  @columns = qw(transdate reference description curr debit credit);
   if ($form->{link} =~ /_paid/) {
-    @columns = qw(transdate reference description source cleared debit credit);
+    @columns = qw(transdate reference description source cleared curr debit credit);
   }
 
   if ($form->{l_name}){
-      @columns = qw(transdate reference description name debit credit);
+      @columns = qw(transdate reference description name curr debit credit);
       if ($form->{link} =~ /_paid/) {
-        @columns = qw(transdate reference description name source cleared debit credit);
+        @columns = qw(transdate reference description name source cleared curr debit credit);
       }
   }
 
@@ -424,16 +425,16 @@ sub list_transactions {
            SELECT '*'
            FROM acc_trans ac
            JOIN ap ON (ap.id = ac.trans_id)
-           WHERE ap.amount - ap.paid <> 0
-           AND ((ap.amount - ap.paid = $ca->{debit}) OR (ap.paid - ap.amount = $ca->{credit}))
+           WHERE ap.fxamount - ap.fxpaid <> 0
+           AND ((ap.fxamount - ap.fxpaid = $ca->{debit}) OR (ap.fxpaid - ap.fxamount = $ca->{credit}))
 
            UNION ALL
 
            SELECT '*'
            FROM acc_trans ac
            JOIN ar ON (ar.id = ac.trans_id)
-           WHERE ar.amount - ar.paid <> 0
-           AND ((ar.amount - ar.paid = $ca->{credit}) OR (ar.paid - ar.amount = $ca->{debit}))
+           WHERE ar.fxamount - ar.fxpaid <> 0
+           AND ((ar.fxamount - ar.fxpaid = $ca->{credit}) OR (ar.fxpaid - ar.fxamount = $ca->{debit}))
 
            LIMIT 1
          ";
@@ -476,6 +477,7 @@ sub list_transactions {
     
     $column_data{cleared} = ($ca->{cleared}) ? qq|<td>*</td>| : qq|<td>&nbsp;</td>|;
     $column_data{source} = qq|<td>$ca->{source}&nbsp;</td>|;
+    $column_data{curr} = qq|<td>$ca->{curr}&nbsp;</td>|;
     
     $column_data{accno} = qq|<td>|;
     for (@{ $ca->{accno} }) { $column_data{accno} .= "<a href=$drilldown&accno=$_>$_</a> " }

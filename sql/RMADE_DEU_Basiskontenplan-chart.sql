@@ -1818,7 +1818,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('4998','Nicht kontiert','A','I','AR_amount','999',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('4999','MATERIAL- UND STOFFVERBRAUCH','H','E','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5000','Aufwendungen f. RHB und bezogene Waren','A','E','','999',false,false,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5100','Einkauf Roh-,Hilfs- und Betriebsstoffe','A','E','AP_amount','999',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5100','Einkauf Roh-,Hilfs- und Betriebsstoffe','A','E','AP_amount:IC_expense','999',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5101','Einkauf Roh-, Hilfs- und Betriebsstoffe','A','E','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5110','Einkauf RHB 7% Vorsteuer','A','E','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5120','Reserviertes Konto - Einkauf Roh-, Hilfs- und Betriebsstoffe zum erm‰ﬂigten Vorsteuersatz','A','E','','999',false,false,'');

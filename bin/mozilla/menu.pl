@@ -11,7 +11,8 @@
 #
 #######################################################################
 
-$menufile = "menu.ini";
+#$menu file is now set in sql-ledger.conf
+#$menufile = "menu.ini";
 use SL::Menu;
 
 

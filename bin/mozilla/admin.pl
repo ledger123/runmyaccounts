@@ -12,7 +12,8 @@
 #
 #======================================================================
 
-$menufile = "menu.ini";
+#$menufile is not configured in sql-ledger.conf
+#$menufile = "menu.ini";
 
 use SL::Form;
 use SL::User;
@@ -366,7 +367,6 @@ $software
 |;
 
 }
-
 
 
 sub form_header {
@@ -1241,7 +1241,6 @@ sub dbselect_source {
 <input type=submit class=submit name=action value="|.$locale->text('Create Dataset').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Update Dataset').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Delete Dataset').qq|">
-
 </form>
 
     </td>

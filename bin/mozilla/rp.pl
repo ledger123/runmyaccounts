@@ -290,14 +290,13 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
   <tr>
     <td>
       <table>
-	<tr>
-	  <th align=right nowrap>| . $locale->text('Include in Report') . qq|</th>
-	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|
-		  . $locale->text('Heading') . qq|
-	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|
-		  . $locale->text('Subtotal')
-		  . qq|</td>
-	</tr>
+        <tr>
+          <th align=right nowrap>|.$locale->text('Include in Report').qq|</th>
+          <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Heading').qq|
+             <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|
+             <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|
+          </td>
+        </tr>
 |;
 	}
 
@@ -473,10 +472,14 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 		  . $locale->text('Subtotal') . qq|
 	  <input name=all_accounts class=checkbox type=checkbox value=Y>&nbsp;|
 		  . $locale->text('All Accounts') . qq|
+	  <input name=empty_accounts class=checkbox type=checkbox value=Y>&nbsp;|
+		  . $locale->text('Empty Accounts') . qq|
 	  <input name=l_name class=checkbox type=checkbox value=Y checked>&nbsp;|
 		  . $locale->text('Company Name') . qq|
       <input type=checkbox class=checkbox name=fx_transaction value=1 checked> |
-		  . $locale->text('Include Exchange Rate Difference')
+		  . $locale->text('Include Exchange Rate Difference') . qq|
+      <input type=checkbox class=checkbox name=l_csv value=1> |
+		  . $locale->text('CSV')
 		  . qq|</td>
 	</tr>
 |;
@@ -1180,12 +1183,12 @@ sub generate_balance_sheet {
 	$form->{endbold} = "</strong>";
 	$form->{br}      = "<br>\n";
 
-	RP->balance_sheet( \%myconfig, \%$form );
-
-	$form->{asofdate} = $form->current_date( \%myconfig )
-	  unless $form->{asofdate};
+    $form->{asofdate} = $form->current_date( \%myconfig )
+      unless $form->{asofdate} or ($form->{asofmonth} and $form->{asofyear});
 	$form->{period} =
 	  $locale->date( \%myconfig, $form->current_date( \%myconfig ), 1 );
+
+	RP->balance_sheet( \%myconfig, \%$form );
 
 	( $form->{department} ) = split /--/, $form->{department};
 
@@ -1326,6 +1329,51 @@ sub list_accounts {
 		$column_header{accno} =
 		  qq|<th class=listheading>| . $locale->text('GIFI') . qq|</th>|;
 	}
+
+    if ($form->{l_csv}){
+       $filename = 'trialbalance';
+       my $name;
+       do { $name = tmpnam() }
+       until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+
+       open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
+       my $line;
+       for (@column_index){
+           $line .= "$_,";
+       }
+       chop $line;
+       print CSVFILE "$line\n";
+
+       foreach $ref ( sort { $a->{accno} cmp $b->{accno} } @{ $form->{TB} } ) {
+
+           $ml = ( $ref->{category} =~ /(A|E)/ ) ? -1 : 1;
+           $ml *= -1 if $ref->{contra};
+
+           $ref->{begbalance} = $ref->{balance} * $ml;
+           $ref->{endbalance} = ($ref->{balance} + $ref->{amount}) * $ml;
+           for (qw(begbalance debit credit endbalance)){
+              $ref->{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision} );
+           }
+
+           $line = '';
+           for (@column_index) { $line .= qq|"$ref->{$_}",| }
+           chop $line;
+           print CSVFILE "$line\n";
+       }
+
+       close (CSVFILE) || $form->error('Cannot close csv file');
+
+       my @fileholder;
+       open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
+       @fileholder = <DLFILE>;
+       close (DLFILE) || $form->error('Cannot close file opened for download');
+       my $dlfile = $filename . ".csv";
+       print "Content-Type: application/csv\n";
+       print "Content-Disposition:attachment; filename=$dlfile\n\n";
+       print @fileholder;
+       unlink($name) or die "Couldn't unlink $name : $!";
+       exit;
+    }
 
 	$form->header;
 
@@ -2348,10 +2396,12 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 	if ( $form->{customer} ) {
 		$option .= "\n<br>" if $option;
 		$option .= $form->{customer};
+		$form->{callback} .= "&customer=" . $form->{customer} . '--' . $form->{customer_id};
 	}
 	if ( $form->{duedateto} ) {
 		$option .= "\n<br>" if $option;
 		$option .= $locale->text("Due Date") . " : " . $form->{duedateto};
+		$form->{callback} .= "&duedateto=" . $form->{duedateto};
 	}
 
 	$title = "$form->{title} / $form->{company}";
@@ -3120,6 +3170,7 @@ sub do_print_reminder {
 				$sth->finish;
 			}
 
+            $form->{bankrvc} = $ref->{rvc};
 			$form->{rvc} = $form->format_dcn( $form->{rvc} );
 			$form->{dcn} = $form->format_dcn( $form->{dcn} );
 
@@ -4004,7 +4055,7 @@ sub list_payments {
 		$href     .= "&fromdate=$form->{fromdate}";
 		$option   .= "\n<br>" if ($option);
 		$option .=
-		    $locale->text('From') 
+		    $locale->text('From')
 		  . "&nbsp;"
 		  . $locale->date( \%myconfig, $form->{fromdate}, 1 );
 	}
@@ -4013,7 +4064,7 @@ sub list_payments {
 		$href     .= "&todate=$form->{todate}";
 		$option   .= "\n<br>" if ($option);
 		$option .=
-		    $locale->text('To') 
+		    $locale->text('To')
 		  . "&nbsp;"
 		  . $locale->date( \%myconfig, $form->{todate}, 1 );
 	}

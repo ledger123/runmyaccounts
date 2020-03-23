@@ -1711,5 +1711,181 @@ sub vendor_payment {
   chop $form->{ndx};
 }
 
+sub delete_import {
+  my ($dbh, $form) = @_;
+
+  my $query = qq|SELECT reportid FROM report
+                 WHERE reportcode = '$form->{reportcode}'
+	         AND login = '$form->{login}'|;
+  my ($reportid) = $dbh->selectrow_array($query);
+
+  if (!$reportid) {
+    $query = qq|INSERT INTO report (reportcode, login)
+                VALUES ('$form->{reportcode}', '$form->{login}')|;
+    $dbh->do($query) || $form->dberror($query);
+
+    $query = qq|SELECT reportid FROM report
+                WHERE reportcode = '$form->{reportcode}'
+		AND login = '$form->{login}'|;
+    ($reportid) = $dbh->selectrow_array($query);
+  }
+
+  $query = qq|DELETE FROM reportvars
+              WHERE reportid = $reportid|;
+  $dbh->do($query) || $form->dberror($query);
+
+  $reportid;
+}
+
+sub dataline {
+  my ($form) = @_;
+
+  my @dl     = ();
+  my $string = 0;
+  my $chr    = "";
+  my $m      = 0;
+
+  chomp;
+
+  if ($form->{tabdelimited}) {
+    @dl = split /\t/, $_;
+  }
+  else {
+    if ($form->{stringsquoted}) {
+      foreach $chr (split //, $_) {
+        if ($chr eq '"') {
+          if (!$string) {
+            $string = 1;
+            next;
+          }
+        }
+        if ($string) {
+          if ($chr eq '"') {
+            $string = 0;
+            next;
+          }
+        }
+        if ($chr eq $form->{delimiter}) {
+          if (!$string) {
+            $m++;
+            next;
+          }
+        }
+        $dl[$m] .= $chr;
+      }
+    }
+    else {
+      @dl = split /$form->{delimiter}/, $_;
+    }
+  }
+
+  unshift @dl, "";
+  return @dl;
+
+}
+
+
+
+sub prepare_import_data {
+  my ($self, $myconfig, $form) = @_;
+
+  # connect to database
+  my $dbh = $form->dbconnect($myconfig);
+
+  my $query;
+  my $sth;
+  my $ref;
+
+  # clean out report
+  my $reportid = &delete_import($dbh, $form);
+
+  $query = qq|DELETE FROM reportvars
+              WHERE reportid = $reportid|;
+  $dbh->do($query) || $form->dberror($query);
+
+  $query = qq|INSERT INTO reportvars (reportid, reportvariable, reportvalue)
+              VALUES ($reportid, ?, ?)|;
+  my $rth = $dbh->prepare($query) || $form->dberror($query);
+
+  my $i = 0;
+  my $j = 0;
+
+  my @d = split /\n/, $form->{data};
+  shift @d if !$form->{mapfile};
+
+  my @dl;
+
+  for (@d) {
+
+    @dl = &dataline($form);
+
+    if ($#dl) {
+      $i++;
+      for (keys %{$form->{$form->{type}}}) {
+        if (defined $form->{$form->{type}}->{$_}{ndx}) {
+
+          # Remove non-printable character
+          $dl[$form->{$form->{type}}->{$_}{ndx}] =~ s/[^[:print:]]+//g;
+          $form->{"${_}_$i"} = $dl[$form->{$form->{type}}->{$_}{ndx}];
+          if ($form->{"${_}_$i"}) {
+            $rth->execute("${_}_$i", $form->{"${_}_$i"});
+            $rth->finish;
+          }
+        }
+      }
+    }
+    $form->{rowcount} = $i;
+
+  }
+  $dbh->disconnect;
+}
+
+sub import_generic {
+  my ($self, $myconfig, $form) = @_;
+
+  use DBIx::Simple;
+  $form->{dbh} = $form->dbconnect($myconfig);
+  $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+  my $reportid = $form->{dbs}->query('SELECT reportid FROM report WHERE reportcode = ?', $form->{reportcode})->list;
+
+  my $newform = new Form;
+
+  $query = qq|SELECT * FROM reportvars
+              WHERE reportid = $reportid
+	      AND reportvariable LIKE ?|;
+  my $sth = $form->{dbh}->prepare($query) || $form->dberror($query);
+
+  $form->{dbs}->query('delete from generic_import') or die($form->{dbs}->error);
+
+  for my $i (1 .. $form->{rowcount}) {
+    if ($form->{"ndx_$i"}) {
+
+      for (keys %$newform) { delete $newform->{$_} }
+
+      $sth->execute("%\\_$i");
+      while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+        $ref->{reportvariable} =~ s/_(\d+)//;
+        if ($1 == $i) {
+          $newform->{$ref->{reportvariable}} = $ref->{reportvalue};
+        }
+      }
+      $sth->finish;
+
+      my $query = qq|
+         INSERT INTO generic_import (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      |;
+      $form->{dbs}->query($query, 
+            $newform->{c1}, $newform->{c2}, $newform->{c3}, $newform->{c4}, $newform->{c5}, $newform->{c6}, $newform->{c7},
+            $newform->{c8}, $newform->{c9}, $newform->{c10}, $newform->{c11}, $newform->{c12}, $newform->{c13}, $newform->{c14}, $newform->{c15}, $newform->{c16}, $newform->{c17}, $newform->{c18},
+            $newform->{c19}, $newform->{c20}
+      ) or error($form->dberror);
+    }
+    $i++;
+  }
+}
+
 1;
+
 

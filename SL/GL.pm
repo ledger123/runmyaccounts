@@ -147,6 +147,7 @@ sub post_transaction {
 
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
   $form->{precision} = $defaults{precision};
+  $form->{precision} = 8; # Override to fix fx calculations rounding error.
 
   if ($form->{id} *= 1 and $defaults{extendedlog}) {
         $query = qq|INSERT INTO gl_log SELECT * FROM gl WHERE id = $form->{id}|;
@@ -727,7 +728,8 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts, ac.entry_id
+		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl g
 		 JOIN acc_trans ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -743,7 +745,8 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id
+		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ar a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -762,7 +765,8 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id
+		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap a
 		 JOIN acc_trans ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -788,7 +792,8 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id
+		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl g
 		 JOIN acc_trans_log ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -804,7 +809,8 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ar a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -823,7 +829,8 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap a
 		 JOIN acc_trans_log ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -848,7 +855,8 @@ sub transactions {
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
 		 '' AS address1, '' AS address2, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
-		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id
+		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl_log_deleted g
 		 JOIN acc_trans_log_deleted ac ON (g.id = ac.trans_id)
 		 JOIN chart c ON (ac.chart_id = c.id)
@@ -864,7 +872,9 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id,
 		 FROM ar_log_deleted a
 		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -883,7 +893,8 @@ sub transactions {
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
 		 ad.address1, ad.address2, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id
+		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
+         ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap_log_deleted a
 		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
 		 $invoicejoin
@@ -1147,6 +1158,7 @@ sub transaction {
   
   my %defaults = $form->get_defaults($dbh, \@{[qw(closedto revtrans precision)]});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
+  $form->closedto_user($myconfig, $dbh);
 
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
   

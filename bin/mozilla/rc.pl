@@ -113,7 +113,9 @@ sub reconciliation {
 	</tr>
 	<tr>
 	  <td></td>
-	  <td colspan=3><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|</td>
+	  <td colspan=3><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Include Exchange Rate Difference').qq|
+      <input type=checkbox class=checkbox name=l_company value=1> |.$locale->text('Company').qq|
+      </td>
 	</tr>
       </table>
     </td>
@@ -188,16 +190,18 @@ sub get_payments {
 sub display_form {
   
   if ($form->{report}) {
-    @column_index = qw(transdate source name debit credit);
+    @column_index = qw(transdate source name company debit credit);
   } else {
-    @column_index = qw(transdate source name cleared debit credit balance);
+    @column_index = qw(transdate source name company cleared debit credit balance);
   }
+  splice @column_index, 3, 1 if !$form->{l_company};
   
   $form->{allbox} = ($form->{allbox}) ? "checked" : "";
   $action = ($form->{deselect}) ? "deselect_all" : "select_all";
   $column_header{cleared} = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;
   $column_header{source} = "<th class=listheading>".$locale->text('Source')."</a></th>";
   $column_header{name} = "<th class=listheading>".$locale->text('Description')."</a></th>";
+  $column_header{company} = "<th class=listheading>".$locale->text('Company')."</a></th>";
   $column_header{transdate} = "<th class=listheading>".$locale->text('Date')."</a></th>";
 
   $column_header{debit} = "<th class=listheading>".$locale->text('Debit')."</a></th>";
@@ -315,6 +319,7 @@ function CheckAll() {
     $column_data{name} = "<td>";
     for (@{ $temp{name} }) { $column_data{name} .= "$_<br>" }
     $column_data{name} .= "</td>";
+    $column_data{company} = qq|<td>$ref->{company}&nbsp;</td>|;
     $column_data{source} = qq|<td>$temp{source}&nbsp;</td>
     <input type=hidden name="id_$i" value="$ref->{id}">
     <input type=hidden name="payment_id_$i" value="$ref->{payment_id}">|;

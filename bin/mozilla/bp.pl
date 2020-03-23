@@ -467,6 +467,9 @@ sub print {
 	if ($myform->{type} ne 'invoice') {
 	  $form->{formname} = $myform->{type};
 	}
+    if ($form->{type} eq 'invoice' and $form->{vc} eq 'vendor'){
+      $form->{formname} = 'vendor_invoice';
+    }
 	delete $form->{paid};
 	
 	$arap = ($form->{vc} eq 'customer') ? "AR" : "AP";

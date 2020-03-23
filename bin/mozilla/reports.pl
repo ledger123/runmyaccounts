@@ -24,13 +24,17 @@ sub alltaxes {
     $form->{dbh} = $form->dbconnect(\%myconfig);
     $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
-    $form->{title} = $locale->text('All Taxes Report');
+    my %defaults = $form->get_defaults($form->{dbh}, \@{['precision', 'company']});
+    for (keys %defaults) { $form->{$_} = $defaults{$_} }
+
+    $form->{title} = $locale->text('All Taxes Report' . ' - ' . $form->{company});
     &print_title;
 
-    ( $null, $department_id ) = split( /--/, $form->{department} );
-    &bld_department( 'selectdepartment', 1, $department_id );
-
     $form->all_departments(\%myconfig);
+    if (@{ $form->{all_department} }) {
+      $form->{selectdepartment} = "\n";
+      for (@{ $form->{all_department} }) { $form->{selectdepartment} .= qq|$_->{description}--$_->{id}\n| }
+    }
 
 
   if (@{ $form->{all_years} }) {
@@ -107,7 +111,10 @@ sub alltaxes {
 <table>
 <tr>
     <th align=right>| . $locale->text('Department') . qq|</th>
-    <td><select name=department>$form->{selectdepartment}</select></td>
+    <td><select name=department>|
+		.$form->select_option($form->{selectdepartment}, $form->{department}, 1)
+		.qq|</select>
+</td>
 </tr>
 <tr>
     <th align="right">| . $locale->text('From date') . qq|</th>
@@ -166,6 +173,11 @@ $selectfrom
     if ( $form->{todate} ) {
         $aawhere .= qq| AND aa.transdate <= '$form->{todate}'|;
     }
+    if ( $form->{department} ) {
+        my ($null, $department_id) = split /--/, $form->{department};
+        $aawhere .= qq| AND aa.department_id = $department_id|;
+    }
+
 
 #    if ( $form->{method} eq 'cash' ) {
 #        $transdate = "aa.datepaid";
@@ -413,7 +425,7 @@ $selectfrom
         ORDER BY 1, 2, 3, 6
     ~;
 
-    my @allrows = $form->{dbs}->query($query)->hashes or die( $form->{dbs}->error ) if $form->{runit};
+    my @allrows = $form->{dbs}->query($query)->hashes if $form->{runit};
 
     #-- Report summary starts
     if ($form->{runit}){
@@ -1547,7 +1559,7 @@ sub audit_list {
    $where .= qq| AND (a.transdate <= '$form->{totransdate}')| if $form->{totransdate};
    $where .= qq| AND (a.employee_id = $form->{employee_id})| if $form->{employee};
 
-   @columns = qw(trans_id tablename reference formname action transdate employee_id);
+   @columns = qw(trans_id tablename reference formname action transdate name);
    # if this is first time we are running this report.
    $form->{sort} = 'tablename' if !$form->{sort};
    $form->{oldsort} = 'none' if !$form->{oldsort};
@@ -1752,7 +1764,11 @@ $selectfrom
    my $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute || $form->dberror($query);
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description}<br>\n|;
+      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description}<br>|;
+      if ( $ref->{projectnumber} ) {
+            print qq| ($ref->{projectnumber})|;
+        }
+        print qq|<br>\n|;
    }
 
 print qq|
@@ -1821,8 +1837,8 @@ sub income_statement_by_project {
 
   $form->header;
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
-  print qq|<h4>INCOME STATEMENT</h4>|;
-  print qq|<h4>for Period</h4>|;
+  print qq|<h4>|.$locale->text('Income Statement Projects').qq|</h4>|;
+  print qq|<h4>|.$locale->text('For Period').qq|</h4>|;
   print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
   print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
   my $dbh = $form->dbconnect(\%myconfig);
@@ -1880,7 +1896,7 @@ sub income_statement_by_project {
 
   my $line_total = 0;
   # Print INCOME
-  print qq|<tr><td colspan=2><b>INCOME<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  print qq|<tr><td colspan=2><b>|.$locale->text('INCOME').qq|<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
   foreach $accno (sort keys %{ $form->{I} }){
      print qq|<tr>|;
      print qq|<td>$form->{I}{$accno}{accno}</td>|;
@@ -1899,7 +1915,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   $line_total = 0;
-  print qq|<tr><td colspan=2 align=right><b>TOTAL INCOME</b></td>|;
+  print qq|<tr><td colspan=2 align=right><b>|.$locale->text('TOTAL INCOME').qq|</b></td>|;
   for (sort keys %projects){ 
     print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome}, 0) . qq|</td>|;
     $line_total += $form->{I}{$_}{totalincome};
@@ -1912,7 +1928,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   # Print EXPENSES
-  print qq|<tr><td colspan=2><b>EXPENSES<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
+  print qq|<tr><td colspan=2><b>|.$locale->text('EXPENSES').qq|<br><hr width=300 size=5 align=left noshade></b></td></tr>|;
   foreach $accno (sort keys %{ $form->{E} }){
      print qq|<tr>|;
      print qq|<td>$form->{E}{$accno}{accno}</td>|;
@@ -1931,7 +1947,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   $line_total = 0;
-  print qq|<tr><td colspan=2 align=right><b>TOTAL EXPENSES</b></td>|;
+  print qq|<tr><td colspan=2 align=right><b>|.$locale->text('TOTAL EXPENSES').qq|</b></td>|;
   for (sort keys %projects){ 
     print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{E}{$_}{totalexpenses}, 0) . qq|</td>|; 
     $line_total += $form->{E}{$_}{totalexpenses}; 
@@ -1944,7 +1960,7 @@ sub income_statement_by_project {
   print qq|</tr>|;
 
   $line_total = 0;
-  print qq|<tr><td colspan=2 align=right><b>INCOME (LOSS)</b></td>|;
+  print qq|<tr><td colspan=2 align=right><b>|.$locale->text('INCOME (LOSS)').qq|</b></td>|;
   for (sort keys %projects){
     print qq|<td align=right>| . $form->format_amount(\%myconfig, $form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses},0) . qq|</td>|; 
     $line_total += ($form->{I}{$_}{totalincome} - $form->{E}{$_}{totalexpenses});
@@ -4547,7 +4563,7 @@ sub projects_list {
    my $groupbreak = 'none';
    $form->{accounttype} = 'standard';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-    $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&projectnumber=$ref->{projectnumber}--$ref->{id}|;
+    $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&fx_transaction=1&projectnumber=$ref->{projectnumber}--$ref->{id}|;
         for (qw(accounttype datefrom dateto l_subtotal path login)){ $form->{link} .= "&$_=$form->{$_}" }
     $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
     if ($form->{l_subtotal}){
