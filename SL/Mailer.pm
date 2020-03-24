@@ -43,7 +43,7 @@ sub send {
   $self->{contenttype} ||= "text/plain";
   
   my %h;
-  for (qw(from to cc bcc)) {
+  for (qw(reply-to from to cc bcc)) {
     $self->{$_} =~ s/\&lt;/</g;
     $self->{$_} =~ s/\&gt;/>/g;
     $self->{$_} =~ s/(\/|\\|\$)//g;
@@ -52,6 +52,7 @@ sub send {
     $h{$_} = $self->{$_};
   }
  
+  $h{'reply-to'} = "Reply-to: $h{'reply-to'}\n" if $self->{'reply-to'};
   $h{cc} = "Cc: $h{cc}\n" if $self->{cc};
   $h{bcc} = "Bcc: $h{bcc}\n" if $self->{bcc};
   $h{subject} = ($self->{subject} =~ /([\x00-\x1F]|[\x7B-\xFFFF])/) ? "Subject: =?$self->{charset}?B?".&encode_base64($self->{subject},"")."?=" : "Subject: $self->{subject}";
@@ -69,7 +70,7 @@ sub send {
   
   print OUT qq|From: $h{from}
 To: $h{to}
-$h{date}$h{cc}$h{bcc}$h{subject}
+$h{date}$h{'reply-to'}$h{cc}$h{bcc}$h{subject}
 Message-ID: <$msgid>
 $h{notify}X-Mailer: Run my Accounts $self->{version}
 MIME-Version: 1.0

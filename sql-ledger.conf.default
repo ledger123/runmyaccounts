@@ -1,4 +1,6 @@
-use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzipi $debuglatex $dump_variables $debits_credits_footer $ip_whitelist $menufile);
+use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzipi $debuglatex $dump_variables $debits_credits_footer $ip_whitelist $menufile $noreply);
+
+$noreply = 'noreply@munshi10.net';
 
 $ip_whitelist = "31.216.40.164";
 

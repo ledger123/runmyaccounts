@@ -670,7 +670,7 @@ sub round_amount {
 }
 
 sub parse_template {
-	my ( $self, $myconfig, $userspath, $debuglatex ) = @_;
+	my ( $self, $myconfig, $userspath, $debuglatex, $noreply ) = @_;
 
 	my ( $chars_per_line, $lines_on_first_page, $lines_on_second_page ) =
 	  ( 0, 0, 0 );
@@ -1068,8 +1068,9 @@ sub parse_template {
 			for (qw(cc bcc subject message version format charset notify)) {
 				$mail->{$_} = $self->{$_};
 			}
-			$mail->{to}     = qq|$self->{email}|;
-			$mail->{from}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+			$mail->{to}           = qq|$self->{email}|;
+			$mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
+			$mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
 			$mail->{fileid} = "$fileid.";
 
 			# if we send html or plain text inline
