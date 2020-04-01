@@ -670,7 +670,7 @@ sub round_amount {
 }
 
 sub parse_template {
-	my ( $self, $myconfig, $userspath, $debuglatex ) = @_;
+	my ( $self, $myconfig, $userspath, $debuglatex, $noreply ) = @_;
 
 	my ( $chars_per_line, $lines_on_first_page, $lines_on_second_page ) =
 	  ( 0, 0, 0 );
@@ -683,6 +683,7 @@ sub parse_template {
 
 	# Setup variables from defaults table
 	my $dbh = $self->dbconnect($myconfig);
+	my ($noreplyemail) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='noreplyemail'");
 	my $query =
 	  "SELECT fldname, fldvalue FROM defaults WHERE fldname LIKE 'latex'";
 	my $sth = $dbh->prepare($query);
@@ -1068,8 +1069,10 @@ sub parse_template {
 			for (qw(cc bcc subject message version format charset notify)) {
 				$mail->{$_} = $self->{$_};
 			}
-			$mail->{to}     = qq|$self->{email}|;
-			$mail->{from}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+            $noreply              = $myconfig->{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
+			$mail->{to}           = qq|$self->{email}|;
+			$mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
+			$mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
 			$mail->{fileid} = "$fileid.";
 
 			# if we send html or plain text inline

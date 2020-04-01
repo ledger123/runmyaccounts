@@ -1791,7 +1791,7 @@ sub print_form {
 
   $form->format_string(qw(email cc bcc));
   
-  $form->parse_template(\%myconfig, $userspath, $debuglatex) if $form->{copies};
+  $form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply) if $form->{copies};
 
 
   # if we got back here restore the previous form
