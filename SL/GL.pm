@@ -874,7 +874,6 @@ sub transactions {
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
-		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id,
 		 FROM ar_log_deleted a
 		 JOIN acc_trans_log_deleted ac ON (a.id = ac.trans_id)
 		 $invoicejoin
