@@ -1019,6 +1019,9 @@ sub parse_template {
 
 		$self->{tmpfile} =~ s/$userspath\///g;
 
+        system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
+        system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} -o $self->{tmpfile}");
+
 		$self->{errfile} = $self->{tmpfile};
 		$self->{errfile} =~ s/tex$/err/;
 
