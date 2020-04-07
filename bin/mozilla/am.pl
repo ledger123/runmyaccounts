@@ -2241,6 +2241,7 @@ sub defaults {
   $checked{linetax} = "checked" if $form->{linetax};
   $checked{gldepartment} = "checked" if $form->{gldepartment};
   $checked{noreplyemail} = "checked" if $form->{noreplyemail};
+  $checked{utf8templates} = "checked" if $form->{utf8templates};
   $checked{name} = "checked";
   if ($form->{namesbynumber}) {
     $checked{name} = "";
@@ -2338,6 +2339,10 @@ sub defaults {
 	<tr>
 	  <th align=right>|.$locale->text('Use noreply email').qq|</th>
 	  <td><input name=noreplyemail class=checkbox type=checkbox value="1" $checked{noreplyemail}>&nbsp;|.$locale->text('Yes').qq|</td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('UTF-8 Templates').qq|</th>
+	  <td><input name=utf8templates class=checkbox type=checkbox value="1" $checked{utf8templates}>&nbsp;|.$locale->text('Yes').qq|</td>
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Sort Names by').qq|</th>
@@ -2465,7 +2470,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail utf8templates namesbynumber typeofcontact";
 
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 
