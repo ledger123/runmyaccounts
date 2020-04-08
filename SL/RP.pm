@@ -1106,7 +1106,7 @@ sub trial_balance {
   my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
-  $form->{precision5} = 5; # armaghan 7 april 2020 use 5 as precision for calculations to avoid rounding issues.
+  $form->{precision8} = 8; # armaghan 7 april 2020 use 8 as precision for calculations to avoid rounding issues.
 
   my $where = "ac.approved = '1'";
   my $invwhere = $where;
@@ -1180,7 +1180,7 @@ sub trial_balance {
     $sth->execute || $form->dberror($query);
 
     while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
-      $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision5});
+      $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision8});
       $balance{$ref->{accno}} = $ref->{amount};
 
       $ref->{description} = $ref->{translation} if $ref->{translation};
@@ -1363,7 +1363,7 @@ sub trial_balance {
 	} else {
 	  $ref->{credit} = $ref->{amount};
 	}
-	next if $form->round_amount($ref->{amount}, $form->{precision5}) == 0;
+	next if $form->round_amount($ref->{amount}, $form->{precision8}) == 0;
 
       } else {
 
@@ -1379,11 +1379,11 @@ sub trial_balance {
 
       }
 
-      $ref->{debit} = $form->round_amount($ref->{debit}, $form->{precision5});
-      $ref->{credit} = $form->round_amount($ref->{credit}, $form->{precision5});
+      $ref->{debit} = $form->round_amount($ref->{debit}, $form->{precision8});
+      $ref->{credit} = $form->round_amount($ref->{credit}, $form->{precision8});
 
       if (!$form->{all_accounts}) {
-	next if $form->round_amount($ref->{debit} + $ref->{credit}, $form->{precision5}) == 0;
+	next if $form->round_amount($ref->{debit} + $ref->{credit}, $form->{precision8}) == 0;
       }
     }
 
