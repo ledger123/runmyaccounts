@@ -2327,6 +2327,7 @@ sub export_as_csv {
 
 sub reminder {
 
+    $form->{precision8} = 8;
 	$form->{callback} = $form->{initcallback};
 	for (qw(path login type format)) { $form->{callback} .= "&$_=$form->{$_}" }
 	for (qw(title media report)) {
@@ -2539,7 +2540,7 @@ qq|$ref->{module}.pl?path=$form->{path}&action=edit&id=$ref->{id}&login=$form->{
 		$column_data{due} = qq|<td align=right nowrap>|
 		  . $form->format_amount( \%myconfig,
 			$ref->{due} / $ref->{exchangerate},
-			$form->{precision} )
+			$form->{precision8} )
 		  . qq|</td>|;
 
 		$j++;
