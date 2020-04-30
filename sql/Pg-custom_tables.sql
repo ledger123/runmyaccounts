@@ -152,4 +152,7 @@ create table debits (id serial, reference text, description text, transdate date
 create table credits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2));
 create table debitscredits (id serial, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2));
 
+ALTER TABLE bank ADD qriban TEXT;
+ALTER TABLE bank ADD strdbkginf TEXT;
+ALTER TABLE bank ADD invdescriptionqr TEXT;
 
