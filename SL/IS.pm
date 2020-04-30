@@ -641,7 +641,7 @@ sub invoice_details {
   ($form->{customeremail}) = $dbh->selectrow_array("SELECT email FROM customer WHERE id = $form->{customer_id}");
 
   # dcn
-  $query = qq|SELECT bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc
+  $query = qq|SELECT bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc, bk.invdescriptionqr bk.qriban bk.strdbkginf
 	      FROM bank bk
 	      JOIN chart c ON (c.id = bk.id)
 	      WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
@@ -668,6 +668,17 @@ sub invoice_details {
   }
 
   $dbh->disconnect;
+
+  my @oldvars = qw(company companyaddress1 companyzip companycityr name address1 zipcode companycity businessnumber invdate invdescriptionqr qriban strdbkginf);
+
+  my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr companycityqr businessnumberqr swicotaxbaseqr swiscotaxqr invdateqr invdescriptionqr qribanqr strdbkginfqr);
+
+  $form->info("Old vars");
+  $form->debug('', \@oldvars);
+  $form->info("New vars");
+  $form->debug('', \@qrvars);
+  $form->error;
+
 }
 
 
