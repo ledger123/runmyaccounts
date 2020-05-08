@@ -706,8 +706,6 @@ sub invoice_details {
 
       my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr companycityqr businessnumberqr swicotaxbaseqr swicotaxqr invdateqr invdescriptionqr qribanqr strdbkginfqr);
 
-      #$form->debug;
-  $form->dumper($form->{tax});
   $form->info("Old vars");
   $form->debug('', \@oldvars);
   $form->info("New vars");
