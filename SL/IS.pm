@@ -670,9 +670,10 @@ sub invoice_details {
 
   $dbh->disconnect;
 
-  my @oldvars = qw(company companyaddress1 companyzip companycityr name address1 zipcode companycity businessnumber invdate invdescriptionqr qriban strdbkginf);
+  my @oldvars = qw(company companyaddress1 companyzip companycity name address1 zipcode city businessnumber invdate invdescriptionqr qriban strdbkginf);
 
   # conversion to QR variables
+  $form->{invdescriptionqr} = substr($form->{invdescriptionqr},0,14);
   $form->{qribanqr} = $form->{qriban};
   $form->{qribanqr} =~ s/\s//g;
 
@@ -694,17 +695,15 @@ sub invoice_details {
          $rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
          $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
          $tax = $form->round_amount(($rate * $taxbase)/100,2);
-         $form->{swicotaxbaseqr} .= qq|$rate:$taxbase|;
-         $form->{swicotaxqr} .= qq|$rate:$tax|;
+         $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
      }
   }
-  #chop $form->{swicotaxbaseqr}
-  #$form->{swicotaxqr}  = $form->{swicotax};
+  chop $form->{swicotaxbaseqr};
 
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
-  $form->{invdateqr}  = $form->datetonum($myconfig, $form->{invdate});
+  $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 
-      my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr companycityqr businessnumberqr swicotaxbaseqr swicotaxqr invdateqr invdescriptionqr qribanqr strdbkginfqr);
+      my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr qribanqr strdbkginfqr);
 
   $form->info("Old vars");
   $form->debug('', \@oldvars);
