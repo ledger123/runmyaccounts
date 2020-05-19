@@ -263,9 +263,9 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   print qq|<h3>Transactions with rounding issue due to 8 precision in AR posting process</h3>|;
 
   $query = qq|
-      SELECT id, invnumber, amount, paid, invoice FROM ar WHERE amount - paid BETWEEN 0.0009 AND 0.009
+      SELECT id, invnumber, amount, paid, invoice FROM ar WHERE amount - paid BETWEEN 0.00001 AND 0.009
       UNION
-      SELECT id, invnumber, amount, paid, invoice FROM ar WHERE paid - amount BETWEEN 0.0009 AND 0.009
+      SELECT id, invnumber, amount, paid, invoice FROM ar WHERE paid - amount BETWEEN 0.00001 AND 0.009
       ORDER BY invnumber
 |;
 
