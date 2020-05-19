@@ -684,6 +684,8 @@ sub parse_template {
 	# Setup variables from defaults table
 	my $dbh = $self->dbconnect($myconfig);
 	my ($noreplyemail) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='noreplyemail'");
+	my ($utf8templates) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='utf8templates'");
+
 	my $query =
 	  "SELECT fldname, fldvalue FROM defaults WHERE fldname LIKE 'latex'";
 	my $sth = $dbh->prepare($query);
@@ -1018,6 +1020,11 @@ sub parse_template {
 		}
 
 		$self->{tmpfile} =~ s/$userspath\///g;
+
+        if ($utf8templates){
+           system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
+           system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} -o $self->{tmpfile}");
+        }
 
 		$self->{errfile} = $self->{tmpfile};
 		$self->{errfile} =~ s/tex$/err/;
@@ -1609,6 +1616,7 @@ sub cleanup {
 			$self->{tmpfile} =~ s/\.\w+$//g;
 			my $tmpfile = $self->{tmpfile};
 			unlink(<$tmpfile.*>);
+			unlink(<"LATIN-$tmpfile.tex">);
 		}
 
 		chdir("$self->{cwd}");

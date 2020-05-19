@@ -256,6 +256,51 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
 
 
 
+
+  #------------------------
+  # 2b. Rounding diff
+  #------------------------
+  print qq|<h3>Transactions with rounding issue due to 8 precision in AR posting process</h3>|;
+
+  $query = qq|
+      SELECT id, invnumber, amount, paid, invoice FROM ar WHERE amount - paid BETWEEN 0.00001 AND 0.009
+      UNION
+      SELECT id, invnumber, amount, paid, invoice FROM ar WHERE paid - amount BETWEEN 0.00001 AND 0.009
+      ORDER BY invnumber
+|;
+
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  print qq|<table>|;
+  print qq|<tr class=listheading>|;
+  print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Trans ID').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Paid').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Diff').qq|</td>|;
+  print qq|</tr>|;
+  $i = 0;
+  my $module;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     if ($ref->{invoice}){
+        $module = 'is.pl';
+     } else {
+        $module = 'ar.pl';
+     }
+     print qq|<tr class=listrow$i>|;
+     print qq|<td><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
+     print qq|<td>$ref->{id}</td>|;
+     print qq|<td align="right">$ref->{amount}</td>|;
+     print qq|<td align="right">$ref->{paid}</td>|;
+     print qq|<td align="right">|.$form->format_amount(\%myconfig, $ref->{amount} - $ref->{paid}, 8).qq|</td>|;
+     print qq|</tr>|;
+  }
+  print qq|</table>|;
+
+
+
+
+
   #-------------------
   # 3. Orphaned Rows
   #-------------------
