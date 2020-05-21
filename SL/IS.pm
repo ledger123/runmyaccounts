@@ -673,6 +673,7 @@ sub invoice_details {
   my @oldvars = qw(company companyaddress1 companyzip companycity name address1 zipcode city businessnumber invdate invdescriptionqr qriban strdbkginf);
 
   # conversion to QR variables
+  $form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescriptionqr});
   $form->{invdescriptionqr} = substr($form->{invdescriptionqr},0,140);
   $form->{qribanqr} = $form->{qriban};
   $form->{qribanqr} =~ s/\s//g;
