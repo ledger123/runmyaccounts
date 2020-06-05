@@ -712,13 +712,12 @@ sub invoice_details {
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 
-      my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr qribanqr strdbkginfqr);
-
-      $form->info("Old vars");
-      $form->debug('', \@oldvars);
-      $form->info("New vars");
-      $form->debug('', \@qrvars);
-      $form->error;
+      #my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr qribanqr strdbkginfqr);
+      #$form->info("Old vars");
+      #$form->debug('', \@oldvars);
+      #$form->info("New vars");
+      #$form->debug('', \@qrvars);
+      #$form->error;
 
 }
 
