@@ -40,6 +40,9 @@ sub invoice_details {
   $form->{qr_invdate} = $form->format_date('yyyy-mm-dd', $form->{xml_invdate});
 
   my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
+
+  my ($utf8templates) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='utf8templates'");
+
   $form->{companyaddress1} = $defaults{address1};
   $form->{companyaddress2} = $defaults{address2};
   $form->{companycity} = $defaults{city};
@@ -126,8 +129,9 @@ sub invoice_details {
 	$form->{projectnumber} .= $form->{partsgroup};
       }
       
+      if (!$utf8templates){
       $form->format_string(projectnumber);
-
+      }
     }
 
     $sortby = qq|$projectnumber$form->{partsgroup}|;
@@ -171,7 +175,9 @@ sub invoice_details {
   $c->init;
 
   $form->{text_packages} = $c->num2text($form->{packages} * 1);
+  if (!$utf8templates){
   $form->format_string(qw(text_packages));
+  }
   $form->format_amount($myconfig, $form->{packages});
   
   $form->{projectnumber} = ();
@@ -629,7 +635,9 @@ sub invoice_details {
     $form->{integer_cd_invtotal} = $whole;
   }
  
+  if (!$utf8templates){
   $form->format_string(qw(text_amount text_decimal text_cd_invtotal text_cd_decimal text_out_amount text_out_decimal));
+  }
 
   for (qw(cd_amount paid)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}) }
   for (qw(invtotal subtotal total)) { $form->{"xml_$_"} = $form->{$_} }
