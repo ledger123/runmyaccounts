@@ -256,8 +256,9 @@ sub invoice_details {
       for (qw(sku serialnumber ordernumber customerponumber bin description unit deliverydate sellprice listprice package netweight grossweight volume countryorigin hscode barcode itemnotes)) { push(@{ $form->{$_} }, $form->{"${_}_$i"}) }
 	
       push(@{ $form->{xml_qty} }, $form->format_amount({ numberformat => '1000.00' }, $form->{"qty_$i"}, 4));
+      push(@{ $form->{xml_sellprice} }, $form->format_amount({ numberformat => '1000.00' }, $form->{"sellprice_$i"}, 4));
       push(@{ $form->{qty} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
-      push(@{ $form->{ship} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
+      push(@{ $form->{ship} }, $form->format_amount($myconfig, $form->{"ship_$i"}));
 
       my $sellprice = $form->parse_amount($myconfig, $form->{"sellprice_$i"});
       my ($dec) = ($sellprice =~ /\.(\d+)/);
@@ -656,6 +657,9 @@ sub invoice_details {
   ($form->{iban}, $form->{bic}, $form->{membernumber}, $form->{dcn}, $form->{rvc},
     $form->{invdescriptionqr}, $form->{qriban}, $form->{strdbkginf}) = $dbh->selectrow_array($query);
 
+  $form->{invdescriptionqr2} = $form->{invdescriptionqr};
+  $form->format_string(invdescriptionqr2);
+
   if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
     $query = qq|SELECT dcn FROM ar
               WHERE id = $form->{id}|;
@@ -710,14 +714,18 @@ sub invoice_details {
   chop $form->{swicotaxbaseqr};
 
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
+  $form->format_string(strdbkginfqr);
+
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 
-      #my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr qribanqr strdbkginfqr);
-      #$form->info("Old vars");
-      #$form->debug('', \@oldvars);
-      #$form->info("New vars");
-      #$form->debug('', \@qrvars);
-      #$form->error;
+      my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr invdescriptionqr2 qribanqr strdbkginfqr);
+      $form->info("Old vars");
+      $form->debug('', \@oldvars);
+      $form->info("New vars");
+      $form->debug('', \@qrvars);
+      $form->info("XML Sellprice");
+      $form->dumper(\@{ $form->{xml_sellprice} });
+      $form->error;
 
 }
 
