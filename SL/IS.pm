@@ -1710,12 +1710,6 @@ sub post_invoice {
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
 
-  $invamount = $form->round_amount($invamount,2);
-  $invnetamount = $form->round_amount($invnetamount,2);
-  $form->{paid} = $form->round_amount($form->{paid},2);
-  $fxamount_total = $form->round_amount($fxamount_total,2);
-  $fxpaid_total = $form->round_amount($fxpaid_total,2);
-
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
