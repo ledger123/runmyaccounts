@@ -712,7 +712,7 @@ sub invoice_details {
   }
   chop $form->{swicotaxbaseqr};
 
-  $form->{strdbkginf} = $form->format_line($form->{strdbkginf});
+  $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
 
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
