@@ -658,7 +658,6 @@ sub invoice_details {
     $form->{invdescriptionqr}, $form->{qriban}, $form->{strdbkginf}) = $dbh->selectrow_array($query);
 
   $form->{invdescriptionqr2} = $form->{invdescriptionqr};
-  $form->format_string(invdescriptionqr2);
 
   if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
     $query = qq|SELECT dcn FROM ar
@@ -713,8 +712,8 @@ sub invoice_details {
   }
   chop $form->{swicotaxbaseqr};
 
+  $form->{strdbkginf} = $form->format_line($form->{strdbkginf});
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
-  $form->format_string(strdbkginfqr);
 
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 
