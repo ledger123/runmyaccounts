@@ -298,6 +298,57 @@ $form->format_amount(\%myconfig, $total_amount, 2).qq|</td></tr></table>|;
   print qq|</table>|;
 
 
+  #------------------------
+  # 2c. Rounding error which cannot be fixed with ROUND
+  #------------------------
+  print qq|<h3>Rounding Diff Error</h3>|;
+
+  $query = qq|
+      SELECT id, invnumber, amount, paid, invoice, (SELECT ROUND(SUM(amount)::NUMERIC,2) FROM acc_trans ac WHERE ac.trans_id = ar.id) gl
+      FROM ar
+      WHERE ROUND(amount::numeric,2) - ROUND(paid::numeric,2) BETWEEN 0.009 AND 1
+      AND transdate BETWEEN '$form->{firstdate}' AND '$form->{lastdate}'
+
+      UNION
+
+      SELECT id, invnumber, amount, paid, invoice, (SELECT ROUND(SUM(amount)::NUMERIC,2) FROM acc_trans ac WHERE ac.trans_id = ar.id) gl
+      FROM ar
+      WHERE ROUND(paid::numeric,2) - ROUND(amount::numeric,2) BETWEEN 0.009 AND 1
+      AND transdate BETWEEN '$form->{firstdate}' AND '$form->{lastdate}'
+
+      ORDER BY invnumber
+|;
+
+  $sth = $dbh->prepare($query) || $form->dberror($query);
+  $sth->execute;
+  print qq|<table>|;
+  print qq|<tr class=listheading>|;
+  print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Trans ID').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Paid').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Diff').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('GL').qq|</td>|;
+  print qq|</tr>|;
+  $i = 0;
+  my $module;
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     if ($ref->{invoice}){
+        $module = 'is.pl';
+     } else {
+        $module = 'ar.pl';
+     }
+     print qq|<tr class=listrow$i>|;
+     print qq|<td><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
+     print qq|<td>$ref->{id}</td>|;
+     print qq|<td align="right">$ref->{amount}</td>|;
+     print qq|<td align="right">$ref->{paid}</td>|;
+     print qq|<td align="right">|.$form->format_amount(\%myconfig, $ref->{amount} - $ref->{paid}, 8).qq|</td>|;
+     print qq|<td align="right">$ref->{gl}</td>|;
+     print qq|</tr>|;
+  }
+  print qq|</table>|;
+
 
 
 

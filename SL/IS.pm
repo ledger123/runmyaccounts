@@ -921,8 +921,6 @@ sub post_invoice {
 
   my %defaults = $form->get_defaults($dbh, \@{['fx%_accno_id', 'cdt', 'precision', 'extendedlog']});
   $form->{precision} = $defaults{precision};
-  # 11 march 2020 armaghan increase precision for accurate calculations of discounts
-  $form->{precision} = 8;
 
   $query = qq|SELECT p.assembly, p.inventory_accno_id,
               p.income_accno_id, p.expense_accno_id, p.project_id
@@ -1709,12 +1707,6 @@ sub post_invoice {
 
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
-
-  $invamount = $form->round_amount($invamount,2);
-  $invnetamount = $form->round_amount($invnetamount,2);
-  $form->{paid} = $form->round_amount($form->{paid},2);
-  $fxamount_total = $form->round_amount($fxamount_total,2);
-  $fxpaid_total = $form->round_amount($fxpaid_total,2);
 
   # save AR record
   $query = qq|UPDATE ar set

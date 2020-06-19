@@ -1746,7 +1746,7 @@ sub reminder {
   $form->{currencies} ||= ":";
 
   $where = qq|
-	a.paid != a.amount
+	ROUND(a.paid::NUMERIC, $form->{precision}) != ROUND(a.amount::NUMERIC, $form->{precision})
 	AND a.approved = '1'
 	AND a.duedate < current_date
 	AND c.id = ?
