@@ -1904,6 +1904,7 @@ sub bank_accounts {
 
   my $query = qq|SELECT c.id, c.accno, c.description,
                  bk.name, bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc,
+                 bk.qriban, bk.strdbkginf, bk.invdescriptionqr,
 		 ad.address1, ad.address2, ad.city,
                  ad.state, ad.zipcode, ad.country,
 		 l.description AS translation
@@ -1947,6 +1948,7 @@ sub get_bank {
 
   $query = qq|SELECT c.accno, c.description,
               bk.name, bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc,
+              bk.qriban, bk.strdbkginf, bk.invdescriptionqr,
 	      ad.address1, ad.address2, ad.city,
               ad.state, ad.zipcode, ad.country,
 	      l.description AS translation
@@ -1982,13 +1984,12 @@ sub save_bank {
   my ($id) = $dbh->selectrow_array($query);
 
   my $ok;
-  for (qw(name iban bic address1 address2 city state zipcode country membernumber rvc dcn)) {
+  for (qw(name iban bic address1 address2 city state zipcode country membernumber rvc dcn qriban strdbkginf invdescriptionqr)) {
     if ($form->{$_}) {
       $ok = 1;
       last;
     }
   }
-
   if ($ok) {
     if ($id) {
       $query = qq|UPDATE bank SET
@@ -1997,18 +1998,24 @@ sub save_bank {
 		  bic = |.$dbh->quote(uc $form->{bic}).qq|,
 		  membernumber = |.$dbh->quote($form->{membernumber}).qq|,
 		  rvc = |.$dbh->quote($form->{rvc}).qq|,
+		  qriban = |.$dbh->quote($form->{qriban}).qq|,
+		  strdbkginf = |.$dbh->quote($form->{strdbkginf}).qq|,
+		  invdescriptionqr = |.$dbh->quote($form->{invdescriptionqr}).qq|,
 		  dcn = |.$dbh->quote($form->{dcn}).qq|
 		  WHERE id = $form->{id}|;
       $dbh->do($query) || $form->dberror($query);
     } else {
-      $query = qq|INSERT INTO bank (id, name, iban, bic, membernumber, rvc, dcn)
+      $query = qq|INSERT INTO bank (id, name, iban, bic, membernumber, rvc, dcn, qriban, strdbkginf, invdescriptionqr)
 		  VALUES ($form->{id}, |
 		  .$dbh->quote(uc $form->{name}).qq|, |
 		  .$dbh->quote(uc $form->{iban}).qq|, |
 		  .$dbh->quote($form->{bic}).qq|, |
 		  .$dbh->quote($form->{membernumber}).qq|, |
 		  .$dbh->quote($form->{rvc}).qq|, |
-		  .$dbh->quote($form->{dcn}).qq|
+		  .$dbh->quote($form->{dcn}).qq|, |
+		  .$dbh->quote($form->{qriban}).qq|, |
+		  .$dbh->quote($form->{strdbkginf}).qq|, |
+		  .$dbh->quote($form->{invdescriptionqr}).qq|
 		  )|;
       $dbh->do($query) || $form->dberror($query);
 

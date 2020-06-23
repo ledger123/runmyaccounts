@@ -40,6 +40,9 @@ sub invoice_details {
   $form->{qr_invdate} = $form->format_date('yyyy-mm-dd', $form->{xml_invdate});
 
   my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
+
+  my ($utf8templates) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='utf8templates'");
+
   $form->{companyaddress1} = $defaults{address1};
   $form->{companyaddress2} = $defaults{address2};
   $form->{companycity} = $defaults{city};
@@ -126,8 +129,9 @@ sub invoice_details {
 	$form->{projectnumber} .= $form->{partsgroup};
       }
       
+      if (!$utf8templates){
       $form->format_string(projectnumber);
-
+      }
     }
 
     $sortby = qq|$projectnumber$form->{partsgroup}|;
@@ -171,7 +175,9 @@ sub invoice_details {
   $c->init;
 
   $form->{text_packages} = $c->num2text($form->{packages} * 1);
+  if (!$utf8templates){
   $form->format_string(qw(text_packages));
+  }
   $form->format_amount($myconfig, $form->{packages});
   
   $form->{projectnumber} = ();
@@ -250,8 +256,9 @@ sub invoice_details {
       for (qw(sku serialnumber ordernumber customerponumber bin description unit deliverydate sellprice listprice package netweight grossweight volume countryorigin hscode barcode itemnotes)) { push(@{ $form->{$_} }, $form->{"${_}_$i"}) }
 	
       push(@{ $form->{xml_qty} }, $form->format_amount({ numberformat => '1000.00' }, $form->{"qty_$i"}, 4));
+      push(@{ $form->{xml_sellprice} }, $form->format_amount({ numberformat => '1000.00' }, $form->{"sellprice_$i"}, 4));
       push(@{ $form->{qty} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
-      push(@{ $form->{ship} }, $form->format_amount($myconfig, $form->{"qty_$i"}));
+      push(@{ $form->{ship} }, $form->format_amount($myconfig, $form->{"ship_$i"}));
 
       my $sellprice = $form->parse_amount($myconfig, $form->{"sellprice_$i"});
       my ($dec) = ($sellprice =~ /\.(\d+)/);
@@ -629,7 +636,9 @@ sub invoice_details {
     $form->{integer_cd_invtotal} = $whole;
   }
  
+  if (!$utf8templates){
   $form->format_string(qw(text_amount text_decimal text_cd_invtotal text_cd_decimal text_out_amount text_out_decimal));
+  }
 
   for (qw(cd_amount paid)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}) }
   for (qw(invtotal subtotal total)) { $form->{"xml_$_"} = $form->{$_} }
@@ -641,11 +650,14 @@ sub invoice_details {
   ($form->{customeremail}) = $dbh->selectrow_array("SELECT email FROM customer WHERE id = $form->{customer_id}");
 
   # dcn
-  $query = qq|SELECT bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc
+  $query = qq|SELECT bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc, bk.invdescriptionqr, bk.qriban, bk.strdbkginf
 	      FROM bank bk
 	      JOIN chart c ON (c.id = bk.id)
 	      WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
-  ($form->{iban}, $form->{bic}, $form->{membernumber}, $form->{dcn}, $form->{rvc}) = $dbh->selectrow_array($query);
+  ($form->{iban}, $form->{bic}, $form->{membernumber}, $form->{dcn}, $form->{rvc},
+    $form->{invdescriptionqr}, $form->{qriban}, $form->{strdbkginf}) = $dbh->selectrow_array($query);
+
+  $form->{invdescriptionqr2} = $form->{invdescriptionqr};
 
   if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
     $query = qq|SELECT dcn FROM ar
@@ -653,7 +665,7 @@ sub invoice_details {
     my $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
     $form->{dcn} = $sth->fetchrow_array;
-    $sth->finish;    	
+    $sth->finish;
   }
 
   for my $dcn (qw(dcn rvc)) { $form->{$dcn} = $form->format_dcn($form->{$dcn}) }
@@ -668,6 +680,52 @@ sub invoice_details {
   }
 
   $dbh->disconnect;
+
+  my @oldvars = qw(company companyaddress1 companyzip companycity name address1 zipcode city businessnumber invdate invdescriptionqr qriban strdbkginf);
+
+  # conversion to QR variables
+  $form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescriptionqr});
+  $form->{invdescriptionqr} = substr($form->{invdescriptionqr},0,140);
+  $form->{qribanqr} = $form->{qriban};
+  $form->{qribanqr} =~ s/\s//g;
+
+  $form->{companyqr} = substr($form->{company},0,70);
+  $form->{companyaddress1qr} = substr($form->{companyaddress1},0,70);
+  $form->{companyzipqr} = substr($form->{companyzip},0,16);
+  $form->{companycityqr} = substr($form->{companycity},0,35);
+  $form->{nameqr} = substr($form->{name},0,70);
+  $form->{address1qr} = substr($form->{address1},0,70);
+  $form->{zipcodeqr}  = substr($form->{zipcode},0,16);
+  $form->{cityqr} = substr($form->{city},0,35);
+  my @nums = $form->{businessnumber} =~ /(\d+)/g;
+  for (@nums) { $form->{businessnumberqr} .= $_ };
+
+  $form->{swicotaxbaseqr}  = $form->{swicotaxbase};
+  $form->{swicotaxqr}  = $form->{swicotax};
+  for (@taxaccounts){
+     if ($form->{"${_}_rate"}){
+         $rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
+         $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
+         $tax = $form->round_amount(($rate * $taxbase)/100,2);
+         $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
+     }
+  }
+  chop $form->{swicotaxbaseqr};
+
+  $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
+  $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
+
+  $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
+
+      my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr invdescriptionqr2 qribanqr strdbkginfqr);
+      $form->info("Old vars");
+      $form->debug('', \@oldvars);
+      $form->info("New vars");
+      $form->debug('', \@qrvars);
+      $form->info("XML Sellprice");
+      $form->dumper(\@{ $form->{xml_sellprice} });
+      $form->error;
+
 }
 
 
