@@ -4126,7 +4126,7 @@ sub bank_accounts {
   $callback = "$form->{script}?action=bank_accounts";
   for (qw(path login)) { $callback .= "&$_=$form->{$_}" }
 
-  @column_index = qw(accno description name iban bic membernumber rvc dcn);
+  @column_index = qw(accno description name iban bic membernumber rvc dcn qriban strdbkginf invdescriptionqr);
 
   $callback = $form->escape($callback);
 
@@ -4140,6 +4140,9 @@ sub bank_accounts {
   $column_header{rvc} = qq|<th class=listheading>|.$locale->text('RVC').qq|</th>|;
   $column_header{dcn} = qq|<th class=listheading>|.$locale->text('DCN').qq|</th>|;
 
+  $column_header{qriban} = qq|<th class=listheading>|.$locale->text('qriban').qq|</th>|;
+  $column_header{strdbkginf} = qq|<th class=listheading>|.$locale->text('strdbkginf').qq|</th>|;
+  $column_header{invdescriptionqr} = qq|<th class=listheading>|.$locale->text('invdescriptionqr').qq|</th>|;
 
   $form->header;
 
@@ -4279,6 +4282,18 @@ sub bank_header {
 	<tr>
 	  <th align=right>|.$locale->text('DCN').qq|</th>
 	  <td><input name=dcn size=60 value="$form->{dcn}"></td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('qriban').qq|</th>
+	  <td><input name=qriban size=60 value="$form->{qriban}"></td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('strdbkginf').qq|</th>
+	  <td><input name=strdbkginf size=60 value="$form->{strdbkginf}"></td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('invdescriptionqr').qq|</th>
+	  <td><input name=invdescriptionqr size=60 value="$form->{invdescriptionqr}"></td>
 	</tr>
       </table>
     </td>
