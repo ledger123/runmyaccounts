@@ -2741,7 +2741,7 @@ sub create_links {
 
 	my %defaults =
 	  $self->get_defaults( $dbh,
-		\@{ [qw(closedto revtrans weightunit cdt precision)] } );
+		\@{ [qw(closedto revtrans weightunit cdt precision showtaxper)] } );
 	for ( keys %defaults ) { $self->{$_} = $defaults{$_} }
     $self->closedto_user($myconfig, $dbh);
 
