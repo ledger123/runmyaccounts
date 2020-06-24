@@ -717,14 +717,14 @@ sub invoice_details {
 
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 
-      my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr invdescriptionqr2 qribanqr strdbkginfqr);
-      $form->info("Old vars");
-      $form->debug('', \@oldvars);
-      $form->info("New vars");
-      $form->debug('', \@qrvars);
-      $form->info("XML Sellprice");
-      $form->dumper(\@{ $form->{xml_sellprice} });
-      $form->error;
+  #my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr invdescriptionqr2 qribanqr strdbkginfqr);
+  #$form->info("Old vars");
+  #$form->debug('', \@oldvars);
+  #$form->info("New vars");
+  #$form->debug('', \@qrvars);
+  #$form->info("XML Sellprice");
+  #$form->dumper(\@{ $form->{xml_sellprice} });
+  #$form->error;
 
 }
 
