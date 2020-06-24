@@ -852,7 +852,7 @@ sub form_footer {
   }
   
   $form->{oldtotalpaid} = $totalpaid;
-  $form->hide_form(qw(paidaccounts oldinvtotal oldtotalpaid payment_accno payment_method));
+  $form->hide_form(qw(paidaccounts oldinvtotal oldtotalpaid payment_accno payment_method showtaxper));
   
   print qq|
       </table>
