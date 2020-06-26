@@ -707,6 +707,7 @@ sub invoice_details {
          $rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
          $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
          $tax = $form->round_amount(($rate * $taxbase)/100,2);
+         $rate *= 100;
          $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
      }
   }
