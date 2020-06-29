@@ -704,7 +704,8 @@ sub invoice_details {
   $form->{swicotaxqr}  = $form->{swicotax};
   for (@taxaccounts){
      if ($form->{"${_}_rate"}){
-         $rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
+         #$rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
+         $rate = $form->{"${_}_rate"};
          $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
          $tax = $form->round_amount(($rate * $taxbase)/100,2);
          $rate *= 100;
@@ -718,6 +719,7 @@ sub invoice_details {
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
 
+  $form->error($form->{swicotaxbaseqr});
   #my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr invdescriptionqr2 qribanqr strdbkginfqr);
   #$form->info("Old vars");
   #$form->debug('', \@oldvars);
