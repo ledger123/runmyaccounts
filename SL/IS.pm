@@ -702,14 +702,18 @@ sub invoice_details {
 
   $form->{swicotaxbaseqr}  = $form->{swicotaxbase};
   $form->{swicotaxqr}  = $form->{swicotax};
+  @taxaccounts = split (/ /, $form->{taxaccounts});
   for (@taxaccounts){
      if ($form->{"${_}_rate"}){
          #$rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
          $rate = $form->{"${_}_rate"};
          $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
+         $taxbase *= 1;
          $tax = $form->round_amount(($rate * $taxbase)/100,2);
          $rate *= 100;
-         $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
+         if ($taxbase){
+           $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
+         }
      }
   }
   chop $form->{swicotaxbaseqr};
