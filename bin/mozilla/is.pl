@@ -645,10 +645,15 @@ sub form_footer {
 	}
 
 	$form->{invtotal} += $form->{"${_}_total"};
+
+    if ($form->{showtaxper}){
+        $taxrate = $form->format_amount(\%myconfig, $form->{"${_}_rate"} * 100, 2);
+        $taxrate = "($taxrate%)";
+    }
       
 	$tax .= qq|
 	      <tr>
-		<th align=right>$form->{"${_}_description"}</th>
+		<th align=right>$form->{"${_}_description"} $taxrate</th>
 		<td id=total_tax_${_} align=right>|.$form->format_amount(\%myconfig, $form->{"${_}_total"}, $form->{precision}).qq|</td>
 	      </tr>
 |;
@@ -864,7 +869,7 @@ sub form_footer {
   }
   
   $form->{oldtotalpaid} = $totalpaid;
-  $form->hide_form(qw(paidaccounts oldinvtotal oldtotalpaid payment_accno payment_method));
+  $form->hide_form(qw(paidaccounts oldinvtotal oldtotalpaid payment_accno payment_method showtaxper));
   
   print qq|
       </table>
