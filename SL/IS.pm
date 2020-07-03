@@ -723,16 +723,6 @@ sub invoice_details {
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
 
-  $form->error($form->{swicotaxbaseqr});
-  #my @qrvars = qw(companyqr companyaddress1qr companyzipqr companycityqr nameqr address1qr zipcodeqr cityqr businessnumberqr swicotaxbaseqr invdateqr invdescriptionqr invdescriptionqr2 qribanqr strdbkginfqr);
-  #$form->info("Old vars");
-  #$form->debug('', \@oldvars);
-  #$form->info("New vars");
-  #$form->debug('', \@qrvars);
-  #$form->info("XML Sellprice");
-  #$form->dumper(\@{ $form->{xml_sellprice} });
-  #$form->error;
-
 }
 
 

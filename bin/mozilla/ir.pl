@@ -623,7 +623,6 @@ sub form_footer {
 
 	$form->{invtotal} += $form->{"${_}_total"};
 	
-	$form->{"${_}_total"} = $form->round_amount($form->{"${_}_base"} * $form->{"${_}_rate"}, $form->{precision});
 
     if ($form->{showtaxper}){
         $taxrate = $form->format_amount(\%myconfig, $form->{"${_}_rate"} * 100, 2);
