@@ -43,7 +43,10 @@ sub send {
 
   my $stuff = new Email::Stuffer;
 
-  #$stuff->transport(Email::Sender::Transport::SMTP->new({ host => 'rt.mavsol.com', port => '25', }));
+  if ($self->{noreplyemail}){
+      #if $noreplyemail is set, use an SMTP server
+      $stuff->transport(Email::Sender::Transport::SMTP->new({ host => 'rt.mavsol.com', port => '25', }));
+  }
 
   $stuff->text_body($self->{message});
   $stuff->subject($self->{subject});
