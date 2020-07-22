@@ -1079,8 +1079,11 @@ sub parse_template {
             $noreply              = $myconfig->{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
             $mail->{noreplyemail} = $noreplyemail;
 			$mail->{to}           = qq|$self->{email}|;
-			$mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
-			$mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+			$mail->{from}         = $noreply;
+			$mail->{fromname}     = $myconfig->{name};
+			$mail->{'reply-to'}   = $myconfig->{email};
+            #$mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
+            #$mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
 			$mail->{fileid} = "$fileid.";
 
 			# if we send html or plain text inline
