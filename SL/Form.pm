@@ -1077,7 +1077,7 @@ sub parse_template {
 				$mail->{$_} = $self->{$_};
 			}
             $noreply              = $myconfig->{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
-            $mail->{noreplyemail} = $noreplyemail;
+            $mail->{noreplyemail} = $noreplyemail; # Flag for Mailer
 			$mail->{to}           = qq|$self->{email}|;
 			$mail->{from}         = $noreply;
 			$mail->{fromname}     = $myconfig->{name};

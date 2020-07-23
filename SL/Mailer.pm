@@ -91,17 +91,15 @@ sub send {
   my $jsonstr = $json->encode($data);
 
   $commandline = q~
-  curl --request POST \
+  curl -s --request POST \
       --url https://api.sendinblue.com/v3/smtp/email \
       --header 'accept: application/json' \
       --header 'api-key:~.$apikey.q~' \
       --header 'content-type: application/json' \
-      --data '~.$jsonstr.q~' \
+      --data '~.$jsonstr.q~' > /dev/null \
   ~;
 
-  #print $commandline;
-
-  system("$commandline 2>&1 /dev/null");
+  system("$commandline");
 
   return "";
 }
