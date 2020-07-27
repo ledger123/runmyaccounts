@@ -1,6 +1,8 @@
-use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzipi $debuglatex $dump_variables $debits_credits_footer $ip_whitelist $menufile $noreply);
+use vars qw($userspath $tmppath $tmpurl $apikey $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzipi $debuglatex $dump_variables $debits_credits_footer $ip_whitelist $menufile $noreply $smtphost $smtpport);
 
-$noreply = 'noreply@munshi10.net';
+$noreply = 'noreply@mavsol.com';
+$smtphost = 'rt.mavsol.com';
+$smtpport = 25;
 
 $ip_whitelist = "31.216.40.164";
 
@@ -20,6 +22,13 @@ $dump_variables = 1;
 
 # path to user configuration files
 $userspath = "users";
+
+# path used by $form->parse_template for temporary files
+$tmppath = "users";
+
+# for sendinblue api
+$tmpurl = 'http://domain.net/ledger123/rma/users';
+$apikey = 'xkeysib-ad3c502c031275016ba77259cbaad630f58431abfa6eb4938c56e64591-UfY14WhVRGN';
 
 # spool directory for batch printing
 $spool = "spool";

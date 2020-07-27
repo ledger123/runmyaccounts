@@ -26,11 +26,6 @@ sub new {
 sub apisend {
   my ($self) = @_;
 
-  #----- CONFIGURATION
-  my $tmpfolder = 'http://domain.net/ledger123/rma/users';
-  my $apikey = 'xkeysib-ad3c502c031275016ba77259cbaad630f58431abfa6eb4938c56e62e7dc64591-UfY14WhVRGNz';
-  #----- CONFIG END
-
   $self->{contenttype} = "text/plain" unless $self->{contenttype};
 
   for (qw(from to cc bcc)) {
@@ -70,13 +65,14 @@ sub apisend {
           $filename =~ s/(.*\/|$self->{fileid})//g;
 
           $data->{attachment}->[$i]->{name} = $filename;
-          $data->{attachment}->[$i]->{url} = "$tmpfolder/$attachment";
+          $data->{attachment}->[$i]->{url} = "$self->{tmpurl}/$attachment";
 
           $i++;
     }
   }
 
   $data->{subject} = $self->{subject};
+  $self->{message} = '.' if !$self->{message}; #sendinblue api throws error on blank message text so stuffing '.'
   $data->{htmlContent} = $self->{message};
 
   my $jsonstr = $json->encode($data);
@@ -85,7 +81,7 @@ sub apisend {
   curl --request POST \
       --url https://api.sendinblue.com/v3/smtp/email \
       --header 'accept: application/json' \
-      --header 'api-key:~.$apikey.q~' \
+      --header 'api-key:~.$self->{apikey}.q~' \
       --header 'content-type: application/json' \
       --data '~.$jsonstr.q~' \
   ~;
