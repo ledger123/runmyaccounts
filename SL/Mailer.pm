@@ -14,12 +14,87 @@
 package Mailer;
 
 use POSIX;
+use JSON::XS;
 
 sub new {
   my ($type) = @_;
   my $self = {};
 
   bless $self, $type;
+}
+
+sub apisend {
+  my ($self) = @_;
+
+  #----- CONFIGURATION
+  my $tmpfolder = 'http://domain.net/ledger123/rma/users';
+  my $apikey = 'xkeysib-ad3c502c031275016ba77259cbaad630f58431abfa6eb4938c56e62e7dc64591-UfY14WhVRGNz';
+  #----- CONFIG END
+
+  $self->{contenttype} = "text/plain" unless $self->{contenttype};
+
+  for (qw(from to cc bcc)) {
+    $self->{$_} =~ s/\&lt;/</g;
+    $self->{$_} =~ s/\&gt;/>/g;
+    $self->{$_} =~ s/(\/|\\|\$)//g;
+  }
+
+  my $json = JSON::XS->new;
+  my $data = {};
+
+  $data->{sender}->{name} = $self->{fromname};
+  $data->{sender}->{email} = $self->{from};
+
+  if ($self->{replyto}){
+     $data->{replyTo}->{name} = $self->{replyto};
+     $data->{replyTo}->{email} = $self->{replyto};
+  }
+
+  $data->{to}->[0]->{name} = $self->{to};
+  $data->{to}->[0]->{email} = $self->{to};
+
+  if ($self->{cc}){
+     $data->{cc}->[0]->{name} = $self->{cc};
+     $data->{cc}->[0]->{email} = $self->{cc};
+  }
+
+  if ($self->{bcc}){
+     $data->{bcc}->[0]->{name} = $self->{bcc};
+     $data->{bcc}->[0]->{email} = $self->{bcc};
+  }
+
+  if (@{$self->{attachments}}) {
+      my $i = 0;
+      foreach my $attachment (@{$self->{attachments}}) {
+          my $filename    = $attachment;
+          $filename =~ s/(.*\/|$self->{fileid})//g;
+
+          $data->{attachment}->[$i]->{name} = $filename;
+          $data->{attachment}->[$i]->{url} = "$tmpfolder/$attachment";
+
+          $i++;
+    }
+  }
+
+  $data->{subject} = $self->{subject};
+  $data->{htmlContent} = $self->{message};
+
+  my $jsonstr = $json->encode($data);
+
+  $commandline = q~
+  curl --request POST \
+      --url https://api.sendinblue.com/v3/smtp/email \
+      --header 'accept: application/json' \
+      --header 'api-key:~.$apikey.q~' \
+      --header 'content-type: application/json' \
+      --data '~.$jsonstr.q~' \
+  ~;
+
+  print $commandline;
+
+  system(qq~$commandline~);
+
+  return "";
 }
 
 
