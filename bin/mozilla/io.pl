@@ -1790,8 +1790,8 @@ sub print_form {
   $form->{fileid} =~ s/(\s|\W)+//g;
 
   $form->format_string(qw(email cc bcc));
-  
-  $form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply) if $form->{copies};
+
+  $form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply, $apikey) if $form->{copies};
 
 
   # if we got back here restore the previous form
