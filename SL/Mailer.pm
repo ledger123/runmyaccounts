@@ -15,6 +15,8 @@ package Mailer;
 
 use POSIX;
 use JSON::XS;
+use MIME::Base64 ('encode_base64');
+use File::Slurper ('read_binary');
 
 sub new {
   my ($type) = @_;
@@ -64,8 +66,11 @@ sub apisend {
           my $filename    = $attachment;
           $filename =~ s/(.*\/|$self->{fileid})//g;
 
+          $raw_string = read_binary($attachment);
+          $encoded = encode_base64( $raw_string );
+
           $data->{attachment}->[$i]->{name} = $filename;
-          $data->{attachment}->[$i]->{url} = "$self->{tmpurl}/$attachment";
+          $data->{attachment}->[$i]->{content} = $encoded;
 
           $i++;
     }
@@ -78,15 +83,14 @@ sub apisend {
   my $jsonstr = $json->encode($data);
 
   $commandline = q~
-  curl --request POST \
+  curl -sS --request POST \
       --url https://api.sendinblue.com/v3/smtp/email \
       --header 'accept: application/json' \
       --header 'api-key:~.$self->{apikey}.q~' \
       --header 'content-type: application/json' \
       --data '~.$jsonstr.q~' \
+      > /tmp/apierror.txt
   ~;
-
-  print $commandline;
 
   system(qq~$commandline~);
 
