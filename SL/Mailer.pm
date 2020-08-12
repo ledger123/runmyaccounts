@@ -30,7 +30,7 @@ sub apisend {
 
   $self->{contenttype} = "text/plain" unless $self->{contenttype};
 
-  for (qw(from to cc bcc)) {
+  for (qw(from to replyto cc bcc)) {
     $self->{$_} =~ s/\&lt;/</g;
     $self->{$_} =~ s/\&gt;/>/g;
     $self->{$_} =~ s/(\/|\\|\$)//g;
@@ -43,7 +43,7 @@ sub apisend {
   $data->{sender}->{email} = $self->{from};
 
   if ($self->{replyto}){
-     $data->{replyTo}->{name} = $self->{replyto};
+     $data->{replyTo}->{name} = $self->{fromname};
      $data->{replyTo}->{email} = $self->{replyto};
   }
 

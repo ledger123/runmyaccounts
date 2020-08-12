@@ -1123,7 +1123,7 @@ sub parse_template {
             if ($noreplyemail){
                $mail->{from}         = $noreply;
                $mail->{fromname}     = $myconfig->{name};
-               $mail->{'reply-to'}   = $myconfig->{email};
+               $mail->{replyto}   = $myconfig->{email};
                $mail->{apikey} = $apikey;
 			   $err = $mail->apisend($out);
             } else {
