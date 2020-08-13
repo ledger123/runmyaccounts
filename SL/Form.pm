@@ -670,7 +670,7 @@ sub round_amount {
 }
 
 sub parse_template {
-	my ( $self, $myconfig, $userspath, $debuglatex, $noreply ) = @_;
+	my ( $self, $myconfig, $userspath, $debuglatex, $noreply, $apikey ) = @_;
 
 	my ( $chars_per_line, $lines_on_first_page, $lines_on_second_page ) =
 	  ( 0, 0, 0 );
@@ -1078,8 +1078,8 @@ sub parse_template {
 			}
             $noreply              = $myconfig->{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
 			$mail->{to}           = qq|$self->{email}|;
-			$mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
-			$mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
+            $mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
+            $mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
 			$mail->{fileid} = "$fileid.";
 
 			# if we send html or plain text inline
@@ -1119,7 +1119,17 @@ sub parse_template {
 
 			}
 
-			if ( $err = $mail->send($out) ) {
+            my $err;
+            if ($noreplyemail){
+               $mail->{from}         = $noreply;
+               $mail->{fromname}     = $myconfig->{name};
+               $mail->{replyto}   = $myconfig->{email};
+               $mail->{apikey} = $apikey;
+			   $err = $mail->apisend($out);
+            } else {
+			   $err = $mail->send($out);
+            }
+			if ( $err ) {
 				$self->cleanup;
 				$self->error($err);
 			}
