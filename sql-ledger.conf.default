@@ -1,4 +1,4 @@
-use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzipi $debuglatex $dump_variables $debits_credits_footer $ip_whitelist $menufile $noreply);
+use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $latex %printer $gzipi $debuglatex $dump_variables $debits_credits_footer $ip_whitelist $menufile $noreply $apikey);
 
 $noreply = 'noreply@munshi10.net';
 
@@ -20,6 +20,9 @@ $dump_variables = 1;
 
 # path to user configuration files
 $userspath = "users";
+
+# for sendinblue api
+$apikey = 'ad3c502c0312016ba77259cbad630f58431abfa6eb4956e62e7dc64591-UfY14WV';
 
 # spool directory for batch printing
 $spool = "spool";

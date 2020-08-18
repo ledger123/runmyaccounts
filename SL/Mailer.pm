@@ -14,12 +14,87 @@
 package Mailer;
 
 use POSIX;
+use JSON::XS;
+use MIME::Base64 ('encode_base64');
+use File::Slurper ('read_binary');
 
 sub new {
   my ($type) = @_;
   my $self = {};
 
   bless $self, $type;
+}
+
+sub apisend {
+  my ($self) = @_;
+
+  $self->{contenttype} = "text/plain" unless $self->{contenttype};
+
+  for (qw(from to replyto cc bcc)) {
+    $self->{$_} =~ s/\&lt;/</g;
+    $self->{$_} =~ s/\&gt;/>/g;
+    $self->{$_} =~ s/(\/|\\|\$)//g;
+  }
+
+  my $json = JSON::XS->new;
+  my $data = {};
+
+  $data->{sender}->{name} = $self->{fromname};
+  $data->{sender}->{email} = $self->{from};
+
+  if ($self->{replyto}){
+     $data->{replyTo}->{name} = $self->{fromname};
+     $data->{replyTo}->{email} = $self->{replyto};
+  }
+
+  $data->{to}->[0]->{name} = $self->{to};
+  $data->{to}->[0]->{email} = $self->{to};
+
+  if ($self->{cc}){
+     $data->{cc}->[0]->{name} = $self->{cc};
+     $data->{cc}->[0]->{email} = $self->{cc};
+  }
+
+  if ($self->{bcc}){
+     $data->{bcc}->[0]->{name} = $self->{bcc};
+     $data->{bcc}->[0]->{email} = $self->{bcc};
+  }
+
+  if (@{$self->{attachments}}) {
+      my $i = 0;
+      foreach my $attachment (@{$self->{attachments}}) {
+          my $filename    = $attachment;
+          $filename =~ s/(.*\/|$self->{fileid})//g;
+
+          $raw_string = read_binary($attachment);
+          $encoded = encode_base64( $raw_string );
+
+          $data->{attachment}->[$i]->{name} = $filename;
+          $data->{attachment}->[$i]->{content} = $encoded;
+
+          $i++;
+    }
+  }
+
+  $data->{subject} = $self->{subject};
+  $self->{message} = '.' if !$self->{message}; #sendinblue api throws error on blank message text so stuffing '.'
+  $data->{htmlContent} = $self->{message};
+
+  my $jsonstr = $json->encode($data);
+
+  $commandline = q~
+  curl -sS --request POST \
+      --url https://api.sendinblue.com/v3/smtp/email \
+      --header 'accept: application/json' \
+      --header 'api-key:~.$self->{apikey}.q~' \
+      --header 'content-type: application/json' \
+      --data '~.$jsonstr.q~' \
+      > /tmp/apierror.txt
+  ~;
+
+  system(qq~$commandline~);
+
+  return "";
 }
 
 
