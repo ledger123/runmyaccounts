@@ -26,6 +26,10 @@ $sendmail = "| /usr/sbin/sendmail -t";
 %printer = ();
 ########## end ###########################################
 
+BEGIN {
+   push @INC, '.';
+}
+
 
 $| = 1;
 
