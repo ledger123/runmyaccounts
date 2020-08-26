@@ -17,7 +17,7 @@ use SL::PE;
 use SL::RP;
 use SL::CSV;
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 1;
 
@@ -1332,9 +1332,8 @@ sub list_accounts {
 
     if ($form->{l_csv}){
        $filename = 'trialbalance';
-       my $name;
-       do { $name = tmpnam() }
-       until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+
+       my ($fh, $name) = tempfile();
 
        open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
        my $line;
@@ -2242,10 +2241,9 @@ sub export_as_csv {
 		RP->reminder( \%myconfig, \%$form );
 
 		$filename = 'rp';
-		my $aaname;
-		do { $aaname = tmpnam() }
-		  until $fh = IO::File->new( $aaname, O_RDWR | O_CREAT | O_EXCL );
+                my ($fh, $aaname) = tempfile();
 		open( CSVFILE, ">$aaname" ) || $form->error('Cannot create csv file');
+
 
 		$vcnumber                      = $locale->text('Customer Number');
 		$column_header{vc}             = $locale->text( ucfirst $form->{vc} );

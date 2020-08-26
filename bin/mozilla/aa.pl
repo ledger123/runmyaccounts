@@ -21,7 +21,7 @@ if ( -f "$form->{path}/$form->{login}_aa.pl" ) {
 
 use SL::VR;
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 require "$form->{path}/mylib.pl";
 
@@ -2484,8 +2484,9 @@ qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=l
 sub transactions_to_csv {
 
     $filename = 'aa';
-    my $aaname;
-    do { $aaname = tmpnam() } until $fh = IO::File->new( $aaname, O_RDWR | O_CREAT | O_EXCL );
+
+    my ($fh, $aaname) = tempfile();
+
     open( CSVFILE, ">$aaname" ) || $form->error('Cannot create csv file');
 
     if ( $form->{ $form->{vc} } ) {

@@ -16,7 +16,7 @@ use SL::PE;
 use SL::VR;
 
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 require "$form->{path}/arap.pl";
 require "$form->{path}/mylib.pl";
@@ -1238,9 +1238,9 @@ sub gl_subtotal {
 sub transactions_to_csv {
 
     $filename = 'gl';
-    my $name;
-    do { $name = tmpnam() } until $fh = IO::File->new( $name, O_RDWR | O_CREAT | O_EXCL );
-    open( CSVFILE, ">$name" ) || $form->error('Cannot create csv file');
+
+    my ($fh, $name) = tempfile();
+    close $fh;
 
     ( $form->{reportdescription}, $form->{reportid} ) = split /--/, $form->{report};
     $form->{sort} ||= "transdate";
