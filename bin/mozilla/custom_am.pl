@@ -676,6 +676,22 @@ WHERE trans_id NOT IN
     </table>
 |;
 
+
+  #-------------------------------------------------------------
+  # 8. Update account description in acc_trans for tax accounts.
+  #-------------------------------------------------------------
+
+  print qq|<h1>Line tax description change fix</h1>|;
+  print qq|<p>Correcting tax descriptions in line tax which have been changed in chart (if any)</p>|;
+  $dbh->do(qq~
+      UPDATE acc_trans SET
+        tax=(SELECT accno || '--' || description
+                FROM chart
+                WHERE chart.id = acc_trans.tax_chart_id)
+      WHERE tax_chart_id IN (SELECT id FROM chart)
+  ~);
+  print qq|<p>...Done.</p>|;
+
   $dbh->disconnect;
 }
 
