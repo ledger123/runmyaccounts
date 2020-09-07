@@ -1659,7 +1659,8 @@ sub generate_ap_aging {
 		$locale->text('Invalid to date ...') );
 
 	# split vendor
-	( $form->{vendor} ) = split( /--/, $form->{vendor} );
+	( $form->{vendor}, $form->{vendor_id} ) = split( /--/, $form->{vendor} );
+    $form->{vendor_id} *= 1;
 	$vendor = $form->escape( $form->{vendor}, 1 );
 	$title  = $form->escape( $form->{title},  1 );
 	$media  = $form->escape( $form->{media},  1 );
