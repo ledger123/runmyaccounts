@@ -82,17 +82,22 @@ sub apisend {
 
   my $jsonstr = $json->encode($data);
 
+  use File::Temp qw(tempfile);
+  my ($fh, $filename) = tempfile();
+  print $fh $jsonstr;
+  close $fh;
+
   $commandline = q~
   curl -sS --request POST \
       --url https://api.sendinblue.com/v3/smtp/email \
       --header 'accept: application/json' \
       --header 'api-key:~.$self->{apikey}.q~' \
       --header 'content-type: application/json' \
-      --data '~.$jsonstr.q~' \
+      -d @~.$filename.q~ \
       > /tmp/apierror.txt
   ~;
-
   system(qq~$commandline~);
+  unlink $filename;
 
   return "";
 }
