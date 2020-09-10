@@ -1,5 +1,5 @@
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 use SL::RP;
 
@@ -1211,9 +1211,7 @@ sub gl_list {
     $column_header{balance}     = '"' . $locale->text('Balance') . '"';
     
        $filename = 'gl';
-       my $name;
-       do { $name = tmpnam() }
-       until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+       my ($fh, $name) = tempfile();
 
        open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
        my $sth = $dbh->prepare($query);

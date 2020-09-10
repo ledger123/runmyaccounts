@@ -1,5 +1,5 @@
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 #use Spreadsheet::WriteExcel;
 
 1;
@@ -8,9 +8,7 @@ use POSIX qw(tmpnam);
 sub export_to_xls {
    my ($dbh, $query, $filename) = @_;
 
-   my $name;
-   do { $name = tmpnam() }
-   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+   my ($fh, $name) = tempfile();
 
    my $workbook = Spreadsheet::WriteExcel->new("$name");
    my $worksheet = $workbook->add_worksheet();
@@ -46,9 +44,7 @@ sub export_to_xls {
 sub ref_to_csv {
    my ($data, $filename, $column_index) = @_;
 
-   my $name;
-   do { $name = tmpnam() }
-   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+   my ($fh, $name) = tempfile();
    open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
 
    for (@$column_index) { print CSVFILE "$_," }
@@ -79,9 +75,7 @@ sub ref_to_csv {
 sub export_to_csv {
    my ($dbh, $query, $filename, $copyfromcsv) = @_;
 
-   my $name;
-   do { $name = tmpnam() }
-   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+   my ($fh, $name) = tempfile();
 
    open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
    my $sth = $dbh->prepare($query);
