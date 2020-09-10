@@ -1064,6 +1064,11 @@ sub transactions {
     }
   }
 
+  if ($form->{currency}) {
+     $where .= " AND a.curr = ".$dbh->quote($form->{currency})."";
+  }
+
+
   $form->{transdatefrom} = $form->dbclean($form->{transdatefrom});
   $form->{transdateto} = $form->dbclean($form->{transdateto});
   $where .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};

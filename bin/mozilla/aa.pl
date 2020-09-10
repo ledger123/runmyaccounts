@@ -1798,6 +1798,20 @@ sub search {
         $summary       = "";
     }
 
+    if ( !$form->{outstanding} ) {
+        @curr = split /:/, $form->{currencies};
+        $form->{selectcurrency} = "\n";
+        for (@curr) { $form->{selectcurrency} .= "$_\n" }
+        $form->{defaultcurrency} = $curr[0];
+        chomp $form->{defaultcurrency};
+        $currency = qq|
+          <tr>
+            <th align="right">|.$locale->text('Currency').qq|</th>
+            <td><select name=currency>|.$form->select_option( $form->{selectcurrency} ).qq|</select></td>
+	      <tr>
+        |;
+    }
+
     if ( @{ $form->{all_years} } ) {
 
         # accounting years
@@ -1857,6 +1871,7 @@ sub search {
     push @a, qq|<input name="l_waybill" class=checkbox type=checkbox value=Y> | . $locale->text('Waybill');
     push @a, qq|<input name="l_dcn" class=checkbox type=checkbox value=Y> | . $locale->text('DCN');
 
+
     $form->header;
 
     print qq|
@@ -1880,7 +1895,7 @@ sub search {
 	      </tr>
 	      $vc
 	      $invnumber
-	      <tr>
+          $currency
 		<th align=right nowrap>| . $locale->text('From') . qq|</th>
 		<td colspan=3><input name=transdatefrom size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"> <b>|
       . $locale->text('To')
@@ -2032,6 +2047,14 @@ sub transactions {
         $option .= "\n<br>" if ($option);
         $option .= $locale->text('Department') . " : $department";
     }
+
+    if ( $form->{currency} ) {
+        $callback .= "&currency=" . $form->escape( $form->{currency}, 1 );
+        $href .= "&currency=" . $form->escape( $form->{currency} );
+        $option .= "\n<br>" if ($option);
+        $option .= $locale->text('Currency') . " : $form->{currency}";
+    }
+
     if ( $form->{employee} ) {
         $callback .= "&employee=" . $form->escape( $form->{employee}, 1 );
         $href .= "&employee=" . $form->escape( $form->{employee} );
