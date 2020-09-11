@@ -30,6 +30,10 @@ sub ask_dbcheck {
 	<th>|.$locale->text('Last transaction date').qq|</th>
 	<td><input name=lastdate size=11 value='$lastdate' title='$myconfig{dateformat}'></td>
      </tr>
+    <tr>
+	<th>|.$locale->text('Minimum rounding diff').qq|</th>
+	<td><input name=mindiff size=11 value=1></td>
+     </tr>
   </table>|.
 $locale->text('All transactions outside this date range will be reported as having invalid dates.').qq|
 <br><br><hr/>
@@ -621,6 +625,8 @@ WHERE trans_id NOT IN
   $dbh->do("update acc_trans set tax='' where tax is null");
   print qq|<p>... done.</p>|;
 
+  $form->{mindiff} *= 1;
+
   $query = qq|
     SELECT
         id,
@@ -635,11 +641,11 @@ WHERE trans_id NOT IN
             - round(amount::numeric,2) diff
     FROM ap
     WHERE
-        (SELECT ROUND(SUM(ac.amount)::numeric,2)
+        ABS((SELECT ROUND(SUM(ac.amount)::numeric,2)
         FROM acc_trans ac
         JOIN chart c ON c.id = ac.chart_id
         WHERE ac.trans_id = ap.id AND c.link LIKE '%AP_paid%' )
-        - round(amount::numeric,2) <> 0
+        - round(amount::numeric,2)) > $form->{mindiff}
     |;
 
     $sth = $dbh->prepare($query) || $form->dberror($query);
