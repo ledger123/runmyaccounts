@@ -86,7 +86,7 @@ sub export_to_csv {
    chop $collist; 
    if ($copyfromcsv){
        print $fh "COPY tablename($collist) FROM STDIN CSV HEADER;\n";
-
+    }
    print $fh "$collist\n";
    my $line; 
    while (@row = $sth->fetchrow_array) {
