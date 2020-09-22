@@ -2510,8 +2510,6 @@ sub transactions_to_csv {
 
     my ($fh, $aaname) = tempfile();
 
-    open( CSVFILE, ">$aaname" ) || $form->error('Cannot create csv file');
-
     if ( $form->{ $form->{vc} } ) {
         ( $form->{ $form->{vc} }, $form->{"$form->{vc}_id"} ) = split( /--/, $form->{ $form->{vc} } );
     }
@@ -2618,8 +2616,8 @@ sub transactions_to_csv {
 
     $form->{title} .= " / $form->{company}";
 
-    for (@column_index) { print CSVFILE "$column_data{$_}," }
-    print CSVFILE "\n";
+    for (@column_index) { print $fh "$column_data{$_}," }
+    print $fh "\n";
 
     # add sort and escape callback, this one we use for the add sub
     $form->{callback} = $callback .= "&sort=$form->{sort}";
@@ -2711,8 +2709,8 @@ sub transactions_to_csv {
             $j %= 2;
         }
 
-        for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
-        print CSVFILE "\n";
+        for (@column_index) { print $fh "\"$column_data{$_}\"," }
+        print $fh "\n";
         $sameid = $ref->{id};
     }
 
@@ -2739,11 +2737,11 @@ sub transactions_to_csv {
         $column_data{fx_due}       = $form->format_amount( \%myconfig, $totalfxamount - $totalfxpaid,      $form->{precision}, " " );
     }
 
-    for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
-    print CSVFILE "\n";
+    for (@column_index) { print $fh "\"$column_data{$_}\"," }
+    print $fh "\n";
 
     # write csv end
-    close(CSVFILE) || $form->error('Cannot close csv file');
+    close($fh) || $form->error('Cannot close csv file');
 
     my @fileholder;
     open( DLFILE, qq|<$aaname| ) || $form->error('Cannot open file for download');
@@ -2784,8 +2782,8 @@ sub subtotal_csv {
     $subtotalfxamount    = 0;
     $subtotalfxpaid      = 0;
 
-    for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
-    print CSVFILE "\n";
+    for (@column_index) { print $fh "\"$column_data{$_}\"," }
+    print $fh "\n";
 
 }
 

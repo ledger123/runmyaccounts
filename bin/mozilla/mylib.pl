@@ -45,21 +45,20 @@ sub ref_to_csv {
    my ($data, $filename, $column_index) = @_;
 
    my ($fh, $name) = tempfile();
-   open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
 
-   for (@$column_index) { print CSVFILE "$_," }
-   print CSVFILE "\n";
+   for (@$column_index) { print $fh "$_," }
+   print $fh "\n";
 
    foreach $ref (@{ $form->{$data} }) {
    	  my $cellValue = '';
       for (@$column_index) {
       	$cellValue = &escape_csv($ref->{$_});
-      	print CSVFILE qq|"$cellValue",|;
+      	print $fh qq|"$cellValue",|;
       }
-      print CSVFILE "\n";
+      print $fh "\n";
    }
 
-   close (CSVFILE) || $form->error('Cannot close csv file');
+   close ($fh) || $form->error('Cannot close csv file');
    my @fileholder;
    open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
    @fileholder = <DLFILE>;
@@ -77,7 +76,6 @@ sub export_to_csv {
 
    my ($fh, $name) = tempfile();
 
-   open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
    my $sth = $dbh->prepare($query);
    $sth->execute or $form->dberror($query);
    my $ncols = $sth->{NUM_OF_FIELDS};
@@ -87,9 +85,9 @@ sub export_to_csv {
    }
    chop $collist; 
    if ($copyfromcsv){
-       print CSVFILE "COPY tablename($collist) FROM STDIN CSV HEADER;\n";
-   }
-   print CSVFILE "$collist\n";
+       print $fh "COPY tablename($collist) FROM STDIN CSV HEADER;\n";
+
+   print $fh "$collist\n";
    my $line; 
    while (@row = $sth->fetchrow_array) {
       $line = '';
@@ -97,10 +95,10 @@ sub export_to_csv {
          $line .= qq|"$row[$column]",|;
       }
       chop $line;
-      print CSVFILE "$line\n";
+      print $fh "$line\n";
    }
-   print CSVFILE '\.' if $copyfromcsv;
-   close (CSVFILE) || $form->error('Cannot close csv file');
+   print $fh '\.' if $copyfromcsv;
+   close ($fh) || $form->error('Cannot close csv file');
 
    my @fileholder;
    open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
