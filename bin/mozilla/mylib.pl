@@ -1,5 +1,5 @@
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 #use Spreadsheet::WriteExcel;
 
 1;
@@ -8,9 +8,7 @@ use POSIX qw(tmpnam);
 sub export_to_xls {
    my ($dbh, $query, $filename) = @_;
 
-   my $name;
-   do { $name = tmpnam() }
-   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+   my ($fh, $name) = tempfile();
 
    my $workbook = Spreadsheet::WriteExcel->new("$name");
    my $worksheet = $workbook->add_worksheet();
@@ -46,24 +44,21 @@ sub export_to_xls {
 sub ref_to_csv {
    my ($data, $filename, $column_index) = @_;
 
-   my $name;
-   do { $name = tmpnam() }
-   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
-   open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
+   my ($fh, $name) = tempfile();
 
-   for (@$column_index) { print CSVFILE "$_," }
-   print CSVFILE "\n";
+   for (@$column_index) { print $fh "$_," }
+   print $fh "\n";
 
    foreach $ref (@{ $form->{$data} }) {
    	  my $cellValue = '';
       for (@$column_index) {
       	$cellValue = &escape_csv($ref->{$_});
-      	print CSVFILE qq|"$cellValue",|;
+      	print $fh qq|"$cellValue",|;
       }
-      print CSVFILE "\n";
+      print $fh "\n";
    }
 
-   close (CSVFILE) || $form->error('Cannot close csv file');
+   close ($fh) || $form->error('Cannot close csv file');
    my @fileholder;
    open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
    @fileholder = <DLFILE>;
@@ -79,11 +74,8 @@ sub ref_to_csv {
 sub export_to_csv {
    my ($dbh, $query, $filename, $copyfromcsv) = @_;
 
-   my $name;
-   do { $name = tmpnam() }
-   until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+   my ($fh, $name) = tempfile();
 
-   open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
    my $sth = $dbh->prepare($query);
    $sth->execute or $form->dberror($query);
    my $ncols = $sth->{NUM_OF_FIELDS};
@@ -93,9 +85,9 @@ sub export_to_csv {
    }
    chop $collist; 
    if ($copyfromcsv){
-       print CSVFILE "COPY tablename($collist) FROM STDIN CSV HEADER;\n";
-   }
-   print CSVFILE "$collist\n";
+       print $fh "COPY tablename($collist) FROM STDIN CSV HEADER;\n";
+    }
+   print $fh "$collist\n";
    my $line; 
    while (@row = $sth->fetchrow_array) {
       $line = '';
@@ -103,10 +95,10 @@ sub export_to_csv {
          $line .= qq|"$row[$column]",|;
       }
       chop $line;
-      print CSVFILE "$line\n";
+      print $fh "$line\n";
    }
-   print CSVFILE '\.' if $copyfromcsv;
-   close (CSVFILE) || $form->error('Cannot close csv file');
+   print $fh '\.' if $copyfromcsv;
+   close ($fh) || $form->error('Cannot close csv file');
 
    my @fileholder;
    open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');

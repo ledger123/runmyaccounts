@@ -44,6 +44,7 @@ INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,a
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('1300', 'Charges payées d‘avance', 'A', 'A', '', '130', 'f', 't', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('1301', 'Produits à recevoir', 'A', 'A', '', '130', 'f', 't', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('1302', 'Réserve de contributions de I` employeur', 'A', 'A', '', '130', 'f', 't', '');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1310', 'Aktive Rechnungsabgrenzung', 'A', 'A', '', '130', 'f', 't', 'aktiverechnungsabgrenzung');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('14', 'ACTIFS IMMOBILISÉS', 'H', 'A', '', '140', 'f', 'f', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('140', 'IMMOBILISATIONS FINANCIÈRES', 'H', 'A', '', '140', 'f', 'f', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('1400', 'Actions', 'A', 'A', '', '140', 'f', 't', '');
@@ -97,6 +98,7 @@ INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,a
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('230', 'PASSIFS DE RÉGULARISATION (PASSIFS TRANSITOIRES) ET PROVISIONS À COURT TERME', 'H', 'L', '', '230', 'f', 'f', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2300', 'Charges à payer', 'A', 'L', '', '230', 'f', 't', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2301', 'Produits encaissés d’avance', 'A', 'L', '', '230', 'f', 't', '');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2310', 'Passive Rechnungsabgrenzung', 'A', 'L', '', '230', 'f', 't', 'passiverechnungsabgrenzung');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2330', 'Provisions pour travaux de garantie', 'A', 'L', '', '230', 'f', 't', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2340', 'TBD', 'A', 'L', 'AP_amount', '230', 'f', 't', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('24', 'CAPITAUX ÉTRANGERS À LONG TERME', 'H', 'L', '', '240', 'f', 'f', '');

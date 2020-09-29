@@ -16,7 +16,7 @@ use SL::PE;
 use SL::VR;
 
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 require "$form->{path}/arap.pl";
 require "$form->{path}/mylib.pl";
@@ -1238,9 +1238,8 @@ sub gl_subtotal {
 sub transactions_to_csv {
 
     $filename = 'gl';
-    my $name;
-    do { $name = tmpnam() } until $fh = IO::File->new( $name, O_RDWR | O_CREAT | O_EXCL );
-    open( CSVFILE, ">$name" ) || $form->error('Cannot create csv file');
+
+    my ($fh, $name) = tempfile();
 
     ( $form->{reportdescription}, $form->{reportid} ) = split /--/, $form->{report};
     $form->{sort} ||= "transdate";
@@ -1519,9 +1518,9 @@ sub transactions_to_csv {
     $l = $#column_index;
 
     for ( 0 .. $l ) {
-        print CSVFILE qq|"$column_data{$column_index[$_]}",|;
+        print $fh qq|"$column_data{$column_index[$_]}",|;
     }
-    print CSVFILE qq|\n|;
+    print $fh qq|\n|;
 
     # add sort to callback
     $form->{callback} = "$callback&sort=$form->{sort}";
@@ -1545,7 +1544,7 @@ sub transactions_to_csv {
             $i %= 2;
         }
 
-        for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
+        for (@column_index) { print $fh qq|"$column_data{$_}",| }
 
     }
 
@@ -1618,8 +1617,8 @@ sub transactions_to_csv {
             $i++;
             $i %= 2;
         }
-        for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
-        print CSVFILE "\n";
+        for (@column_index) { print $fh qq|"$column_data{$_}",| }
+        print $fh "\n";
 
         $sameid = $ref->{id};
     }
@@ -1632,8 +1631,8 @@ sub transactions_to_csv {
     $column_data{credit}  = $totalcredit;
     $column_data{balance} = $form->{balance} * $ml * $cml;
 
-    for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
-    print CSVFILE qq|\n|;
+    for (@column_index) { print $fh qq|"$column_data{$_}",| }
+    print $fh qq|\n|;
 
     %button = (
         'General Ledger--Add Transaction' => { ndx => 1, key => 'G', value => $locale->text('GL Transaction') },
@@ -1672,7 +1671,7 @@ sub transactions_to_csv {
         delete $button{'Save Report'};
     }
 
-    close(CSVFILE) || $form->error('Cannot close csv file');
+    close($fh) || $form->error('Cannot close csv file');
 
     my @fileholder;
     open( DLFILE, qq|<$name| ) || $form->error('Cannot open file for download');
@@ -1693,8 +1692,8 @@ sub gl_subtotal_to_csv {
     $column_data{credit} = $subtotalcredit;
     $column_data{taxamount} = $subtotaltaxamount;
 
-    for (@column_index) { print CSVFILE qq|"$column_data{$_}",| }
-    print CSVFILE qq|\n|;
+    for (@column_index) { print $fh qq|"$column_data{$_}",| }
+    print $fh qq|\n|;
 
     $subtotaldebit  = 0;
     $subtotalcredit = 0;

@@ -1,5 +1,5 @@
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 use SL::RP;
 
@@ -1211,11 +1211,8 @@ sub gl_list {
     $column_header{balance}     = '"' . $locale->text('Balance') . '"';
     
        $filename = 'gl';
-       my $name;
-       do { $name = tmpnam() }
-       until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+       my ($fh, $name) = tempfile();
 
-       open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
        my $sth = $dbh->prepare($query);
        $sth->execute or $form->dberror($query);
        
@@ -1230,16 +1227,16 @@ sub gl_list {
               $column_data{debit} = $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0");
               $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
               $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
-              for (@column_index) { print CSVFILE "$column_data{$_}," }
-              print CSVFILE "\n";
+              for (@column_index) { print $fh "$column_data{$_}," }
+              print $fh "\n";
            }
            $groupbreak = "$ref->{accno}--$ref->{accdescription}";
            $line = $locale->text('Account') . " " . $groupbreak;
-           print CSVFILE qq|"$line"\n|;
+           print $fh qq|"$line"\n|;
            
            # print header
-           for (@column_index) { print CSVFILE "$column_header{$_}," }
-              print CSVFILE "\n";
+           for (@column_index) { print $fh "$column_header{$_}," }
+              print $fh "\n";
     
            $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
            if ($form->{datefrom} || $ref->{type} eq "empty"){
@@ -1257,8 +1254,8 @@ sub gl_list {
             $column_data{balance}   = '"' . (0 - $balance) . '"';
     
             # print footer
-            for (@column_index) { print CSVFILE "$column_data{$_}," }
-            print CSVFILE "\n";
+            for (@column_index) { print $fh "$column_data{$_}," }
+            print $fh "\n";
              }
            }
             }
@@ -1289,8 +1286,8 @@ sub gl_list {
         $balance += $ref->{amount};
         $column_data{balance}       = '"' . ($balance * -1) . '"';
     
-        for (@column_index) { print CSVFILE "$column_data{$_}," }
-        print CSVFILE "\n";
+        for (@column_index) { print $fh "$column_data{$_}," }
+        print $fh "\n";
         $i++; $i %= 2; $no++;
     
         $debit_subtotal += $ref->{amount} if $ref->{amount} < 0;
@@ -1308,20 +1305,20 @@ sub gl_list {
        $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
        $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
     
-       for (@column_index) { print CSVFILE "$column_data{$_}," }
-        print CSVFILE "\n";
+       for (@column_index) { print $fh "$column_data{$_}," }
+        print $fh "\n";
     
        $column_data{debit} = $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}, "0");
        $column_data{credit} = $form->format_amount(\%myconfig, $credit_total, $form->{precision}, "0");
        $column_data{balance} = ' ';
     
        # grand totals
-       for (@column_index) { print CSVFILE "$column_data{$_}," }
-       print CSVFILE "\n";
+       for (@column_index) { print $fh "$column_data{$_}," }
+       print $fh "\n";
            
        # end of create csv data
        
-       close (CSVFILE) || $form->error('Cannot close csv file');
+       close ($fh) || $form->error('Cannot close csv file');
     
        my @fileholder;
        open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');

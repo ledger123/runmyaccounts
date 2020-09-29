@@ -51,13 +51,24 @@ sub apisend {
   $data->{to}->[0]->{email} = $self->{to};
 
   if ($self->{cc}){
-     $data->{cc}->[0]->{name} = $self->{cc};
-     $data->{cc}->[0]->{email} = $self->{cc};
+     $self->{cc} =~ tr/ //ds;
+     @cc = split /,/, $self->{cc};
+     my $i = 0;
+     for (@cc){
+        $data->{cc}->[$i]->{name} = $_;
+        $data->{cc}->[$i]->{email} = $_;
+        $i++;
+     }
   }
-
   if ($self->{bcc}){
-     $data->{bcc}->[0]->{name} = $self->{bcc};
-     $data->{bcc}->[0]->{email} = $self->{bcc};
+     $self->{bcc} =~ tr/ //ds;
+     @bcc = split /,/, $self->{bcc};
+     my $i = 0;
+     for (@bcc){
+        $data->{bcc}->[$i]->{name} = $_;
+        $data->{bcc}->[$i]->{email} = $_;
+        $i++;
+     }
   }
 
   if (@{$self->{attachments}}) {
@@ -84,6 +95,8 @@ sub apisend {
 
   use File::Temp qw(tempfile);
   my ($fh, $filename) = tempfile();
+  binmode( $fh, ":utf8" );
+
   print $fh $jsonstr;
   close $fh;
 

@@ -17,7 +17,7 @@ use SL::PE;
 use SL::RP;
 use SL::CSV;
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 1;
 
@@ -1332,17 +1332,15 @@ sub list_accounts {
 
     if ($form->{l_csv}){
        $filename = 'trialbalance';
-       my $name;
-       do { $name = tmpnam() }
-       until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
 
-       open (CSVFILE, ">$name") || $form->error('Cannot create csv file');
+       my ($fh, $name) = tempfile();
+
        my $line;
        for (@column_index){
            $line .= "$_,";
        }
        chop $line;
-       print CSVFILE "$line\n";
+       print $fh "$line\n";
 
        foreach $ref ( sort { $a->{accno} cmp $b->{accno} } @{ $form->{TB} } ) {
 
@@ -1358,10 +1356,10 @@ sub list_accounts {
            $line = '';
            for (@column_index) { $line .= qq|"$ref->{$_}",| }
            chop $line;
-           print CSVFILE "$line\n";
+           print $fh "$line\n";
        }
 
-       close (CSVFILE) || $form->error('Cannot close csv file');
+       close ($fh) || $form->error('Cannot close csv file');
 
        my @fileholder;
        open (DLFILE, qq|<$name|) || $form->error('Cannot open file for download');
@@ -1659,7 +1657,8 @@ sub generate_ap_aging {
 		$locale->text('Invalid to date ...') );
 
 	# split vendor
-	( $form->{vendor} ) = split( /--/, $form->{vendor} );
+	( $form->{vendor}, $form->{vendor_id} ) = split( /--/, $form->{vendor} );
+    $form->{vendor_id} *= 1;
 	$vendor = $form->escape( $form->{vendor}, 1 );
 	$title  = $form->escape( $form->{title},  1 );
 	$media  = $form->escape( $form->{media},  1 );
@@ -2242,10 +2241,7 @@ sub export_as_csv {
 		RP->reminder( \%myconfig, \%$form );
 
 		$filename = 'rp';
-		my $aaname;
-		do { $aaname = tmpnam() }
-		  until $fh = IO::File->new( $aaname, O_RDWR | O_CREAT | O_EXCL );
-		open( CSVFILE, ">$aaname" ) || $form->error('Cannot create csv file');
+        my ($fh, $aaname) = tempfile();
 
 		$vcnumber                      = $locale->text('Customer Number');
 		$column_header{vc}             = $locale->text( ucfirst $form->{vc} );
@@ -2264,8 +2260,8 @@ sub export_as_csv {
 		  qw(vc number level language invnumber invdescription ordnumber transdate duedate due curr);
 
 		# Write header line
-		for (@column_index) { print CSVFILE "\"$column_header{$_}\"," }
-		print CSVFILE "\n";
+		for (@column_index) { print $fh "\"$column_header{$_}\"," }
+		print $fh "\n";
 
 		# Write data TODO
 		for $ref ( @{ $form->{AG} } ) {
@@ -2304,13 +2300,13 @@ sub export_as_csv {
 					$form->{precision} );
 				$column_data{curr} = $ref->{curr};
 
-				for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
-				print CSVFILE "\n";
+				for (@column_index) { print $fh "\"$column_data{$_}\"," }
+				print $fh "\n";
 			}
 		}
 
 		# write csv end
-		close(CSVFILE) || $form->error('Cannot close csv file');
+		close($fh) || $form->error('Cannot close csv file');
 
 		my @fileholder;
 		open( DLFILE, qq|<$aaname| )

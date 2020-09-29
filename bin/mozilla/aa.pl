@@ -21,7 +21,7 @@ if ( -f "$form->{path}/$form->{login}_aa.pl" ) {
 
 use SL::VR;
 use IO::File;
-use POSIX qw(tmpnam);
+use File::Temp qw(tempfile);
 
 require "$form->{path}/mylib.pl";
 
@@ -1798,6 +1798,20 @@ sub search {
         $summary       = "";
     }
 
+    if ( !$form->{outstanding} ) {
+        @curr = split /:/, $form->{currencies};
+        $form->{selectcurrency} = "\n";
+        for (@curr) { $form->{selectcurrency} .= "$_\n" }
+        $form->{defaultcurrency} = $curr[0];
+        chomp $form->{defaultcurrency};
+        $currency = qq|
+          <tr>
+            <th align="right">|.$locale->text('Currency').qq|</th>
+            <td><select name=currency>|.$form->select_option( $form->{selectcurrency} ).qq|</select></td>
+	      </tr>
+        |;
+    }
+
     if ( @{ $form->{all_years} } ) {
 
         # accounting years
@@ -1857,6 +1871,7 @@ sub search {
     push @a, qq|<input name="l_waybill" class=checkbox type=checkbox value=Y> | . $locale->text('Waybill');
     push @a, qq|<input name="l_dcn" class=checkbox type=checkbox value=Y> | . $locale->text('DCN');
 
+
     $form->header;
 
     print qq|
@@ -1880,7 +1895,8 @@ sub search {
 	      </tr>
 	      $vc
 	      $invnumber
-	      <tr>
+          $currency
+          <tr>
 		<th align=right nowrap>| . $locale->text('From') . qq|</th>
 		<td colspan=3><input name=transdatefrom size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"> <b>|
       . $locale->text('To')
@@ -2032,6 +2048,14 @@ sub transactions {
         $option .= "\n<br>" if ($option);
         $option .= $locale->text('Department') . " : $department";
     }
+
+    if ( $form->{currency} ) {
+        $callback .= "&currency=" . $form->escape( $form->{currency}, 1 );
+        $href .= "&currency=" . $form->escape( $form->{currency} );
+        $option .= "\n<br>" if ($option);
+        $option .= $locale->text('Currency') . " : $form->{currency}";
+    }
+
     if ( $form->{employee} ) {
         $callback .= "&employee=" . $form->escape( $form->{employee}, 1 );
         $href .= "&employee=" . $form->escape( $form->{employee} );
@@ -2484,9 +2508,8 @@ qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=l
 sub transactions_to_csv {
 
     $filename = 'aa';
-    my $aaname;
-    do { $aaname = tmpnam() } until $fh = IO::File->new( $aaname, O_RDWR | O_CREAT | O_EXCL );
-    open( CSVFILE, ">$aaname" ) || $form->error('Cannot create csv file');
+
+    my ($fh, $aaname) = tempfile();
 
     if ( $form->{ $form->{vc} } ) {
         ( $form->{ $form->{vc} }, $form->{"$form->{vc}_id"} ) = split( /--/, $form->{ $form->{vc} } );
@@ -2594,8 +2617,8 @@ sub transactions_to_csv {
 
     $form->{title} .= " / $form->{company}";
 
-    for (@column_index) { print CSVFILE "$column_data{$_}," }
-    print CSVFILE "\n";
+    for (@column_index) { print $fh "$column_data{$_}," }
+    print $fh "\n";
 
     # add sort and escape callback, this one we use for the add sub
     $form->{callback} = $callback .= "&sort=$form->{sort}";
@@ -2687,8 +2710,8 @@ sub transactions_to_csv {
             $j %= 2;
         }
 
-        for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
-        print CSVFILE "\n";
+        for (@column_index) { print $fh "\"$column_data{$_}\"," }
+        print $fh "\n";
         $sameid = $ref->{id};
     }
 
@@ -2715,11 +2738,11 @@ sub transactions_to_csv {
         $column_data{fx_due}       = $form->format_amount( \%myconfig, $totalfxamount - $totalfxpaid,      $form->{precision}, " " );
     }
 
-    for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
-    print CSVFILE "\n";
+    for (@column_index) { print $fh "\"$column_data{$_}\"," }
+    print $fh "\n";
 
     # write csv end
-    close(CSVFILE) || $form->error('Cannot close csv file');
+    close($fh) || $form->error('Cannot close csv file');
 
     my @fileholder;
     open( DLFILE, qq|<$aaname| ) || $form->error('Cannot open file for download');
@@ -2760,8 +2783,8 @@ sub subtotal_csv {
     $subtotalfxamount    = 0;
     $subtotalfxpaid      = 0;
 
-    for (@column_index) { print CSVFILE "\"$column_data{$_}\"," }
-    print CSVFILE "\n";
+    for (@column_index) { print $fh "\"$column_data{$_}\"," }
+    print $fh "\n";
 
 }
 

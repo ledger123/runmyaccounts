@@ -511,7 +511,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1895','Verbindlichkeiten gg. Kreditinstituten','A','A','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1896','Verbindlichkeiten gegenüber Kreditinstituten (nicht im Finanzmittelfonds enthalten)','A','A','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1899','ABGRENZUNGSPOSTEN','H','A','','999',false,false,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1900','Aktive Rechnungsabgrenzung','A','A','AP_paid','999',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1900','Aktive Rechnungsabgrenzung','A','A','AP_paid','999',false,true,'aktiverechnungsabgrenzung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1901','Aktive Rechnungsabgrenzung','A','A','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1920','Aufwand Zölle und Verbrauchsteuern','A','A','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1921','Als Aufwand berücksichtigte Zölle und Verbrauchsteuern auf Vorräte','A','A','','999',false,false,'');
@@ -1545,7 +1545,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3860','Verbindlichkeiten aus Umsatzsteuer','A','L','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3861','Verbindlichkeiten aus Umsatzsteuer','A','L','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3899','RECHNUNGSABGRENZUNGSPOSTEN','H','L','','999',false,false,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3900','Passive Rechnungsabgrenzung','A','L','','999',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3900','Passive Rechnungsabgrenzung','A','L','','999',false,true,'passiverechnungsabgrenzung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3901','Passive Rechnungsabgrenzung','A','L','AR_paid','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3950','Abgrenzung unterjährige AfA für BWA','A','L','','999',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3951','Abgrenzung unterjährig pauschal gebuchter Abschreibungen für BWA','A','L','','999',false,false,'');

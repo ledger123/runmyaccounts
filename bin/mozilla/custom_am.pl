@@ -30,6 +30,10 @@ sub ask_dbcheck {
 	<th>|.$locale->text('Last transaction date').qq|</th>
 	<td><input name=lastdate size=11 value='$lastdate' title='$myconfig{dateformat}'></td>
      </tr>
+    <tr>
+	<th>|.$locale->text('Minimum rounding diff').qq|</th>
+	<td><input name=mindiff size=11 value=1></td>
+     </tr>
   </table>|.
 $locale->text('All transactions outside this date range will be reported as having invalid dates.').qq|
 <br><br><hr/>
@@ -592,9 +596,12 @@ WHERE trans_id NOT IN
   print qq|<th class=listheading>|.$locale->text('Net Amount').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Invoice Tax').qq|</td>|;
   print qq|<th class=listheading>|.$locale->text('Line Tax').qq|</td>|;
+  print qq|<th class=listheading>|.$locale->text('Diff').qq|</td>|;
   print qq|</tr>|;
 
   $i = 0;
+
+  $form->{mindiff} *= 1;
 
   my $module;
   my $total_amount;
@@ -604,15 +611,20 @@ WHERE trans_id NOT IN
      $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
 
      if ($form->round_amount($ref->{tax1}, 2) != $form->round_amount($ref->{tax2}, 2)){
-     	print qq|<tr class=listrow$i>|;
-     	print qq|<td>$ref->{module}</td>|;
-     	print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
-     	print qq|<td>$ref->{transdate}</td>|;
-     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 2).qq|</td>|;
-     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{netamount}, 2).qq|</td>|;
-     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax1}, 2).qq|</td>|;
-     	print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax2}, 2).qq|</td>|;
-     	print qq|</tr>|;
+        $diff = $ref->{tax1} - $ref->{tax2};
+        $diff *= -1 if $diff < 1;
+        if ($diff > $form->{mindiff}){
+            print qq|<tr class=listrow$i>|;
+            print qq|<td>$ref->{module}</td>|;
+            print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
+            print qq|<td>$ref->{transdate}</td>|;
+            print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{amount}, 2).qq|</td>|;
+            print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{netamount}, 2).qq|</td>|;
+            print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax1}, 2).qq|</td>|;
+            print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax2}, 2).qq|</td>|;
+            print qq|<td align=right>|.$form->format_amount(\%myconfig, $ref->{tax1} - $ref->{tax2}, 2).qq|</td>|;
+            print qq|</tr>|;
+        }
      }
   }
   print qq|</table>|;
@@ -635,11 +647,11 @@ WHERE trans_id NOT IN
             - round(amount::numeric,2) diff
     FROM ap
     WHERE
-        (SELECT ROUND(SUM(ac.amount)::numeric,2)
+        ABS((SELECT ROUND(SUM(ac.amount)::numeric,2)
         FROM acc_trans ac
         JOIN chart c ON c.id = ac.chart_id
         WHERE ac.trans_id = ap.id AND c.link LIKE '%AP_paid%' )
-        - round(amount::numeric,2) <> 0
+        - round(amount::numeric,2)) > $form->{mindiff}
     |;
 
     $sth = $dbh->prepare($query) || $form->dberror($query);

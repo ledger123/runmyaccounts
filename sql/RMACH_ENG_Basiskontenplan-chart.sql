@@ -44,6 +44,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1300','Accrued cost','A','A','','130',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1301','Accrued income','A','A','','130',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1302','TBD','A','A','','130',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1310', 'Active Accrual', 'A', 'A', '', '130', 'f', 't', 'aktiverechnungsabgrenzung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('14','FIXED ASSETS','H','A','','140',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('140','INVESTMENTS','H','A','','140',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1400','Investment securities','A','A','','140',false,true,'');
@@ -97,6 +98,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('230','DEFERRED AND CURRENT PROVISIONS','H','L','','230',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2300','Accrued Cost','A','L','','230',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2301','Accrued Income','A','L','','230',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2310', 'Passive Accrual', 'A', 'L', '', '230', 'f', 't', 'passiverechnungsabgrenzung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2330','Accrued Liabilities','A','L','','230',false,true,'');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2340', 'TBD', 'A', 'L', 'AP_amount', '230', 'f', 't', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('24','LONG TERM DEBT','H','L','','240',false,true,'');
