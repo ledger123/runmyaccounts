@@ -51,6 +51,7 @@ sub apisend {
   $data->{to}->[0]->{email} = $self->{to};
 
   if ($self->{cc}){
+     $self->{cc} =~ tr/ //ds;
      @cc = split /,/, $self->{cc};
      my $i = 0;
      for (@cc){
@@ -60,6 +61,7 @@ sub apisend {
      }
   }
   if ($self->{bcc}){
+     $self->{bcc} =~ tr/ //ds;
      @bcc = split /,/, $self->{bcc};
      my $i = 0;
      for (@bcc){
