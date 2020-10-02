@@ -1808,7 +1808,7 @@ sub search {
           <tr>
             <th align="right">|.$locale->text('Currency').qq|</th>
             <td><select name=currency>|.$form->select_option( $form->{selectcurrency} ).qq|</select></td>
-	      <tr>
+	      </tr>
         |;
     }
 
@@ -1896,6 +1896,7 @@ sub search {
 	      $vc
 	      $invnumber
           $currency
+          <tr>
 		<th align=right nowrap>| . $locale->text('From') . qq|</th>
 		<td colspan=3><input name=transdatefrom size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"> <b>|
       . $locale->text('To')
