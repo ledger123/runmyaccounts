@@ -560,6 +560,7 @@ sub transactions {
     $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
     $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
 
+    for (qw(amountfrom amountto)){ $form->{"save_$_"} = $form->{$_} }
     for (qw(amountfrom amountto)){ $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
 
     # currencies
@@ -764,14 +765,14 @@ sub transactions {
     }
 
     if ( $form->{amountfrom} ) {
-        $href     .= "&amountfrom=$form->{amountfrom}";
-        $callback .= "&amountfrom=$form->{amountfrom}";
+        $href     .= "&amountfrom=$form->{save_amountfrom}";
+        $callback .= "&amountfrom=$form->{save_amountfrom}";
         $option   .= "\n<br>" if $option;
         $option   .= $locale->text('Amount') . " >= " . $form->format_amount( \%myconfig, $form->{amountfrom}, $form->{precision} );
     }
     if ( $form->{amountto} ) {
-        $href     .= "&amountto=$form->{amountto}";
-        $callback .= "&amountto=$form->{amountto}";
+        $href     .= "&amountto=$form->{save_amountto}";
+        $callback .= "&amountto=$form->{save_amountto}";
         if ( $form->{amountfrom} ) {
             $option .= " <= ";
         }
