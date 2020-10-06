@@ -507,6 +507,7 @@ sub search {
               <td><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Exchange Rate Difference').qq|</td>
               <td><input type=checkbox class=checkbox name=filter_amounts value=1> |.$locale->text('Filter Amounts').qq|</td>
 		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('CSV') . qq|</td>
+		      <td nowrap><input name=onhold class=checkbox type=checkbox value=1>| . $locale->text('On Hold') . qq|</td>
 		    </tr>
 		  </table>
 		</td>
@@ -781,6 +782,12 @@ sub transactions {
             $option .= $locale->text('Amount') . " <= ";
         }
         $option .= $form->format_amount( \%myconfig, $form->{amountto}, $form->{precision} );
+    }
+    if ( $form->{onhold} ) {
+        $callback .= "&onhold=$form->{onhold}";
+        $href     .= "&onhold=$form->{onhold}";
+        $option   .= "\n<br>" if ($option);
+        $option   .= $locale->text('On Hold');
     }
 
     @columns = ();
@@ -2051,6 +2058,8 @@ sub form_header {
 |;
     }
 
+    $form->{onhold} = ( $form->{onhold} ) ? "checked" : "";
+
     $form->header;
 
     print qq|
@@ -2078,6 +2087,14 @@ sub form_header {
 	  <td><input name=reference size=20 value="| . $form->quote( $form->{reference} ) . qq|"></td>
 	  <th align=right>| . $locale->text('Date') . qq| <font color=red>*</font></th>
 	  $transdate
+      <td>
+          <table>
+	      <tr>
+		<td align=right><input name=onhold type=checkbox class=checkbox value=1 $form->{onhold}></td>
+		<th align=left nowrap>| . $locale->text('On Hold') . qq|</font></th>
+	      </tr>
+          </table>
+      </td>
 	</tr>
 	<tr>
 	  $department

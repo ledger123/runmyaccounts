@@ -259,6 +259,8 @@ sub post_transaction {
   my $exchangerate = $form->parse_amount($myconfig, $form->{exchangerate});
   $exchangerate ||= 1;
 
+  $form->{onhold} *= 1;
+
   $query = qq|UPDATE gl SET 
 	      reference = |.$dbh->quote($form->{reference}).qq|,
 	      description = |.$dbh->quote($form->{description}).qq|,
@@ -266,6 +268,7 @@ sub post_transaction {
 	      transdate = '$form->{transdate}',
 	      department_id = $department_id,
 	      curr = |.$dbh->quote($form->{currency}).qq|,
+	      onhold = |.$dbh->quote($form->{onhold}).qq|,
 	      exchangerate = $exchangerate
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
@@ -461,6 +464,11 @@ sub transactions {
     $glwhere .= " AND g.department_id = $var";
     $arwhere .= " AND a.department_id = $var";
     $apwhere .= " AND a.department_id = $var";
+  }
+  if ($form->{onhold}) {
+    $glwhere .= " AND g.onhold = '1'";
+    $arwhere .= " AND a.onhold = '1'";
+    $apwhere .= " AND a.onhold = '1'";
   }
   if ($form->{projectnumber}) {
     ($null, $var) = split /--/, $form->{projectnumber};
