@@ -746,21 +746,35 @@ sub click_here_to_delete_blank_non_tax_rows {
 }
 
 sub fix_invoicetax_for_alltaxes_report {
-    #use DBIx::Simple;
+    use DBIx::Simple;
     my $dbh = $form->dbconnect(\%myconfig);
-    #my $dbs = DBIx::Simple->connect($dbh);
+    my $dbs = DBIx::Simple->connect($dbh);
 
     $form->info("Building invoicetax table<br>\n");
     $query = qq|DELETE FROM invoicetax|;
     $dbh->do($query) || $form->dberror($query);
 
+    $dbs->query("DROP TABLE taxtmp");
+    $dbs->query("CREATE TABLE taxtmp AS SELECT chart_id, rate, validto AS validfrom, validto FROM tax");
+    $dbs->query("UPDATE taxtmp SET validto = '31-12-2030' WHERE validto IS NULL");
+    my @alltaxes = $dbs->query("SELECT DISTINCT chart_id FROM tax")->hashes;
+    for my $tax (@alltaxes){
+        my @onetax = $dbs->query("SELECT * FROM taxtmp WHERE chart_id = ? ORDER BY validto", $tax->{chart_id})->hashes;
+        my $i = 1;
+        my $validfrom = '01-01-2000';
+        for (@onetax){
+            $dbs->query("UPDATE taxtmp SET validfrom=? WHERE chart_id = ? AND validto = ?", $validfrom, $_->{chart_id}, $_->{validto});
+            $validfrom = $dbs->query("SELECT '$_->{validto}'::DATE + 1")->list;
+        }
+    }
+
     my $query = qq|
 	    SELECT i.id, i.trans_id, i.parts_id, i.qty * i.sellprice amount,
-		(i.qty * i.sellprice * tax.rate) AS taxamount, 
-		ptax.chart_id
+		(i.qty * i.sellprice * tax.rate) AS taxamount,
+		ptax.chart_id, tax.validfrom, tax.validto
 	    FROM invoice i
 	    JOIN partstax ptax ON (ptax.parts_id = i.parts_id)
-	    JOIN tax ON (tax.chart_id = ptax.chart_id)
+	    JOIN taxtmp tax ON (tax.chart_id = ptax.chart_id)
 	    WHERE i.trans_id = ?
 	    AND ptax.chart_id = ?|;
     my $itsth = $dbh->prepare($query) || $form->dberror($query);
@@ -770,7 +784,7 @@ sub fix_invoicetax_for_alltaxes_report {
     my $itins = $dbh->prepare($query) || $form->dberror($query);
 
     ## 1. First AR
-    $query = qq|SELECT ar.id, ar.customer_id, ctax.chart_id 
+    $query = qq|SELECT ar.id, ar.customer_id, ctax.chart_id, ar.transdate
 		FROM ar
 		JOIN customertax ctax ON (ar.customer_id = ctax.customer_id)|;
     $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -778,12 +792,16 @@ sub fix_invoicetax_for_alltaxes_report {
     while ($ref = $sth->fetchrow_hashref(NAME_lc)){
 	    $itsth->execute($ref->{id}, $ref->{chart_id});
         while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
-            $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}, $itref->{taxamount});
+            if (($form->datetonum(\%myconfig, $ref->{transdate}) >= $form->datetonum(\%myconfig, $itref->{validfrom}))
+                    and ($form->datetonum(\%myconfig, $ref->{transdate}) <= $form->datetonum(\%myconfig, $itref->{validto}))){
+                $form->info("Processing $itref->{trans_id}<br/>\n");
+                $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}, $itref->{taxamount});
+            }
         }
     }
 
     ## 2. Now AP
-    $query = qq|SELECT ap.id, ap.vendor_id, vtax.chart_id 
+    $query = qq|SELECT ap.id, ap.vendor_id, vtax.chart_id, ap.transdate
 		FROM ap
 		JOIN vendortax vtax ON (ap.vendor_id = vtax.vendor_id)|;
     $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -791,9 +809,14 @@ sub fix_invoicetax_for_alltaxes_report {
     while ($ref = $sth->fetchrow_hashref(NAME_lc)){
 	$itsth->execute($ref->{id}, $ref->{chart_id});
        while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
-          $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}*-1, $itref->{taxamount}*-1);
+            if (($form->datetonum(\%myconfig, $ref->{transdate}) >= $form->datetonum(\%myconfig, $itref->{validfrom}))
+                    and ($form->datetonum(\%myconfig, $ref->{transdate}) <= $form->datetonum(\%myconfig, $itref->{validto}))){
+                $form->info("Processing $itref->{trans_id}<br/>\n");
+                $itins->execute($itref->{trans_id}, $itref->{id}, $itref->{chart_id}, $itref->{amount}*-1, $itref->{taxamount}*-1);
+            }
        }
     }
+    $dbs->query("DROP TABLE taxtmp");
     $form->info($locale->text('Done ...'));
 }
 
