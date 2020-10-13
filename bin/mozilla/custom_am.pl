@@ -746,6 +746,32 @@ sub click_here_to_delete_blank_non_tax_rows {
 }
 
 sub fix_invoicetax_for_alltaxes_report {
+
+    $form->{title} = $locale->text('Fix Invoicetax table for all taxes report');
+    $form->header;
+    print qq|
+<body>
+  <table width=100%>
+     <tr><th class=listtop>$form->{title}</th></tr>
+  </table><br />
+|;
+
+    if (!$form->{runit}){
+        $form->{nextsub} = 'fix_invoicetax_for_alltaxes_report';
+        $form->{runit} = 1;
+        $form->info("Click the button below to run this procedure ...");
+        print qq|
+<form method=post action=$form->{script}>
+<input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">
+|;
+        $form->hide_form(qw(runit title path nextsub login));
+
+        print qq|
+</form>
+|;
+        return;
+    }
+
     use DBIx::Simple;
     my $dbh = $form->dbconnect(\%myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
