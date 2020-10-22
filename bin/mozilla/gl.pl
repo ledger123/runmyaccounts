@@ -1560,7 +1560,7 @@ sub transactions_to_csv {
         # if item ne sort print subtotal
         if ( $form->{l_subtotal} eq 'Y' ) {
             if ( $sameitem ne $ref->{ $form->{sort} } ) {
-                &gl_subtotal_to_csv;
+                &gl_subtotal_to_csv($fh);
             }
         }
 
@@ -1624,7 +1624,7 @@ sub transactions_to_csv {
         $sameid = $ref->{id};
     }
 
-    &gl_subtotal_to_csv if ( $form->{l_subtotal} eq 'Y' );
+    &gl_subtotal_to_csv($fh) if ( $form->{l_subtotal} eq 'Y' );
 
     for (@column_index) { $column_data{$_} = "" }
 
@@ -1686,6 +1686,7 @@ sub transactions_to_csv {
 }
 
 sub gl_subtotal_to_csv {
+    $fh = shift;
 
     for (@column_index) { $column_data{$_} = "" }
 
