@@ -1,0 +1,2 @@
+customernumber,name,firstname,lastname,contacttitle,phone,fax,email,notes,address1,address2,city,state,zipcode,country,shiptoname,shiptoaddress1,shiptoaddress2,shiptocity,shiptostate,shiptozipcode,shiptocountry,shiptocontact,shiptophone,shiptofax,shiptoemail,discount
+IMP001,Ledger123,Armaghan,Saqib,Consultant,,,saqib@ledger123.com,"These are, just, sample notes",,,London,,"AA7 8BB",UK,shiptoname,shiptoaddress1,shiptoaddress2,shiptocity,shiptostate,zipcode,shiptocountry,shiptocontact,shiptophone,shiptofax,shiptoemail,12.5
