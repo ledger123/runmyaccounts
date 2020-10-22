@@ -152,6 +152,21 @@ create table debits (id serial, reference text, description text, transdate date
 create table credits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2));
 create table debitscredits (id serial, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2));
 
+CREATE TABLE gl_log (
+    id integer,
+    reference text,
+    description text,
+    transdate date,
+    employee_id integer,
+    notes text,
+    department_id integer,
+    approved boolean,
+    curr character(3),
+    exchangerate double precision,
+    ticket_id integer,
+    ts timestamp without time zone
+);
+
 alter table gl add column onhold boolean;
 alter table gl_log add column onhold boolean;
 alter table gl_log_deleted add column onhold boolean;
