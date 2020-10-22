@@ -39,6 +39,7 @@ $self{texts} = {
   'For'                         => 'für',
   'From'                        => 'Von',
   'Include Payment'             => 'Bezahlung reinnehmen',
+  'Invalid date ...'            => 'Ungültiges Datum ...',
   'Invoice'                     => 'Rechnung',
   'Invoice Date'                => 'Rechnungsdatum',
   'Invoices'                    => 'Rechnungen',

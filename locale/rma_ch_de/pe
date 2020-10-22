@@ -52,6 +52,7 @@ $self{texts} = {
   'Groups'                      => 'Gruppen',
   'Inactive'                    => 'Inaktiv',
   'Income'                      => 'Ertrag',
+  'Invalid date ...'            => 'Ungültiges Datum ...',
   'Job'                         => 'Auftrag',
   'Job Number'                  => 'Auftragsnummer',
   'Job deleted!'                => 'Auftrag gelöscht!',
