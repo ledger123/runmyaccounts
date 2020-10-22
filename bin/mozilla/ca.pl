@@ -258,6 +258,7 @@ sub list_transactions {
   $title = $form->escape($form->{title});
 
   # construct href
+  $form->{l_name} = 'Y'; # armaghan 2 oct 2020 add missing company name after reposting of gl transaction
   $href = "$form->{script}?action=list_transactions&department=$department&projectnumber=$projectnumber&title=$title";
   for (qw(path oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno l_name fx_transaction)) { $href .= "&$_=$form->{$_}" }
 

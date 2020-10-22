@@ -507,6 +507,7 @@ sub search {
               <td><input type=checkbox class=checkbox name=fx_transaction value=1 checked> |.$locale->text('Exchange Rate Difference').qq|</td>
               <td><input type=checkbox class=checkbox name=filter_amounts value=1> |.$locale->text('Filter Amounts').qq|</td>
 		      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;| . $locale->text('CSV') . qq|</td>
+		      <td nowrap><input name=onhold class=checkbox type=checkbox value=1>| . $locale->text('On Hold') . qq|</td>
 		    </tr>
 		  </table>
 		</td>
@@ -560,6 +561,7 @@ sub transactions {
     $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
     $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
 
+    for (qw(amountfrom amountto)){ $form->{"save_$_"} = $form->{$_} }
     for (qw(amountfrom amountto)){ $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
 
     # currencies
@@ -764,14 +766,14 @@ sub transactions {
     }
 
     if ( $form->{amountfrom} ) {
-        $href     .= "&amountfrom=$form->{amountfrom}";
-        $callback .= "&amountfrom=$form->{amountfrom}";
+        $href     .= "&amountfrom=$form->{save_amountfrom}";
+        $callback .= "&amountfrom=$form->{save_amountfrom}";
         $option   .= "\n<br>" if $option;
         $option   .= $locale->text('Amount') . " >= " . $form->format_amount( \%myconfig, $form->{amountfrom}, $form->{precision} );
     }
     if ( $form->{amountto} ) {
-        $href     .= "&amountto=$form->{amountto}";
-        $callback .= "&amountto=$form->{amountto}";
+        $href     .= "&amountto=$form->{save_amountto}";
+        $callback .= "&amountto=$form->{save_amountto}";
         if ( $form->{amountfrom} ) {
             $option .= " <= ";
         }
@@ -780,6 +782,12 @@ sub transactions {
             $option .= $locale->text('Amount') . " <= ";
         }
         $option .= $form->format_amount( \%myconfig, $form->{amountto}, $form->{precision} );
+    }
+    if ( $form->{onhold} ) {
+        $callback .= "&onhold=$form->{onhold}";
+        $href     .= "&onhold=$form->{onhold}";
+        $option   .= "\n<br>" if ($option);
+        $option   .= $locale->text('On Hold');
     }
 
     @columns = ();
@@ -1559,7 +1567,7 @@ sub transactions_to_csv {
         # if item ne sort print subtotal
         if ( $form->{l_subtotal} eq 'Y' ) {
             if ( $sameitem ne $ref->{ $form->{sort} } ) {
-                &gl_subtotal_to_csv;
+                &gl_subtotal_to_csv($fh);
             }
         }
 
@@ -1623,7 +1631,7 @@ sub transactions_to_csv {
         $sameid = $ref->{id};
     }
 
-    &gl_subtotal_to_csv if ( $form->{l_subtotal} eq 'Y' );
+    &gl_subtotal_to_csv($fh) if ( $form->{l_subtotal} eq 'Y' );
 
     for (@column_index) { $column_data{$_} = "" }
 
@@ -1685,6 +1693,7 @@ sub transactions_to_csv {
 }
 
 sub gl_subtotal_to_csv {
+    $fh = shift;
 
     for (@column_index) { $column_data{$_} = "" }
 
@@ -2050,6 +2059,8 @@ sub form_header {
 |;
     }
 
+    $form->{onhold} = ( $form->{onhold} ) ? "checked" : "";
+
     $form->header;
 
     print qq|
@@ -2077,6 +2088,14 @@ sub form_header {
 	  <td><input name=reference size=20 value="| . $form->quote( $form->{reference} ) . qq|"></td>
 	  <th align=right>| . $locale->text('Date') . qq| <font color=red>*</font></th>
 	  $transdate
+      <td>
+          <table>
+	      <tr>
+		<td align=right><input name=onhold type=checkbox class=checkbox value=1 $form->{onhold}></td>
+		<th align=left nowrap>| . $locale->text('On Hold') . qq|</font></th>
+	      </tr>
+          </table>
+      </td>
 	</tr>
 	<tr>
 	  $department
