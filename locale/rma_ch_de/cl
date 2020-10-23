@@ -1,14 +1,26 @@
 $self{charset} = 'ISO-8859-1';
 
 $self{texts} = {
+  'AR or AP?'                   => 'Debitor oder Kreditor?',
+  'Amount'                      => 'Betrag',
+  'Date'                        => 'Datum',
+  'Description'                 => 'Überschrift',
+  'From date'                   => 'Von Datum',
+  'GL Account'                  => 'GL Konto',
+  'GL entry updated ...'        => 'GL Eintrag gespeichert ...',
+  'Invoice'                     => 'Rechnung',
+  'It is done ...'              => 'Abgeschlossen ...',
+  'Order Number'                => 'Bestellnummer',
+  'To date'                     => 'Bis Datum',
 };
 
 $self{subs} = {
   'book_selected_transactions'  => 'book_selected_transactions',
   'continue'                    => 'continue',
+  'deselect_all'                => 'deselect_all',
   'just_do_it'                  => 'just_do_it',
   'list_trans'                  => 'list_trans',
-  'deselect_all'				=> 'deselect_all',
+  'select_all'                  => 'select_all',
 };
 
 1;
