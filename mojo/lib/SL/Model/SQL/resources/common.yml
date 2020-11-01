@@ -1,0 +1,5 @@
+---
+
+earliest_trans_year: |
+  SELECT extract(year from min(transdate))
+  FROM acc_trans

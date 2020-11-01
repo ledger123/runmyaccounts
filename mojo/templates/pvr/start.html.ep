@@ -1,0 +1,13 @@
+% layout 'default';
+% title l 'Preliminary VAT Return';
+% languages userconfig->val('x_language');
+
+<h1 class='listtop'><%= l 'Preliminary VAT Return'%></h1>
+
+%= form_for '/pvr/generate' => (method => 'GET') => begin
+
+%= include '_partial/date_interval_picker', from_year => $earliest_trans_year
+
+%= submit_button l('Create'), class => 'submit'
+
+% end

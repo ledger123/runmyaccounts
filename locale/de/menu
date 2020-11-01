@@ -102,6 +102,7 @@ $self{texts} = {
   'Pick List'                   => 'Lagerliste',
   'Pick Lists'                  => 'Lagerlisten',
   'Preferences'                 => 'Benutzereinstellungen',
+  'Preliminary VAT Return'      => 'Umsatzsteuer-Voranmeldung',
   'Pricegroups'                 => 'Preisgruppen',
   'Print'                       => 'Drucken',
   'Projects'                    => 'Projekte',
