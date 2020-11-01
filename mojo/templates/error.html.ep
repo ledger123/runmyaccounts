@@ -1,0 +1,80 @@
+% languages userconfig->val('x_language');
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Error</title>
+    <meta charset="utf-8">
+
+    %= javascript '/js/jquery.min.js'
+    %= stylesheet '/css/legacy/sql-ledger.css', title => "SQL-Ledger stylesheet"
+
+    <style>
+      .alert {
+	  margin: 5ex;
+	  padding: 1ex;
+	  background-color: #ffd9d7;
+	  box-shadow: 10px 10px 5px grey;
+	  border-style: solid;
+	  border-color: red;
+	  border-width: 1px;
+      }
+      .alert h2 {
+	  color: red;
+	  padding: 0px;
+	  margin: 0px;
+      }
+      .alert a {
+	  color: blue;
+	  text-decoration: underline;
+      }
+      .alert #error {
+	  display: none;
+	  font-size: large;
+	  padding: 0px;
+	  margin: 0px;
+      }
+      .error_back {
+	  margin-left: 5ex;
+      }
+    </style>
+
+    <script>
+$(document).ready(function() {
+    $('#collapse_error').click(function() {
+        $('#error').toggle(250);
+    });
+});
+
+function goBack() {
+  window.history.back();
+}
+</script>
+  </head>
+
+  <body>
+    <div class="alert">
+      <h2><%= l $short %></h2>
+      
+      % if (stash('long')) {
+      <br/>
+      
+      [<a id='collapse_error' href='#'><%= l 'Details' %></a>]
+      
+      <div id='error'>
+	<br/>
+	%# Remove stuff like "at /usr/share/perl5/Mojo/Pg.pm line 71."
+	%# From text execeptions:
+	% my $long = stash('long');
+	% $long =~ s|\s+at.+?line \d+\.||s;
+	<%= l $long %>
+      </div>
+      % }
+
+    </div>
+
+    <button class="submit error_back" onclick="goBack()"><%= l 'Back' %></button>
+    
+    %= javascript '/js/jquery.min.js'
+  </body>
+</html>

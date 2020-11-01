@@ -1,0 +1,34 @@
+% layout 'default';
+% languages userconfig->val('x_language');
+
+<h1 class='listtop'><%= l 'System Information' %></h1>
+
+
+<h2 class='listheading'>Session:</h2>
+<pre>
+<%= dumper($self->session) %>
+</pre>
+
+
+<h2 class='listheading'>Cookies:</h2>
+<pre>
+<%= dumper($self->cookies) %>
+</pre>
+
+
+<h2 class='listheading'><%= l 'Request Parameters' %>:</h2>
+<pre>
+<%= dumper($self->req->params->to_hash) %>
+</pre>
+
+
+<h2 class='listheading'>Configuration:</h2>
+<pre>
+<%= dumper(userconfig) %>
+</pre>
+
+
+<h2 class='listheading'>Environment variables:</h2>
+<pre>
+<%= dumper(\%ENV) %>
+</pre>

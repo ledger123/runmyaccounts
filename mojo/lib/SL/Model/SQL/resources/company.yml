@@ -1,0 +1,51 @@
+---
+
+name_address: |
+  SELECT * FROM
+  (
+    SELECT fldvalue FROM defaults WHERE fldname = 'company'
+    UNION ALL
+    SELECT NULL
+    LIMIT 1
+  ) AS company,
+  (
+    SELECT fldvalue FROM defaults WHERE fldname = 'address1'
+    UNION ALL
+    SELECT NULL
+    LIMIT 1
+  ) AS address,
+  concat(
+    (
+      SELECT fldvalue FROM defaults WHERE fldname = 'zip'
+      UNION ALL
+      SELECT NULL
+      LIMIT 1
+    ),
+    ' ',
+    (
+      SELECT fldvalue FROM defaults WHERE fldname = 'city'
+      UNION ALL
+      SELECT NULL
+      LIMIT 1
+    )
+  ) AS zip_city
+
+
+businessnumber: |
+  SELECT fldvalue FROM defaults WHERE fldname = 'businessnumber'
+  UNION ALL
+  SELECT NULL
+  LIMIT 1
+
+
+ust_idnr: |
+  SELECT taxnumber
+  FROM chart INNER JOIN tax
+  ON chart.id = tax.chart_id
+  WHERE accno = '3823'
+
+method: |
+  SELECT fldvalue FROM defaults WHERE fldname = 'method'
+  UNION ALL
+  SELECT NULL
+  LIMIT 1

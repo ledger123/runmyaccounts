@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Administration</title>
+    <meta charset="utf-8">
+
+    %= stylesheet '/css/legacy/sql-ledger.css', title => "SQL-Ledger stylesheet"
+    %= javascript '/js/jquery.min.js'
+
+  </head>
+
+  <body class="admin">
+    <%= content %>
+  </body>
+</html>
