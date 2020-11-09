@@ -17,6 +17,7 @@ use POSIX;
 use JSON::XS;
 use MIME::Base64 ('encode_base64');
 use File::Slurper ('read_binary');
+use Text::Markdown;
 
 sub new {
   my ($type) = @_;
@@ -89,7 +90,9 @@ sub apisend {
 
   $data->{subject} = $self->{subject};
   $self->{message} = '.' if !$self->{message}; #sendinblue api throws error on blank message text so stuffing '.'
-  $data->{htmlContent} = $self->{message};
+
+  my $m = Text::Markdown->new;
+  $data->{htmlContent} = $m->markdown($self->{message});
 
   my $jsonstr = $json->encode($data);
 

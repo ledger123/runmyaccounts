@@ -263,6 +263,7 @@ $self{subs} = {
   'csv_export'                  => 'export_as_csv',
   'vorschau'                    => 'preview',
   'drucken'                     => 'print',
+  'bericht_drucken'             => 'print_report',
   'mahnstufe_speichern'         => 'save_level',
   'zeitplan_speichern'          => 'save_schedule',
   'alle_auswählen'              => 'select_all',
