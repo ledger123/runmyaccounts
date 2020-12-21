@@ -1701,8 +1701,7 @@ sub print_form {
     $form->{subject} = qq|$form->{label} $form->{"${inv}number"}| unless $form->{subject};
 
     $form->{plainpaper} = 1;
-    $form->{OUT} = "$sendmail";
-    # $form->{OUT} = "$sendmail -f $form->{useremail}"; # sind mails are with -t option of sendmail, -f does not make sence
+    $form->{OUT} = "$sendmail -f $form->{useremail}"; 
 
     if ($form->{emailed} !~ /$form->{formname}/) {
       $form->{emailed} .= " $form->{formname}";
