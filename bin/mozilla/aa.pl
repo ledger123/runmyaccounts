@@ -718,7 +718,7 @@ sub form_header {
 	      $department
 	      $employee
 	      <tr>
-		<th align=right nowrap>| . $locale->text('Invoice Number') . qq|</th>
+		<th align=right nowrap>| . $locale->text('Invoice N.') . qq|</th>
 		<td><input name=invnumber size=20 value="| . $form->quote( $form->{invnumber} ) . qq|"></td>
 	      </tr>
 	      <tr>
@@ -2216,7 +2216,7 @@ sub transactions {
     if ( $form->{vc} eq 'customer' ) {
         $employee   = $locale->text('Salesperson');
         $name       = $locale->text('Customer');
-        $namenumber = $locale->text('Customer Number');
+        $namenumber = $locale->text('Customer N.');
         $namefld    = "customernumber";
     }
     else {
@@ -2242,7 +2242,7 @@ sub transactions {
     $column_data{paid}          = "<th align=right class=listheading>" . $locale->text('Paid') . "</th>";
     $column_data{paid}          = "<th align=right><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
     $column_data{paymentmethod} = "<th><a class=listheading href=$href&sort=paymentmethod>" . $locale->text('Payment Method') . "</a></th>";
-    $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
+    $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date p.') . "</a></th>";
     $column_data{due}           = "<th class=listheading>" . $locale->text('Due') . "</th>";
     $column_data{notes}         = "<th class=listheading>" . $locale->text('Notes') . "</th>";
     $column_data{intnotes}      = "<th class=listheading>" . $locale->text('Internal Notes') . "</th>";
@@ -2258,7 +2258,7 @@ sub transactions {
     $column_data{dcn}           = "<th><a class=listheading href=$href&sort=dcn>" . $locale->text('DCN') . "</a></th>";
     $column_data{paymentdiff}   = "<th><a class=listheading href=$href&sort=paymentdiff>" . $locale->text('+/-') . "</a></th>";
 
-    $column_data{curr} = "<th><a class=listheading href=$href&sort=curr>" . $locale->text('Curr') . "</a></th>";
+    $column_data{curr} = "<th><a class=listheading href=$href&sort=curr>" . $locale->text('Curr.') . "</a></th>";
     for (qw(amount tax netamount paid due)) { $column_data{"fx_$_"} = "<th>&nbsp;</th>" }
 
     $column_data{department} = "<th><a class=listheading href=$href&sort=department>" . $locale->text('Department') . "</a></th>";
