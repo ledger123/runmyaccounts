@@ -1760,6 +1760,7 @@ sub post_invoice {
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
+  $fxamount_total = $invamount if $form->{currency} eq $form->{defaultcurrency};
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
 
