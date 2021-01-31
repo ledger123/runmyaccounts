@@ -26,9 +26,13 @@ if (-f "$form->{path}/$form->{login}_arap.pl") {
 
 sub debits_credits {
   if ($form->{id}) {
-    my $table = $form->{dbs}->query(
+    use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    my $table = $dbs->query(
       qq|
-            SELECT ac.transdate, ac.transdate2, c.accno account, c.description account_name, 
+            SELECT ac.transdate, c.accno account, c.description account_name, 
                 case when ac.amount < 0 then 0 - ac.amount else 0 end debit,
                 case when ac.amount > 0 then ac.amount else 0 end credit,
                 source, memo, c.link
@@ -37,7 +41,7 @@ sub debits_credits {
             WHERE ac.trans_id = ?
             AND ac.amount <> 0
             ORDER BY ac.transdate, c.accno|, $form->{id}
-    )->xto(tr => {class => ['listrow0', 'listrow1']}, th => {class => ['listheading']},);
+    )->xto(table => {width => '100%'}, tr => {class => ['listrow0', 'listrow1']}, th => {class => ['listheading']},);
     $table->modify(td => {align => 'right'}, 'debit');
     $table->modify(td => {align => 'right'}, 'credit');
 
