@@ -24,6 +24,37 @@ if (-f "$form->{path}/$form->{login}_arap.pl") {
 1;
 # end of main
 
+sub debits_credits {
+  if ($form->{id}) {
+    use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    my $table = $dbs->query(
+      qq|
+            SELECT ac.transdate, c.accno account, c.description account_name, 
+                case when ac.amount < 0 then 0 - ac.amount else 0 end debit,
+                case when ac.amount > 0 then ac.amount else 0 end credit,
+                source, memo, c.link
+            FROM acc_trans ac
+            LEFT JOIN chart c ON (c.id = ac.chart_id)
+            WHERE ac.trans_id = ?
+            AND ac.amount <> 0
+            ORDER BY ac.transdate, c.accno|, $form->{id}
+    )->xto(table => {width => '100%'}, tr => {class => ['listrow0', 'listrow1']}, th => {class => ['listheading']},);
+    $table->modify(td => {align => 'right'}, 'debit');
+    $table->modify(td => {align => 'right'}, 'credit');
+
+    $table->set_group('transdate', '-');
+    $table->calc_totals([qw(debit credit)]);
+    $table->calc_subtotals([qw(debit credit)]);
+    $table->map_cell(sub { return $form->format_amount(\%myconfig, shift, 2) }, 'debit');
+    $table->map_cell(sub { return $form->format_amount(\%myconfig, shift, 2) }, 'credit');
+    print qq|<h3>General Ledger ...</h3>|;
+    print $table->output;
+  }
+}
+
 
 sub check_name {
   my ($name) = @_;

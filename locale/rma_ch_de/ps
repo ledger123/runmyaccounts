@@ -506,6 +506,7 @@ $self{subs} = {
   'als_neu_buchen'              => 'post_as_new',
   'vorschau'                    => 'preview',
   'drucken'                     => 'print',
+  'bericht_drucken'             => 'print_report',
   'ausgangsrechnung_'           => 'sales_invoice_',
   'auftragsbestätigung'         => 'sales_order',
   'mahnstufe_speichern'         => 'save_level',
