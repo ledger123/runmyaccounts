@@ -755,7 +755,7 @@ sub parse_template {
 			if ( $i == 1 ) {
 				@_ = ();
 				while ( $_ = shift @texform ) {
-					if (/\\end{document}/) {
+					if (/\\end\{document\}/) {
 						push @_, qq|\\newpage\n|;
 						last;
 					}
@@ -766,7 +766,7 @@ sub parse_template {
 
 			if ( $i == 2 ) {
 				while ( $_ = shift @texform ) {
-					last if /\\begin{document}/;
+					last if /\\begin\{document\}/;
 				}
 			}
 
