@@ -137,6 +137,7 @@ sub sales_invoice {
 	  $form->{"city_$i"} = $ref->{city};
 	  $form->{"employee_$i"} = $ref->{employee};
 	  $form->{"employee_id_$i"} = $ref->{employee_id};
+	  $form->{"curr_$i"} = $form->{currency} if !$form->{"curr_$i"};
 	  $customertax{$ref->{accno}} = 1;
 	}
 	$cth->finish;
