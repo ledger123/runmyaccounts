@@ -137,6 +137,7 @@ sub sales_invoice {
 	  $form->{"city_$i"} = $ref->{city};
 	  $form->{"employee_$i"} = $ref->{employee};
 	  $form->{"employee_id_$i"} = $ref->{employee_id};
+	  $form->{"curr_$i"} = $form->{currency} if !$form->{"curr_$i"};
 	  $customertax{$ref->{accno}} = 1;
 	}
 	$cth->finish;
@@ -268,6 +269,13 @@ sub import_sales_invoice {
   
   $form->{curr} ||= $form->{defaultcurrency};
   $form->{currency} = $form->{curr};
+
+  if ($form->{currency} ne $form->{defaultcurrency}){
+      $form->{exchangerate} *= 1;
+      if (!$form->{exchangerate}){
+          $form->{exchangerate} = $form->get_exchangerate($myconfig, $dbh, $form->{currency}, $form->{transdate}, 'buy');
+      }
+  }
 
   my $language_code;
   $query = qq|SELECT c.customernumber, c.language_code, a.city

@@ -685,6 +685,7 @@ sub parse_template {
 	my $dbh = $self->dbconnect($myconfig);
 	my ($noreplyemail) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='noreplyemail'");
 	my ($utf8templates) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='utf8templates'");
+	my ($company) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='company'");
 
 	my $query =
 	  "SELECT fldname, fldvalue FROM defaults WHERE fldname LIKE 'latex'";
@@ -755,7 +756,7 @@ sub parse_template {
 			if ( $i == 1 ) {
 				@_ = ();
 				while ( $_ = shift @texform ) {
-					if (/\\end{document}/) {
+					if (/\\end\{document\}/) {
 						push @_, qq|\\newpage\n|;
 						last;
 					}
@@ -766,7 +767,7 @@ sub parse_template {
 
 			if ( $i == 2 ) {
 				while ( $_ = shift @texform ) {
-					last if /\\begin{document}/;
+					last if /\\begin\{document\}/;
 				}
 			}
 
@@ -1078,7 +1079,7 @@ sub parse_template {
 			}
             $noreply              = $myconfig->{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
 			$mail->{to}           = qq|$self->{email}|;
-            $mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
+            $mail->{from}         = qq|"$myconfig->{name} ($company)" <$noreply>|;
             $mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
 			$mail->{fileid} = "$fileid.";
 
@@ -1122,7 +1123,7 @@ sub parse_template {
             my $err;
             if ($noreplyemail){
                $mail->{from}         = $noreply;
-               $mail->{fromname}     = $myconfig->{name};
+               $mail->{fromname}     = "$myconfig->{name} ($company)";
                $mail->{replyto}   = $myconfig->{email};
                $mail->{apikey} = $apikey;
 			   $err = $mail->apisend($out);
