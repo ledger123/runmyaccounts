@@ -3244,7 +3244,7 @@ sub do_print_reminder {
 qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|
 				);
 			}
-			$form->parse_template( \%myconfig, $userspath, $debuglatex );
+  			$form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply, $apikey);
 		}
 	}
 	if ( $form->{create_single_pdf} ) {
