@@ -2471,7 +2471,7 @@ sub im_account {
   print qq|
         </tr>
 |;
-
+ 
   for $i (1 .. $form->{rowcount}) {
     
     $j++; $j %= 2;
@@ -2550,9 +2550,13 @@ sub import_accounts {
       $newform->{"description"} = $form->{"description_$i"};
       $newform->{"charttype"} = $form->{"charttype_$i"};
       $newform->{"category"} = $form->{"category_$i"};
-      $newform->{"link"} = $form->{"link_$i"};
-      
-      $form->info("${m}. ".$locale->text('Add part ...'));
+      $form->{"link_$i"} =~ s/\s+$//;
+      if ($form->{"link_$i"}){
+        my @links = split /:/, $form->{"link_$i"};
+        for (@links) { $newform->{$_} = $_ };
+      }
+     
+      $form->info("${m}. ".$locale->text('Add account ...'));
 
       if (AM->save_account(\%myconfig, \%$newform)) {
 	$form->info(qq| $form->{"account_$i"}, $form->{"description_$i"}|);
