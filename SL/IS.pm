@@ -723,7 +723,6 @@ sub invoice_details {
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
 
-  $form->info; $form->dumper($form->{xml_linetotal}); $form->error;
 }
 
 

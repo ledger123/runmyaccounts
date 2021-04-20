@@ -1507,7 +1507,6 @@ sub order_details {
 
   $dbh->disconnect;
 
-  $form->info; $form->dumper($form->{xml_linetotal}); $form->error;
 }
 
 
