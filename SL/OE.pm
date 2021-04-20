@@ -1334,6 +1334,7 @@ sub order_details {
       # this is for the subtotals for grouping
       $subtotal += $linetotal;
 
+      push(@{ $form->{xml_linetotal} }, $linetotal);
       $form->{"linetotal_$i"} = $form->format_amount($myconfig, $linetotal, $form->{precision}, 0);
       push(@{ $form->{linetotal} }, $form->{"linetotal_$i"});
       
@@ -1403,7 +1404,7 @@ sub order_details {
 	      push(@{ $form->{part} }, NULL);
 	    }
 
-	    for (qw(taxrates runningnumber number sku qty ship unit bin serialnumber ordernumber customerponumber requiredate projectnumber sellprice listprice netprice discount discountrate itemnotes package netweight grossweight volume countryorigin hscode drawing toolnumber barcode)) { push(@{ $form->{$_} }, "") }
+	    for (qw(taxrates runningnumber number sku qty ship unit bin serialnumber ordernumber customerponumber requiredate projectnumber sellprice listprice netprice discount discountrate itemnotes package netweight grossweight volume countryorigin hscode drawing toolnumber barcode xml_linetotal)) { push(@{ $form->{$_} }, "") }
 
 	    push(@{ $form->{description} }, $form->{groupsubtotaldescription});
 
@@ -1506,6 +1507,7 @@ sub order_details {
 
   $dbh->disconnect;
 
+  $form->info; $form->dumper($form->{xml_linetotal}); $form->error;
 }
 
 
