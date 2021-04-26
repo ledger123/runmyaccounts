@@ -633,62 +633,6 @@ WHERE trans_id NOT IN
   $dbh->do("update acc_trans set tax='' where tax is null");
   print qq|<p>... done.</p>|;
 
-  $query = qq|
-    SELECT
-        id,
-        invnumber,
-        amount,
-        invoice,
-        paid,
-            (SELECT ROUND(SUM(ac.amount)::numeric,2)
-            FROM acc_trans ac
-            JOIN chart c ON c.id = ac.chart_id
-            WHERE ac.trans_id = ap.id AND c.link LIKE '%AP_paid%')
-            - round(amount::numeric,2) diff
-    FROM ap
-    WHERE
-        ABS((SELECT ROUND(SUM(ac.amount)::numeric,2)
-        FROM acc_trans ac
-        JOIN chart c ON c.id = ac.chart_id
-        WHERE ac.trans_id = ap.id AND c.link LIKE '%AP_paid%' )
-        - round(amount::numeric,2)) > $form->{mindiff}
-    |;
-
-    $sth = $dbh->prepare($query) || $form->dberror($query);
-    $sth->execute;
-    print qq|<h2>AP invoices with rounding difference</h2>|;
-    print qq|<table>|;
-    print qq|<tr class=listheading>|;
-    print qq|<th class=listheading>|.$locale->text('ID').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Paid').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Diff').qq|</td>|;
-    print qq|</tr>|;
-    $i = 0;
-
-
-    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-         print qq|<tr class=listrow$i>|;
-         print qq|<td>$ref->{id}</td>|;
-         if ($ref->{invoice}){
-             $module = 'ir';
-         } else {
-             $module = 'ap';
-         }
-         print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
-         print qq|<td>$ref->{transdate}</td>|;
-         print qq|<td align=right>$ref->{amount}</td>|;
-         print qq|<td align=right>$ref->{paid}</td>|;
-         print qq|<td align=right>$ref->{diff}</td>|;
-         print qq|</tr>|;
-      }
-    print qq|
-    </table>
-|;
-
-
   #-------------------------------------------------------------
   # 8. Update account description in acc_trans for tax accounts.
   #-------------------------------------------------------------
