@@ -844,8 +844,8 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 		  </td>
                 </tr>
 		<tr>
-		  <th align=right nowrap>$locale->text('Customer')</th>
-		  <td colspan=3><input name="$form->{vc}number" size=35>
+		  <th align=right nowrap>|.$locale->text('Customer Number').qq|</th>
+		  <td colspan=3><input name="$form->{vc}number" size=20>
 		  </td>
                 </tr>
 |;
