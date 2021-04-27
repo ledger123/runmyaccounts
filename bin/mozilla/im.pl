@@ -973,7 +973,7 @@ sub im_sales_order {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback));
+  $form->hide_form(qw(vc rowcount ndx type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Sales Orders').qq|">
@@ -1121,7 +1121,7 @@ sub im_purchase_order {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback));
+  $form->hide_form(qw(vc rowcount ndx type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Purchase Orders').qq|">
@@ -1342,7 +1342,10 @@ sub import_sales_orders {
       
       # post order
       $form->info("${m}. ".$locale->text('Posting Order ...'));
-      if (IM->import_sales_order(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
+      } elsif (IM->import_sales_order(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
@@ -1423,7 +1426,10 @@ sub import_purchase_orders {
       
       # post order
       $form->info("${m}. ".$locale->text('Posting Order ...'));
-      if (IM->import_purchase_order(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
+      } elsif (IM->import_purchase_order(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{vendornumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
@@ -1548,7 +1554,7 @@ sub im_payment {
   
   $form->{paymentaccount} =~ s/--.*//;
 
-  $form->hide_form(qw(precision rowcount type paymentaccount currency defaultcurrency login path callback));
+  $form->hide_form(qw(precision rowcount type paymentaccount currency defaultcurrency login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Payments').qq|">
@@ -1601,7 +1607,10 @@ sub import_payments {
       
       $form->info("${m}. ".$locale->text('Posting Payment ...'));
 
-      if (CP->post_payment(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{datepaid}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post payment in closed period. ') . $newform->{source} . "\n");
+      }	elsif (CP->post_payment(\%myconfig, \%$newform)) {
 	$form->info(qq| $form->{"invnumber_$i"}, $form->{"description_$i"}, $form->{"companynumber_$i"}, $form->{"name_$i"}, $form->{"city_$i"}, |);
 	$form->info($form->{"amount_$i"});
 	$form->info(" ... ".$locale->text('ok')."\n");
