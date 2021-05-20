@@ -124,7 +124,7 @@ sub do_dbcheck {
 	JOIN gl ON (gl.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
+	HAVING SUM(ac.amount) > 0.00005 OR SUM(ac.amount) < -0.00005
 
 	UNION ALL
 
@@ -134,7 +134,7 @@ sub do_dbcheck {
 	JOIN ar ON (ar.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
+	HAVING SUM(ac.amount) > 0.00005 OR SUM(ac.amount) < -0.00005
 
 	UNION ALL
 
@@ -144,7 +144,7 @@ sub do_dbcheck {
 	JOIN ap ON (ap.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
+	HAVING SUM(ac.amount) > 0.00005 OR SUM(ac.amount) < -0.00005
 
 	ORDER BY 3
   |;
