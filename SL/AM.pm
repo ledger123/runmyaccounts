@@ -1993,7 +1993,7 @@ sub save_bank {
   if ($ok) {
     if ($id) {
       $query = qq|UPDATE bank SET
-		  name = |.$dbh->quote(uc $form->{name}).qq|,
+		  name = |.$dbh->quote($form->{name}).qq|,
 		  iban = |.$dbh->quote($form->{iban}).qq|,
 		  bic = |.$dbh->quote(uc $form->{bic}).qq|,
 		  membernumber = |.$dbh->quote($form->{membernumber}).qq|,
