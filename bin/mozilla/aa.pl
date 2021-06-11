@@ -1851,6 +1851,7 @@ sub search {
     push @a, qq|<input name="l_shipvia" class=checkbox type=checkbox value=Y> | . $locale->text('Ship via');
     push @a, qq|<input name="l_waybill" class=checkbox type=checkbox value=Y> | . $locale->text('Waybill');
     push @a, qq|<input name="l_dcn" class=checkbox type=checkbox value=Y> | . $locale->text('DCN');
+    push @a, qq|<input name="l_email" class=checkbox type=checkbox value=Y> | . $locale->text('Email');
 
 
     $form->header;
@@ -2380,7 +2381,9 @@ sub transactions {
         $column_data{accno} =
 qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=list_transactions&accounttype=standard&accno=$ref->{accno}&fromdate=$form->{transdatefrom}&todate=$form->{transdateto}&sort=transdate&l_subtotal=$form->{l_subtotal}&prevreport=$callback>$ref->{accno}</a></td>|;
 
-        $column_data{name} = qq|<td align=left><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a></td>|;
+	$email = '';
+	$email = qq|<br/><a href=mailto:$ref->{email}>$ref->{email}</a>| if $form->{l_email};
+        $column_data{name} = qq|<td align=left><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a>$email</td>|;
 
         if ( $ref->{id} != $sameid ) {
             $j++;
