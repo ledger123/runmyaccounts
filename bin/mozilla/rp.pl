@@ -457,10 +457,6 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 		  . qq|</b> <input name=todate size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
 	</tr>
 	$selectfrom
-	<tr>
-	  <th align=right>| . $locale->text('Decimalplaces') . qq|</th>
-	  <td><input name=decimalplaces size=3 value=$form->{decimalplaces}></td>
-	</tr>
 	$lang
       </table>
     </td>
@@ -1354,7 +1350,7 @@ sub list_accounts {
            $ref->{begbalance} = $ref->{balance} * $ml;
            $ref->{endbalance} = ($ref->{balance} + $ref->{amount}) * $ml;
            for (qw(begbalance debit credit endbalance)){
-              $ref->{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{decimalplaces} );
+              $ref->{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision} );
            }
 
            $line = '';
@@ -1424,17 +1420,17 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 		$ml *= -1 if $ref->{contra};
 
 		$debit =
-		  $form->format_amount( \%myconfig, $ref->{debit}, $form->{decimalplaces},
+		  $form->format_amount( \%myconfig, $ref->{debit}, $form->{precision},
 			"&nbsp;" );
 		$credit =
-		  $form->format_amount( \%myconfig, $ref->{credit}, $form->{decimalplaces},
+		  $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision},
 			"&nbsp;" );
 		$begbalance = $form->format_amount( \%myconfig, $ref->{balance} * $ml,
-			$form->{decimalplaces}, "&nbsp;" );
+			$form->{precision}, "&nbsp;" );
 		$endbalance =
 		  $form->format_amount( \%myconfig,
 			( $ref->{balance} + $ref->{amount} ) * $ml,
-			$form->{decimalplaces}, "&nbsp;" );
+			$form->{precision}, "&nbsp;" );
 
 		if ( $ref->{charttype} eq "H" && $subtotal && $form->{l_subtotal} ) {
 
@@ -1446,16 +1442,16 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 
 				$subtotalbegbalance =
 				  $form->format_amount( \%myconfig, $subtotalbegbalance,
-					$form->{decimalplaces}, "&nbsp;" );
+					$form->{precision}, "&nbsp;" );
 				$subtotalendbalance =
 				  $form->format_amount( \%myconfig, $subtotalendbalance,
-					$form->{decimalplaces}, "&nbsp;" );
+					$form->{precision}, "&nbsp;" );
 				$subtotaldebit =
 				  $form->format_amount( \%myconfig, $subtotaldebit,
-					$form->{decimalplaces}, "&nbsp;" );
+					$form->{precision}, "&nbsp;" );
 				$subtotalcredit =
 				  $form->format_amount( \%myconfig, $subtotalcredit,
-					$form->{decimalplaces}, "&nbsp;" );
+					$form->{precision}, "&nbsp;" );
 
 				$column_data{description} =
 				  "<th class=listsubtotal>$subtotaldescription</th>";
@@ -1561,15 +1557,15 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 		}
 		$subtotalbegbalance =
 		  $form->format_amount( \%myconfig, $subtotalbegbalance,
-			$form->{decimalplaces}, "&nbsp;" );
+			$form->{precision}, "&nbsp;" );
 		$subtotalendbalance =
 		  $form->format_amount( \%myconfig, $subtotalendbalance,
-			$form->{decimalplaces}, "&nbsp;" );
+			$form->{precision}, "&nbsp;" );
 		$subtotaldebit =
-		  $form->format_amount( \%myconfig, $subtotaldebit, $form->{decimalplaces},
+		  $form->format_amount( \%myconfig, $subtotaldebit, $form->{precision},
 			"&nbsp;" );
 		$subtotalcredit =
-		  $form->format_amount( \%myconfig, $subtotalcredit, $form->{decimalplaces},
+		  $form->format_amount( \%myconfig, $subtotalcredit, $form->{precision},
 			"&nbsp;" );
 		$column_data{description} =
 		  "<th class=listsubtotal>$subtotaldescription</th>";
@@ -1593,10 +1589,10 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 	}
 
 	$totaldebit =
-	  $form->format_amount( \%myconfig, $totaldebit, $form->{decimalplaces},
+	  $form->format_amount( \%myconfig, $totaldebit, $form->{precision},
 		"&nbsp;" );
 	$totalcredit =
-	  $form->format_amount( \%myconfig, $totalcredit, $form->{decimalplaces},
+	  $form->format_amount( \%myconfig, $totalcredit, $form->{precision},
 		"&nbsp;" );
 
 	for (qw(accno description begbalance endbalance)) {
