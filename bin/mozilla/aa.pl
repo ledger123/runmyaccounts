@@ -2360,20 +2360,20 @@ sub transactions {
         $module = ( $ref->{invoice} ) ? ( $form->{ARAP} eq 'AR' ) ? "is.pl" : "ir.pl" : $form->{script};
         $module = ( $ref->{till} ) ? "ps.pl" : $module;
 
-        $column_data{invnumber} = "<td align=left><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</a></td>";
+        $column_data{invnumber} = "<td align=left><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>";
 
         for (qw(notes intnotes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
-        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}&nbsp;</td>" }
+        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}</td>" }
         for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
-            $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>";
+            $column_data{$_} = "<td align=left>$ref->{$_}</td>";
         }
-        $column_data{$namefld} = "<td align=left>$ref->{$namefld}&nbsp;</td>";
+        $column_data{$namefld} = "<td align=left>$ref->{$namefld}</td>";
 
         if ( $ref->{paymentdiff} <= 0 ) {
-            $column_data{paymentdiff} = qq|<td class="plus1" align=right>$ref->{paymentdiff}&nbsp;</td>|;
+            $column_data{paymentdiff} = qq|<td class="plus1" align=right>$ref->{paymentdiff}</td>|;
         }
         else {
-            $column_data{paymentdiff} = qq|<td class="plus0" align=right>+$ref->{paymentdiff}&nbsp;</td>|;
+            $column_data{paymentdiff} = qq|<td class="plus0" align=right>+$ref->{paymentdiff}</td>|;
         }
 
         for (qw(id curr)) { $column_data{$_} = "<td align=left>$ref->{$_}</td>" }

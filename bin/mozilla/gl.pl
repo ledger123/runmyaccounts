@@ -1073,11 +1073,11 @@ sub transactions {
             $column_data{reference} = "<td align=left><a href=$ref->{module}.pl?action=view&id=$ref->{id}&ts=".$form->escape($ref->{ts})."&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
         }
 
-        for (qw(tax department projectnumber name vcnumber address)) { $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>" }
+        for (qw(tax department projectnumber name vcnumber address)) { $column_data{$_} = "<td align=left>$ref->{$_}</td>" }
 
         for (qw(lineitem description source memo notes intnotes)) {
             $ref->{$_} =~ s/\r?\n/<br>/g;
-            $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>";
+            $column_data{$_} = "<td align=left>$ref->{$_}</td>";
         }
 
         if ( $ref->{vc_id} ) {
