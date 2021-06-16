@@ -142,6 +142,12 @@ sub list {
      my $dbh = $form->dbconnect(\%myconfig);
      ($form->{accno}) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount' LIMIT 1");
      ($form->{description}) = $dbh->selectrow_array("SELECT description FROM chart WHERE accno = '$form->{accno}'");
+
+     $form->error($locale->text("Selected account is missing ...")) if !$form->{accno};
+
+     my ($transition_accno_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='transitionaccount')");
+     $form->error($locale->text("Transition account is missing ...")) if !$transition_accno_id;
+
      $clearing_account = 1;
   }
 
