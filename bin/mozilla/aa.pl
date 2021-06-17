@@ -2668,19 +2668,19 @@ sub transactions_to_csv {
         $module = ( $ref->{invoice} ) ? ( $form->{ARAP} eq 'AR' ) ? "is.pl" : "ir.pl" : $form->{script};
         $module = ( $ref->{till} ) ? "ps.pl" : $module;
 
-        $column_data{invnumber} = &escape_csv( $ref->{invnumber} . " " );
+        $column_data{invnumber} = &escape_csv( $ref->{invnumber} );
 
-        for (qw(transdate datepaid duedate)) { $column_data{$_} = $ref->{$_} . " " }
+        for (qw(transdate datepaid duedate)) { $column_data{$_} = $ref->{$_} }
         for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
-            $column_data{$_} = &escape_csv( $ref->{$_} . " " );
+            $column_data{$_} = &escape_csv( $ref->{$_} );
         }
-        $column_data{$namefld} = &escape_csv( $ref->{$namefld} . " " );
+        $column_data{$namefld} = &escape_csv( $ref->{$namefld} );
 
         if ( $ref->{paymentdiff} <= 0 ) {
-            $column_data{paymentdiff} = $ref->{paymentdiff} . " ";
+            $column_data{paymentdiff} = $ref->{paymentdiff};
         }
         else {
-            $column_data{paymentdiff} = "+" . $ref->{paymentdiff} . " ";
+            $column_data{paymentdiff} = "+" . $ref->{paymentdiff};
         }
 
         for (qw(id curr)) { $column_data{$_} = $ref->{$_} }
