@@ -90,7 +90,7 @@ sub chart_of_accounts {
     if ($ca->{charttype} eq "H") {
       print qq|<tr class=listheading>|;
       for (qw(accno description)) { $column_data{$_} = "<th class=listheading>$ca->{$_}</th>" }
-      $column_data{gifi_accno} = "<th class=listheading>$ca->{gifi_accno}&nbsp;</th>";
+      $column_data{gifi_accno} = "<th class=listheading>$ca->{gifi_accno}</th>";
     } else {
       $i++; $i %= 2;
       print qq|<tr class=listrow$i>|;
@@ -483,8 +483,8 @@ sub list_transactions {
     $column_data{description} = qq|<td>$ca->{description}&nbsp;</td>|;
     
     $column_data{cleared} = ($ca->{cleared}) ? qq|<td>*</td>| : qq|<td>&nbsp;</td>|;
-    $column_data{source} = qq|<td>$ca->{source}&nbsp;</td>|;
-    $column_data{curr} = qq|<td>$ca->{curr}&nbsp;</td>|;
+    $column_data{source} = qq|<td>$ca->{source}</td>|;
+    $column_data{curr} = qq|<td>$ca->{curr}</td>|;
     
     $column_data{accno} = qq|<td>|;
     for (@{ $ca->{accno} }) { $column_data{accno} .= "<a href=$drilldown&accno=$_>$_</a> " }
