@@ -85,7 +85,15 @@ sub logged_in {
     my $self = shift;
     
     my ($controller, $username) = @_;
-    
+
+    my $ip_whitelist = "31.216.40.164";
+    if ($ip_whitelist) {
+  	if ( $ENV{REMOTE_ADDR} =~ /$ip_whitelist/ ) {
+  		# ip is whitelisted
+	  	return 1;
+  	}
+    }
+
     my $cookievalue = $controller->cookies->{"SL-$username"};
     
     my $sessionkey = $controller->userconfig->val("sessionkey");
