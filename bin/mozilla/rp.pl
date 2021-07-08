@@ -4186,13 +4186,13 @@ sub list_payments {
 			  ? "<a href=ct.pl?action=edit&id=$payment->{vcid}&db=$form->{vc}&login=$form->{login}&path=$form->{path}&callback=$callback>"
 			  : "";
 
-			$column_data{name} = "<td>$href$payment->{name}</a>&nbsp;</td>";
+			$column_data{name} = "<td>$href$payment->{name}</a></td>";
 			$column_data{"$form->{vc}number"} =
-			  qq|<td>$payment->{"$form->{vc}number"}&nbsp;</td>|;
+			  qq|<td>$payment->{"$form->{vc}number"}</td>|;
 			$column_data{description} =
-			  "<td>$payment->{description}&nbsp;</td>";
+			  "<td>$payment->{description}</td>";
 			$column_data{transdate} =
-			  "<td nowrap>$payment->{transdate}&nbsp;</td>";
+			  "<td nowrap>$payment->{transdate}</td>";
 			$column_data{paid} = "<td align=right>"
 			  . $form->format_amount( \%myconfig, $payment->{paid},
 				$form->{precision}, "&nbsp;" )
@@ -4214,14 +4214,14 @@ sub list_payments {
 			$href =
 "<a href=${module}.pl?action=edit&id=$payment->{trans_id}&login=$form->{login}&path=$form->{path}&callback=$callback>";
 
-			$column_data{source} = "<td>$payment->{source}&nbsp;</td>";
+			$column_data{source} = "<td>$payment->{source}</td>";
 			$column_data{reference} =
-			  "<td>$href$payment->{reference}&nbsp;</a></td>";
+			  "<td>$href$payment->{reference}</a></td>";
 
-			$column_data{memo}     = "<td>$payment->{memo}&nbsp;</td>";
-			$column_data{employee} = "<td>$payment->{employee}&nbsp;</td>";
-			$column_data{till}     = "<td>$payment->{till}&nbsp;</td>";
-			$column_data{variance}     = "<td>$payment->{variance}&nbsp;</td>";
+			$column_data{memo}     = "<td>$payment->{memo}</td>";
+			$column_data{employee} = "<td>$payment->{employee}</td>";
+			$column_data{till}     = "<td>$payment->{till}</td>";
+			$column_data{variance}     = "<td>$payment->{variance}</td>";
 
 			$subtotalpaid     += $payment->{paid};
 			$accounttotalpaid += $payment->{paid};
