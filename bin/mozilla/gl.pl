@@ -2315,7 +2315,10 @@ sub post {
         $credit += $cr;
     }
 
-    if ( $form->round_amount( $debit, $form->{precision} ) != $form->round_amount( $credit, $form->{precision} ) ) {
+    my $precision = $form->{precision};
+    $precision = 8 if $precision < 8;
+
+    if ( $form->round_amount( $debit, $precision ) != $form->round_amount( $credit, $precision ) ) {
         $form->error( $locale->text('Out of balance transaction!') );
     }
 
