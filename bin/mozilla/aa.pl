@@ -1851,6 +1851,7 @@ sub search {
     push @a, qq|<input name="l_shipvia" class=checkbox type=checkbox value=Y> | . $locale->text('Ship via');
     push @a, qq|<input name="l_waybill" class=checkbox type=checkbox value=Y> | . $locale->text('Waybill');
     push @a, qq|<input name="l_dcn" class=checkbox type=checkbox value=Y> | . $locale->text('DCN');
+    push @a, qq|<input name="l_email" class=checkbox type=checkbox value=Y> | . $locale->text('Email');
 
 
     $form->header;
@@ -2224,7 +2225,7 @@ sub transactions {
     $column_data{paid}          = "<th align=right><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
     $column_data{paymentmethod} = "<th><a class=listheading href=$href&sort=paymentmethod>" . $locale->text('Payment Method') . "</a></th>";
     $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
-    $column_data{due}           = "<th class=listheading>" . $locale->text('Due') . "</th>";
+    $column_data{due}           = "<th align=right class=listheading>" . $locale->text('Due') . "</th>";
     $column_data{notes}         = "<th class=listheading>" . $locale->text('Notes') . "</th>";
     $column_data{intnotes}      = "<th class=listheading>" . $locale->text('Internal Notes') . "</th>";
     $column_data{employee}      = "<th><a class=listheading href=$href&sort=employee>$employee</a></th>";
@@ -2359,20 +2360,20 @@ sub transactions {
         $module = ( $ref->{invoice} ) ? ( $form->{ARAP} eq 'AR' ) ? "is.pl" : "ir.pl" : $form->{script};
         $module = ( $ref->{till} ) ? "ps.pl" : $module;
 
-        $column_data{invnumber} = "<td align=left><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</a></td>";
+        $column_data{invnumber} = "<td align=left><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>";
 
         for (qw(notes intnotes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
-        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}&nbsp;</td>" }
+        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}</td>" }
         for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
-            $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>";
+            $column_data{$_} = "<td align=left>$ref->{$_}</td>";
         }
-        $column_data{$namefld} = "<td align=left>$ref->{$namefld}&nbsp;</td>";
+        $column_data{$namefld} = "<td align=left>$ref->{$namefld}</td>";
 
         if ( $ref->{paymentdiff} <= 0 ) {
-            $column_data{paymentdiff} = qq|<td class="plus1" align=right>$ref->{paymentdiff}&nbsp;</td>|;
+            $column_data{paymentdiff} = qq|<td class="plus1" align=right>$ref->{paymentdiff}</td>|;
         }
         else {
-            $column_data{paymentdiff} = qq|<td class="plus0" align=right>+$ref->{paymentdiff}&nbsp;</td>|;
+            $column_data{paymentdiff} = qq|<td class="plus0" align=right>+$ref->{paymentdiff}</td>|;
         }
 
         for (qw(id curr)) { $column_data{$_} = "<td align=left>$ref->{$_}</td>" }
@@ -2380,7 +2381,9 @@ sub transactions {
         $column_data{accno} =
 qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=list_transactions&accounttype=standard&accno=$ref->{accno}&fromdate=$form->{transdatefrom}&todate=$form->{transdateto}&sort=transdate&l_subtotal=$form->{l_subtotal}&prevreport=$callback>$ref->{accno}</a></td>|;
 
-        $column_data{name} = qq|<td align=left><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a></td>|;
+	$email = '';
+	$email = qq|<br/><a href=mailto:$ref->{email}>$ref->{email}</a>| if $form->{l_email};
+        $column_data{name} = qq|<td align=left><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a>$email</td>|;
 
         if ( $ref->{id} != $sameid ) {
             $j++;
@@ -2665,19 +2668,19 @@ sub transactions_to_csv {
         $module = ( $ref->{invoice} ) ? ( $form->{ARAP} eq 'AR' ) ? "is.pl" : "ir.pl" : $form->{script};
         $module = ( $ref->{till} ) ? "ps.pl" : $module;
 
-        $column_data{invnumber} = &escape_csv( $ref->{invnumber} . " " );
+        $column_data{invnumber} = &escape_csv( $ref->{invnumber} );
 
-        for (qw(transdate datepaid duedate)) { $column_data{$_} = $ref->{$_} . " " }
+        for (qw(transdate datepaid duedate)) { $column_data{$_} = $ref->{$_} }
         for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
-            $column_data{$_} = &escape_csv( $ref->{$_} . " " );
+            $column_data{$_} = &escape_csv( $ref->{$_} );
         }
-        $column_data{$namefld} = &escape_csv( $ref->{$namefld} . " " );
+        $column_data{$namefld} = &escape_csv( $ref->{$namefld} );
 
         if ( $ref->{paymentdiff} <= 0 ) {
-            $column_data{paymentdiff} = $ref->{paymentdiff} . " ";
+            $column_data{paymentdiff} = $ref->{paymentdiff};
         }
         else {
-            $column_data{paymentdiff} = "+" . $ref->{paymentdiff} . " ";
+            $column_data{paymentdiff} = "+" . $ref->{paymentdiff};
         }
 
         for (qw(id curr)) { $column_data{$_} = $ref->{$_} }

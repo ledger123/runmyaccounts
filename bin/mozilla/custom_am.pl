@@ -124,7 +124,7 @@ sub do_dbcheck {
 	JOIN gl ON (gl.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
+	HAVING SUM(ac.amount) > 0.00005 OR SUM(ac.amount) < -0.00005
 
 	UNION ALL
 
@@ -134,7 +134,7 @@ sub do_dbcheck {
 	JOIN ar ON (ar.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
+	HAVING SUM(ac.amount) > 0.00005 OR SUM(ac.amount) < -0.00005
 
 	UNION ALL
 
@@ -144,7 +144,7 @@ sub do_dbcheck {
 	JOIN ap ON (ap.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) > 0.005 OR SUM(ac.amount) < -0.005
+	HAVING SUM(ac.amount) > 0.00005 OR SUM(ac.amount) < -0.00005
 
 	ORDER BY 3
   |;
@@ -632,62 +632,6 @@ WHERE trans_id NOT IN
   print qq|<h3>Updating null linetax column to blank ('') in acc_trans for correcting sorting in GL report.</h3>|;
   $dbh->do("update acc_trans set tax='' where tax is null");
   print qq|<p>... done.</p>|;
-
-  $query = qq|
-    SELECT
-        id,
-        invnumber,
-        amount,
-        invoice,
-        paid,
-            (SELECT ROUND(SUM(ac.amount)::numeric,2)
-            FROM acc_trans ac
-            JOIN chart c ON c.id = ac.chart_id
-            WHERE ac.trans_id = ap.id AND c.link LIKE '%AP_paid%')
-            - round(amount::numeric,2) diff
-    FROM ap
-    WHERE
-        ABS((SELECT ROUND(SUM(ac.amount)::numeric,2)
-        FROM acc_trans ac
-        JOIN chart c ON c.id = ac.chart_id
-        WHERE ac.trans_id = ap.id AND c.link LIKE '%AP_paid%' )
-        - round(amount::numeric,2)) > $form->{mindiff}
-    |;
-
-    $sth = $dbh->prepare($query) || $form->dberror($query);
-    $sth->execute;
-    print qq|<h2>AP invoices with rounding difference</h2>|;
-    print qq|<table>|;
-    print qq|<tr class=listheading>|;
-    print qq|<th class=listheading>|.$locale->text('ID').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Invoice Number').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Date').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Amount').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Paid').qq|</td>|;
-    print qq|<th class=listheading>|.$locale->text('Diff').qq|</td>|;
-    print qq|</tr>|;
-    $i = 0;
-
-
-    while ($ref = $sth->fetchrow_hashref(NAME_lc)){
-         print qq|<tr class=listrow$i>|;
-         print qq|<td>$ref->{id}</td>|;
-         if ($ref->{invoice}){
-             $module = 'ir';
-         } else {
-             $module = 'ap';
-         }
-         print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
-         print qq|<td>$ref->{transdate}</td>|;
-         print qq|<td align=right>$ref->{amount}</td>|;
-         print qq|<td align=right>$ref->{paid}</td>|;
-         print qq|<td align=right>$ref->{diff}</td>|;
-         print qq|</tr>|;
-      }
-    print qq|
-    </table>
-|;
-
 
   #-------------------------------------------------------------
   # 8. Update account description in acc_trans for tax accounts.

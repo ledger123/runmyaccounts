@@ -54,6 +54,11 @@ sub import {
   $msg = "Import $title{$form->{type}}";
   $form->{title} = $locale->text($msg);
   
+  $form->{dbh} = $form->dbconnect(\%myconfig);
+  my %defaults = $form->get_defaults( $form->{dbh}, \@{ [qw(closedto)] } );
+  for ( keys %defaults ) { $form->{$_} = $defaults{$_} }
+  $form->closedto_user($myconfig, $form->{dbh});
+
   $form->header;
 
   $form->{nextsub} = "im_$form->{type}";
@@ -356,7 +361,7 @@ print qq|
 </table>
 |;
 
-  $form->hide_form(qw(ARAP vc db defaultcurrency title type action nextsub login path));
+  $form->hide_form(qw(ARAP vc db defaultcurrency title type action nextsub login path closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
@@ -820,7 +825,7 @@ sub im_sales_invoice {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback markpaid paymentaccount));
+  $form->hide_form(qw(vc rowcount ndx type login path callback markpaid paymentaccount closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Sales Invoices').qq|">
@@ -968,7 +973,7 @@ sub im_sales_order {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback));
+  $form->hide_form(qw(vc rowcount ndx type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Sales Orders').qq|">
@@ -1116,7 +1121,7 @@ sub im_purchase_order {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback));
+  $form->hide_form(qw(vc rowcount ndx type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Purchase Orders').qq|">
@@ -1237,9 +1242,6 @@ sub import_sales_invoices {
 	for (qw(description unit deliverydate serialnumber itemnotes projectnumber)) { $newform->{"${_}_$j"} = $form->{"${_}_$i"} }
 	$newform->{"sellprice_$j"} = $form->format_amount($myconfig, $form->{"sellprice_$i"});
 
-        $test = sprintf('%s', $newform->{"description_$j"});
-	$form->info($test);
-
 	$j++; 
       }
 
@@ -1252,6 +1254,11 @@ sub import_sales_invoices {
       }
 
       # post invoice
+
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post invoice in closed period. ') . $newform->{invnumber} . "\n");
+     } else {
       $form->info("${m}. ".$locale->text('Posting Invoice ...'));
       if (IM->import_sales_invoice(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{invnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{city}, |);
@@ -1262,6 +1269,7 @@ sub import_sales_invoices {
       } else {
 	$form->error($locale->text('Posting failed!'));
       }
+     }
     }
   }
 
@@ -1334,7 +1342,10 @@ sub import_sales_orders {
       
       # post order
       $form->info("${m}. ".$locale->text('Posting Order ...'));
-      if (IM->import_sales_order(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
+      } elsif (IM->import_sales_order(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
@@ -1415,7 +1426,10 @@ sub import_purchase_orders {
       
       # post order
       $form->info("${m}. ".$locale->text('Posting Order ...'));
-      if (IM->import_purchase_order(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
+      } elsif (IM->import_purchase_order(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{vendornumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
@@ -1540,7 +1554,7 @@ sub im_payment {
   
   $form->{paymentaccount} =~ s/--.*//;
 
-  $form->hide_form(qw(precision rowcount type paymentaccount currency defaultcurrency login path callback));
+  $form->hide_form(qw(precision rowcount type paymentaccount currency defaultcurrency login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Payments').qq|">
@@ -1593,7 +1607,10 @@ sub import_payments {
       
       $form->info("${m}. ".$locale->text('Posting Payment ...'));
 
-      if (CP->post_payment(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{datepaid}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post payment in closed period. ') . $newform->{source} . "\n");
+      }	elsif (CP->post_payment(\%myconfig, \%$newform)) {
 	$form->info(qq| $form->{"invnumber_$i"}, $form->{"description_$i"}, $form->{"companynumber_$i"}, $form->{"name_$i"}, $form->{"city_$i"}, |);
 	$form->info($form->{"amount_$i"});
 	$form->info(" ... ".$locale->text('ok')."\n");
@@ -2711,6 +2728,11 @@ sub import_gl {
 	# Post if it is a new transaction or last transaction.
 	if ($reference ne 'null'){
 	   $newform->{rowcount} = $linenum;
+
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post gl transaction in closed period. ') . $reference . "\n");
+     } else {
       	   $form->info("${m}. ".$locale->text('Posting gl transaction ...'));
       	   if (GL->post_transaction(\%myconfig, \%$newform)) {
 		$form->info(qq| $reference|);
@@ -2719,6 +2741,7 @@ sub import_gl {
       	   } else {
 		$form->error($locale->text('Posting failed!'));
       	   }
+    }
 	   # start new transaction
 	   $linenum = 1;
 	}
@@ -2746,7 +2769,12 @@ sub import_gl {
   }
 
   # Now post last transaction. (Code duplicated from above loop)
+  $reference = $form->{"reference_$linenum"};
   $newform->{rowcount} = $linenum;
+  $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+  if ($form->{locked}){
+        $form->info($locale->text('Cannot post gl transaction in closed period. ') . $reference . "\n");
+  } else {
   $form->info("${m}. ".$locale->text('Posting last gl transaction ...'));
   if (GL->post_transaction(\%myconfig, \%$newform)) {
      $form->info(qq| $reference|);
@@ -2754,6 +2782,7 @@ sub import_gl {
      for (keys %$newform) { delete $newform->{$_} };
   } else {
      $form->error($locale->text('Posting failed!'));
+  }
   }
 }
 
@@ -2861,7 +2890,7 @@ sub im_transactions {
 </table>
 |;
   
-  $form->hide_form(qw(markpaid ARAP vc currency arapaccount incomeaccount paymentaccount expenseaccount precision rowcount type login path callback));
+  $form->hide_form(qw(markpaid ARAP vc currency arapaccount incomeaccount paymentaccount expenseaccount precision rowcount type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Transactions').qq|">
@@ -2885,6 +2914,11 @@ sub import_transactions {
       $m++;
       if ($newform->{invnumber} ne $form->{"invnumber_$i"}){
          if ($newform->{invnumber} ne 'null'){ 
+
+         $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+         if ($form->{locked}){
+            $form->info($locale->text('Cannot post transaction in closed period. ') . $newform->{invnumber} . "\n");
+         } else {
             $form->info("${m}. ".$locale->text('Add transaction ...'));
             if (AA->post_transaction(\%myconfig, \%$newform)) {
  	      $form->info(qq| $newform->{invnumber}, $form->{"$form->{vc}number_$i"}|);
@@ -2892,6 +2926,7 @@ sub import_transactions {
             } else {
 	      $form->error($locale->text('Posting failed!'));
             }
+         }
          }
          for (keys %$newform) { delete $newform->{$_} }
 	 $newform->{vc} = $form->{vc};
@@ -2919,12 +2954,18 @@ sub import_transactions {
     }
   }
   # Post last transaction
+  #
+  $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+  if ($form->{locked}){
+    $form->info($locale->text('Cannot post transaction in closed period. ') . $newform->{invnumber} . "\n");
+  } else {
   $form->info("${m}. ".$locale->text('Add transaction ...'));
   if (AA->post_transaction(\%myconfig, \%$newform)) {
      $form->info(qq| $newform->{invnumber}, $form->{"$form->{vc}number_$i"}|);
      $form->info(" ... ".$locale->text('ok')."\n");
   } else {
      $form->error($locale->text('Posting failed!'));
+  }
   }
 }
 
