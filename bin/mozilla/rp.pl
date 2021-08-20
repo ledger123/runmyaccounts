@@ -1728,17 +1728,17 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 	$column_header{duedate} =
 	  qq|<th class=listheading nowrap>| . $locale->text('Due Date') . qq|</th>|;
 	$column_header{c0} =
-	    qq|<th class=listheading width=10% nowrap>|
+	    qq|<th align=right class=listheading width=10% nowrap>|
 	  . $locale->text('Current')
 	  . qq|</th>|;
-	$column_header{c15} = qq|<th class=listheading width=10% nowrap>15</th>|;
-	$column_header{c30} = qq|<th class=listheading width=10% nowrap>30</th>|;
-	$column_header{c45} = qq|<th class=listheading width=10% nowrap>45</th>|;
-	$column_header{c60} = qq|<th class=listheading width=10% nowrap>60</th>|;
-	$column_header{c75} = qq|<th class=listheading width=10% nowrap>75</th>|;
-	$column_header{c90} = qq|<th class=listheading width=10% nowrap>90</th>|;
+	$column_header{c15} = qq|<th align=right class=listheading width=10% nowrap>15</th>|;
+	$column_header{c30} = qq|<th align=right class=listheading width=10% nowrap>30</th>|;
+	$column_header{c45} = qq|<th align=right class=listheading width=10% nowrap>45</th>|;
+	$column_header{c60} = qq|<th align=right class=listheading width=10% nowrap>60</th>|;
+	$column_header{c75} = qq|<th align=right class=listheading width=10% nowrap>75</th>|;
+	$column_header{c90} = qq|<th align=right class=listheading width=10% nowrap>90</th>|;
 	$column_header{total} =
-	    qq|<th class=listheading width=10% nowrap>|
+	    qq|<th align=right class=listheading width=10% nowrap>|
 	  . $locale->text('Total')
 	  . qq|</th>|;
 
