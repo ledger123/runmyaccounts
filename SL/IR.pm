@@ -263,7 +263,12 @@ sub invoice_details {
       
       push(@{ $form->{discount} }, $discount);
       push(@{ $form->{discountrate} }, $form->format_amount($myconfig, $form->{"discount_$i"}));
-      push(@{ $form->{discountrate_percent} }, $form->format_amount($myconfig, $form->{"discount_$i"}) . '%');
+      if ($form->{"discount_$i"}){
+         push(@{ $form->{discountrate_percent} }, $form->format_amount($myconfig, $form->{"discount_$i"}) . '\%');
+      } else {
+         push(@{ $form->{discountrate_percent} }, $form->format_amount($myconfig, $form->{"discount_$i"}));
+      }
+
 
       $form->{total} += $linetotal;
 

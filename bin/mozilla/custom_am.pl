@@ -144,7 +144,7 @@ sub do_dbcheck {
 	JOIN ap ON (ap.id = ac.trans_id)
     WHERE ac.transdate BETWEEN '$form->{firstdate} 00:00' and '$form->{lastdate}'
 	GROUP BY 1, 2, 3, 4, 5
-	HAVING SUM(ac.amount) > 0.00005 OR SUM(ac.amount) < -0.00005
+	HAVING SUM(ac.amount) > 0.000005 OR SUM(ac.amount) < -0.000005
 
 	ORDER BY 3
   |;
@@ -166,7 +166,7 @@ sub do_dbcheck {
      $module = 'ir' if $ref->{invoice} and $ref->{module} eq 'AP';
      $module = 'is' if $ref->{invoice} and $ref->{module} eq 'AR';
 
-     if ($form->round_amount($ref->{amount}, 2) != 0){
+     if ($form->round_amount($ref->{amount}, 6) != 0){
      	print qq|<tr class=listrow$i>|;
      	print qq|<td>$ref->{module}</td>|;
      	print qq|<td><a href=$module.pl?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>|;
