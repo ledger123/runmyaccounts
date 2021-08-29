@@ -1995,7 +1995,7 @@ sub save_bank {
       $query = qq|UPDATE bank SET
 		  name = |.$dbh->quote($form->{name}).qq|,
 		  iban = |.$dbh->quote($form->{iban}).qq|,
-		  bic = |.$dbh->quote(uc $form->{bic}).qq|,
+		  bic = |.$dbh->quote($form->{bic}).qq|,
 		  membernumber = |.$dbh->quote($form->{membernumber}).qq|,
 		  rvc = |.$dbh->quote($form->{rvc}).qq|,
 		  qriban = |.$dbh->quote($form->{qriban}).qq|,
@@ -2007,8 +2007,8 @@ sub save_bank {
     } else {
       $query = qq|INSERT INTO bank (id, name, iban, bic, membernumber, rvc, dcn, qriban, strdbkginf, invdescriptionqr)
 		  VALUES ($form->{id}, |
-		  .$dbh->quote(uc $form->{name}).qq|, |
-		  .$dbh->quote(uc $form->{iban}).qq|, |
+		  .$dbh->quote($form->{name}).qq|, |
+		  .$dbh->quote($form->{iban}).qq|, |
 		  .$dbh->quote($form->{bic}).qq|, |
 		  .$dbh->quote($form->{membernumber}).qq|, |
 		  .$dbh->quote($form->{rvc}).qq|, |
@@ -2030,12 +2030,12 @@ sub save_bank {
     }
 
     $query = qq|UPDATE address SET
-		address1 = |.$dbh->quote(uc $form->{address1}).qq|,
-		address2 = |.$dbh->quote(uc $form->{address2}).qq|,
-		city = |.$dbh->quote(uc $form->{city}).qq|,
-		state = |.$dbh->quote(uc $form->{state}).qq|,
-		zipcode = |.$dbh->quote(uc $form->{zipcode}).qq|,
-		country = |.$dbh->quote(uc $form->{country}).qq|
+		address1 = |.$dbh->quote($form->{address1}).qq|,
+		address2 = |.$dbh->quote($form->{address2}).qq|,
+		city = |.$dbh->quote($form->{city}).qq|,
+		state = |.$dbh->quote($form->{state}).qq|,
+		zipcode = |.$dbh->quote($form->{zipcode}).qq|,
+		country = |.$dbh->quote($form->{country}).qq|
 		WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
 
