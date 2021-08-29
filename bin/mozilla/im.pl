@@ -2589,7 +2589,7 @@ sub im_gl {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(reference department department_id description transdate notes currency exchangerate accno accdescription debit credit source memo projectnumber);
+  @column_index = qw(reference department department_id description transdate notes currency exchangerate accno accdescription debit credit source memo projectnumber project_id);
   @flds = @column_index;
   unshift @column_index, qw(runningnumber ndx);
 
@@ -2615,6 +2615,7 @@ sub im_gl {
   $column_data{source} = $locale->text('Source');
   $column_data{memo} = $locale->text('Memo');
   $column_data{projectnumber} = $locale->text('Project');
+  $column_data{project_id} = $locale->text('Project ID');
 
   $form->header;
  
