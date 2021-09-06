@@ -765,10 +765,10 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 	        <table>
 		  <tr>
 	            <td nowrap><input name=overdue type=radio class=radio value=0 checked> |
-		  . $locale->text('Aged')
+		  . $locale->text('Invoice Date')
 		  . qq|</td>
  	            <td nowrap><input name=overdue type=radio class=radio value=1> |
-		  . $locale->text('Overdue')
+		  . $locale->text('Due Date')
 		  . qq|</td>
 	          </tr>
 		  <tr>
@@ -1769,9 +1769,9 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 
 	push @column_index, "total";
 
-	$option = $locale->text('Aged');
+	$option = $locale->text('Invoice Date');
 	if ( $form->{overdue} ) {
-		$option = $locale->text('Aged Overdue');
+		$option = $locale->text('Due Date');
 		$form->{callback} .= "&overdue=$form->{overdue}";
 	}
 
