@@ -1442,6 +1442,14 @@ sub gl_list {
         
             print "<tr valign=top class=listrow$i>";
             for (@column_index) { print "\n$column_data{$_}" }
+            print qq|
+            <td align=left nowrap class="noprint nkp">
+              <a href='javascript:void(0);' onclick="window.parent.postMessage(
+              {name: 'ledgerEvent', params:{event: 'uploadLinkAndSignFile', id:$ref->{id}, origin: window.location.pathname}}, '*')">
+               <img style="width: 1.5em; padding-left:0.3em; padding-right:0.3em; align:top; filter: invert(100%); background-color: #bb490f"
+               src="https://my.runmyaccounts.com/assets/img/file-icons/cloud-upload-solid.svg">
+              <a/>
+            </td>|;
             print "</tr>";
             $i++; $i %= 2; $no++;
         
