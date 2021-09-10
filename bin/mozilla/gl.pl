@@ -1120,6 +1120,14 @@ sub transactions {
         print "
         <tr class=listrow$i>";
         for (@column_index) { print "$column_data{$_}\n" }
+        print qq|
+        <td align=left nowrap class="noprint nkp">
+          <a href='javascript:void(0);' onclick="window.parent.postMessage(
+          {name: 'ledgerEvent', params:{event: 'uploadLinkAndSignFile', id:$ref->{id}, origin: window.location.pathname}}, '*')">
+           <img style="width: 1.5em; padding-left:0.3em; padding-right:0.3em; align:top; filter: invert(100%); background-color: #bb490f"
+           src="https://my.runmyaccounts.com/assets/img/file-icons/cloud-upload-solid.svg">
+          <a/>
+        </td>|;
         print "</tr>";
 
         $sameid = $ref->{id};
@@ -2315,7 +2323,10 @@ sub post {
         $credit += $cr;
     }
 
-    if ( $form->round_amount( $debit, $form->{precision} ) != $form->round_amount( $credit, $form->{precision} ) ) {
+    my $precision = $form->{precision};
+    $precision = 8 if $precision < 8;
+
+    if ( $form->round_amount( $debit, $precision ) != $form->round_amount( $credit, $precision ) ) {
         $form->error( $locale->text('Out of balance transaction!') );
     }
 
