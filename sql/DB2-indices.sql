@@ -55,3 +55,4 @@ create index vendtax_vendor_id on vendortax (vendor_id)@
 create index shipto_trans_id on shipto (trans_id)@
 create index project_id_x on project (id)@
 create index partsgroup_id_x on partsgroup (id)@
+create index acc_trans_chart_id_transdate_approved_trans_id on acc_trans (chart_id, transdate, approved, trans_id, amount);

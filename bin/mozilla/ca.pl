@@ -90,7 +90,7 @@ sub chart_of_accounts {
     if ($ca->{charttype} eq "H") {
       print qq|<tr class=listheading>|;
       for (qw(accno description)) { $column_data{$_} = "<th class=listheading>$ca->{$_}</th>" }
-      $column_data{gifi_accno} = "<th class=listheading>$ca->{gifi_accno}&nbsp;</th>";
+      $column_data{gifi_accno} = "<th class=listheading>$ca->{gifi_accno}</th>";
     } else {
       $i++; $i %= 2;
       print qq|<tr class=listrow$i>|;
@@ -142,6 +142,12 @@ sub list {
      my $dbh = $form->dbconnect(\%myconfig);
      ($form->{accno}) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount' LIMIT 1");
      ($form->{description}) = $dbh->selectrow_array("SELECT description FROM chart WHERE accno = '$form->{accno}'");
+
+     $form->error($locale->text("Selected account is missing ...")) if !$form->{accno};
+
+     my ($transition_accno_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = (SELECT fldvalue FROM defaults WHERE fldname='transitionaccount')");
+     $form->error($locale->text("Transition account is missing ...")) if !$transition_accno_id;
+
      $clearing_account = 1;
   }
 
@@ -477,8 +483,8 @@ sub list_transactions {
     $column_data{description} = qq|<td>$ca->{description}&nbsp;</td>|;
     
     $column_data{cleared} = ($ca->{cleared}) ? qq|<td>*</td>| : qq|<td>&nbsp;</td>|;
-    $column_data{source} = qq|<td>$ca->{source}&nbsp;</td>|;
-    $column_data{curr} = qq|<td>$ca->{curr}&nbsp;</td>|;
+    $column_data{source} = qq|<td>$ca->{source}</td>|;
+    $column_data{curr} = qq|<td>$ca->{curr}</td>|;
     
     $column_data{accno} = qq|<td>|;
     for (@{ $ca->{accno} }) { $column_data{accno} .= "<a href=$drilldown&accno=$_>$_</a> " }

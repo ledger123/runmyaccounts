@@ -966,7 +966,7 @@ sub transactions {
 		 a.ponumber, a.warehouse_id, w.description AS warehouse,
 		 a.description, a.dcn, pm.description AS paymentmethod,
 		 a.datepaid - a.duedate AS paymentdiff,
-		 ad.address1, ad.address2, ad.city, ad.zipcode, ad.country
+		 ad.address1, ad.address2, ad.city, ad.zipcode, ad.country, vc.email
 		 $acc_trans_flds
 	         FROM $table a
 	      JOIN $form->{vc} vc ON (a.$form->{vc}_id = vc.id)
