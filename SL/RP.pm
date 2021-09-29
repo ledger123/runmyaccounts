@@ -1070,17 +1070,13 @@ sub get_accounts {
   }
   $sth->finish;
 
-
   # remove accounts with zero balance
   foreach $category (@{ $categories }) {
     foreach $accno (keys %{ $form->{$category} }) {
-      # armaghan 17 aug 2020 forced 8 precision in rounding to avoid rounding errors in calculating income
-      #$form->{$category}{$accno}{last} = $form->round_amount($form->{$category}{$accno}{last}, $form->{decimalplaces});
-      #$form->{$category}{$accno}{this} = $form->round_amount($form->{$category}{$accno}{this}, $form->{decimalplaces});
-      $form->{$category}{$accno}{last} = $form->round_amount($form->{$category}{$accno}{last}, 8);
-      $form->{$category}{$accno}{this} = $form->round_amount($form->{$category}{$accno}{this}, 8);
+      $form->{$category}{$accno}{last} = $form->round_amount($form->{$category}{$accno}{last}, $form->{decimalplaces});
+      $form->{$category}{$accno}{this} = $form->round_amount($form->{$category}{$accno}{this}, $form->{decimalplaces});
 
-      delete $form->{$category}{$accno} if ($form->round_amount($form->{$category}{$accno}{this},2) == 0 && $form->round_amount($form->{$category}{$accno}{last},2) == 0); 
+      delete $form->{$category}{$accno} if ($form->round_amount($form->{$category}{$accno}{this}, $form->{decimalplaces}) == 0 && $form->round_amount($form->{$category}{$accno}{last},$form->{decimalplaces}) == 0); 
     }
   }
 
@@ -1183,7 +1179,7 @@ sub trial_balance {
     $sth->execute || $form->dberror($query);
 
     while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
-      $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision8});
+      $ref->{amount} = $form->round_amount($ref->{amount}, $form->{decimalplaces});
       $balance{$ref->{accno}} = $ref->{amount};
 
       $ref->{description} = $ref->{translation} if $ref->{translation};
@@ -1366,7 +1362,7 @@ sub trial_balance {
 	} else {
 	  $ref->{credit} = $ref->{amount};
 	}
-	next if $form->round_amount($ref->{amount}, $form->{precision8}) == 0;
+	next if $form->round_amount($ref->{amount}, $form->{decimalplaces}) == 0;
 
       } else {
 
@@ -1382,11 +1378,11 @@ sub trial_balance {
 
       }
 
-      $ref->{debit} = $form->round_amount($ref->{debit}, $form->{precision8});
-      $ref->{credit} = $form->round_amount($ref->{credit}, $form->{precision8});
+      $ref->{debit} = $form->round_amount($ref->{debit}, $form->{decimalplaces});
+      $ref->{credit} = $form->round_amount($ref->{credit}, $form->{decimalplaces});
 
       if (!$form->{all_accounts}) {
-	next if $form->round_amount($ref->{debit} + $ref->{credit}, $form->{precision8}) == 0;
+	next if $form->round_amount($ref->{debit} + $ref->{credit}, $form->{decimalplaces}) == 0;
       }
     }
 

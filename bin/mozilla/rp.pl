@@ -457,6 +457,10 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 		  . qq|</b> <input name=todate size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
 	</tr>
 	$selectfrom
+	<tr>
+	  <th align=right>| . $locale->text('Decimalplaces') . qq|</th>
+	  <td><input name=decimalplaces size=3 value=$form->{decimalplaces}></td>
+	</tr>
 	$lang
       </table>
     </td>
@@ -1350,7 +1354,7 @@ sub list_accounts {
            $ref->{begbalance} = $ref->{balance} * $ml;
            $ref->{endbalance} = ($ref->{balance} + $ref->{amount}) * $ml;
            for (qw(begbalance debit credit endbalance)){
-              $ref->{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision} );
+              $ref->{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{decimalplaces} );
            }
 
            $line = '';
@@ -1420,13 +1424,13 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 		$ml *= -1 if $ref->{contra};
 
 		$debit =
-		  $form->format_amount( \%myconfig, $ref->{debit}, $form->{precision},
+		  $form->format_amount( \%myconfig, $ref->{debit}, $form->{decimalplaces},
 			"&nbsp;" );
 		$credit =
-		  $form->format_amount( \%myconfig, $ref->{credit}, $form->{precision},
+		  $form->format_amount( \%myconfig, $ref->{credit}, $form->{decimalplaces},
 			"&nbsp;" );
 		$begbalance = $form->format_amount( \%myconfig, $ref->{balance} * $ml,
-			$form->{precision}, "&nbsp;" );
+			$form->{decimalplaces}, "&nbsp;" );
 		$endbalance =
 		  $form->format_amount( \%myconfig,
 			( $ref->{balance} + $ref->{amount} ) * $ml,
@@ -1442,16 +1446,16 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 
 				$subtotalbegbalance =
 				  $form->format_amount( \%myconfig, $subtotalbegbalance,
-					$form->{precision}, "&nbsp;" );
+					$form->{decimalplaces}, "&nbsp;" );
 				$subtotalendbalance =
 				  $form->format_amount( \%myconfig, $subtotalendbalance,
-					$form->{precision}, "&nbsp;" );
+					$form->{decimalplaces}, "&nbsp;" );
 				$subtotaldebit =
 				  $form->format_amount( \%myconfig, $subtotaldebit,
-					$form->{precision}, "&nbsp;" );
+					$form->{decimalplaces}, "&nbsp;" );
 				$subtotalcredit =
 				  $form->format_amount( \%myconfig, $subtotalcredit,
-					$form->{precision}, "&nbsp;" );
+					$form->{decimalplaces}, "&nbsp;" );
 
 				$column_data{description} =
 				  "<th class=listsubtotal>$subtotaldescription</th>";
@@ -1557,10 +1561,10 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 		}
 		$subtotalbegbalance =
 		  $form->format_amount( \%myconfig, $subtotalbegbalance,
-			$form->{precision}, "&nbsp;" );
+			$form->{decimalplaces}, "&nbsp;" );
 		$subtotalendbalance =
 		  $form->format_amount( \%myconfig, $subtotalendbalance,
-			$form->{precision}, "&nbsp;" );
+			$form->{decimalplaces}, "&nbsp;" );
 		$subtotaldebit =
 		  $form->format_amount( \%myconfig, $subtotaldebit, $form->{precision},
 			"&nbsp;" );
@@ -1589,10 +1593,10 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 	}
 
 	$totaldebit =
-	  $form->format_amount( \%myconfig, $totaldebit, $form->{precision},
+	  $form->format_amount( \%myconfig, $totaldebit, $form->{decimalplaces},
 		"&nbsp;" );
 	$totalcredit =
-	  $form->format_amount( \%myconfig, $totalcredit, $form->{precision},
+	  $form->format_amount( \%myconfig, $totalcredit, $form->{decimalplaces},
 		"&nbsp;" );
 
 	for (qw(accno description begbalance endbalance)) {
