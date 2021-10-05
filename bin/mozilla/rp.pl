@@ -1434,7 +1434,7 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 		$endbalance =
 		  $form->format_amount( \%myconfig,
 			( $ref->{balance} + $ref->{amount} ) * $ml,
-			$form->{precision}, "&nbsp;" );
+			$form->{decimalplaces}, "&nbsp;" );
 
 		if ( $ref->{charttype} eq "H" && $subtotal && $form->{l_subtotal} ) {
 
@@ -1566,10 +1566,10 @@ qq|ca.pl?path=$form->{path}&action=list_transactions&accounttype=$form->{account
 		  $form->format_amount( \%myconfig, $subtotalendbalance,
 			$form->{decimalplaces}, "&nbsp;" );
 		$subtotaldebit =
-		  $form->format_amount( \%myconfig, $subtotaldebit, $form->{precision},
+		  $form->format_amount( \%myconfig, $subtotaldebit, $form->{decimalplaces},
 			"&nbsp;" );
 		$subtotalcredit =
-		  $form->format_amount( \%myconfig, $subtotalcredit, $form->{precision},
+		  $form->format_amount( \%myconfig, $subtotalcredit, $form->{decimalplaces},
 			"&nbsp;" );
 		$column_data{description} =
 		  "<th class=listsubtotal>$subtotaldescription</th>";
