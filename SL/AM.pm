@@ -2030,12 +2030,12 @@ sub save_bank {
     }
 
     $query = qq|UPDATE address SET
-		address1 = |.$dbh->quote(uc $form->{address1}).qq|,
-		address2 = |.$dbh->quote(uc $form->{address2}).qq|,
-		city = |.$dbh->quote(uc $form->{city}).qq|,
-		state = |.$dbh->quote(uc $form->{state}).qq|,
-		zipcode = |.$dbh->quote(uc $form->{zipcode}).qq|,
-		country = |.$dbh->quote(uc $form->{country}).qq|
+		address1 = |.$dbh->quote($form->{address1}).qq|,
+		address2 = |.$dbh->quote($form->{address2}).qq|,
+		city = |.$dbh->quote($form->{city}).qq|,
+		state = |.$dbh->quote($form->{state}).qq|,
+		zipcode = |.$dbh->quote($form->{zipcode}).qq|,
+		country = |.$dbh->quote($form->{country}).qq|
 		WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
 
