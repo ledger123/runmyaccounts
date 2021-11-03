@@ -124,12 +124,24 @@ sub save_account {
 
   $chart_id = $form->{id};
 
-  if (! $form->{id}) {
+  if ( !$form->{id} ) {
     # get id from chart
     $query = qq|SELECT id
 		FROM chart
 		WHERE accno = '$form->{accno}'|;
     ($chart_id) = $dbh->selectrow_array($query);
+  } else {
+    if ( $form->{IC_taxpart} || $form->{IC_taxservice} || $form->{AR_tax} || $form->{AP_tax} ) {
+        my ( $old_accno, $old_description ) = $dbh->selectrow_array("SELECT accno, description FROM chart WHERE id = $form->{id}");
+        if ( $form->{accno} ne '$old_accno' or $form->{description} ne $old_description ) {
+            my $query = qq~
+                UPDATE acc_trans
+                SET tax = (SELECT accno || '--' || description FROM chart WHERE id = $form->{id})
+                WHERE tax_chart_id = $form->{id}
+                ~;
+            $dbh->do($query);
+        }
+    }
   }
 
   if ($form->{IC_taxpart} || $form->{IC_taxservice} || $form->{AR_tax} || $form->{AP_tax}) {
