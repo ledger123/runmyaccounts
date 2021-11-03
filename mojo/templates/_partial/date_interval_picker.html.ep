@@ -1,0 +1,69 @@
+% use Time::Piece;
+
+% my $now = localtime;
+% my $to_year = stash('to_year') // $now->year;
+% my @display_years = ( $from_year .. $to_year );
+
+% our $value_error = 1;
+
+<table>
+  <tr>
+    <th align="right"><%= l 'From date'%></th>
+    <td>
+      %= text_field 'fromdate', class => 'date', size => 12, title => userconfig->val('dateformat')
+    </td>
+  </tr>
+  <tr>
+    <th align="right"><%= l 'To date'%></th>
+    <td>
+      %= text_field 'todate', class => 'date', size => 12, title => userconfig->val('dateformat')
+    </td>
+  </tr>
+
+  <tr>
+    <th align=right><%= l 'Period'%></th>
+    <td>
+      <%=
+	select_field 'month', [
+	"",
+	[l('January')   => "01"],
+        [l('February')  => "02"],
+        [l('March')     => "03"],
+        [l('April')     => "04"],
+        [l('May')       => "05"],
+        [l('June')      => "06"],
+        [l('July')      => "07"],
+        [l('August')    => "08"],
+        [l('September') => "09"],
+        [l('October')   => "10"],
+        [l('November')  => "11"],
+        [l('December')  => "12"],
+      ];
+      %>
+
+      %= select_field 'year', ["", @display_years ]
+
+      &nbsp;&nbsp;&nbsp;
+      <%= radio_button interval => '0', class => 'radio' %>
+      <span class="radio"><%= l 'Current' %>&nbsp;</span>
+      
+      <%= radio_button interval => '1', class => 'radio' %>
+      <span class="radio"><%= l 'Month' %>&nbsp;</span>
+      
+      <%= radio_button interval => '3', class => 'radio' %>
+      <span class="radio"><%= l 'Quarter' %>&nbsp;</span>
+      
+      <%= radio_button interval => '12', class => 'radio' %>
+      <span class="radio"><%= l 'Year' %>&nbsp;</span>
+    </td>
+  </tr>
+  
+  % if (stash('value_error')) {
+  <tr>
+    <td/><th style="color: red; padding-top: 1em"><%= l 'Incorrect input, please check' %></th>
+  </tr>
+  % }
+
+</table>
+
+<hr size="3" noshade="" style="margin-bottom: 2em" />

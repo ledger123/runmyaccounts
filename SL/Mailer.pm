@@ -93,6 +93,9 @@ sub apisend {
 
   my $m = Text::Markdown->new;
   $data->{htmlContent} = $m->markdown($self->{message});
+  $data->{htmlContent} = "<html>\n<body>\n".$data->{htmlContent}."</body>\n</html>";
+
+  # open (FH, "> /tmp/email.html"); print FH "$data->{htmlContent}"; close(FH); # Dump email contents to temp file for inspection.
 
   my $jsonstr = $json->encode($data);
 
