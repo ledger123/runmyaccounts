@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <meta charset="utf-8">
+
+    %= stylesheet '/css/legacy/' . userconfig->val('stylesheet')
+    %= javascript '/js/jquery.min.js'
+
+    <style>
+      td .radio { vertical-align: middle; margin: 0 }
+      
+      table.log { border-spacing: 1ex; }
+      table td.log { font-family: Courier, monospace; }
+      #log { display: none; }
+    </style>
+    
+  </head>
+  
+  <body>
+    <%= content %>
+  </body>
+</html>

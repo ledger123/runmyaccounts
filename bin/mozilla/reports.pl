@@ -582,7 +582,7 @@ sub onhandvalue_search {
    &bld_warehouse;
    &bld_partsgroup;
 
-   #&print_date('dateto', $locale->text('To'));
+   #&print_date('todate', $locale->text('To'));
    &print_text('partnumber', $locale->text('Number'), 20);
    &print_select('partsgroup', $locale->text('Group'));
    #&print_select('department', $locale->text('Department'));
@@ -632,7 +632,7 @@ sub onhandvalue_list {
    $where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})| if $form->{partsgroup};
    #$where .= qq| AND (i.department_id = $form->{department_id})| if $form->{department};
    #$where .= qq| AND (i.warehouse_id = $form->{warehouse_id})| if $form->{warehouse};
-   $subwhere .= qq| AND (i.transdate <= '$form->{dateto}')| if $form->{dateto};
+   $subwhere .= qq| AND (i.transdate <= '$form->{todate}')| if $form->{todate};
 
    my $componentswhere;
    $componentswhere = qq| AND i.assemblyitem IS FALSE| if !$form->{l_components};
@@ -667,7 +667,7 @@ sub onhandvalue_list {
        $callback .= "&l_$item=Y";
      }
    }
-   for (qw(l_subtotal l_components department warehouse partsgroup partnumber description dateto)){
+   for (qw(l_subtotal l_components department warehouse partsgroup partnumber description todate)){
       $callback .= "&$_=".$form->escape($form->{$_});
    }
    my $href = $callback;
@@ -724,7 +724,7 @@ sub onhandvalue_list {
    &print_criteria('partnumber', $locale->text('Number'));
    &print_criteria('warehouse_name', $locale->text('Warehouse'));
    &print_criteria('department_name', $locale->text('Department'));
-   &print_criteria('dateto', $locale->text('To'));
+   &print_criteria('todate', $locale->text('To'));
 
    $form->info($query) if $form->{l_sql};
    print qq|<table width=100%><tr class=listheading>|;
@@ -966,8 +966,8 @@ sub gl_search {
 <input type="hidden" name="auth_token" value="<%auth_token%>" /> 
 <table>
 <tr>
-  <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
-  |.$locale->text('To').qq| <input name=dateto size=11 title='$myconfig{dateformat}'></td>
+  <th align=right>|.$locale->text('From').qq|</th><td><input name=fromdate size=11 title='$myconfig{dateformat}'>
+  |.$locale->text('To').qq| <input name=todate size=11 title='$myconfig{dateformat}'></td>
 </tr>
 $selectfrom
 |;
@@ -1008,24 +1008,24 @@ sub gl_list {
    my $callback = qq|$form->{script}?action=gl_list|;
    for (qw(path login)) { $callback .= "&$_=$form->{$_}" }
 
-   $form->isvaldate(\%myconfig, $form->{datefrom}, $locale->text('Invalid from date ...'));
-   $form->isvaldate(\%myconfig, $form->{dateto}, $locale->text('Invalid to date ...'));
+   $form->isvaldate(\%myconfig, $form->{fromdate}, $locale->text('Invalid from date ...'));
+   $form->isvaldate(\%myconfig, $form->{todate}, $locale->text('Invalid to date ...'));
 
-   ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
    ($fromaccount, $null) = split(/--/, $form->{fromaccount});
    ($toaccount, $null) = split(/--/, $form->{toaccount});
 
    my $glwhere = qq| (1 = 1)|;
    $glwhere .= qq| AND c.accno >= '|.$form->dbclean($fromaccount).qq|'| if $form->{fromaccount};
    $glwhere .= qq| AND c.accno <= '|.$form->dbclean($toaccount).qq|'| if $form->{toaccount};
-   $glwhere .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
-   $glwhere .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};
+   $glwhere .= qq| AND ac.transdate >= '$form->{fromdate}'| if $form->{fromdate};
+   $glwhere .= qq| AND ac.transdate <= '$form->{todate}'| if $form->{todate};
    $glwhere .= qq| AND ac.amount <> 0|;
    $glwhere .= qq| AND ac.fx_transaction = '0'| if !$form->{fx_transaction};
    my $arwhere = $glwhere;
    my $apwhere = $glwhere;
 
-   for (qw(fromaccount toaccount datefrom dateto)){ $callback .= "&$_=".$form->escape($form->{$_},1) }
+   for (qw(fromaccount toaccount fromdate todate)){ $callback .= "&$_=".$form->escape($form->{$_},1) }
 
    @columns = qw(id transdate reference description name source debit credit balance);
    # if this is first time we are running this report.
@@ -1168,8 +1168,8 @@ sub gl_list {
                      WHERE NOT EXISTS (
                             select chart_id from acc_trans ac where c.id = ac.chart_id
                         |;
-            $query .= qq| AND ac.transdate >= '$form->{datefrom}'| if $form->{datefrom};
-            $query .= qq| AND ac.transdate <= '$form->{dateto}'| if $form->{dateto};                        
+            $query .= qq| AND ac.transdate >= '$form->{fromdate}'| if $form->{fromdate};
+            $query .= qq| AND ac.transdate <= '$form->{todate}'| if $form->{todate};                        
             $query .= qq|)|;
             $query .= qq| AND c.accno >= '$fromaccount'| if $form->{fromaccount};
             $query .= qq| AND c.accno <= '$toaccount'| if $form->{toaccount};
@@ -1239,12 +1239,12 @@ sub gl_list {
               print $fh "\n";
     
            $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-           if ($form->{datefrom} || $ref->{type} eq "empty"){
+           if ($form->{fromdate} || $ref->{type} eq "empty"){
               my $openingquery = qq|
             SELECT SUM(amount) 
             FROM acc_trans
             WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')
-            AND transdate < '$form->{datefrom}'
+            AND transdate < '$form->{fromdate}'
              |;
              ($balance) = $dbh->selectrow_array($openingquery);
              if ($balance != 0){
@@ -1338,8 +1338,8 @@ sub gl_list {
        $form->header;
        print qq|<body><table class="noprint report-header" width=100%>|;
        print qq|<tr><th class="listtop">$form->{title}</th></tr>|;
-       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From') . qq| $form->{datefrom}</th></tr>| if $form->{datefrom};
-       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To') . qq| $form->{dateto}</th></tr>| if $form->{dateto};
+       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From') . qq| $form->{fromdate}</th></tr>| if $form->{fromdate};
+       print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To') . qq| $form->{todate}</th></tr>| if $form->{todate};
        print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From Account') . qq| $fromaccount</th></tr>| if  $form->{fromaccount};
        print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('To Account') . qq| $toaccount</th></tr>| if  $form->{$toaccount};
        print qq|</table>\n|;
@@ -1355,8 +1355,8 @@ sub gl_list {
        my $i = 1; my $no = 1;
        my $groupbreak = 'none';
        my $period = '';
-       $period .= $locale->text('From') . ' ' . $form->{datefrom} if $form->{datefrom};
-       $period .= $locale->text('To') . ' ' . $form->{dateto} if $form->{dateto};
+       $period .= $locale->text('From') . ' ' . $form->{fromdate} if $form->{fromdate};
+       $period .= $locale->text('To') . ' ' . $form->{todate} if $form->{todate};
        
        print qq|<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {event: 'urlToPdf', url: window.location.href}}, '*')" class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
   <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
@@ -1393,12 +1393,12 @@ sub gl_list {
                print qq|</tr></thead>|; 
         
                $debit_subtotal = 0; $credit_subtotal = 0; $balance = 0;
-               if ($form->{datefrom} || $ref->{type} eq "empty"){
+               if ($form->{fromdate} || $ref->{type} eq "empty"){
                   my $openingquery = qq|
                 SELECT SUM(amount) 
                 FROM acc_trans
                 WHERE chart_id = (SELECT id FROM chart WHERE accno = '$ref->{accno}')|;
-                $openingquery .= qq| AND transdate < '$form->{datefrom}'| if $form->{datefrom};
+                $openingquery .= qq| AND transdate < '$form->{fromdate}'| if $form->{fromdate};
                  ($balance) = $dbh->selectrow_array($openingquery);
                  if ($balance != 0){
                     for (@column_index){ $column_data{$_} = rpt_txt('&nbsp;') }
@@ -1734,8 +1734,8 @@ $(document).ready(function(){
 
 <table>
 <tr>
-  <th align=right>|.$locale->text('From').qq|</th><td><input name=datefrom size=11 title='$myconfig{dateformat}'>
-  |.$locale->text('To').qq| <input name=dateto size=11 title='$myconfig{dateformat}'></td>
+  <th align=right>|.$locale->text('From').qq|</th><td><input name=fromdate size=11 title='$myconfig{dateformat}'>
+  |.$locale->text('To').qq| <input name=todate size=11 title='$myconfig{dateformat}'></td>
 </tr>
 $selectfrom
 <tr>
@@ -1796,7 +1796,7 @@ print qq|
 
 #-------------------------------
 sub generate_income_statement {
-   ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
+   ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
    if ($form->{pivotby} eq 'project'){
       &income_statement_by_project;
    } else {
@@ -1812,13 +1812,13 @@ sub income_statement_by_project {
 
   my $where = qq|c.category IN ('I', 'E')|;
   my $ywhere = qq| 1 = 1 |;
-  if ($form->{datefrom}){
-    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
-    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
+  if ($form->{fromdate}){
+    $where .= qq| AND ac.transdate >= '$form->{fromdate}'|;
+    $ywhere .= qq| AND transdate >= '$form->{fromdate}'|;
   }
-  if ($form->{dateto}){
-    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
-    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
+  if ($form->{todate}){
+    $where .= qq| AND ac.transdate <= '$form->{todate}'|;
+    $ywhere .= qq| AND transdate <= '$form->{todate}'|;
   }
   $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
 
@@ -1844,8 +1844,8 @@ sub income_statement_by_project {
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
   print qq|<h4>|.$locale->text('Income Statement Projects').qq|</h4>|;
   print qq|<h4>|.$locale->text('For Period').qq|</h4>|;
-  print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h4>| if $form->{datefrom};
-  print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h4>| if $form->{dateto};
+  print qq|<h4>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{fromdate}, 1) . qq|</h4>| if $form->{fromdate};
+  print qq|<h4>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{todate}, 1) . qq|</h4>| if $form->{todate};
   my $dbh = $form->dbconnect(\%myconfig);
   my $query = qq|SELECT id, projectnumber FROM project UNION SELECT 0, '(blank)' ORDER BY projectnumber|;
   my $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -1991,13 +1991,13 @@ sub income_statement_by_department {
 
   my $where = qq|c.category IN ('I', 'E')|;
   my $ywhere = qq| 1 = 1 |;
-  if ($form->{datefrom}){
-    $where .= qq| AND ac.transdate >= '$form->{datefrom}'|;
-    $ywhere .= qq| AND transdate >= '$form->{datefrom}'|;
+  if ($form->{fromdate}){
+    $where .= qq| AND ac.transdate >= '$form->{fromdate}'|;
+    $ywhere .= qq| AND transdate >= '$form->{fromdate}'|;
   }
-  if ($form->{dateto}){
-    $where .= qq| AND ac.transdate <= '$form->{dateto}'|;
-    $ywhere .= qq| AND transdate <= '$form->{dateto}'|;
+  if ($form->{todate}){
+    $where .= qq| AND ac.transdate <= '$form->{todate}'|;
+    $ywhere .= qq| AND transdate <= '$form->{todate}'|;
   }
   $where .= qq| AND ac.trans_id NOT IN (SELECT trans_id FROM yearend WHERE $ywhere)|;
 
@@ -2021,11 +2021,32 @@ sub income_statement_by_department {
    }
 
   $form->header;
-  print qq|<body class="bill main2"><table width=100%><tr><td class=listtop>$form->{title}</td></tr></table><br/>|;
+  print qq|
+    <body class="bill main2">
+    <button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
+    event: 'urlToPdf',
+     url: window.location.href +
+     '&datefrom=$form->{datefrom}' +
+     '&dateto=$form->{dateto}' +
+     '&month=$form->{month}' +
+     '&year=$form->{year}' +
+     '&interval=$form->{interval}' +
+     '&action=$form->{action}' +
+     '&title=$form->{title}' +
+     '&path=$form->{path}' +
+     '&nextsub=$form->{nextsub}' +
+     '&login=$form->{login}' +
+     '&pivotby=$form->{pivotby}'
+      }}, '*');"
+    class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+  </button>
+  |;
+  print qq|<table width=100%><tr><td class=listtop>$form->{title}</td></tr></table><br/>|;
   print qq|<h2 align=center>|.$locale->text('Income Statement Departments').qq|</h2>|;
-  print qq|<h2 align=center>|.$locale->text('For Period').qq|</h2>| if $form->{datefrom} && $form->{dateto};
-  print qq|<h2 align=center>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{datefrom}, 1) . qq|</h2>| if $form->{datefrom};
-  print qq|<h2 align=center>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{dateto}, 1) . qq|</h2>| if $form->{dateto};
+  print qq|<h2 align=center>|.$locale->text('For Period').qq|</h2>| if $form->{fromdate} && $form->{todate};
+  print qq|<h2 align=center>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{fromdate}, 1) . qq|</h2>| if $form->{fromdate};
+  print qq|<h2 align=center>|. $locale->text('To') . "&nbsp;".$locale->date(\%myconfig, $form->{todate}, 1) . qq|</h2>| if $form->{todate};
   my $dbh = $form->dbconnect(\%myconfig);
   my $query = qq|
       SELECT 1 as no, id, description FROM department 
@@ -3036,7 +3057,7 @@ sub onhand_search {
    &bld_warehouse;
    &bld_partsgroup;
 
-   &print_date('dateto', $locale->text('To'));
+   &print_date('todate', $locale->text('To'));
    &print_text('partnumber', $locale->text('Number'), 30);
    &print_select('partsgroup', $locale->text('Group'));
    &print_select('department', $locale->text('Department'));
@@ -3088,7 +3109,7 @@ sub onhand_list {
    $where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})| if $form->{partsgroup};
    $where .= qq| AND (i.department_id = $form->{department_id})| if $form->{department};
    $where .= qq| AND (i.warehouse_id = $form->{warehouse_id})| if $form->{warehouse};
-   $where .= qq| AND (i.shippingdate <= '$form->{dateto}')| if $form->{dateto};
+   $where .= qq| AND (i.shippingdate <= '$form->{todate}')| if $form->{todate};
 
    @columns = qw(id warehouse partnumber description partsgroup unit onhand);
    if ($form->{summary}){
@@ -3122,7 +3143,7 @@ sub onhand_list {
        $callback .= "&l_$item=Y";
      }
    }
-   for (qw(summary l_subtotal department warehouse partsgroup partnumber description dateto)){
+   for (qw(summary l_subtotal department warehouse partsgroup partnumber description todate)){
       $callback .= "&$_=".$form->escape($form->{$_});
    }
    my $href = $callback;
@@ -3191,7 +3212,7 @@ sub onhand_list {
    &print_criteria('partnumber',$locale->text('Number'));
    &print_criteria('warehouse_name', $locale->text('Warehouse'));
    &print_criteria('department_name', $locale->text('Department'));
-   &print_criteria('dateto', $locale->text('To'));
+   &print_criteria('todate', $locale->text('To'));
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -3307,8 +3328,8 @@ sub iactivity_search {
    &bld_partsgroup;
 
    &print_text('partnumber', $locale->text('Number'), 30);
-   &print_date('datefrom', $locale->text('From'));
-   &print_date('dateto', $locale->text('To'));
+   &print_date('fromdate', $locale->text('From'));
+   &print_date('todate', $locale->text('To'));
    &print_select('partsgroup', $locale->text('Group'));
    &print_select('department', $locale->text('Department'));
    &print_select('warehouse', $locale->text('Warehouse'));
@@ -3371,14 +3392,14 @@ sub iactivity_list {
     $where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})|;
     $callback .= "&partsgroup=".$form->escape($form->{partsgroup});
    }
-   if ($form->{datefrom}){
-    $where .= qq| AND (i.shippingdate >= '$form->{datefrom}')|;
-    $callback .= "&datefrom=$form->{datefrom}";
-    $openingwhere .= qq| AND (shippingdate < '$form->{datefrom}')|;
+   if ($form->{fromdate}){
+    $where .= qq| AND (i.shippingdate >= '$form->{fromdate}')|;
+    $callback .= "&fromdate=$form->{fromdate}";
+    $openingwhere .= qq| AND (shippingdate < '$form->{fromdate}')|;
    }
-   if ($form->{dateto}){
-    $where .= qq| AND (i.shippingdate <= '$form->{dateto}')|;
-    $callback .= "&dateto=$form->{dateto}";
+   if ($form->{todate}){
+    $where .= qq| AND (i.shippingdate <= '$form->{todate}')|;
+    $callback .= "&todate=$form->{todate}";
    }
 
    if ($form->{department}){
@@ -3430,7 +3451,7 @@ sub iactivity_list {
        $callback .= "&l_$item=Y";
      }
    }
-   for (qw(l_subtotal partnumber datefrom dateto partsgroup department warehouse)){
+   for (qw(l_subtotal partnumber fromdate todate partsgroup department warehouse)){
       $callback .= "&$_=".$form->escape($form->{$_});
    }
    my $href = $callback;
@@ -3551,7 +3572,7 @@ sub iactivity_list {
         print "<tr valign=top class=listsubtotal>";
         for (@column_index) { print "\n$column_data{$_}" }
         print "</tr>";
-        if ($form->{datefrom}){
+        if ($form->{fromdate}){
            my $openingquery = qq|
             SELECT SUM(qty) 
             FROM inventory 
@@ -4149,8 +4170,8 @@ sub build_search {
    &bld_partsgroup;
 
    &print_text('reference', $locale->text('Reference'), 15);
-   &print_date('datefrom', $locale->text('From'));
-   &print_date('dateto', $locale->text('To'));
+   &print_date('fromdate', $locale->text('From'));
+   &print_date('todate', $locale->text('To'));
 
    &print_text('partnumber', $locale->text('Number'), 30);
    #&print_select('partsgroup', $locale->text('Group'));
@@ -4199,8 +4220,8 @@ sub build_list {
    #$where .= qq| AND (p.partsgroup_id = $form->{partsgroup_id})| if $form->{partsgroup};
    $where .= qq| AND (b.department_id = $form->{department_id})| if $form->{department};
    $where .= qq| AND (b.warehouse_id = $form->{warehouse_id})| if $form->{warehouse};
-   $where .= qq| AND (b.transdate >= '$form->{datefrom}')| if $form->{datefrom};
-   $where .= qq| AND (b.transdate <= '$form->{dateto}')| if $form->{dateto};
+   $where .= qq| AND (b.transdate >= '$form->{fromdate}')| if $form->{fromdate};
+   $where .= qq| AND (b.transdate <= '$form->{todate}')| if $form->{todate};
    $where .= qq| AND (LOWER(p.partnumber) LIKE '$partnumber')| if $form->{partnumber} and !$form->{summary};
 
    @columns = qw(id reference transdate department warehouse partnumber description qty unit);
@@ -4301,8 +4322,8 @@ sub build_list {
 
    $form->{title} = $locale->text('Stock Assembly');
    &print_title;
-   &print_criteria('datefrom', $locale->text('From'));
-   &print_criteria('dateto', $locale->text('To'));
+   &print_criteria('fromdate', $locale->text('From'));
+   &print_criteria('todate', $locale->text('To'));
    &print_criteria('reference',$locale->text('Reference'));
    &print_criteria('department_name', $locale->text('Department'));
    &print_criteria('warehouse_name', $locale->text('Warehouse'));
@@ -4409,8 +4430,8 @@ sub projects_search {
    &print_text('projectnumber', $locale->text('Project Number'), 30);
    &print_text('description', $locale->text('Description'));
    &print_select('department', $locale->text('Department'));
-   &print_date('datefrom', $locale->text('From'));
-   &print_date('dateto', $locale->text('To'));
+   &print_date('fromdate', $locale->text('From'));
+   &print_date('todate', $locale->text('To'));
    &print_period;
  
    print qq|<tr><th align=right>| . $locale->text('Include in Report') . qq|</th><td>|;
@@ -4446,18 +4467,18 @@ sub projects_list {
    $projectnumber = $form->like(lc $form->{projectnumber});
    $description = $form->like(lc $form->{description});
  
-  ($form->{datefrom}, $form->{dateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month}; 
+  ($form->{fromdate}, $form->{todate}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month}; 
   
-   $datefrom = $locale->date(\%myconfig, $form->{datefrom}, 1);
-   $dateto = $locale->date(\%myconfig, $form->{dateto}, 1);
+   $fromdate = $locale->date(\%myconfig, $form->{fromdate}, 1);
+   $todate = $locale->date(\%myconfig, $form->{todate}, 1);
 
    my $where = qq| (1 = 1)|;
    my $subwhere;
    $where .= qq| AND (LOWER(p.projectnumber) LIKE '$projectnumber')| if $form->{projectnumber};
    $where .= qq| AND (LOWER(p.description) LIKE '$description')| if $form->{description};
 
-   $subwhere .= qq| AND (ac.transdate >= '$form->{datefrom}')| if $form->{datefrom};
-   $subwhere .= qq| AND (ac.transdate <= '$form->{dateto}')| if $form->{dateto};
+   $subwhere .= qq| AND (ac.transdate >= '$form->{fromdate}')| if $form->{fromdate};
+   $subwhere .= qq| AND (ac.transdate <= '$form->{todate}')| if $form->{todate};
    $subwhere .= qq| AND (ac.trans_id IN (SELECT trans_id FROM dpt_trans WHERE department_id = $form->{department_id}))| if $form->{department};
 
    @columns = qw(id projectnumber description startdate enddate income expenses net);
@@ -4549,8 +4570,8 @@ sub projects_list {
    &print_criteria('description', $locale->text('Description'));
    &print_criteria('department_name', $locale->text('Department'));
 
-   print $locale->text('From') . ' ' . $datefrom . "<br />";
-   print $locale->text('To') . ' ' . $dateto;
+   print $locale->text('From') . ' ' . $fromdate . "<br />";
+   print $locale->text('To') . ' ' . $todate;
 
    print qq|<table width=100%><tr class=listheading>|;
    # print header
@@ -4569,7 +4590,7 @@ sub projects_list {
    $form->{accounttype} = 'standard';
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
     $form->{link} = qq|rp.pl?action=continue&nextsub=generate_projects&fx_transaction=1&projectnumber=$ref->{projectnumber}--$ref->{id}|;
-        for (qw(accounttype datefrom dateto l_subtotal path login)){ $form->{link} .= "&$_=$form->{$_}" }
+        for (qw(accounttype fromdate todate l_subtotal path login)){ $form->{link} .= "&$_=$form->{$_}" }
     $groupbreak = $ref->{$form->{sort}} if $groupbreak eq 'none';
     if ($form->{l_subtotal}){
        if ($groupbreak ne $ref->{$form->{sort}}){

@@ -1378,6 +1378,27 @@ sub list_accounts {
 	print qq|
 <body>
 
+<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
+    event: 'urlToPdf',
+     url: window.location.href +
+     '&login=$form->{login}' +
+     '&path=$form->{path}' +
+     '&nextsub=$form->{nextsub}' +
+     '&title=$form->{title}' +
+     '&action=$form->{action}' +
+     '&accounttype=$form->{accounttype}' +
+     '&fx_transaction=$form->{fx_transaction}' +
+     '&interval=$form->{interval}' +
+     '&year=$form->{year}' +
+     '&month=$form->{month}' +
+     '&todate=$form->{todate}' +
+     '&fromdate=$form->{fromdate}' +
+     '&department=$form->{department}'
+      }}, '*')"
+    class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+</button>
+
 <table width=100%>
   <tr>
     <th class=listtop>$form->{title}</th>

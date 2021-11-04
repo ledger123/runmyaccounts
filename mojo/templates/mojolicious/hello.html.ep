@@ -1,0 +1,8 @@
+% layout 'default';
+% languages userconfig->val('x_language');
+
+<h1 class='listtop'><%= l 'Hello' %> Mojolicious!</h1>
+
+<p>
+  %= l $sometext
+</p>
