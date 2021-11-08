@@ -399,6 +399,12 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
 |;
 		print q|
 <script>
+$(document).ready(function() {
+    $('.js-basic-single-disabled').select2();
+});
+$(document).on('select2:open', () => {
+    document.querySelector('.select2-search__field').focus();
+});
 $(document).ready(function(){
     var str = $("div.redirectmsg").text();
     if ( str.length > 0 ) {
