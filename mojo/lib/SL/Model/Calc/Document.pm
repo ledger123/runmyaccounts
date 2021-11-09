@@ -45,6 +45,7 @@ sub new {
 
     $self->{dest} = $dest;
 
+    odfWorkingDirectory('/tmp/');
     $self->{doc} = odfDocument(file => $dest);
     $self->{doc}->normalizeSheet(0, 'full');
 
