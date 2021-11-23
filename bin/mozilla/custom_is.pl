@@ -349,7 +349,9 @@ sub fractional_correction {
     $form->{dbs}->query("DROP TABLE tmp1");
     my $query = "
         CREATE TABLE tmp1 AS
-        SELECT chart_id, SUM(0-ac.amount) debit, SUM(0) credit 
+        SELECT 
+            chart_id, SUM(0-ac.amount) debit, SUM(0) credit,
+            0.00 AS debit2, 0.00 AS credit2
         FROM acc_trans ac
         WHERE transdate BETWEEN '$form->{fromdate}' AND '$form->{todate}'
         GROUP BY chart_id
@@ -397,6 +399,13 @@ sub fractional_correction {
     $table1 = &fractional_correction_table($query, \@bind, $totalcols, $groupcol);
     print $table1->output;
 
+    $form->{dbs}->query("UPDATE tmp1 SET debit2=debit, credit2=credit");
+    $form->{dbs}->query("UPDATE tmp1 SET debit=ROUND(debit::numeric,2), credit=ROUND(credit::numeric,2)");
+    $form->{dbs}->query("UPDATE tmp1 SET debit = debit - debit2, credit = credit - credit2");
+
+    print qq|<h1>Trial 3</h1>|;
+    $table1 = &fractional_correction_table($query, \@bind, $totalcols, $groupcol);
+    print $table1->output;
 
 }
 
