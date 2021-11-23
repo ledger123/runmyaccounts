@@ -304,6 +304,24 @@ $selectfrom
 
         UNION ALL
 
+        -- 4. AR Invoices without tax
+        SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
+        '*' f,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE aa.netamount = aa.amount
+        AND aa.invoice
+        $aawhere
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
         -- 5. AP Invoices
         SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
         aa.id, aa.invnumber, aa.transdate,
