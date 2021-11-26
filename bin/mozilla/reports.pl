@@ -423,6 +423,7 @@ $selectfrom
         JOIN ap aa ON (aa.id = ac.trans_id)
         JOIN vendor vc ON (vc.id = aa.vendor_id)
         WHERE aa.netamount = aa.amount
+        AND NOT invoice
         $aawhere
         $cashwhere
         GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
