@@ -1311,17 +1311,17 @@ sub list_accounts {
 	$column_header{description} =
 	  qq|<th class=listheading>| . $locale->text('Description') . qq|</th>|;
 	$column_header{debit} =
-	  qq|<th class=listheading width=10%>| . $locale->text('Debit') . qq|</th>|;
+	  qq|<th align=right class=listheading width=10%>| . $locale->text('Debit') . qq|</th>|;
 	$column_header{credit} =
-	    qq|<th class=listheading width=10%>|
+	    qq|<th align=right class=listheading width=10%>|
 	  . $locale->text('Credit')
 	  . qq|</th>|;
 	$column_header{begbalance} =
-	    qq|<th class=listheading width=10%>|
+	    qq|<th align=right class=listheading width=10%>|
 	  . $locale->text('Beginning Balance')
 	  . qq|</th>|;
 	$column_header{endbalance} =
-	    qq|<th class=listheading width=10%>|
+	    qq|<th align=right class=listheading width=10%>|
 	  . $locale->text('Ending Balance')
 	  . qq|</th>|;
 
