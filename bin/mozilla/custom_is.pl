@@ -346,11 +346,13 @@ sub fractional_correction {
     $form->{dbh} = $form->dbconnect(\%myconfig);
     $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
-    $form->{dbs}->query("DROP TABLE tmp1");
+    #$form->{dbs}->query("DROP TABLE tmp1");
+    #  create table tmp1 (chart_id integer, debit float, credit float, debit2 float, credit2 float);
+    $form->{dbs}->query("DELETE FROM tmp1");
     my $query = "
-        CREATE TABLE tmp1 AS
+        INSERT INTO tmp1
         SELECT 
-            chart_id, SUM(0-ac.amount) debit, SUM(0) credit,
+            chart_id, SUM(0-ac.amount::numeric) debit, SUM(0) credit,
             0.00 AS debit2, 0.00 AS credit2
         FROM acc_trans ac
         WHERE transdate BETWEEN '$form->{fromdate}' AND '$form->{todate}'
@@ -377,9 +379,6 @@ sub fractional_correction {
             c.accno, c.description, t.debit, t.credit
         FROM tmp1 t
         JOIN chart c ON c.id = t.chart_id
-        UNION
-        SELECT
-            null, null, 0, 0
         ORDER BY 1
     ~;
 
