@@ -1,3 +1,3 @@
-runningnumber,reference,department,description,transdate,notes,currency,exchangerate,accno,accdescription,debit,credit,source,memo
-,19001,,Mobile phone,03.01.19,,USD,"1,0045",1026,,0,"275,12",,
-,19001,,Mobile phone,03.01.19,,USD,"1,0045",1099,,"275,12",0,,
+runningnumber,reference,department,description,transdate,notes,currency,exchangerate,accno,accdescription,debit,credit,source,memo,projectnumber
+,19001,,Mobile phone,03.01.19,,USD,"1,0045",1001,,0,"275,12",,,J002
+,19001,,Mobile phone,03.01.19,,USD,"1,0045",1002,,"275,12",0,,,P001
