@@ -143,7 +143,7 @@ if ($form->{action}) {
 sub check_password {
 
   if ($ip_whitelist) {
-  	if ( $ENV{REMOTE_ADDR} =~ /$ip_whitelist/ ) {
+  	if (grep(/^$ENV{REMOTE_ADDR}$/, split(',', $ip_whitelist))) {
   		# ip is whitelisted
 	  	return;
   	}
