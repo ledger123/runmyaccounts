@@ -1789,7 +1789,7 @@ sub reminder {
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
           LEFT JOIN bank ON (bank.id = a.bank_id)
-          LEFT JOIN address ad2 ON (ad2.trans_id = c.payment_accno_id)
+          LEFT JOIN address ad2 ON (ad2.trans_id = bank.id)
 	      WHERE a.duedate <= '$form->{duedateto}'
 	      AND $where
 	      $exclude_credits
