@@ -144,10 +144,14 @@ if ($form->{action}) {
 sub check_password {
 
   if ($ip_whitelist) {
-  	if ( $ENV{REMOTE_ADDR} =~ /$ip_whitelist/ ) {
-  		# ip is whitelisted
-	  	return;
-  	}
+        print STDERR " HOST IP: $ENV{REMOTE_ADDR}";
+        for my $ip (split /,/, $ip_whitelist) {
+                # print STDERR " listed IP: $ip";
+                if ( $ENV{REMOTE_ADDR} =~ /$ip/ ) {
+                        # ip is whitelisted
+                        return;
+                }
+        }
   }
 
   if ($myconfig{password}) {
