@@ -1157,7 +1157,7 @@ sub generate_income_statement {
 
 	$form->{IN} = "income_statement.html";
 
-  	$form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply, $apikey);
+  	$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
 }
 
@@ -1212,7 +1212,7 @@ sub generate_balance_sheet {
 
 	$form->{templates} = $myconfig{templates};
 
-  	$form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply, $apikey);
+  	$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
 }
 
@@ -3265,7 +3265,7 @@ sub do_print_reminder {
 qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|
 				);
 			}
-  			$form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply, $apikey);
+  			$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 		}
 	}
 	if ( $form->{create_single_pdf} ) {
@@ -3381,7 +3381,7 @@ sub do_print_statement {
 						$form->{precision} );
 				}
 
-  				$form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply, $apikey);
+  				$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
 			}
 		}
