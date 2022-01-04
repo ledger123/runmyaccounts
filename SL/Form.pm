@@ -676,7 +676,7 @@ sub round_amount {
 }
 
 sub parse_template {
-	my ( $self, $myconfig, $userspath, $debuglatex, $noreply, $apikey ) = @_;
+	my ( $self, $myconfig, $tmppath, $debuglatex, $noreply, $apikey ) = @_;
 
 	my ( $chars_per_line, $lines_on_first_page, $lines_on_second_page ) =
 	  ( 0, 0, 0 );
@@ -729,7 +729,7 @@ sub parse_template {
 	my $fileid  = time;
 	my $tmpfile = $self->{IN};
 	$tmpfile =~ s/\./_$self->{fileid}./ if $self->{fileid};
-	$self->{tmpfile} = "$userspath/${fileid}_${tmpfile}";
+	$self->{tmpfile} = "$tmppath/${fileid}_${tmpfile}";
 
 	if ( $self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email' ) {
 		$out = $self->{OUT};
@@ -1018,15 +1018,15 @@ sub parse_template {
 
 		use Cwd;
 		$self->{cwd}    = cwd();
-		$self->{tmpdir} = "$self->{cwd}/$userspath";
+		$self->{tmpdir} = "$self->{cwd}/$tmppath";
 
-		unless ( chdir("$userspath") ) {
+		unless ( chdir("$tmppath") ) {
 			$err = $!;
 			$self->cleanup;
 			$self->error("chdir : $err");
 		}
 
-		$self->{tmpfile} =~ s/$userspath\///g;
+		$self->{tmpfile} =~ s/$tmppath\///g;
 
         if ($utf8templates){
            system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
