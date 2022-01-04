@@ -20,6 +20,7 @@ $dump_variables = 1;
 
 # path to user configuration files
 $userspath = "users";
+$tmppath = "tmp";
 
 # for sendinblue api
 $apikey = 'ad3c502c0312016ba77259cbad630f58431abfa6eb4956e62e7dc64591-UfY14WV';

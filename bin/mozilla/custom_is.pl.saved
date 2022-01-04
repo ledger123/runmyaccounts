@@ -1,0 +1,565 @@
+# WLprinter start
+#$printer{Netzwerkdrucker} = "wlprinter/fileprinter.pl $form->{login}";
+# WLprinter end
+
+require "$form->{path}/lib.pl";
+
+1;
+
+sub continue { &{$form->{nextsub}} };
+
+#===================================
+#
+# Repost COGS
+#
+#===================================
+#-----------------------------------
+sub ask_repost {
+   $form->{title} = $locale->text("Repost COGS");
+   &print_title;
+   &start_form;
+ 
+   print qq|<h2 class=confirm> Continue with COGS reposting?</h1>|;
+   print qq|
+<table>
+<tr>
+  <th>|.$locale->text('To').qq|</th>
+  <td><input type=text name=todate size=11 title='$myconfig{dateformat}'></td>
+</tr>
+<tr>
+  <th></th>
+  <td nowrap="nowrap"><input name="build_invoicetax" class="checkbox" value="Y" type="checkbox"> Build invoicetax table.</td>
+</tr>
+</table>
+<br>
+|;
+   $form->{nextsub} = 'repost_cogs';
+   &print_hidden('nextsub');
+   &add_button('Continue');
+   &end_form;
+}
+
+#-----------------------------------
+sub repost_cogs {
+   my $dbh = $form->dbconnect(\%myconfig);
+   my ($warehouse, $warehouse_id) = split (/--/, $form->{warehouse});
+   $warehouse_id *= 1;
+   $form->info("Reposting COGS for warehouse $warehouse\n") if $form->{warehouse};
+
+   # Build invoicetax table
+   if ($form->{build_invoicetax}){
+      $form->info("Building invoicetax table<br>\n");
+      $query = qq|DELETE FROM invoicetax|;
+      $dbh->do($query) || $form->dberror($query);
+
+      my $query = qq|
+	    SELECT i.id, i.trans_id, i.parts_id, 
+		(i.qty * i.sellprice * tax.rate) AS taxamount, 
+		ptax.chart_id
+	    FROM invoice i
+	    JOIN partstax ptax ON (ptax.parts_id = i.parts_id)
+	    JOIN tax ON (tax.chart_id = ptax.chart_id)
+	    WHERE i.trans_id = ?
+	    AND ptax.chart_id = ?|;
+      my $itsth = $dbh->prepare($query) || $form->dberror($query);
+
+      $query = qq|INSERT INTO invoicetax (trans_id, invoice_id, chart_id, taxamount)
+		   VALUES (?, ?, ?, ?)|;
+      my $itins = $dbh->prepare($query) || $form->dberror($query);
+
+      ## 1. First AR
+      $query = qq|SELECT ar.id, ar.customer_id, ctax.chart_id 
+		FROM ar
+		JOIN customertax ctax ON (ar.customer_id = ctax.customer_id)|;
+      $sth = $dbh->prepare($query) || $form->dberror($query);
+      $sth->execute;
+      while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+	 $itsth->execute($ref->{id}, $ref->{chart_id});
+	 while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
+	    $itins->execute($itref->{trans_id}, $itref->{id}, 
+			$itref->{chart_id}, $itref->{taxamount});
+	 }
+      }
+
+      ## 2. Now AP
+      $query = qq|SELECT ap.id, ap.vendor_id, vtax.chart_id 
+		FROM ap
+		JOIN vendortax vtax ON (ap.vendor_id = vtax.vendor_id)|;
+      $sth = $dbh->prepare($query) || $form->dberror($query);
+      $sth->execute;
+      while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+	 $itsth->execute($ref->{id}, $ref->{chart_id});
+	 while ($itref = $itsth->fetchrow_hashref(NAME_lc)){
+	    $itins->execute($itref->{trans_id}, $itref->{id}, 
+			$itref->{chart_id}, $itref->{taxamount});
+	 }
+      }
+
+   }
+
+   $form->info("Reposting COGS<br>");
+
+   # Now Empty fifo table
+   if ($form->{warehouse}){
+ 	$query = qq|DELETE FROM fifo WHERE warehouse_id = $warehouse_id|;
+   } else {
+	$query = qq|DELETE FROM fifo|;
+   }
+   $dbh->do($query) || $form->dberror($query);
+
+   # Now update lastcost column in invoice table for AP
+   $form->info("Updating AP lastcost<br>");
+   $query = qq|UPDATE invoice SET lastcost = sellprice WHERE trans_id IN (SELECT id FROM ap)|;
+   $dbh->do($query) || $form->dberror($query);
+
+   # Now update lastcost column in invoice table for AR
+   $form->info("Updating AR lastcost<br>");
+   $query = qq|SELECT i.parts_id, ar.transdate, i.id, i.sellprice, 'AR' AS aa
+	       FROM invoice i
+	       JOIN ar ON (ar.id = i.trans_id)
+
+	       UNION ALL
+
+	       SELECT i.parts_id, ap.transdate, i.id, i.sellprice, 'AP' AS aa
+	       FROM invoice i
+	       JOIN ap ON (ap.id = i.trans_id)
+
+	       ORDER BY 1,2,3
+   |;
+   $sth = $dbh->prepare($query) || $form->dberror($query);
+   $sth->execute;
+
+   $query = qq|UPDATE invoice SET lastcost = ? WHERE id = ?|;
+   $updateinvoice = $dbh->prepare($query) || $form->error($query);
+
+   my $parts_id = 0;
+   my $lastcost = 0;
+   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+     if ($parts_id != $ref->{parts_id}){
+        $form->info("-- Processing part $ref->{parts_id} ...<br>");
+	$parts_id = $ref->{parts_id};
+	$lastcost = 0;
+     }
+     if ($ref->{aa} eq 'AP'){
+	$lastcost = $ref->{sellprice};
+     } else {
+	$updateinvoice->execute($lastcost, $ref->{id});
+     }
+   }
+
+   # COGS Reposting. First re-post invoices based on FIFO
+   $form->info("Reallocating inventory<br>");
+
+   # Remove all current allocations
+   $query = qq|UPDATE invoice SET allocated = 0, cogs = 0|;
+   $dbh->do($query) || $form->dberror($query);
+   
+   $query = qq|UPDATE invoice SET cogs = qty * lastcost WHERE qty < 0|;
+   $dbh->do($query) || $form->dberror($query);
+
+   $query = qq|UPDATE inventory SET cogs = 0 WHERE trans_id NOT IN (SELECT id FROM trf)|;
+   $dbh->do($query) || $form->dberror($query);
+
+   # SELECT parts with unallocated quantities
+   $query = qq|SELECT id, partnumber, description 
+		FROM parts 
+		WHERE id IN (SELECT DISTINCT parts_id FROM invoice WHERE qty < 0)
+		AND inventory_accno_id IS NOT NULL|;
+   $sth = $dbh->prepare($query) || $form->dberror($query);
+   $sth->execute;
+
+   $query = qq|UPDATE invoice SET allocated = allocated + ?, cogs = cogs + ? WHERE id = ?|;
+   $invoiceupdate = $dbh->prepare($query) || $form->dberror($query);
+   $query = qq|UPDATE inventory SET cogs = cogs + ?, cost = ? WHERE invoice_id = ?|;
+   $inventoryupdate = $dbh->prepare($query) || $form->dberror($query);
+
+   $query = qq|INSERT INTO fifo (
+			trans_id, transdate, parts_id, 
+			qty, costprice, sellprice,
+			warehouse_id, invoice_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)|;
+   $fifoadd = $dbh->prepare($query) || $form->dberror($query);
+
+   my $whwhere = '';
+   $whwhere .= qq| AND warehouse_id = $warehouse_id| if $form->{warehouse};
+   $whwhere .= qq| AND transdate <= '$form->{todate}'| if $form->{todate};
+
+   $apquery = qq|SELECT id, qty, lastcost AS sellprice
+		FROM invoice 
+		WHERE parts_id = ? 
+		$whwhere
+		AND qty < 0 
+		ORDER BY trans_id|;
+   $apsth = $dbh->prepare($apquery) || $form->dberror($apquery);
+
+   $arquery = qq|SELECT id, trans_id, transdate, qty, sellprice,
+				qty+allocated AS unallocated
+			FROM invoice 
+			WHERE parts_id = ?
+			$whwhere
+			AND qty > 0 
+			AND (qty + allocated) > 0
+			ORDER BY trans_id|;
+   $arsth = $dbh->prepare($arquery) || $form->dberror($arquery);
+   while ($partsref = $sth->fetchrow_hashref(NAME_lc)){
+	print "--- Processing $partsref->{partnumber}--$partsref->{description}<br>\n";
+	$apsth->execute($partsref->{id});
+	while ($apref = $apsth->fetchrow_hashref(NAME_lc)){
+	    $qty2allocate = 0 - $apref->{qty}; # qty IN is always -ve so change sign for clarity
+	    # select unallocated sale invoice transactions
+	    $arsth->execute($partsref->{id});
+	    $inventoryupdate->execute($apref->{sellprice} * $apref->{qty} * -1, $apref->{sellprice}, $apref->{id});
+	    while ($arref = $arsth->fetchrow_hashref(NAME_lc)){
+	        #print "----- Invoice ID $arref->{id}<br>\n";
+		if ($qty2allocate != 0){
+		   if ($qty2allocate > $arref->{unallocated}){
+		      $thisallocation = $arref->{unallocated};
+		      $qty2allocate -= $thisallocation;
+		   } else {
+		      $thisallocation = $qty2allocate;
+		      $qty2allocate = 0;
+		   }
+		   $invoiceupdate->execute($thisallocation, 0, $apref->{id}) || $form->error('Error updating AP');
+		   $invoiceupdate->execute(0.00 - $thisallocation, $apref->{sellprice} * $thisallocation, $arref->{id}) || $form->error('Error updating AR');
+		   $inventoryupdate->execute($apref->{sellprice} * $thisallocation * -1, $apref->{sellprice},  $arref->{id});
+		   $fifoadd->execute($arref->{trans_id}, "$arref->{transdate}", $partsref->{id},
+				$thisallocation, $apref->{sellprice}, $arref->{sellprice},
+				$warehouse_id, $apref->{id});
+		}
+	    }
+	}
+   }
+
+   $form->info("Reposting COGS<br>");
+
+   # Delete old COGS 
+   $query = qq|DELETE FROM acc_trans
+		WHERE chart_id IN (
+		  SELECT id
+		  FROM chart
+		  WHERE (link LIKE '%IC_cogs%')
+		  OR (link = 'IC'))
+		AND trans_id IN (
+		  SELECT id 
+		  FROM ar 
+		  WHERE invoice is true
+		  $whwhere)
+   |;
+   $dbh->do($query) || $form->dberror($query);
+
+   # Post new COGS
+   my $cogsquery = qq|INSERT INTO acc_trans(
+			trans_id, chart_id, amount, 
+			transdate, source, id)
+                        VALUES (?, ?, ?, ?, ?, ?)|;
+   my $cogssth = $dbh->prepare($cogsquery) or $form->dberror($cogsquery);
+
+   my $where;
+   $where .= qq| AND f.warehouse_id = $warehouse_id| if $form->{warehouse};
+   $query = qq|SELECT f.trans_id, f.transdate, 
+		      f.qty * f.costprice AS amount,
+		      p.inventory_accno_id, p.expense_accno_id,
+		      f.invoice_id
+		FROM fifo f
+		JOIN parts p ON (p.id = f.parts_id)
+   		WHERE f.trans_id IN (SELECT id FROM ar)
+		$where|;
+   $sth = $dbh->prepare($query) || $form->dberror($query);
+   $sth->execute;
+   while ($ref = $sth->fetchrow_hashref(NAME_lc)){
+	$form->info("-- Processing transaction $ref->{trans_id}<br>");
+	$cogssth->execute(
+		$ref->{trans_id}, $ref->{inventory_accno_id}, 
+		$ref->{amount}, $ref->{transdate}, 'cogs', $ref->{invoice_id});
+	$cogssth->execute(
+		$ref->{trans_id}, $ref->{expense_accno_id},
+		0-($ref->{amount}), $ref->{transdate}, 'cogs', $ref->{invoice_id});
+   }
+
+   # Reverse COGS for sale returns / credit invoices
+   my $query = qq|DELETE FROM acc_trans 
+		WHERE chart_id = ?
+		AND trans_id = ?|;
+   my $saledelete = $dbh->prepare($query) || $form->dberror($query);
+
+   $query = qq|SELECT i.id, i.trans_id, i.transdate,
+			i.qty * i.lastcost AS cogs,
+			(i.sellprice - (i.sellprice * i.discount/100))*i.qty*1 AS sale,
+			p.inventory_accno_id, p.expense_accno_id,
+			p.income_accno_id,
+			i.parts_id, i.sellprice, i.warehouse_id,
+			i.qty, i.lastcost
+		FROM invoice i
+		JOIN parts p ON (p.id = i.parts_id)
+		WHERE trans_id IN (SELECT id FROM ar WHERE netamount < 0)
+		$whwhere 
+		ORDER BY i.trans_id
+   |;
+   $sth = $dbh->prepare($query) || $form->dberror($query);
+   $sth->execute;
+
+   # Delete income 
+   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+	# Delete/repost sale account transactions
+	$saledelete->execute($ref->{income_accno_id}, $ref->{trans_id});
+   }
+
+   $sth = $dbh->prepare($query) || $form->dberror($query);
+   $sth->execute;
+   while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
+	   # Post income
+           $cogssth->execute(
+		$ref->{trans_id}, $ref->{income_accno_id}, 
+		$ref->{sale}, $ref->{transdate}, 
+		"income", $ref->{id});
+
+	   if ($ref->{inventory_accno_id}){
+	     # Delete/repost cogs transactions
+             $cogssth->execute(
+		$ref->{trans_id}, $ref->{inventory_accno_id}, 
+		$ref->{cogs}, $ref->{transdate}, "cogs:$ref->{sale}:$ref->{id}", $ref->{id});
+             $cogssth->execute(
+		$ref->{trans_id}, $ref->{expense_accno_id},
+		0-($ref->{cogs}), $ref->{transdate}, "cogs:$ref->{sale}:$ref->{id}", $ref->{id});
+	   }
+
+	   $fifoadd->execute($ref->{trans_id}, "$ref->{transdate}", $ref->{parts_id},
+		$ref->{qty}, $ref->{lastcost}, $ref->{sellprice},
+		$warehouse_id, $ref->{id});
+
+   }
+   $sth->finish;
+   $dbh->disconnect;
+   print qq|<h2 class=confirm>Completed</h2>|;
+}
+
+
+sub fractional_correction {
+
+    my $title = 'Fractional Correction Transaction';
+    my @searchcols = qw(fromdate todate);
+
+    use CGI::FormBuilder;
+    use SQL::Abstract;
+    use DBIx::Simple;
+
+    $form->{dbh} = $form->dbconnect(\%myconfig);
+    $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+    #$form->{dbs}->query("DROP TABLE tmp1");
+    #  create table tmp1 (chart_id integer, debit float, credit float, debit2 float, credit2 float);
+
+    my $id = $form->{dbs}->query("SELECT id FROM gl WHERE reference='FRACTIONAL CORRECTION'")->list;
+    if (!$id){
+        $query = qq|INSERT INTO gl (transdate, reference) VALUES (?, 'FRACTIONAL CORRECTION')|;
+        $form->{dbs}->query($query, $form->{todate});
+        $id = $form->{dbs}->query("SELECT id FROM gl WHERE reference='FRACTIONAL CORRECTION'")->list;
+    }
+    $form->{dbs}->query("DELETE FROM acc_trans WHERE trans_id = ?", $id);
+
+    $form->{dbs}->query("DELETE FROM tmp1");
+    my $query = "
+        INSERT INTO tmp1
+        SELECT 
+            chart_id, SUM(0-ac.amount::numeric) debit, SUM(0) credit,
+            0.00 AS debit2, 0.00 AS credit2
+        FROM acc_trans ac
+        WHERE transdate BETWEEN '$form->{fromdate}' AND '$form->{todate}'
+        GROUP BY chart_id
+    ";
+    $form->{dbs}->query($query);
+    $form->{dbs}->query("UPDATE tmp1 SET credit = 0 - debit WHERE debit < 0");
+    $form->{dbs}->query("UPDATE tmp1 SET debit = 0 WHERE debit < 0");
+
+    my $form1 = &fractional_correction_form($title, \@searchcols);
+    $form->header;
+    print $form1->render;
+
+    my $totalcols = [qw(debit credit)];
+
+    my $groupcol = 'charttype';
+
+    my $callback = "$form->{script}?action=fractional_correction&path=$form->{path}&login=$form->{login}";
+    for (@searchcols){ $callback .= "&$_=$form->{$_}" }
+    $form->{callback} = $form->escape($callback);
+
+    $query = qq~
+        SELECT
+            c.accno, c.description, t.debit, t.credit
+        FROM tmp1 t
+        JOIN chart c ON c.id = t.chart_id
+        ORDER BY 1
+    ~;
+
+
+    for (@searchcols){
+        my $label = $_; $label =~ tr/_/ /; $label = uc $label;
+        print qq|<b>$label</b>: $form->{$_}<br/>\n| if $form->{$_};
+    };
+
+    print qq|<h1>Trial 1</h1>|;
+    my $table1 = &fractional_correction_table($query, \@bind, $totalcols, $groupcol);
+    print $table1->output;
+
+    $form->{dbs}->query("UPDATE tmp1 SET debit2=debit, credit2=credit");
+    $form->{dbs}->query("UPDATE tmp1 SET debit=debit-ROUND(debit::numeric,2), credit=credit-ROUND(credit::numeric,2)");
+
+    print qq|<h1>Trial 2</h1>|;
+    $table1 = &fractional_correction_table($query, \@bind, $totalcols, $groupcol);
+    print $table1->output;
+
+    $form->{dbs}->query("UPDATE tmp1 SET debit = debit2 - debit, credit = credit2 - credit");
+
+    print qq|<h1>Trial 3</h1>|;
+    $table1 = &fractional_correction_table($query, \@bind, $totalcols, $groupcol);
+    print $table1->output;
+
+    $form->{dbs}->query("
+        INSERT INTO acc_trans (trans_id, chart_id, amount, transdate)
+        SELECT $id, chart_id, debit+credit*-1, '$form->{todate}'
+        FROM tmp1
+        WHERE debit + credit <> 0
+    ");
+    my $fxgain_accno_id = $form->{dbs}->query("SELECT fldvalue FROM defaults WHERE fldname='fxgain_accno_id'")->list;
+    my $diff = $form->{dbs}->query("SELECT SUM(debit+credit)*1 FROM tmp1")->list;
+
+    $form->info($diff);
+    $form->{dbs}->query("
+        INSERT INTO acc_trans (trans_id, chart_id, amount, transdate)
+        VALUES ($id, $fxgain_accno_id, $diff, '$form->{todate}')
+    ");
+
+}
+
+
+sub fractional_correction_form {
+    my ($title, $searchcols) = @_;
+    $form->{nextsub} = 'fractional_correction';
+    my $template = &fractional_correction_template;
+
+    $form->{fromdate} = $form->{dbs}->query("SELECT current_date")->list if !$form->{fromdate};
+    $form->{todate} = $form->{dbs}->query("SELECT current_date")->list if !$form->{todate};
+    my $form1 = CGI::FormBuilder->new(
+        method   => 'post',
+        table    => 1,
+        title    => $title,
+        fields   => $searchcols,
+        messages => {form_required_text => '',},
+        labels   => {
+
+        },
+        submit   => [qw(Continue)],
+        options    => {
+
+        },
+        params     => $form,
+        stylesheet => 1,
+        template   => {type => 'TT2', template => \$template, variable => 'form1',},
+        keepextras => [qw(nextsub action path login)],
+    );
+
+    return $form1;
+}
+
+
+sub fractional_correction_table {
+    my ($query, $bind, $totalcols, $groupcol) = @_;
+    my $table1 = $form->{dbs}->query($query, @$bind)->xto();
+    #$table1->drop_cols([qw(memo)]);
+
+    $table1->modify(table => {cellpadding => "3", cellspacing => "2"});
+    $table1->modify(tr => {class => ['listrow0', 'listrow1']});
+    $table1->modify(th => {class => 'listheading'}, 'head');
+    $table1->modify(th => {class => 'listtotal'},   'foot');
+    $table1->modify(th => {class => 'listsubtotal'});
+    $table1->modify(th => {align => 'center'},      'head');
+    $table1->modify(th => {align => 'right'},       'foot');
+    $table1->modify(th => {align => 'right'});
+
+    $table1->modify(td => {align => 'right'}, $totalcols);
+    $table1->map_cell(sub { return $form->format_amount(\%myconfig, shift, 10) }, $totalcols);
+    #$table1->set_group($groupcol, 1);
+    #$table1->calc_subtotals($totalcols);
+    $table1->calc_totals($totalcols);
+
+    my $url = "$form->{script}?action=edit_tmp1 t JOIN chart c ON c.id = t.chart_id&path=$form->{path}&login=$form->{login}";
+
+    $table1->map_cell(
+        sub {
+            my $datum = shift;
+            my $row   = $table1->get_current_row();
+            my $col   = $table1->get_current_col();
+            return qq|<a href="$url&id=$datum&callback=$form->{callback}">$datum</a>|;
+        },
+        'disabled'
+    );
+
+    my %headings = (
+        id => $locale->text('I D'),
+    );
+    $table1->map_head(sub {
+        my $col = shift;
+        my $label = $headings{$col};
+        if (!$label){
+            $col =~ tr/_/ /;
+            $label = uc $col;
+        }
+        return qq|<a class="listheading">$label</a>|;
+    });
+
+    return $table1;
+}
+
+sub fractional_correction_template {
+    return q|
+[% form1.jshead %]
+<body onLoad="document.forms[0].reference.focus()" />
+
+<table width=100%>
+<tr>
+    <th class=listtop>[% form1.title %]</th>
+</tr>
+<tr height="5"></tr>
+<tr>
+    <td align="top">
+    [% form1.start %]
+        <table>
+            <tr valign="top">
+                <td><table>
+                    [% i = 1 %]
+                    [% FOREACH field = form1.fields %]
+                        <tr valign="top">
+                            <th align="right">[% field.required ? "$field.label *" : field.label %]</th>
+                            <td>
+                            [% IF field.invalid %]
+                            Missing or invalid entry, please try again.<br/>
+                            [% END %]
+                            [% field.field %]
+                            </td>
+                        </tr>
+                    [% IF i == 3 OR i == 6 OR i == 9 %]
+                    </table></td><td><table>
+                    [% END %]
+                    [% i = i + 1 %]
+                    [% END %]
+                </td></table>
+            </tr>
+        </table>
+    </td>
+</tr>
+</table>
+
+<hr size=3 noshade />
+
+<input type=submit class=submit name=action value="Continue">
+
+[% form1.end %]
+<br/><br/>
+|;
+
+}
+
+##
+## EOF
+##
+
