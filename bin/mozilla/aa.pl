@@ -1599,6 +1599,8 @@ sub yes {
 
 sub search {
 
+    $form->get_lastused(\%myconfig, 'transactions');
+
     $form->error($locale->text('Access denied!')) if $myconfig{acs} =~ $form->{level};
 
     my $old_number = $form->{"$form->{vc}number"}; # customer/vendor number is changed in $form->create_links
@@ -2184,6 +2186,8 @@ sub transactions {
             $href     .= "&l_$item=Y";
         }
     }
+
+    $form->save_lastused(\%myconfig, 'transactions', \@columns);
 
     if ( !$form->{summary} ) {
         @a = grep !/memo/, @column_index;
