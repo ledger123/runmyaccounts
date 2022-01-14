@@ -4256,10 +4256,11 @@ sub save_form {
 
 
 sub get_lastused {
-	my ( $self, $myconfig, $report ) = @_;
+	my ( $self, $myconfig, $report, $default_checked ) = @_;
 	my $dbh = $self->dbconnect($myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
     my $cols = $dbs->query("SELECT cols FROM lastused WHERE report = ? AND login = ? LIMIT 1", $report, $self->{login})->list;
+    $cols = $default_checked if !$cols;
     my @colslist = split /,/, $cols;
     for (@colslist){ $self->{"l_$_"} = 'checked' };
 }
