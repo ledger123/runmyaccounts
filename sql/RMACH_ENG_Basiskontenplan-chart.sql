@@ -1,12 +1,12 @@
 -- Schweizer Kontenrahmen KMU (Sterchi/Schweizer Gewerbeverband)
 -- exkl. Konzern- und Tochtergesellschaften
 -- ab SQL Ledger Version 2.8, einsprachig (deutsch)
--- Das Script lÃ¶scht den bestehenden Kontenrahmen (falls vorhanden).
--- Dieses Script nur bei Neuinstallationen bzw. Datenbanken ohne bestehende Buchungen durchfÃ¼hren.
+-- Das Script löscht den bestehenden Kontenrahmen (falls vorhanden).
+-- Dieses Script nur bei Neuinstallationen bzw. Datenbanken ohne bestehende Buchungen durchführen.
 -- integratio GmbH, September 2007
 
 -- Diverse Anpassungen durch Run my Accounts AG, 2008-2014
--- Version 05.12.2014 Neues Rechnungslegungsrecht, Thomas BrÃ¤ndle, Mattia Kienast, Nils Samuelsson
+-- Version 05.12.2014 Neues Rechnungslegungsrecht, Thomas Brändle, Mattia Kienast, Nils Samuelsson
 
 -----------------
 --- 1 AKTIVEN ---
@@ -21,9 +21,9 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('1060', 'Securities with quoted market price', 'A', 'A', 'AP_amount', '106', 'f', 't', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('109','TRANSFER ACCOUNTS','H','A','','109',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1090','Transfer Account','A','A','AR_paid:AP_paid','109',false,true,'transfer');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1099','Clarification account','A','A','AP_amount','109',false,true,'abklÃ¤rung');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1099','Clarification account','A','A','AP_amount','109',false,true,'abklärung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('110','ACCOUNTS RECEIVABLE','H','A','','110',false,false,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1100','Accounts ReceivableÂ Switzerland','A','A','AR','110',false,false,'forderungenschweiz');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1100','Accounts Receivable Switzerland','A','A','AR','110',false,false,'forderungenschweiz');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1101','Accounts Receivable Foreign Countries','A','A','AR','110',false,false,'forderungenauslandchf');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1102','Accounts Receivable Foreign Currencies','A','A','AR','110',false,false,'forderungenauslandandere');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1103','Accounts receivable old','A','A','','110',false,true,'');
@@ -82,19 +82,19 @@ INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,a
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2020', 'Accounts payable to participations', 'A', 'L', 'AP', '202', 'f', 'f', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('203','ADVANCES','H','L','','203',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2030','Advances from Third Parties','A','L','AR_amount:IC_income','203',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('214','SHORT-TERM FINANCIAL LIABILITIESÂ THIRD PARTIES','H','L','','214',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('215','SHORT-TERM FINANCIAL LIABILITIESÂ INVESTMENTS','H','L','','215',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('220','SHORT-TERM FINANCIAL LIABILITIESÂ INVESTMENTS PUBLIC AGENCIES','H','L','','220',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('214','SHORT-TERM FINANCIAL LIABILITIES THIRD PARTIES','H','L','','214',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('215','SHORT-TERM FINANCIAL LIABILITIES INVESTMENTS','H','L','','215',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('220','SHORT-TERM FINANCIAL LIABILITIES INVESTMENTS PUBLIC AGENCIES','H','L','','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2200','VAT payable','A','L','AP_amount','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2206','Withholding Tax','A','L','AP_amount','220',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('221','SHORT-TERM FINANCIAL LIABILITIESÂ THIRD PARTIES (INTEREST-FREE)','H','L','','221',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('221','SHORT-TERM FINANCIAL LIABILITIES THIRD PARTIES (INTEREST-FREE)','H','L','','221',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2215','Credit Card','A','L','','221',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('225','SHORT-TERM FINANCIAL LIABILITIESÂ INVESTMENTS (INTEREST-FREE)','H','L','','225',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('225','SHORT-TERM FINANCIAL LIABILITIES INVESTMENTS (INTEREST-FREE)','H','L','','225',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('227','SHORT-TERM FINANCIAL LIABILITIES SOCIAL INSURANCE (INTEREST-FREE)','H','L','','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2270','Current Account Pension Fund','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2271','Current Account AHV, IV, EO, ALV','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2272','Current Account FAK','A','L','AP_amount','227',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2273','Current Account Accident InsuranceÂ ','A','L','AP_amount','227',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2273','Current Account Accident Insurance ','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2274','Current Account sickness insurance','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2279','Current Account Source Tax','A','L','AP_amount','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('230','DEFERRED AND CURRENT PROVISIONS','H','L','','230',false,true,'');
@@ -161,7 +161,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5402','Profit Sharing','A','E','','540',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5403','Bonus','A','E','','540',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5405','Benefits from Social Insurance','A','E','AP_amount','540',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('57','SOCIAL INSURANCE COSTSÂ ','H','E','','570',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('57','SOCIAL INSURANCE COSTS ','H','E','','570',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5700','AHV, IV, EO, ALV','A','E','AP_amount','570',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5710','FAK','A','E','AP_amount','570',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5720','Pension Fund','A','E','AP_amount','570',false,true,'');
@@ -186,7 +186,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6040','Cleaning','A','E','AP_amount','600',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6090','Private Part Housing Costs','A','E','','600',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('610','MAINTENANCE, REPAIR, REPLACEMENT AND LEASING OF TANGIBLE ASSETS','H','E','','610',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6130','Maintenance and ReplacementÂ Office Materials','A','E','AP_amount','610',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6130','Maintenance and Replacement Office Materials','A','E','AP_amount','610',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6160','Leasing','A','E','AP_amount','610',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('620','VEHICLE AND TRANSPORTATION EXPENSES','H','E','','620',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6200','Repair, Service, Cleaning Vehicles','A','E','AP_amount','620',false,true,'');
