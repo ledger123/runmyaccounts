@@ -901,7 +901,7 @@ sub list_names {
   
   $column_header{ndx} = qq|<th class=listheading width=1%>&nbsp;</th>|;
   $column_header{id} = qq|<th class=listheading>|.$locale->text('ID').qq|</th>|;
-  $column_header{typeofcontact} = qq|<th class=listheading>|.$locale->text('Type').qq|</th>|;
+  $column_header{typeofcontact} = qq|<th><a class=listheading href=$href&sort=typeofcontact>|.$locale->text('Type').qq|</a></th>|;
   $column_header{"$form->{db}number"} = qq|<th><a class=listheading href=$href&sort=$form->{db}number>$vcnumber</a></th>|;
   $column_header{name} = qq|<th><a class=listheading href=$href&sort=name>$vcname</a></th>|;
   $column_header{address1} = qq|<th class=listheading>|.$locale->text('Address').qq|</th>|;

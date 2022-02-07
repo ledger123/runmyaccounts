@@ -1,7 +1,7 @@
 -- Schweizer Kontenrahmen KMU (Sterchi/Schweizer Gewerbeverband)
 -- exkl. Konzern- und Tochtergesellschaften
 -- ab SQL Ledger Version 2.8, einsprachig (deutsch)
--- Das Script löscht den bestehenden Kontenrahmen (falls vorhanden). 
+-- Das Script löscht den bestehenden Kontenrahmen (falls vorhanden).
 -- Dieses Script nur bei Neuinstallationen bzw. Datenbanken ohne bestehende Buchungen durchführen.
 -- integratio GmbH, September 2007
 
@@ -17,8 +17,8 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('100','CASH AND SECURITIES','H','A','','100',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1000','Cash','A','A','AR_paid:AP_paid','100',false,true,'kassa');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1020','Bank','A','A','AR_paid:AP_paid','100',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('106','TBD','H','A','','106',false,false,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('1060', 'TBD', 'A', 'A', 'AP_amount', '106', 'f', 't', '');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('106','CURRENT ASSETS HELD AT MARKET PRICE','H','A','','106',false,false,'');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('1060', 'Securities with quoted market price', 'A', 'A', 'AP_amount', '106', 'f', 't', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('109','TRANSFER ACCOUNTS','H','A','','109',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1090','Transfer Account','A','A','AR_paid:AP_paid','109',false,true,'transfer');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1099','Clarification account','A','A','AP_amount','109',false,true,'abklärung');
@@ -43,7 +43,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('130','ACCRUALS','H','A','','130',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1300','Accrued cost','A','A','','130',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1301','Accrued income','A','A','','130',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1302','TBD','A','A','','130',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1302','Arbeitgeberbeitragsreserve','A','A','','130',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1310', 'Active Accrual', 'A', 'A', '', '130', 'f', 't', 'aktiverechnungsabgrenzung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('14','FIXED ASSETS','H','A','','140',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('140','INVESTMENTS','H','A','','140',false,true,'');
@@ -61,23 +61,25 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1530','Cars','A','A','AP_amount','150',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1540','Tools and equipment','A','A','AP_amount','150',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1590','Other Tangible Assets','A','A','AP_amount','150',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('160','IMMOBILE SACHANLAGEN','H','A','','160',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('160','REAL ESTATE ASSETS','H','A','','160',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1600','Tangible fixed assets','A','A','','160',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('170','INTANGIBLE ASSETS','H','A','','170',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1700','Patents, Brands','A','A','AP_amount','170',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1740','TBD','A','A','','170',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1740','Self developed software','A','A','','170',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1741','Software','A','A','AP_amount','170',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1790','Other Immaterial Goods','A','A','','170',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('180','UNPAID SHARE CAPITAL','H','A','','180',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('1800','Unpaid Share Capital','A','A','AP_amount','180',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2','EQUITY AND LIABILITIES','H','L','','2',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('20','SHORT-TERM DEBT','H','L','','200',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('200','ACCOUNTS PAYABLE','H','L','','200',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2000','Accounts payable','A','L','AP','200',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2001','Accounts payable old','A','L','','200',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2002','Liabilities Personnel','A','L','','200',false,true,'lohnzahlung');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('201', 'TBD', 'H', 'Q', '', '201', 'f', 'f', '');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2010', 'TBD', 'A', 'L', 'AP', '201', 'f', 'f', '');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('202', 'TBD', 'H', 'Q', '', '202', 'f', 'f', '');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2020', 'TBD', 'A', 'L', 'AP', '202', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('201', 'ACCOUNTS PAYABLE TO ASSOCIATES AND GOVERNING BODIES', 'H', 'Q', '', '201', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2010', 'Accounts payable to associates and governing bodies', 'A', 'L', 'AP', '201', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('202', 'ACCOUNTS PAYABLE TO PARTICIPATIONS', 'H', 'Q', '', '202', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2020', 'Accounts payable to participations', 'A', 'L', 'AP', '202', 'f', 'f', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('203','ADVANCES','H','L','','203',false,false,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2030','Advances from Third Parties','A','L','AR_amount:IC_income','203',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('214','SHORT-TERM FINANCIAL LIABILITIES THIRD PARTIES','H','L','','214',false,true,'');
@@ -86,7 +88,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2200','VAT payable','A','L','AP_amount','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2206','Withholding Tax','A','L','AP_amount','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('221','SHORT-TERM FINANCIAL LIABILITIES THIRD PARTIES (INTEREST-FREE)','H','L','','221',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2215','Kreditkarte','A','L','','221',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2215','Credit Card','A','L','','221',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('225','SHORT-TERM FINANCIAL LIABILITIES INVESTMENTS (INTEREST-FREE)','H','L','','225',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('227','SHORT-TERM FINANCIAL LIABILITIES SOCIAL INSURANCE (INTEREST-FREE)','H','L','','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2270','Current Account Pension Fund','A','L','AP_amount','227',false,true,'');
@@ -100,7 +102,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2301','Accrued Income','A','L','','230',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2310', 'Passive Accrual', 'A', 'L', '', '230', 'f', 't', 'passiverechnungsabgrenzung');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2330','Accrued Liabilities','A','L','','230',false,true,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2340', 'TBD', 'A', 'L', 'AP_amount', '230', 'f', 't', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2340', 'Tax accruals', 'A', 'L', 'AP_amount', '230', 'f', 't', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('24','LONG TERM DEBT','H','L','','240',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('240','LONG TERM DEBT (INTEREST BEARING)','H','L','','240',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2400','Long-term Bank Debt','A','L','','240',false,true,'');
@@ -111,15 +113,15 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('260','LONG TERM PROVISIONS','H','L','','260',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2600','Provisions','A','L','','260',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3','REVENUES','H','I','','3',false,true,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('30', 'TBD', 'H', 'I', '', '300', 'f', 't', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('30', 'NET REVENUES FROM DELIVERIES AND SERVICES', 'H', 'I', '', '300', 'f', 't', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('300','REVENUES FROM PRODUCTION','H','I','','300',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3000','Revenues Production','A','I','AR_amount:IC_income','300',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('320','REVENUES FROM TRADE','H','I','','320',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3200','Revenues Trade','A','I','AR_amount:IC_income','320',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('340','REVENUES FROM SERVICES','H','I','','340',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3400','Revenues Services','A','I','AR_amount:IC_income','340',false,true,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('350', 'TBD', 'H', 'I', '', '350', 'f', 't', '');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('3500', 'TBD', 'A', 'I', 'AR_paid', '350', 'f', 't', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('350', 'REDUCTIONS IN REVENUE FROM DELIVERIES AND SERVICES', 'H', 'I', '', '350', 'f', 't', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('3500', 'Trade discounts', 'A', 'I', 'AR_paid', '350', 'f', 't', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('36','OTHER REVENUES','H','I','','360',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3600','Incidental Revenue','A','I','AR_amount:IC_income','360',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('3680','Other Revenues','A','I','AR_amount:IC_income','360',false,true,'');
@@ -146,14 +148,14 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('4400','Expenses for Service','A','E','AP_amount','440',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('45','ENERGY FOR GOODS AND SERVICES','H','E','','450',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('46','OTHER DIRECT EXPENSES','H','E','','460',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('47','TBD','H','E','','470',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('47','DIRECT PURCHASE EXPENSES','H','E','','470',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('48','INVENTORY CHANGE LOSS OF MATERIAL','H','E','','480',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('4800','Inventory Change Trade','A','E','','480',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('4880','Inventory Change Material','A','E','','480',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('49','PURCHASE PRICE REDUCTION','H','E','','490',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('4999','Systemaccount','A','E','AP_amount:IC_expense:IC_cogs','490',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5','PERSONNEL COSTS','H','E','','500',false,true,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('54', 'TBD', 'H', 'E', '', '540', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('54', 'PAYROLLING', 'H', 'E', '', '540', 'f', 'f', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5400','Wages','A','E','','540',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5401','Gratification','A','E','','540',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5402','Profit Sharing','A','E','','540',false,true,'');
@@ -178,7 +180,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('5900','Efforts Third Parties','A','E','AP_amount','590',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6','OTHER OPERATING EXPENSES','H','E','','600',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('60','HOUSING COSTS','H','E','','600',false,true,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('600', 'TBD', 'H', 'E', '', '600', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('600', 'OTHER OPERATING EXPENSES, DEPRECIATION, AMORTIZATION AND IMPAIRMENT, AND FINANCIAL RESULT - OTHER OPERATING EXPENSES, DEPRECIATION, AMORTIZATION AND IMPAIRMENT, AND FINANCIAL RESULT', 'H', 'E', '', '600', 'f', 'f', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6000','Rent','A','E','AP_amount','600',false,true,'miete');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6030','Related Costs','A','E','AP_amount','600',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6040','Cleaning','A','E','AP_amount','600',false,true,'');
@@ -233,13 +235,13 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('670','OTHER OPERATING EXPENSES','H','E','','670',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6700','Other Operating Expenses','A','E','AP_amount','670',false,true,'');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('6731', 'Reversecharge', 'A', 'E', 'AP_amount', '670', 'f', 't', '');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('6732', 'TBD', 'A', 'E', 'AP_amount', '670', 'f', 't', '');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('6733', 'TBD', 'A', 'E', 'AP_amount', '670', 'f', 't', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('6732', 'Input tax correction', 'A', 'E', 'AP_amount', '670', 'f', 't', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('6733', 'Input tax reduction', 'A', 'E', 'AP_amount', '670', 'f', 't', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6799','Not Assigned','A','E','AP_amount','670',false,true,'nichtkontierteraufwand');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('68','FINANCIAL INCOME AND EXPENSES','H','E','','680',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6800','Valuation Adjustment','A','E','','680',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6820','Depreciation','A','E','','680',false,true,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('69', 'TBD', 'H', 'E', '', '690', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('69', 'FINANCIAL EXPENSES AND FINANCIAL INCOME', 'H', 'E', '', '690', 'f', 'f', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('690','FINANCIAL EXPENSES','H','E','','690',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6900','Interest Cost Third Parties','A','E','AP_amount','690',false,true,'schuldzins');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('6930','Interest Cost Pension Fund','A','E','AP_amount','690',false,true,'');
@@ -256,7 +258,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('701','EXPENSES COMPANION PLANTS','H','E','','701',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('7010','Expenses Companion Plants','A','E','','701',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8','EXTRAORDINARY AND NON-OPERATING EXPENSES, TAX','H','E','','800',false,true,'');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('80', 'TBD', 'H', 'E', '', '800', 'f', 'f', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('80', 'EXTRAORDINARY, NON-RECURRING OR OUT-OF-PERIOD EXPENSES AND INCOME', 'H', 'E', '', '800', 'f', 'f', '');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('800','NON-OPERATING EXPENSES','H','E','','800',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('8000','Non-Operationg Expenses','A','E','','800',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('810','NON-OPERATING REVENUES','H','E','','810',false,true,'');
