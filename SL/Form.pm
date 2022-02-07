@@ -11,6 +11,7 @@ package Form;
 
 use Date::Parse;
 use Time::Piece;
+use DBIx::Simple;
 
 sub new {
 	my $type = shift;
@@ -92,7 +93,7 @@ sub new {
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
 	$self->{version}   = "2.8.33";
-	$self->{dbversion} = "2.8.20";
+	$self->{dbversion} = "2.8.21";
 
 	bless $self, $type;
 
@@ -4252,6 +4253,36 @@ sub save_form {
 		$self->info('Saved');
 	}
 }
+
+
+sub get_lastused {
+	my ( $self, $myconfig, $report, $default_checked ) = @_;
+	my $dbh = $self->dbconnect($myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+    my $cols = $dbs->query("SELECT cols FROM lastused WHERE report = ? AND login = ? LIMIT 1", $report, $self->{login})->list;
+    $cols = $default_checked if !$cols;
+    my @colslist = split /,/, $cols;
+    for (@colslist){ $self->{"l_$_"} = 'checked' };
+}
+
+
+sub save_lastused {
+	my ( $self, $myconfig, $report, $cols ) = @_;
+	my $dbh = $self->dbconnect($myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    my $colslist;
+
+    for (@$cols) { $colslist .= "$_," if $self->{"l_$_"} }
+    chop $report_columns;
+    my $exists = $dbs->query( "SELECT 1 FROM lastused WHERE report=? AND login = ? LIMIT 1", $report, $self->{login} )->list;
+    if ($exists) {
+        $dbs->query( "UPDATE lastused SET cols = ? WHERE report=? AND login = ?", $colslist, $report, $self->{login} );
+    } else {
+        $dbs->query( "INSERT INTO lastused (report, cols, login) VALUES (?, ?, ?)", $report, $colslist, $self->{login} );
+    }
+}
+
 
 package Locale;
 

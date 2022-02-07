@@ -224,6 +224,9 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 	if (   $form->{report} eq 'balance_sheet'
 		|| $form->{report} eq 'income_statement' )
 	{
+        $default_checked = "heading,subtotal,accno";
+        $form->get_lastused(\%myconfig, "$form->{report}", $default_checked);
+
 		$form->{currencies} = $form->get_currencies( undef, \%myconfig );
 
 		if ( $form->{currencies} ) {
@@ -374,11 +377,11 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 
 	<tr>
 	  <th align=right nowrap>| . $locale->text('Include in Report') . qq|</th>
-	  <td colspan=3><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|
+	  <td colspan=3><input name=l_heading class=checkbox type=checkbox value=Y $form->{l_heading}>&nbsp;|
 		  . $locale->text('Heading') . qq|
-	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|
+	  <input name=l_subtotal class=checkbox type=checkbox value=Y $form->{l_subtotal}>&nbsp;|
 		  . $locale->text('Subtotal') . qq|
-	  <input name=l_accno class=checkbox type=checkbox value=Y checked>&nbsp;|
+	  <input name=l_accno class=checkbox type=checkbox value=Y $form->{l_accno}>&nbsp;|
 		  . $locale->text('Account Number')
 		  . qq|</td>
 	</tr>
@@ -436,11 +439,11 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 
 	<tr>
 	  <th align=right nowrap>| . $locale->text('Include in Report') . qq|</th>
-	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|
+	  <td><input name=l_heading class=checkbox type=checkbox value=Y $form->{l_heading}>&nbsp;|
 		  . $locale->text('Heading') . qq|
-	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|
+	  <input name=l_subtotal class=checkbox type=checkbox value=Y $form->{l_subtotal}>&nbsp;|
 		  . $locale->text('Subtotal') . qq|
-	  <input name=l_accno class=checkbox type=checkbox value=Y checked>&nbsp;|
+	  <input name=l_accno class=checkbox type=checkbox value=Y $form->{l_accno}>&nbsp;|
 		  . $locale->text('Account Number')
 		  . qq|</td>
 	</tr>
@@ -1079,6 +1082,8 @@ sub continue { &{ $form->{nextsub} } }
 
 sub generate_income_statement {
 
+    $form->save_lastused(\%myconfig, "income_statement", [qw(heading subtotal accno)]);
+
 	$form->isvaldate( \%myconfig, $form->{fromdate},
 		$locale->text('Invalid from date ...') );
 	$form->isvaldate( \%myconfig, $form->{todate},
@@ -1162,6 +1167,8 @@ sub generate_income_statement {
 }
 
 sub generate_balance_sheet {
+
+    $form->save_lastused(\%myconfig, "balance_sheet", [qw(heading subtotal accno)]);
 
 	$form->isvaldate( \%myconfig, $form->{fromdate},
 		$locale->text('Invalid from date ...') );
