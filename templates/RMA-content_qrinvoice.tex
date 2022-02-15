@@ -1,0 +1,172 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+% Typ: QR-Rechnung
+% Name: content-qrinvoice.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 25. Juni 2020
+% © by Run my Accounts AG
+
+\ifthenelse{\equal{<%qriban%>}{}}{}{
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{\end{document}}{}
+\ifthenelse{\equal{<%currency%>}{CHF}}{}{\end{document}}{}
+
+\AddToShipoutPicture{\BackgroundWithoutFooter} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
+
+% External border style
+\newcommand{\COLextbord}{black}
+
+\ifthenelse{\equal{\PrintOnPaper}{on}}{\tikzset{externalrect/.style={opacity=0,draw=\COLextbord}}}{\tikzset{externalrect/.style={opacity=1,draw=\COLextbord}}}
+
+\clearpage
+\pagestyle{empty}
+
+\strut
+% The payment part is in DIN-A6 landscape format (148 mm x 105 mm). The receipt to
+% the left of the payment part measures 62 mm x 105 mm, so that the two together
+% measure 210 mm x 105 mm (DIN long).
+\newlength{\QRpwid}\setlength{\QRpwid}{148mm}
+\newlength{\QRphei}\setlength{\QRphei}{105mm}
+\newlength{\QRrwid}\setlength{\QRrwid}{62mm}
+\newlength{\QRrhei}\setlength{\QRrhei}{105mm}
+\newlength{\QRpad}\setlength{\QRpad}{5mm}
+
+\newcommand{\QRfontdef}[3]{\fontfamily{phv}\fontsize{#1pt}{#2pt}\fontseries{#3}\selectfont\strut}
+
+\newcommand{\QRrtitle}{\QRfontdef{11}{11.1}{b}}
+\newcommand{\QRrsubtitle}{\QRfontdef{6}{10.60}{b}}
+\newcommand{\QRrcontent}{\QRfontdef{8}{10.8}{m}}
+\newcommand{\QRptitle}{\QRfontdef{11}{11.1}{b}}
+\newcommand{\QRpsubtitle}{\QRfontdef{6}{10.60}{b}}
+\newcommand{\QRpcontent}{\QRfontdef{8}{10.8}{m}}
+
+
+\renewcommand{\QRposX}{0}
+\renewcommand{\QRposY}{187}
+
+% REFORMATING OF VARIABLES
+
+\StrMid{<%strdbkginf%>}{1}{50}[\strdbkginfi]
+\StrMid{<%strdbkginf%>}{51}{100}[\strdbkginfii]
+\StrMid{<%strdbkginf%>}{100}{140}[\strdbkginfiii]
+
+\noindent
+% Block where the QR code is
+\begin{textblock}{210}(\QRposX,\QRposY)\setlength{\parindent}{0pt}%
+\begin{tikzpicture}[x=1mm,y=1mm]
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%% RECEIPT PART
+        % Edge
+           \ifthenelse{\equal{\PrintOnPaper}{on}}{\node[above] at (0.5*\QRrwid+0.5*\QRpwid,{\QRrhei+10mm}) {\color{white}\LANGuse{qr_cutoff}};}{\node[above] at (0.5*\QRrwid+0.5*\QRpwid,{\QRrhei+10mm}) {\LANGuse{qr_cutoff}};}
+            \draw[externalrect] (0,0) rectangle (\QRrwid,{\QRrhei+10mm});
+        \begin{scope}[every node/.style={anchor=north west,text width={\QRrwid-2*\QRpad},align=left,inner sep=0pt,outer sep=0pt}]
+        % Title section RTS
+            \node (RTS) at ({\QRpad},{\QRphei-\QRpad+7.5mm}) {\QRrtitle \LANGuse{qr_receipt}};
+        % Information section
+            \node (RIS) at ([shift={(0,10pt)}]RTS.south west) {%
+                \begin{minipage}{\linewidth}\raggedright\QRrcontent
+                    {\par
+\QRrsubtitle \LANGuse{qr_account}}\par
+                    \strut <%qriban%>\par
+                    \strut <%company%>\par
+                    \strut <%companyaddress1%>\par
+                    \strut <%companyzip%> <%companycity%>\par
+                    \vspace{2pt}
+                    {\par\medskip
+\QRrsubtitle \LANGuse{qr_reference}}\par
+                    \strut <%dcn group=5right%>\par
+                    \vspace{2pt}
+                    {\par\medskip
+\QRrsubtitle \LANGuse{qr_payableby}}\par
+                    \strut <%name%>\par
+                    \strut <%address1%> <%address2%>\par
+                    \strut <%zipcode%> <%city%> \par
+                \end{minipage}
+            };
+        % Amount section
+            \node (RAS) at ({\QRpad},48mm) {%
+                \begin{minipage}{\linewidth}\raggedright
+                    \begin{tabular}{@{}ll@{}}
+                         \QRpsubtitle \LANGuse{qr_currency} & \QRpsubtitle \LANGuse{qr_amount} \\
+                        \QRpcontent <%currency%> & \QRrcontent \StrSubstitute[0]{<%total%>}{'}{ }\\
+                    \end{tabular}
+                \end{minipage}
+            };
+        % Acceptance point section
+            \node (RAPS) at ([shift={(0pt,-\QRpad)}]RAS.south west) {
+                \begin{minipage}{\linewidth}\raggedleft\QRrsubtitle
+\par
+\LANGuse{qr_acceptancepoint}
+                \end{minipage}
+            };
+        \end{scope}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%% PAYMENT PART
+        %%%%% A6 Edge
+            \draw[externalrect] ({\QRrwid},0) rectangle ++({\QRpwid},{\QRphei+10mm});
+        \begin{scope}[every node/.style={anchor=north west,text width={\QRdim},align=left,inner sep=0pt,outer sep=0pt}]
+        % Title section
+            \node (PTS) at ({\QRrwid+\QRpad},{\QRphei-\QRpad+7.5mm}) {
+                \begin{minipage}{\linewidth}\raggedright\QRptitle
+                    \LANGuse{qr_paymentpart}
+                \end{minipage}
+            };
+        % Swiss QR Code section
+            \node (PSQRCS) at ({\QRrwid+\QRpad},{\QRphei-2.34*\QRpad+5mm}) {
+                \begin{minipage}{\linewidth}\raggedright
+\unicodeqrcode{SPC\\0200\\1\\<%qribanqr%>\\K\\<%companyqr%>\\<%companyaddress1qr%>\\<%companyzipqr%> <%companycityqr%>\\\\\\CH\\\\\\\\\\\\\\\\<%integer_out_amount%>.<%out_decimal%>\\<%currency%>\\K\\<%nameqr%>\\<%address1qr%>\\<%zipcodeqr%> <%cityqr%>\\\\\\CH\\QRR\\<%dcn%>\\<%invdescriptionqr%>\\EPD\\<%strdbkginfqr%>\\\\}
+
+                \end{minipage}
+            };
+        % Amount section
+           \node (PAS) at ({\QRrwid+\QRpad},48mm) {%
+                \begin{minipage}{\linewidth}\raggedright
+                    \begin{tabular}{@{}ll@{}}
+                        \QRpsubtitle \LANGuse{qr_currency} & \QRpsubtitle \LANGuse{qr_amount} \\
+                        \QRpcontent <%currency%> & \QRrcontent \StrSubstitute[0]{<%total%>}{'}{ }\\
+                    \end{tabular}
+                \end{minipage}
+            };
+        \end{scope}
+        %
+        % Swiss flag
+            \node[anchor=center] at (PSQRCS.center) {\QRSwissflag};
+        \begin{scope}[every node/.style={anchor=north west,text width={\QRpwid-\QRdim-3*\QRpad},align=left,inner sep=0pt,outer sep=0pt}]
+        % Information section
+            \node (PIS) at ([shift={({\QRpad},3pt)}]PTS.north east) {
+                \begin{minipage}{\linewidth}\raggedright\QRpcontent
+                    {\QRpsubtitle \LANGuse{qr_account}}\par
+                    \strut <%qriban%>\par
+                    \strut <%company%>\par
+                    \strut <%companyaddress1%>\par
+                    \strut <%companyzip%> <%companycity%>\par
+                    \vskip1ex
+                    {\par\medskip
+\QRpsubtitle \LANGuse{qr_reference}}\par
+                    \strut <%dcn group=5right%> \par
+                    \referencenum\par
+                    \vskip1ex
+                    {\par\medskip
+\QRpsubtitle \LANGuse{qr_additionalinformation}}\par
+                    \strut <%invdescriptionqr2%> \par
+                   \strut \strdbkginfi \par
+                   \strut \strdbkginfii \par
+                   \strut \strdbkginfiii
+                    \vskip1ex
+                    {\par\medskip
+\QRpsubtitle \LANGuse{qr_payableby}}\par
+                    \strut <%name%>\par
+                    \strut <%address1%> <%address2%>\par
+                    \strut <%zipcode%> <%city%> \par
+                \end{minipage}
+            };
+        \end{scope}
+        % Further information section
+        \begin{scope}[every node/.style={anchor=north west,text width={\QRpwid-2*\QRpad},align=left,inner sep=0pt,outer sep=0pt}]
+            \node at ([shift={(0pt,{-\QRpad})}]PAS.south west) {%
+                \begin{minipage}{\linewidth}\raggedright\QRpcontent
+
+                \end{minipage}
+            };
+        \end{scope}
+\end{tikzpicture}
+\end{textblock}
+}

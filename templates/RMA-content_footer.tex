@@ -1,31 +1,25 @@
-% Falls der Footer über das Hintergrund-Bild eingesetzt wird, muss dieser Footer gelöscht werden.
+\ifthenelse{\equal{\Footer}{on}}{
 
-\newcommand\Footer{
-
-\begin{textblock*}{17.4cm}(1.8cm,27.4cm)
-\parbox{\textwidth}{
-\begin{small}
-\vspace{0.2cm}
-\hline
-\vspace{0.2cm}
-\parbox[t]{.34\textwidth}{
-<%company%>\\
-\BeforeSubString{ --}{<%address%>}\\
-\BehindSubString{-- }{<%address%>}\\
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%tel%>}{}}{}{Tel.: <%tel%>\\}
-\ifthenelse{\equal{<%fax%>}{}}{}{Fax: <%fax%>\\}
-\ifthenelse{\equal{<%companyemail%>}{}}{}{E-Mail: <%companyemail%>\\}
-\ifthenelse{\equal{<%companywebsite%>}{}}{}{Web: <%companywebsite%>\\}
-}
-\parbox[t]{.33\textwidth}{
-\ifthenelse{\equal{<%bankname%>}{}}{}{Bank: <%bankname%>\\}
-\ifthenelse{\equal{<%iban%>}{}}{}{IBAN: <%iban%>\\}
-\ifthenelse{\equal{<%bic%>}{}}{}{BIC: <%bic%>\\}
-}
-\end{small}
-}
-\end{textblock*}
-
-}
+     \renewcommand{\headrulewidth}{0pt}
+     \renewcommand{\footrulewidth}{0.5pt}
+     \fancypagestyle{plain}{\fancyhf{}}
+     \fancypagestyle{myfoot}{\fancyhf{}
+          \lfoot{%
+               \ifstrempty{<%company%>}{}{<%company%>\\}
+               \ifstrempty{<%companyaddress1%>}{}{<%companyaddress1%>\\}
+               \ifstrempty{<%companyaddress2%>}{}{<%companyaddress2%>\\}
+               <%companyzip%> <%companycity%>\\
+          }
+          \cfoot{%
+               \strut\ifstrempty{<%iban%>}{}{IBAN: <%iban%>}\\
+               \strut\ifstrempty{<%bic%>}{}{BIC: <%bic%>}\\
+               \strut\\
+               \ifthenelse{\equal{\PageNumber}{on}}{\strut \LANGuse{footer_page} \thepage}{}
+          }
+          \rfoot{%
+               \strut\ifstrempty{<%companyemail%>}{}{<%companyemail%>\\}
+               \strut\ifstrempty{<%companywebsite%>}{}{<%companywebsite%>\\}
+               \strut\ifstrempty{<%tel%>}{}{<%tel%>\\}
+          }
+     }
+}{}

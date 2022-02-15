@@ -1,4 +1,4 @@
-\renewcommand{\arraystretch}{1.2} %Abstand zwischen den Zeilen
+\renewcommand{\arraystretch}{1.3} %Abstand zwischen den Zeilen
 
 \begin{tabularx}{\textwidth}{@{}llXrr@{}}
 
@@ -9,7 +9,7 @@
 \hline
 
 <%foreach number%>
-\IfSubStr{<%number%>}{Titel}{}{<%runningnumber%>} & \IfSubStr{<%number%>}{Titel}{}{<%number%>}& \IfSubStr{<%number%>}{Titel}{\textbf{<%description%>}}{<%description%>} \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline <%itemnotes%>} 
+ <%runningnumber%> & <%number%>& <%description%> \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline <%itemnotes%>} 
 \ifthenelse{\equal{<%deliverydate%>}{}}{}{\newline Lieferdatum: <%deliverydate%>} 
 \ifthenelse{\equal{<%serialnumber%>}{}}{}{\newline Seriennummer: <%serialnumber%>}
 \ifthenelse{\equal{<%projectnumber%>}{}}{}{\newline Projekt: <%projectnumber%>}
@@ -18,7 +18,7 @@
 \ifthenelse{\equal{<%package%>}{}}{}{\newline Verpackung: <%package%>}
 \ifthenelse{\equal{<%netweight%>}{}}{}{\newline Netto Gewicht: <%netweight%>}
 \ifthenelse{\equal{<%grossweight%>}{}}{}{\newline Brutto Gewicht: <%grossweight%>}
-& \IfSubStr{<%number%>}{Titel}{}{<%qty%>} & \IfSubStr{<%number%>}{Titel}{}{<%unit%>}\\
+& <%qty%> & <%unit%>\\
 <%end number%>
 \end{tabularx}
 \hline

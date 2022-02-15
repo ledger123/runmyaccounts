@@ -1,7 +1,11 @@
-\ifthenelse{\equal{<%shiptoaddress1%>}{<%address1%>}}{}{
+\ifthenelse{\equal{\Deliveraddress}{on}}{
 
-\vspace{0.5cm}
+     \ifthenelse{\equal{<%shiptoaddress1%>}{<%address1%>}}{}{
 
-\textbf{Lieferung an:}\\
-\ShiptoAddress
-}
+          \vspace{0.5cm}
+
+          \textbf{\LANGuse{deliveryto}:}\\
+          \ShiptoAddress
+     }
+
+}{}
