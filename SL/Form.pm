@@ -4269,14 +4269,16 @@ sub get_lastused {
 
 
 sub save_lastused {
-	my ( $self, $myconfig, $report, $cols ) = @_;
+	my ( $self, $myconfig, $report, $cols, $cols2 ) = @_;
 	my $dbh = $self->dbconnect($myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
 
     my $colslist;
 
     for (@$cols) { $colslist .= "$_," if $self->{"l_$_"} }
+    for (@$cols2) { $colslist .= "$_," if $self->{"l_$_"} }
     chop $report_columns;
+
     my $exists = $dbs->query( "SELECT 1 FROM lastused WHERE report=? AND login = ? LIMIT 1", $report, $self->{login} )->list;
     if ($exists) {
         $dbs->query( "UPDATE lastused SET cols = ? WHERE report=? AND login = ?", $colslist, $report, $self->{login} );
