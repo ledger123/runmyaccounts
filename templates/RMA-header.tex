@@ -1,0 +1,39 @@
+\null\vspace{4.2cm}
+
+\parbox{\textwidth}{
+\textbf{\large{\DocType \ifthenelse{\equal{<%invnumber%><%quonumber%>}{}}{}{\ \ Nr. <%invnumber%><%quonumber%>}\hfill {Datum:} <%invdate%><%orddate%><%quodate%>}}
+}
+
+\vspace{0.5cm}
+
+%Rechnungstitel
+\ifthenelse{\equal{<%invdescription%><%orddescription%><%quodescription%>}{}}{}{\textbf{<%invdescription%><%orddescription%><%quodescription%>}}
+\vspace{0.2cm}
+%}
+
+%Bestellnummer
+\ifthenelse{\equal{<%ordnumber%>}{}}{}{Bestellnummer: <%ordnumber%>
+\vspace{0.2cm}
+}
+
+%Ihre Bestellnummer
+\ifthenelse{\equal{<%ponumber%>}{}}{}{Ihre Bestellnummer: <%ponumber%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 1
+\ifthenelse{\equal{<%shippingpoint%>}{}}{}{<%shippingpoint%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 2
+\ifthenelse{\equal{<%shipvia%>}{}}{}{<%shipvia%>
+\vspace{0.2cm}
+}
+
+%Text-Feld 3
+\ifthenelse{\equal{<%waybill%>}{}}{}{<%waybill%>
+\vspace{0.2cm}
+}
+
+\vspace{0.3cm}
