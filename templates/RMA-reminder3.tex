@@ -1,76 +1,69 @@
 %%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
 
-% Typ: 3. Mahnung
-% Name: reminder3.tex
-% Sprache: Deutsch
-% Erstellungsdatum: 14. Oktober 2015
-% Mandant: 
-% Version: 
-% Ersteller: 
-% © by Run my Accounts AG
+\newcommand{\DocType}{3. Mahnung}
 
-%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%
 
 <%include definitions_packages.tex%>
 
-<%include definitions_settings.tex%>
+<%include content_language.tex%>
+
+<%include definitions_language.tex%>
+
+%%%%%%%%%%%%% GENERAL SETTINGS FOR THE TEMPLATE %%%%%%%%%%%%
+
+%%% PAGE LAYOUT %%%
+\usepackage[a4paper,top=5cm,bottom=3.1cm,left=1.8cm,right=1.8cm]{geometry} 
+\textblockorigin{0.00cm}{0.00cm} % - nach links / + nach unten
+\newcommand{\PageNumber}{off}
+\newcommand{\PrintOnPaper}{off}
+\newcommand{\Greetings}{on}
+\newcommand{\Deliveraddress}{on}
+\newcommand{\Footer}{on}
+\newcommand{\StandardBackground}{../<%templates%>/background_with_footer.pdf}
+\newcommand{\BackgroundESRorange}{../<%templates%>/background_ESR.pdf}
+\newcommand{\BackgroundESRwhite}{../<%templates%>/background_without_footer.pdf}
+
+%%% PLACE OF ADDRESS %%%
+\newcommand{\Addressblock}{right}
+%\newcommand{\Addressblock}{left}
+%\newcommand{\Addressblock}{pingenleft}
+
 
 <%include content_footer.tex%>
 
-%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
-\Footer
+<%include definitions_settings.tex%>
 
-%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  ELEMENTS  %%%%%%%%%%%%%
+
+\pagestyle{myfoot}
 
 <%include content_address.tex%>
 
 \null\vspace{7.2cm}
 
 \parbox{\textwidth}{
-\textbf{\large{Letzte Mahnung}\hfill \today}
+\textbf{\large{\LANGuse{doctype}}}\hfill \today}
 }
 
 \vspace{0.5cm}
-\parbox{\textwidth}{
-Sehr geehrte Damen und Herren\\
-\\
-Wir beziehen uns auf die \textbf{Rechnung Nr. <%invnumber%>}\ifthenelse{\equal{<%invdescription%>}{}}{}{ mit dem Titel \glqq <%invdescription%>\grqq} vom <%invdate%> über <%currency%> <%due%>. Leider konnten wir noch immer keinen Zahlungseingang feststellen.\\
 
-Sollte der Betrag nicht innerhalb von 3 Tagen auf unserem Bankkonto eingegangen sein, sehen wir uns zur Veranlassung weiterer Schritte gezwungen.
+\LANGuse{accounttable_salutation}\\
+\\
+\LANGuse{reminder3_part_1}\\
+
+\LANGuse{reminder3_part_2}
 
 \vspace{0.5cm}
 
-Freundliche Grüsse
+\LANGuse{greetings}
 
 \vspace{0.5cm}
 
 <%company%>
-}
 
+%include content_einzahlungsschein.tex%>
 
-%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
-
-\ifthenelse{\equal{<%membernumber%>}{}}{
-
-%Hier könnte man IBAN Infos anfügen
-
-}{
-
-\ifthenelse{\equal{<%currency%>}{CHF}}{
-\ifthenelse{\equal{<%invtotal%>}{0.00}}{
-\end{document}
-
-}{
-
-\pagebreak
-
-<%include content_einzahlungsschein.tex%>
-
-
-}
-}
-{} }
-  
 %%%%%%%%%%%%%  END  %%%%%%%%%%%%%
  
 \end{document}
