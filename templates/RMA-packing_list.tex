@@ -1,39 +1,66 @@
 %%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
 
-% Typ: Lieferschein
-% Name: packing_list.tex
-% Sprache: Deutsch
-% Erstellungsdatum: 8. Oktober 2015
-% Mandant: 
-% Version: 
-% Ersteller: 
-% © by Run my Accounts AG
+\newcommand{\DocType}{Lieferschein}
 
-%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%
 
 <%include definitions_packages.tex%>
 
-<%include definitions_settings.tex%>
+<%include content_language.tex%>
+
+<%include definitions_language.tex%>
+
+<%include definitions_table.tex%>
+
+%%% GENERAL SETTINGS %%%
+
+%%% PAGE LAYOUT %%%
+\usepackage[a4paper,top=5cm,bottom=3.1cm,left=1.8cm,right=1.8cm]{geometry} 
+\textblockorigin{0.00cm}{0.00cm} % - nach links / + nach unten
+\newcommand{\PageNumber}{on}
+\newcommand{\PrintOnPaper}{on}
+\newcommand{\Greetings}{on}
+\newcommand{\Footer}{on}
+\newcommand{\StandardBackground}{../<%templates%>/background_with_footer.pdf}
+\newcommand{\BackgroundESRorange}{../<%templates%>/background_ESR.pdf}
+\newcommand{\BackgroundESRwhite}{../<%templates%>/background_without_footer.pdf}
+
+%%% PLACE OF ADDRESS %%%
+\newcommand{\Addressblock}{right}
+%\newcommand{\Addressblock}{left}
+%\newcommand{\Addressblock}{pingenleft}
+
+%%% TEMPLATE TABLE DEFINITIONS %%%
+\declarecolumn[headstyle={b},headcolor={black},headalign={l},colstyle={n},colcolor={black},colalign={l}]{1}{\LANGuse{arttable_runningnumber}}{runningnumber}
+\declarecolumn[headstyle={b},headcolor={black},headalign={l},colstyle={n},colcolor={black},colalign={l}]{2}{\LANGuse{arttable_number}}{number}
+\declarecolumn[headstyle={b},headcolor={black},headalign={l},colstyle={n},colcolor={black},colalign={l},colwidth={x}]{3}{\LANGuse{arttable_description}}{description}
+\declarecolumn[headstyle={b},headcolor={black},headalign={r},colstyle={n},colcolor={black},colalign={r}]{4}{\LANGuse{arttable_unit}}{unit}
+\declarecolumn[headstyle={b},headcolor={black},headalign={r},colstyle={n},colcolor={black},colalign={r}]{5}{\LANGuse{arttable_quantity}}{qty}
+
+\DefineContents{subtotalline}{\LANGuse{arttable_subtotal} <%currency%>}{}
+\DefineContents{continuefromline}{\LANGuse{arttable_continuefromline}~\thepreviouspage}{}
+\DefineContents{invoiceamountline}{\LANGuse{arttable_subtotal} <%currency%>}{\bfseries}
+\DefineContents{subtotallineend}{\LANGuse{arttable_total} <%currency%>}{}
+\DefineContents{subtotal}{\LANGuse{arttable_subtotal} <%currency%>}{\bfseries}
+\DefineContents{invoicetotal}{\LANGuse{arttable_invoicetotal} <%currency%>}{\bfseries}
+
+\Tableoptions{subtotal=off,total=off,rowvoffset=3pt,paidtable=on}
 
 <%include content_footer.tex%>
 
-%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
-\Footer
+<%include definitions_settings.tex%>
 
-\newcommand{\DocType}{Lieferschein}
+%%%%%%%%%%%%%  ELEMENTS  %%%%%%%%%%%%%
 
-%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
-
-<%include content_pagebreak_withoutamount_withfooter.tex%>
+\pagestyle{myfoot}
 
 <%include content_address.tex%>
 
 <%include content_header.tex%>
 
-<%include content_articles_withoutamount.tex%>
+\PrintInvoiceTable
 
 <%include content_notes.tex%>
 
 %%%%%%%%%%%%%  END  %%%%%%%%%%%%%
- 
 \end{document}

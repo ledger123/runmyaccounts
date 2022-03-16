@@ -1,3 +1,35 @@
+%Definiert die Lieferadresse:
+\newcommand{\ShiptoAddress}{
+     \ifthenelse{\equal{<%shiptoname%>}{}}{}{<%shiptoname%>\\}
+     \ifthenelse{\equal{<%shiptoaddress1%>}{}}{}{<%shiptoaddress1%>\\}
+     \ifthenelse{\equal{<%shiptoaddress2%>}{}}{}{<%shiptoaddress2%>\\}
+     \ifthenelse{\equal{<%shiptocity%>}{}}{}{<%shiptozipcode%> <%shiptocity%>\\}
+     \ifthenelse{\equal{<%shiptocountry%>}{}}{}{<%shiptocountry%>\\}
+}
+
+%Definiert die Rechnungsadresse:
+\newcommand{\Address}{
+     \ifthenelse{\equal{<%typeofcontact%>}{company}}{
+
+          %Firmenanschrift
+          <%name%>\\
+          \ifthenelse{\equal{<%salutation%>}{}}{}{<%salutation%> }\ifthenelse{\equal{<%contacttitle%>}{}}{}{<%contacttitle%> }\ifthenelse{\equal{<%firstname%>}{}}{}{<%firstname%> }\ifthenelse{\equal{<%lastname%>}{}}{}{<%lastname%>\\}
+          \ifthenelse{\equal{<%address1%>}{}}{}{<%address1%>\\}
+          \ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>\\}
+           <%zipcode%> <%city%>\\
+          \ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+     }{
+          %Privatanschrift
+          \ifthenelse{\equal{<%salutation%>}{}}{}{<%salutation%>\\}
+          \ifthenelse{\equal{<%contacttitle%>}{}}{<%firstname%> <%lastname%>\\}                              
+          {<%contacttitle%> <%firstname%> <%lastname%>\\}
+          \ifthenelse{\equal{<%address1%>}{}}{}{<%address1%>\\}
+          \ifthenelse{\equal{<%address2%>}{}}{}{<%address2%>\\}
+          <%zipcode%> <%city%>\\
+          \ifthenelse{\equal{<%country%>}{}}{}{<%country%>}
+     }
+}
+
 \ifthenelse{\equal{\Addressblock}{right}}{\begin{textblock*}{6.5cm}(11.85cm,6.10cm)}{}
 \ifthenelse{\equal{\Addressblock}{left}}{\begin{textblock*}{6.5cm}(1.8cm,6.10cm)}{}
 \ifthenelse{\equal{\Addressblock}{pingenleft}}{\begin{textblock*}{6.5cm}(2.25cm,6.10cm)}{}

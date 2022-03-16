@@ -1,23 +1,24 @@
+
 \ifthenelse{\equal{\Addressblock}{left}}{\begin{textblock*}{6.5cm}(11.85cm,6.10cm)}{}
 \ifthenelse{\equal{\Addressblock}{pingenleft}}{\begin{textblock*}{6.5cm}(11.85cm,6.10cm)}{}
 \ifthenelse{\equal{\Addressblock}{right}}{\begin{textblock*}{6.5cm}(1.8cm,6.10cm)}{}
 
-\textbf{\Large{\DocType}}\\
-Datum: <%invdate%><%orddate%><%quodate%>\\
-\ifthenelse{\equal{<%invnumber%>}{}}{}{Rechnungs-Nr.: <%invnumber%>\\}
-\ifthenelse{\equal{<%quonumber%>}{}}{}{Offert-Nr.: <%quonumber%>\\}
-\ifthenelse{\equal{<%ordnumber%>}{}}{}{Bestell-Nr.: <%ordnumber%>\\}
-\ifthenelse{\equal{<%ponumber%>}{}}{}{Ihre Bestell-Nr.: <%ponumber%>\\}
-\ifthenelse{\equal{<%customernumber%>}{}}{}{Kunden-Nr.: <%customernumber%>\\}
-\ifthenelse{\equal{<%businessnumber%>}{}}{}{MWST Nr.: <%businessnumber%>\\}
-\ifthenelse{\equal{<%customertaxnumber%>}{}}{}{Ihre MWST Nr.: <%customertaxnumber%>\\}
+\textbf{\Large{\LANGuse{doctype}}}\\
+\ifthenelse{\equal{<%invnumber%>}{}}{}{\LANGuse{invnumber}: <%invnumber%>\\}
+\ifthenelse{\equal{<%quonumber%>}{}}{}{\LANGuse{quonumber}: <%quonumber%>\\}
+\ifthenelse{\equal{<%ordnumber%>}{}}{}{\LANGuse{ordnumber}: <%ordnumber%>\\}
+\ifthenelse{\equal{<%ponumber%>}{}}{}{\LANGuse{ponumber}: <%ponumber%>\\}
+\LANGuse{invdate}: <%invdate%><%orddate%><%quodate%>\\
+\ifthenelse{\equal{<%customernumber%>}{}}{}{\LANGuse{customernumber}: <%customernumber%>\\}
+\ifthenelse{\equal{<%businessnumber%>}{}}{}{\LANGuse{businessnumber}: <%businessnumber%>\\}
+\ifthenelse{\equal{<%customertaxnumber%>}{}}{}{\LANGuse{customertaxnumber}:: <%customertaxnumber%>\\}
 
 \end{textblock*}
 
 \null\vspace{4.2cm}
 
 %Rechnungstitel
-\textbf{\ifthenelse{\equal{\DocType }{Rechnung}}{<%invdescription%>}{}\ifthenelse{\equal{\DocType }{Offerte}}{<%quodescription%>}{}\ifthenelse{\equal{\DocType }{Auftragsbestätigung}}{<%quodescription%>}{}}
+\textbf{\ifthenelse{\equal{\DocType }{Offerte}}{<%quodescription%>}{\ifthenelse{\equal{\DocType }{\LANGuse{orddescription}}}{<%orddescription%>}{<%invdescription%>}}}
 \vspace{0.1cm}
 %}
 
