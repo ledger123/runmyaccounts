@@ -1,0 +1,664 @@
+\usepackage{etoolbox}
+\newcommand{\LANGdef}[1]{\csdef{LANG#1}{}}
+\newcommand{\LANGtra}[2]{\csdef{LANG#1}{#2}}
+\newcommand{\LANGuse}[1]{\csuse{LANG#1}}
+\newcommand{\LANGlist}[2]{\csdef{LANGload#1}{#2}}
+\newcommand{\LANGload}[1]{\csuse{LANGload#1}}
+
+%%%%%%%%% LIST OF VARIABLES %%%%%%%%%
+
+% List of variables
+\LANGdef{accounttable_current}
+\LANGdef{accounttable_days}
+\LANGdef{accounttable_due}
+\LANGdef{accounttable_invoice}
+\LANGdef{accounttable_part_1}
+\LANGdef{accounttable_part_2}
+\LANGdef{accounttable_salutation}
+\LANGdef{accounttable_total}
+\LANGdef{arttable_customerponumber}
+\LANGdef{arttable_continuefromline}
+\LANGdef{arttable_deliverydate}
+\LANGdef{arttable_description}
+\LANGdef{arttable_grossweight}
+\LANGdef{arttable_invoicetotal}
+\LANGdef{arttable_inclvat}
+\LANGdef{arttable_net}
+\LANGdef{arttable_netweight}
+\LANGdef{arttable_no}
+\LANGdef{arttable_notsubjecttovat}
+\LANGdef{arttable_number}
+\LANGdef{arttable_on}
+\LANGdef{arttable_openinvoiceamount}
+\LANGdef{arttable_ordernumber}
+\LANGdef{arttable_package}
+\LANGdef{arttable_paid}
+\LANGdef{arttable_price}
+\LANGdef{arttable_projectnumber}
+\LANGdef{arttable_quantity}
+\LANGdef{arttable_runningnumber}
+\LANGdef{arttable_serialnumber}
+\LANGdef{arttable_subtotal}
+\LANGdef{arttable_total}
+\LANGdef{arttable_unit}
+\LANGdef{arttable_vat}
+\LANGdef{arttable_vatrate}
+\LANGdef{businessnumber}
+\LANGdef{customernumber}
+\LANGdef{customertaxnumber}
+\LANGdef{deliveryto}
+\LANGdef{doctype}
+\LANGdef{footer_page}
+\LANGdef{greetings}
+\LANGdef{invdate}
+\LANGdef{invnumber}
+\LANGdef{invterms_duedate}
+\LANGdef{invterms_immediate}
+\LANGdef{orddescription}
+\LANGdef{ordnumber}
+\LANGdef{other_terms_duedate}
+\LANGdef{other_terms_immediate}
+\LANGdef{ponumber}
+\LANGdef{qr_acceptancepoint}
+\LANGdef{qr_account}
+\LANGdef{qr_additionalinformation}
+\LANGdef{qr_amount}
+\LANGdef{qr_currency}
+\LANGdef{qr_cutoff}
+\LANGdef{qr_payableby}
+\LANGdef{qr_paymentpart}
+\LANGdef{qr_receipt}
+\LANGdef{qr_reference}
+\LANGdef{quonumber}
+\LANGdef{reminder1_part_1}
+\LANGdef{reminder1_part_2}
+\LANGdef{reminder2_part_1}
+\LANGdef{reminder2_part_2}
+\LANGdef{reminder3_part_1}
+\LANGdef{reminder3_part_2}
+\LANGdef{total}
+
+
+%%%%%%%%% SWISS GERMAN DICTIONARY %%%%%%%%%
+
+\LANGlist{de-CH}{
+    \LANGtra{accounttable_current}{Aktuell}
+    \LANGtra{accounttable_days}{Tage}
+    \LANGtra{accounttable_due}{Fällig}
+    \LANGtra{accounttable_invoice}{Rechnung}
+    \LANGtra{accounttable_part_1}{Wir mussten feststellen, dass untenstehende Rechnungen noch imer offen sind. Wir bitten Sie höflich, die ausstehenden Beträge in der Höhe von <%currency%> <%total%> baldmöglichst zu begleichen.}
+    \LANGtra{accounttable_part_2}{Sollten Sie in der Zwischenzeit die ausstehenden Rechnungen bezahlt haben, beachten Sie bitte dieses Schreiben als gegenstandslos.}
+    \LANGtra{accounttable_salutation}{Sehr geehrte Damen und Herren}
+    \LANGtra{accounttable_total}{Total ausstehend}
+    \LANGtra{arttable_customerponumber}{Ihre Bestellnummer}
+    \LANGtra{arttable_continuefromline}{\"{U}bertrag von Seite}
+    \LANGtra{arttable_deliverydate}{Lieferdatum}
+    \LANGtra{arttable_description}{Beschreibung}
+    \LANGtra{arttable_grossweight}{Brutto Gewicht}
+    \LANGtra{arttable_inclvat}{inkl. MWST}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{arttable_invoicetotal}{Auftrags-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_invoicetotal}{Rechnungs-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{arttable_invoicetotal}{Einkaufsbestell-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{arttable_invoicetotal}{Total ausstehend}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_invoicetotal}{Lagerliste-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Gutschrifts-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Gutschrifts-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_invoicetotal}{Lieferschein-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_invoicetotal}{Gutschrifts-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{arttable_invoicetotal}{Offertanfrage-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{arttable_invoicetotal}{Offert-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_invoicetotal}{Rechnungs-Betrag}}{}
+    \LANGtra{arttable_net}{Netto}
+    \LANGtra{arttable_netweight}{Netto Gewicht}
+    \LANGtra{arttable_notsubjecttovat}{<%company%> ist nicht MWST-pflichtig}
+    \LANGtra{arttable_number}{Artikel}
+    \LANGtra{arttable_on}{auf}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_openinvoiceamount}{Offener Rechnungs-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{arttable_openinvoiceamount}{Offener Rechnungs-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_openinvoiceamount}{Offener Lagerlisten-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_openinvoiceamount}{Offener Gutschrifts-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_openinvoiceamount}{Offener Lieferschein-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_openinvoiceamount}{Offener Gutschrifts-Betrag}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_openinvoiceamount}{Offener Rechnungs-Betrag}}{}
+    \LANGtra{arttable_ordernumber}{Bestellnummer}
+    \LANGtra{arttable_package}{Verpackung}
+    \LANGtra{arttable_paid}{Bezahlt}
+    \LANGtra{arttable_price}{Preis}
+    \LANGtra{arttable_projectnumber}{Projektnummer}
+    \LANGtra{arttable_quantity}{Menge}
+    \LANGtra{arttable_runningnumber}{Pos.}
+    \LANGtra{arttable_no}{Pos.}
+    \LANGtra{arttable_serialnumber}{Seriennummer}
+    \LANGtra{arttable_subtotal}{Zwischensumme}
+    \LANGtra{arttable_total}{Total}
+    \LANGtra{arttable_unit}{Einheit}
+    \LANGtra{arttable_vat}{MWST}
+    \LANGtra{arttable_vatrate}{MWST-Satz}
+    \LANGtra{businessnumber}{MWST Nr.}
+    \LANGtra{customernumber}{Kunden Nr.}
+    \LANGtra{customertaxnumber}{Ihre MWST Nr.}
+    \LANGtra{deliveryto}{Lieferung an}
+    \ifthenelse{\equal{\DocType}{1. Mahnung}}{\LANGtra{doctype}{1. Mahnung}}{}
+    \ifthenelse{\equal{\DocType}{2. Mahnung}}{\LANGtra{doctype}{2. Mahnung}}{}
+    \ifthenelse{\equal{\DocType}{3. Mahnung}}{\LANGtra{doctype}{Letzte Mahnung}}{}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{doctype}{Auftragsbestätigung}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{doctype}{Rechnung}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{doctype}{Einkaufsbestellung}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{doctype}{Kontoauszug}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{doctype}{Kreditorenrechnung}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{doctype}{Lagerliste}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{doctype}{Lastschrift}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{doctype}{Lieferschein}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{doctype}{Gutschrift}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{doctype}{Offertanfrage}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{doctype}{Offerte}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{doctype}{Rechnung}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{doctype}{Rüstschein}}{}
+    \LANGtra{footer_page}{Seite}
+    \LANGtra{greetings}{Freundliche Grüsse}
+    \LANGtra{invdate}{Datum}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{invnumber}{Auftragsbestätigung Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{invnumber}{Rechnung Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{invnumber}{Einkaufsbestellung Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{invnumber}{Kreditorenrechnung Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{invnumber}{Lagerliste Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{invnumber}{Lastschrift Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{invnumber}{Lieferschein Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{invnumber}{Gutschrift Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{invnumber}{Offertanfrage Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{invnumber}{Offerte Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{invnumber}{Rechnung Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{invnumber}{Rüstschein Nr.}}{}
+    \LANGtra{invterms_duedate}{Wir bedanken uns für Ihre \textbf{Überweisung innerhalb von <%terms%> Tagen} bis zum <%duedate%>}
+    \LANGtra{invterms_immediate}{Wir bedanken uns für die \textbf{sofortige Überweisung}}
+    \LANGtra{orddescription}{Auftragsbestätigung}
+    \LANGtra{ordnumber}{Bestell Nr.}
+    \LANGtra{other_terms_duedate}{Zahlungsfrist: <%terms%> Tage}
+    \LANGtra{other_terms_immediate}{Zahlungsfrist: sofort}
+    \LANGtra{ponumber}{Ihre Bestell Nr.}
+    \LANGtra{qr_acceptancepoint}{Annahmestelle}
+    \LANGtra{qr_account}{Konto / Zahlbar an}
+    \LANGtra{qr_additionalinformation}{Zusätzliche Information}
+    \LANGtra{qr_amount}{Betrag}
+    \LANGtra{qr_currency}{Währung}
+    \LANGtra{qr_cutoff}{Vor der Einzahlung abzutrennen}
+    \LANGtra{qr_payableby}{Zahlbar durch}
+    \LANGtra{qr_paymentpart}{Zahlteil}
+    \LANGtra{qr_receipt}{Empfangsschein}
+    \LANGtra{qr_reference}{Referenz}
+    \LANGtra{quonumber}{Offerte Nr.}
+    \LANGtra{reminder1_part_1}{Wir möchten Sie daran erinnern, dass die Rechnung Nr. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}vom <%invdate%> über <%currency%> <%due%> noch nicht beglichen ist. Zahlungen bis zum {\today} wurden berücksichtigt.}
+    \LANGtra{reminder1_part_2}{Wir danken Ihnen für eine Überweisung des ausstehenden Betrages innerhalb von 10 Tagen auf unser Bankkonto\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}. Sollte sich Ihre Zahlung mit unserer Mahnung gekreuzt haben, betrachten Sie diese bitte als gegenstandslos.}
+    \LANGtra{reminder2_part_1}{Trotz unserer früheren Mahnung ist die Rechnung Nr. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}vom <%invdate%> über <%currency%> <%due%> noch nicht beglichen. Zahlungen bis zum {\today} wurden berücksichtigt.}
+    \LANGtra{reminder2_part_2}{Ohne Ihren sofortigen gegenteiligen Bericht gehen wir davon aus, dass Sie mit diesem Saldo einverstanden sind. Wir fordern Sie nochmals auf, unser Guthaben innert 5 Tagen auf unser Bankkonto\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>} zu überweisen.}
+    \LANGtra{reminder3_part_1}{Wir beziehen uns auf die Rechnung Nr. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}vom <%invdate%> über <%currency%> <%due%>. Leider konnten wir bis zum {\today} noch immer keinen Zahlungseingang feststellen.}
+    \LANGtra{reminder3_part_2}{Sollte der Betrag nicht innerhalb von 3 Tagen auf unserem Bankkonto\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>} eingegangen sein, sehen wir uns zur Veranlassung weiterer Schritte gezwungen.}
+    \LANGtra{total}{Total}
+}
+
+%%%%%%%%% GERMAN GERMAN DICTIONARY %%%%%%%%%
+
+\LANGlist{de-DE}{
+    \LANGtra{accounttable_current}{Aktuell}
+    \LANGtra{accounttable_days}{Tage}
+    \LANGtra{accounttable_due}{Fällig}
+    \LANGtra{accounttable_invoice}{Rechnung}
+    \LANGtra{accounttable_part_1}{Wir mussten feststellen, dass untenstehende Rechnungen noch immer offen sind. Wir bitten Sie höflich, die ausstehenden Beträge in der Höhe von <%currency%> <%total%> baldmöglichst zu begleichen.}
+    \LANGtra{accounttable_part_2}{Sollten Sie in der Zwischenzeit die ausstehenden Rechnungen bezahlt haben, beachten Sie bitte dieses Schreiben als gegenstandslos.}
+    \LANGtra{accounttable_salutation}{Sehr geehrte Damen und Herren,}
+    \LANGtra{accounttable_total}{Summe ausstehend}
+    \LANGtra{arttable_customerponumber}{Ihre Bestellnummer}
+    \LANGtra{arttable_continuefromline}{\"{U}bertrag von Seite}
+    \LANGtra{arttable_deliverydate}{Lieferdatum}
+    \LANGtra{arttable_description}{Beschreibung}
+    \LANGtra{arttable_grossweight}{Bruttogewicht}
+    \LANGtra{arttable_inclvat}{inkl. USt.}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{arttable_invoicetotal}{Auftragssumme}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_invoicetotal}{Rechnungsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{arttable_invoicetotal}{Auftragssumme}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{arttable_invoicetotal}{Summe ausstehend}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_invoicetotal}{Lagerwert}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Gutschriftsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Gutschriftsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_invoicetotal}{Liefersumme}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_invoicetotal}{Gutschriftsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{arttable_invoicetotal}{Angebotssumme}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{arttable_invoicetotal}{Angebotssumme}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_invoicetotal}{Rechnungsbetrag}}{}
+    \LANGtra{arttable_net}{Netto}
+    \LANGtra{arttable_netweight}{Nettogewicht}
+    \LANGtra{arttable_notsubjecttovat}{<%company%> ist nicht umsatzsteuerpflichtig}
+    \LANGtra{arttable_number}{Artikel}
+    \LANGtra{arttable_on}{auf}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_openinvoiceamount}{Offener Rechnungsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{arttable_openinvoiceamount}{Offener Rechnungsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_openinvoiceamount}{Offener Lagerwert}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_openinvoiceamount}{Offener Gutschriftsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_openinvoiceamount}{Offene Liefersumme}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_openinvoiceamount}{Offener Gutschriftsbetrag}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_openinvoiceamount}{Offener Rechnungsbetrag}}{}
+    \LANGtra{arttable_ordernumber}{Bestellnummer}
+    \LANGtra{arttable_package}{Verpackung}
+    \LANGtra{arttable_paid}{Bezahlt}
+    \LANGtra{arttable_price}{Preis}
+    \LANGtra{arttable_projectnumber}{Projektnummer}
+    \LANGtra{arttable_quantity}{Menge}
+    \LANGtra{arttable_runningnumber}{Pos.}
+    \LANGtra{arttable_no}{Pos.}
+    \LANGtra{arttable_serialnumber}{Seriennummer}
+    \LANGtra{arttable_subtotal}{Zwischensumme}
+    \LANGtra{arttable_total}{Summe}
+    \LANGtra{arttable_unit}{Einheit}
+    \LANGtra{arttable_vat}{USt.}
+    \LANGtra{arttable_vatrate}{USt-Satz}
+    \LANGtra{businessnumber}{USt-Nr.}
+    \LANGtra{customernumber}{Kundennummer}
+    \LANGtra{customertaxnumber}{Ihre USt-Nr.}
+    \LANGtra{deliveryto}{Lieferung an}
+    \ifthenelse{\equal{\DocType}{1. Mahnung}}{\LANGtra{doctype}{1. Mahnung}}{}
+    \ifthenelse{\equal{\DocType}{2. Mahnung}}{\LANGtra{doctype}{2. Mahnung}}{}
+    \ifthenelse{\equal{\DocType}{3. Mahnung}}{\LANGtra{doctype}{Letzte Mahnung}}{}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{doctype}{Auftragsbestätigung}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{doctype}{Rechnung}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{doctype}{Einkaufsbestellung}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{doctype}{Kontoauszug}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{doctype}{Kreditorenrechnung}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{doctype}{Lagerliste}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{doctype}{Lastschrift}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{doctype}{Lieferschein}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{doctype}{Gutschrift}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{doctype}{Angebotsanfrage}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{doctype}{Angebot}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{doctype}{Rechnung}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{doctype}{Rüstschein}}{}
+    \LANGtra{footer_page}{Seite}
+    \LANGtra{greetings}{Freundliche Grüße}
+    \LANGtra{invdate}{Datum}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{invnumber}{Auftragsbestätigungsnummer}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{invnumber}{Rechnungsnummer}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{invnumber}{Einkaufsbestellnummer}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{invnumber}{Kreditorenrechnung Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{invnumber}{Lagerliste Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{invnumber}{Gutschrift Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{invnumber}{Lieferschein Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{invnumber}{Gutschrift Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{invnumber}{Angebotsanfrage Nr.}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{invnumber}{Angebotsnummer}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{invnumber}{Rechnungsnummer}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{invnumber}{Rüstschein Nr.}}{}
+    \LANGtra{invterms_duedate}{Wir bedanken uns für Ihre \textbf{Überweisung innerhalb von <%terms%> Tagen} bis zum <%duedate%>}
+    \LANGtra{invterms_immediate}{Wir bedanken uns für die \textbf{sofortige Überweisung}}
+    \LANGtra{orddescription}{Auftragsbestätigung}
+    \LANGtra{ordnumber}{Bestellnummer}
+    \LANGtra{other_terms_duedate}{Zahlungsfrist: <%terms%> Tage}
+    \LANGtra{other_terms_immediate}{Zahlungsfrist: Sofort}
+    \LANGtra{ponumber}{Ihre Bestellnummer}
+    \LANGtra{qr_acceptancepoint}{Annahmestelle}
+    \LANGtra{qr_account}{Bankverbindung / Zahlbar an}
+    \LANGtra{qr_additionalinformation}{Zusätzliche Information}
+    \LANGtra{qr_amount}{Betrag}
+    \LANGtra{qr_currency}{Währung}
+    \LANGtra{qr_cutoff}{Vor der Einzahlung abzutrennen}
+    \LANGtra{qr_payableby}{Zahlbar durch}
+    \LANGtra{qr_paymentpart}{Zahlteil}
+    \LANGtra{qr_receipt}{Empfangsschein}
+    \LANGtra{qr_reference}{Referenz}
+    \LANGtra{quonumber}{Angebotsnummer}
+    \LANGtra{reminder1_part_1}{Wir möchten Sie daran erinnern, dass die Rechnung Nr. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}vom <%invdate%> über <%currency%> <%due%> noch nicht beglichen ist. Zahlungen bis zum {\today} wurden berücksichtigt.}
+    \LANGtra{reminder1_part_2}{Wir danken Ihnen für eine Überweisung des ausstehenden Betrages innerhalb von 10 Tagen auf unser Bankkonto\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}. Sollte sich Ihre Zahlung mit unserer Mahnung überschneiden, betrachten Sie dieses Schreiben bitte als gegenstandslos.}
+    \LANGtra{reminder2_part_1}{Trotz unserer früheren Mahnung ist die Rechnung Nr. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}vom <%invdate%> über <%currency%> <%due%> noch nicht beglichen. Zahlungen bis zum {\today} wurden berücksichtigt.}
+    \LANGtra{reminder2_part_2}{Ohne Ihren sofortigen gegenteiligen Bericht gehen wir davon aus, dass Sie mit diesem Saldo einverstanden sind. Wir fordern Sie nochmals auf, unser Guthaben innerhalb von 5 Tagen auf unser Bankkonto\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>} zu überweisen.}
+    \LANGtra{reminder3_part_1}{Wir beziehen uns auf die Rechnung Nr. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}vom <%invdate%> über <%currency%> <%due%>. Leider konnten wir bis zum {\today} noch immer keinen Zahlungseingang feststellen.}
+    \LANGtra{reminder3_part_2}{Sollte der Betrag nicht innerhalb von 3 Tagen auf unserem Bankkonto\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>} eingegangen sein, sehen wir uns zur Veranlassung weiterer Schritte gezwungen.}
+    \LANGtra{total}{Total}
+}
+
+
+%%%%%%%%% ENGLISH DICTIONARY  %%%%%%%%%
+
+\LANGlist{en-US}{
+    \LANGtra{accounttable_current}{Current}
+    \LANGtra{accounttable_days}{Days}
+    \LANGtra{accounttable_due}{Due}
+    \LANGtra{accounttable_invoice}{Invoice}
+    \LANGtra{accounttable_part_1}{We have found that the invoices in the table listed below are still outstanding. We kindly ask you to pay the outstanding amount of <%currency%> <%total%> as soon as possible.}
+    \LANGtra{accounttable_part_2}{If you have paid the outstanding invoices in the meantime, please consider this letter as irrelevant.}
+    \LANGtra{accounttable_salutation}{Ladies and Gentlemen}
+    \LANGtra{accounttable_total}{Total outstanding}
+    \LANGtra{arttable_customerponumber}{PO number}
+    \LANGtra{arttable_continuefromline}{Carried forward from page}
+    \LANGtra{arttable_deliverydate}{Delivery date}
+    \LANGtra{arttable_description}{Description}
+    \LANGtra{arttable_grossweight}{Gross weight}
+    \LANGtra{arttable_inclvat}{incl. VAT}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{arttable_invoicetotal}{Sales order amount}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{arttable_invoicetotal}{Purchase order amount}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_invoicetotal}{Invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{arttable_invoicetotal}{Invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_invoicetotal}{Bin list amount}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Debit invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_invoicetotal}{Packing list amount}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_invoicetotal}{Credit invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{arttable_invoicetotal}{Request for quotation amount}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{arttable_invoicetotal}{Offer amount}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_invoicetotal}{Invoice amount}}{}
+    \LANGtra{arttable_net}{Net}
+    \LANGtra{arttable_netweight}{Net weight}
+    \LANGtra{arttable_notsubjecttovat}{<%company%> is not subject to VAT}
+    \LANGtra{arttable_number}{Article}
+    \LANGtra{arttable_on}{on}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_openinvoiceamount}{Open invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{arttable_openinvoiceamount}{Open invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_openinvoiceamount}{Open bin list amount}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_openinvoiceamount}{Open debit invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_openinvoiceamount}{Open packing list amount}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_openinvoiceamount}{Open credit invoice amount}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_openinvoiceamount}{Open invoice amount}}{}
+    \LANGtra{arttable_ordernumber}{Order number}
+    \LANGtra{arttable_package}{Package}
+    \LANGtra{arttable_paid}{Paid}
+    \LANGtra{arttable_price}{Price}
+    \LANGtra{arttable_projectnumber}{Projectnumber}
+    \LANGtra{arttable_quantity}{Quantity}
+    \LANGtra{arttable_runningnumber}{Pos.}
+    \LANGtra{arttable_serialnumber}{Serialnumber}
+    \LANGtra{arttable_subtotal}{Subtotal}
+    \LANGtra{arttable_total}{Total}
+    \LANGtra{arttable_unit}{Unit}
+    \LANGtra{arttable_vat}{VAT}
+    \LANGtra{arttable_vatrate}{VAT rate}
+    \LANGtra{businessnumber}{VAT no.}
+    \LANGtra{customernumber}{Customer no.}
+    \LANGtra{customertaxnumber}{Your VAT no.}
+    \LANGtra{deliveryto}{Delivery to}
+    \ifthenelse{\equal{\DocType}{1. Mahnung}}{\LANGtra{doctype}{First reminder}}{}
+    \ifthenelse{\equal{\DocType}{2. Mahnung}}{\LANGtra{doctype}{Second reminder}}{}
+    \ifthenelse{\equal{\DocType}{3. Mahnung}}{\LANGtra{doctype}{Last reminder}}{}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{doctype}{Sales order}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{doctype}{Purchase order}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{doctype}{Invoice}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{doctype}{Account statement}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{doctype}{Vendor invoice}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{doctype}{Bin list}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{doctype}{Debit invoice}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{doctype}{Packing list}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{doctype}{Credit invoice}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{doctype}{Invoice}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{doctype}{Request for quotation}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{doctype}{Offer}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{doctype}{Pick List}}{}
+    \LANGtra{footer_page}{Page}
+    \LANGtra{greetings}{Best regards}
+    \LANGtra{invdate}{Date}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{invnumber}{Sales order no.}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{invnumber}{Invoice no.}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{invnumber}{Purchase order no.}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{invnumber}{Vendor invoice no.}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{invnumber}{Bin list no.}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{invnumber}{Debit invoice no.}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{invnumber}{Packing list no.}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{invnumber}{Credit invoice no.}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{invnumber}{Invoice no.}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{invnumber}{Pick list no.}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{invnumber}{Request for quotation no.}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{invnumber}{Offer no.}}{}
+    \LANGtra{invterms_duedate}{Thank you for your \textbf{transfer within <%terms%> days} until <%duedate%>}
+    \LANGtra{invterms_immediate}{We thank you for the \textbf{immediate transfer}}
+    \LANGtra{orddescription}{Order entry}
+    \LANGtra{ordnumber}{Sales order no.}
+    \LANGtra{other_terms_duedate}{Terms: <%terms%> days}
+    \LANGtra{other_terms_immediate}{Terms: immediate}
+    \LANGtra{ponumber}{PO no.}
+    \LANGtra{qr_acceptancepoint}{Acceptance point}
+    \LANGtra{qr_account}{Account / Payable to}
+    \LANGtra{qr_additionalinformation}{Additional information}
+    \LANGtra{qr_amount}{Amount}
+    \LANGtra{qr_currency}{Currency}
+    \LANGtra{qr_cutoff}{Separate before paying in}
+    \LANGtra{qr_payableby}{Payable by}
+    \LANGtra{qr_paymentpart}{Payment part}
+    \LANGtra{qr_receipt}{Receipt}
+    \LANGtra{qr_reference}{Reference}
+    \LANGtra{quonumber}{Offer no.}
+    \LANGtra{reminder1_part_1}{We would like to remind you that our invoice no. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}of <%invdate%> over <%currency%> <%due%> has not been settled yet. Payments made by {\today} have been taken into account.}
+    \LANGtra{reminder1_part_2}{Thank you for transferring the outstanding amount within 10 days to our bank account\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}. If your payment has meanwhile been transferred, please consider our reminder it as irrelevant.}
+    \LANGtra{reminder2_part_1}{Despite our previous reminder, our invoice no. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}of <%invdate%> over <%currency%> <%due%> has not been settled yet. Payments made by {\today} have been taken into account.}
+    \LANGtra{reminder2_part_2}{Without your immediate report to the contrary, we assume that you agree with this balance. We again request you to transfer our balance to our bank account\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}.}
+    \LANGtra{reminder3_part_1}{We refer to the invoice no. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}of <%invdate%> over <%currency%> <%due%>. Unfortunately, as of {\today}, we still have not received any payment.}
+    \LANGtra{reminder3_part_2}{If we do not receive the amount within 3 days to our bank account\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}, we will take further steps.}
+    \LANGtra{total}{Total}
+}
+
+%%%%%%%%% FRENCH DICTIONARY %%%%%%%%%
+
+\LANGlist{fr-CH}{
+    \LANGtra{accounttable_current}{Courant}
+    \LANGtra{accounttable_days}{Jours}
+    \LANGtra{accounttable_due}{Échéance}
+    \LANGtra{accounttable_invoice}{Facture}
+    \LANGtra{accounttable_part_1}{Il nous est apparu que les montants ci-dessous pour un total de <%currency%> <%total%> restent dus. Nous vous prions de bien vouloir régler les arriérés de factures dans les plus brefs délais.}
+    \LANGtra{accounttable_part_2}{Si vous avez entretemps réglé les factures impayées, nous vous prions de ne pas tenir compte de ce courrier.}
+    \LANGtra{accounttable_salutation}{Chère Madame, cher Monsieur,}
+    \LANGtra{accounttable_total}{Total dû}
+    \LANGtra{arttable_customerponumber}{Votre numéro de commande}
+    \LANGtra{arttable_continuefromline}{Somme reporté de la page}
+    \LANGtra{arttable_deliverydate}{Date de livraison}
+    \LANGtra{arttable_description}{Description}
+    \LANGtra{arttable_grossweight}{Poids brut}
+    \LANGtra{arttable_inclvat}{incluse TVA}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{arttable_invoicetotal}{Montant de la commande}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_invoicetotal}{Montant de la facture}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{arttable_invoicetotal}{Montant de la commande}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{arttable_invoicetotal}{Total de l'encours}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_invoicetotal}{Montant liste des stocks}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Montant du crédit}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Montant du crédit}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_invoicetotal}{Montant bon de livraison}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_invoicetotal}{Montant du crédit}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{arttable_invoicetotal}{Montant demande de devis}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{arttable_invoicetotal}{Montant de l' offre}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_invoicetotal}{Montant de la facture}}{}
+    \LANGtra{arttable_net}{Net}
+    \LANGtra{arttable_netweight}{Poids net}
+    \LANGtra{arttable_notsubjecttovat}{<%company%> n'est pas soumis à la TVA}
+    \LANGtra{arttable_number}{Article}
+    \LANGtra{arttable_on}{sur}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_openinvoiceamount}{Montant de la facture ouverte}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{arttable_openinvoiceamount}{Montant de la facture ouverte}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_openinvoiceamount}{Montant de la liste de stock ouverte}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_openinvoiceamount}{Montant du crédit ouvert}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_openinvoiceamount}{Montant du bon de livraison ouvert}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_openinvoiceamount}{Montant du crédit ouvert}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_openinvoiceamount}{Montant de la facture ouverte}}{}
+    \LANGtra{arttable_ordernumber}{Numéro de commande}
+    \LANGtra{arttable_package}{Emballage}
+    \LANGtra{arttable_paid}{Payé}
+    \LANGtra{arttable_price}{Prix}
+    \LANGtra{arttable_projectnumber}{Numéro du projet}
+    \LANGtra{arttable_quantity}{Quantité}
+    \LANGtra{arttable_runningnumber}{Pos.}
+    \LANGtra{arttable_no}{Pos.}
+    \LANGtra{arttable_serialnumber}{Numéro de série}
+    \LANGtra{arttable_subtotal}{Sous-total}
+    \LANGtra{arttable_total}{Total}
+    \LANGtra{arttable_unit}{Unité}
+    \LANGtra{arttable_vat}{TVA}
+    \LANGtra{arttable_vatrate}{Taux de TVA}
+    \LANGtra{businessnumber}{No de TVA}
+    \LANGtra{customernumber}{No de client}
+    \LANGtra{customertaxnumber}{Votre no de TVA}
+    \LANGtra{deliveryto}{Livraison à}
+    \ifthenelse{\equal{\DocType}{1. Mahnung}}{\LANGtra{doctype}{1er rappel}}{}
+    \ifthenelse{\equal{\DocType}{2. Mahnung}}{\LANGtra{doctype}{2ème rappel}}{}
+    \ifthenelse{\equal{\DocType}{3. Mahnung}}{\LANGtra{doctype}{Dernier rappel}}{}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{doctype}{Confirmation de la commande}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{doctype}{Facture}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{doctype}{Bon de commande}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{doctype}{Relevé de compte}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{doctype}{Facture comptes payables}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{doctype}{Liste des stocks}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{doctype}{Débit direct}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{doctype}{Bon de livraison}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{doctype}{Crédit}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{doctype}{Demande de devis}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{doctype}{Offre}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{doctype}{Facture}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{doctype}{Certificat d'installation}}{}
+    \LANGtra{footer_page}{Page}
+    \LANGtra{greetings}{Sincères salutations}
+    \LANGtra{invdate}{Date}
+    \ifthenelse{\equal{\DocType}{Auftragsbestätigung}}{\LANGtra{invnumber}{Numéro Confirmation de la commande}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{invnumber}{Numéro facture}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{invnumber}{Numéro bon de commande}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{invnumber}{Numéro facture comptes payables}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{invnumber}{Numéro liste des stocks}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{invnumber}{Numéro débit direct}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{invnumber}{Numéro bon de livraison}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{invnumber}{Numéro crédit}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{invnumber}{Numéro demande de devis}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{invnumber}{Numéro offre}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{invnumber}{Numéro facture}}{}
+    \ifthenelse{\equal{\DocType}{Rüstschein}}{\LANGtra{invnumber}{Numéro certificat d'installation}}{}
+    \LANGtra{invterms_duedate}{Nous vous remercions de bien vouloir effectuer \textbf{un virement dans <%terms%> jours} avant le <%duedate%>}
+    \LANGtra{invterms_immediate}{Nous vous remercions de remettre le paiement \textbf{immédiatement}}
+    \LANGtra{orddescription}{Confirmation de la commande}
+    \LANGtra{ordnumber}{No de commande}
+    \LANGtra{other_terms_duedate}{Date limite de paiement: <%terms%> jours.}
+    \LANGtra{other_terms_immediate}{Date limite de paiement: immédiatement}
+    \LANGtra{ponumber}{Votre no de commande}
+    \LANGtra{qr_acceptancepoint}{Point de dépôt}
+    \LANGtra{qr_account}{Compte / Payable à }
+    \LANGtra{qr_additionalinformation}{Informations supplémentaires}
+    \LANGtra{qr_amount}{Montant}
+    \LANGtra{qr_currency}{Monnaie}
+    \LANGtra{qr_cutoff}{A détacher avant le versement}
+    \LANGtra{qr_payableby}{Payable par}
+    \LANGtra{qr_paymentpart}{Section paiement}
+    \LANGtra{qr_receipt}{Récépissé}
+    \LANGtra{qr_reference}{Référence}
+    \LANGtra{quonumber}{No. d'offre}
+    \LANGtra{reminder1_part_1}{Nous attirons votre attention sur le fait que la facture no. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}en date du <%invdate%> au montant de <%currency%> <%due%> n'a pas encore été réglée. Les paiements ont été pris en compte jusqu'au {\today}}
+    \LANGtra{reminder1_part_2}{Nous vous remercions de bien vouloir procéder au règlement du montant dû dans les 10 jours par virement sur notre compte bancaire\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}. Si votre règlement et ce rappel se sont croisés, nous vous prions de ne pas en tenir compte.}
+    \LANGtra{reminder2_part_1}{Malgré notre rappel précédent, la facture no. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}en date du <%invdate%> au montant de <%currency%> <%due%> n'a pas encore été réglée. Les paiements ont été pris en compte jusqu'au {\today}.}
+    \LANGtra{reminder2_part_2}{Si nous ne recevons pas rapidement de nouvelles de votre part, nous considérerons que vous ne contestez pas cet en-cours. Nous vous enjoignons à nouveau de virer cette somme due sur notre compte bancaire\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}.}
+    \LANGtra{reminder3_part_1}{Faisant référence à la facture no. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}en date du <%invdate%> au montant de <%currency%> <%due%>. Nous n'avons malheureusement pas encore constaté son règlement.}
+    \LANGtra{reminder3_part_2}{Si son montant ne figure pas sur notre compte bancaire\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>} dans les 3 jours, nous nous verrons contraints de recourir à d'autres mesures.}
+    \LANGtra{total}{Total}
+}
+
+%%%%%%%%% ITALIAN DICTIONARY %%%%%%%%%
+
+\LANGlist{it-CH}{
+    \LANGtra{accounttable_current}{Corrente}
+    \LANGtra{accounttable_days}{Giorni}
+    \LANGtra{accounttable_due}{Dovuto}
+    \LANGtra{accounttable_invoice}{Fattura}
+    \LANGtra{accounttable_part_1}{Abbiamo riscontrato che le fatture sotto indicate non sono ancora state uguagliate. Per tanto le chiediamo gentilmente di ugualiare le fatture aperte di <%currency%> <%total%> il più presto possibile.}
+    \LANGtra{accounttable_part_2}{Se nel frattempo avete pagato le fatture in sospeso, vi preghiamo di notare che questa lettera non è valida.}
+    \LANGtra{accounttable_salutation}{Gentile Signor/Signora}
+    \LANGtra{accounttable_total}{Totale in sospeso}
+    \LANGtra{arttable_customerponumber}{il vostro numero d'ordine}
+    \LANGtra{arttable_continuefromline}{Riporto dalla pagina}
+    \LANGtra{arttable_deliverydate}{Data di consegna}
+    \LANGtra{arttable_description}{Descrizione}
+    \LANGtra{arttable_grossweight}{Peso lordo}
+    \LANGtra{arttable_inclvat}{IVA incl.}
+    \ifthenelse{\equal{\DocType}{Auftragsbest‰tigung}}{\LANGtra{arttable_invoicetotal}{Importo-ordine}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_invoicetotal}{Importo-fattura}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{arttable_invoicetotal}{Importo-ordine di acquisto}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{arttable_invoicetotal}{Totale in sospeso}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_invoicetotal}{Importo-elenco delle scorte}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Importo-cedito}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_invoicetotal}{Importo-cedito}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_invoicetotal}{Importo-bolla di consegna}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_invoicetotal}{Importo-cedito}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{arttable_invoicetotal}{Importo-richiesta di preventivo}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{arttable_invoicetotal}{Importo-offerta}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_invoicetotal}{Importo-fattura}}{}
+    \LANGtra{arttable_net}{netto}
+    \LANGtra{arttable_netweight}{Peso netto}
+    \LANGtra{arttable_notsubjecttovat}{<%company%> non è soggetto a IVA}
+    \LANGtra{arttable_number}{Articolo}
+    \LANGtra{arttable_on}{su}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{arttable_openinvoiceamount}{Importo fattura aperta}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{arttable_openinvoiceamount}{Importo fattura aperta}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{arttable_openinvoiceamount}{Importo elenco scorte aperte}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{arttable_openinvoiceamount}{Importo credito aperto}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{arttable_openinvoiceamount}{Importo bolla di consegna aperta}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{arttable_openinvoiceamount}{Importo credito aperto}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{arttable_openinvoiceamount}{Importo fattura aperta}}{}
+    \LANGtra{arttable_ordernumber}{Numero d'ordine}
+    \LANGtra{arttable_package}{Imballaggio}
+    \LANGtra{arttable_paid}{Pagato}
+    \LANGtra{arttable_price}{Prezzo}
+    \LANGtra{arttable_projectnumber}{Numero progetto}
+    \LANGtra{arttable_quantity}{Quantità}
+    \LANGtra{arttable_runningnumber}{Pos.}
+    \LANGtra{arttable_no}{Pos.}
+    \LANGtra{arttable_serialnumber}{Numero seriale}
+    \LANGtra{arttable_subtotal}{Subtotale}
+    \LANGtra{arttable_total}{Totale}
+    \LANGtra{arttable_unit}{Unità}
+    \LANGtra{arttable_vat}{IVA}
+    \LANGtra{arttable_vatrate}{Tasso IVA}
+    \LANGtra{businessnumber}{Partita IVA}
+    \LANGtra{customernumber}{No. cliente}
+    \LANGtra{customertaxnumber}{La vostra partita IVA}
+    \LANGtra{deliveryto}{Consegna a}
+    \ifthenelse{\equal{\DocType}{1. Mahnung}}{\LANGtra{doctype}{1° richiamo}}{}
+    \ifthenelse{\equal{\DocType}{2. Mahnung}}{\LANGtra{doctype}{2° richiamo}}{}
+    \ifthenelse{\equal{\DocType}{3. Mahnung}}{\LANGtra{doctype}{Ultimo richiamo}}{}
+    \ifthenelse{\equal{\DocType}{Auftragsbest‰tigung}}{\LANGtra{doctype}{Conferma d'ordine}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{doctype}{Fattura}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{doctype}{Ordine d'acquisto}}{}
+    \ifthenelse{\equal{\DocType}{Kontoauszug}}{\LANGtra{doctype}{Estratto conto}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{doctype}{Conti fornitori}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{doctype}{Inventario}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{doctype}{addebito}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{doctype}{Bolla di consegna}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{doctype}{Accredito}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{doctype}{Richiesta di preventivo}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{doctype}{Offerta}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{doctype}{Fattura}}{}
+    \ifthenelse{\equal{\DocType}{R¸stschein}}{\LANGtra{doctype}{Lista di selezione}}{}
+    \LANGtra{footer_page}{pagina}
+    \LANGtra{greetings}{Cordiali saluti}
+    \LANGtra{invdate}{Data}
+    \ifthenelse{\equal{\DocType}{Auftragsbest‰tigung}}{\LANGtra{invnumber}{Conferma d'ordine}}{}
+    \ifthenelse{\equal{\DocType}{Debitorenbuchung}}{\LANGtra{invnumber}{Fattura n°}}{}
+    \ifthenelse{\equal{\DocType}{Einkaufsbestellung}}{\LANGtra{invnumber}{No. ordine d'acquisto}}{}
+    \ifthenelse{\equal{\DocType}{Kreditorenrechnung}}{\LANGtra{invnumber}{No. fattura di pagamento}}{}
+    \ifthenelse{\equal{\DocType}{Lagerliste}}{\LANGtra{invnumber}{No. elenco delle scorte}}{}
+    \ifthenelse{\equal{\DocType}{Lastschriftrechnung}}{\LANGtra{invnumber}{No. addebito diretto}}{}
+    \ifthenelse{\equal{\DocType}{Lieferschein}}{\LANGtra{invnumber}{No. bolla di consegna}}{}
+    \ifthenelse{\equal{\DocType}{Gutschrift}}{\LANGtra{invnumber}{No. accredito}}{}
+    \ifthenelse{\equal{\DocType}{Offertanfrage}}{\LANGtra{invnumber}{No. richiesta di preventivo}}{}
+    \ifthenelse{\equal{\DocType}{Offerte}}{\LANGtra{invnumber}{No. offerta}}{}
+    \ifthenelse{\equal{\DocType}{Rechnung}}{\LANGtra{invnumber}{Fattura n°}}{}
+    \ifthenelse{\equal{\DocType}{R¸stschein}}{\LANGtra{invnumber}{R¸stschein Nr.}}{}
+    \LANGtra{invterms_duedate}{Vi ringraziamo per il vostro \textbf{bonifico entro <%terms%> giorni} fino al <%duedate%>}
+    \LANGtra{invterms_immediate}{Vi ringraziamo per il \textbf{bonifico immediato}}
+    \LANGtra{orddescription}{Conferma d'ordine}
+    \LANGtra{ordnumber}{n° ordine}
+    \LANGtra{other_terms_duedate}{Termine di pagamento: <%terms%> giorni}
+    \LANGtra{other_terms_immediate}{Termine di pagamento: immediato}
+    \LANGtra{ponumber}{N° del ordine.}
+    \LANGtra{qr_acceptancepoint}{Punto di accettazione}
+    \LANGtra{qr_account}{Conto / Pagabile a}
+    \LANGtra{qr_additionalinformation}{Informazioni supplementari}
+    \LANGtra{qr_amount}{Importo}
+    \LANGtra{qr_currency}{Valuta}
+    \LANGtra{qr_cutoff}{Da staccare prima del versamento}
+    \LANGtra{qr_payableby}{Pagabile da}
+    \LANGtra{qr_paymentpart}{Sezione pagamento}
+    \LANGtra{qr_receipt}{Ricevuta}
+    \LANGtra{qr_reference}{Riferimento}
+    \LANGtra{quonumber}{Offerta n.}
+    \LANGtra{reminder1_part_1}{Vi ricordiamo che la fattura n. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}del <%invdate%> di <%currency%> <%due%> non è ancora stata saldata. I pagamenti fino al {\today} sono stati presi in considerazione.}
+    \LANGtra{reminder1_part_2}{La ringraziamo per il trasferimento dell'imposto in sospeso entro 10 giorni sul nostro conto bancario\ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>}. Se il vostro pagamento si è incrociato con il nostro sollecito, considerate il nostro sollecito come irrilevante.}
+    \LANGtra{reminder2_part_1}{Nonostante il nostro precedente sollecito, la fattura n. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}del <%invdate%> di <%currency%> <%due%> non è ancora stata saldata. I pagamenti fino al {\today} sono stati presi in considerazione.}
+    \LANGtra{reminder2_part_2}{Senza una vostra immediata segnalazione del contrario, supponiamo che siate d'accordo con questo bilancio. Vi chiediamo pertanto ancora una volta di trasferire il nostro saldo sul nostro conto bancario \ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>} entro 5 giorni.}
+    \LANGtra{reminder3_part_1}{Facciamo riferimento alla fattura n. <%invnumber%> \ifthenelse{\equal{<%invdescription%>}{}}{}{\textbf{<%invdescription%> }}del <%invdate%> di <%currency%> <%due%>. Purtroppo non abbiamo ancora ricevuto nessun pagamento fino al {\today}.}
+    \LANGtra{reminder3_part_2}{Se l'importo non viene ricevuto sul nostro conto bancario \ifthenelse{\equal{<%iban%>}{}}{}{ <%iban%>} entro 3 giorni, saremo costretti a prendere ulteriori provvedimenti.}
+    \LANGtra{total}{Total}
+}
