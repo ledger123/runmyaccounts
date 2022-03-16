@@ -87,6 +87,12 @@ sub logged_in {
     my ($controller, $username) = @_;
 
     my $ip_whitelist = "31.216.40.164";
+
+    open(FILE, "sql-ledger.conf");
+    ($ip_whitelist) = grep{/ip_whitelist = /} <FILE>;
+    ($ip_whitelist) = $ip_whitelist =~ /"(.+?)"/;
+    print STDERR "IP:$ip_whitelist";
+
     if ($ip_whitelist) {
   	if ( $ENV{REMOTE_ADDR} =~ /$ip_whitelist/ ) {
   		# ip is whitelisted
