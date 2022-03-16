@@ -1,4 +1,5 @@
 users
+templates/*/
 locale/*.zip
 *.missing
 *~
