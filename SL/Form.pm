@@ -11,6 +11,7 @@ package Form;
 
 use Date::Parse;
 use Time::Piece;
+use DBIx::Simple;
 
 sub new {
 	my $type = shift;
@@ -92,7 +93,7 @@ sub new {
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
 	$self->{version}   = "2.8.33";
-	$self->{dbversion} = "2.8.20";
+	$self->{dbversion} = "2.8.22";
 
 	bless $self, $type;
 
@@ -394,22 +395,15 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
   $stylesheet
   $charset
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js" integrity="sha512-uto9mlQzrs59VwILcLiRYeLKPPbS/bT71da/OEBYEwcdNUk8jYIy+D176RYoop1Da+f9mvkYrmj5MCLZWEtQuA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" integrity="sha512-aOG0c6nPNzGk+5zjwyJaoRUgCdOrfSDhmMID2u4+OIslr0GjpLKo7Xm0Ao3xmpM4T8AmIouRkqwj1nrdVsLKEQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
+  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
   <script src="js/rma.js" type="text/javascript"></script>
 |;
 		print q|
 <script>
 $(document).ready(function() {
-    $('.js-basic-single').select2();
+    $('.js-basic-single-disabled').select2();
 });
 $(document).on('select2:open', () => {
     document.querySelector('.select2-search__field').focus();
@@ -685,7 +679,7 @@ sub round_amount {
 }
 
 sub parse_template {
-	my ( $self, $myconfig, $userspath, $debuglatex, $noreply, $apikey ) = @_;
+	my ( $self, $myconfig, $tmppath, $debuglatex, $noreply, $apikey ) = @_;
 
 	my ( $chars_per_line, $lines_on_first_page, $lines_on_second_page ) =
 	  ( 0, 0, 0 );
@@ -738,7 +732,7 @@ sub parse_template {
 	my $fileid  = time;
 	my $tmpfile = $self->{IN};
 	$tmpfile =~ s/\./_$self->{fileid}./ if $self->{fileid};
-	$self->{tmpfile} = "$userspath/${fileid}_${tmpfile}";
+	$self->{tmpfile} = "$tmppath/${fileid}_${tmpfile}";
 
 	if ( $self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email' ) {
 		$out = $self->{OUT};
@@ -1027,15 +1021,15 @@ sub parse_template {
 
 		use Cwd;
 		$self->{cwd}    = cwd();
-		$self->{tmpdir} = "$self->{cwd}/$userspath";
+		$self->{tmpdir} = "$self->{cwd}/$tmppath";
 
-		unless ( chdir("$userspath") ) {
+		unless ( chdir("$tmppath") ) {
 			$err = $!;
 			$self->cleanup;
 			$self->error("chdir : $err");
 		}
 
-		$self->{tmpfile} =~ s/$userspath\///g;
+		$self->{tmpfile} =~ s/$tmppath\///g;
 
         if ($utf8templates){
            system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
@@ -4261,6 +4255,38 @@ sub save_form {
 		$self->info('Saved');
 	}
 }
+
+
+sub get_lastused {
+	my ( $self, $myconfig, $report, $default_checked ) = @_;
+	my $dbh = $self->dbconnect($myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+    my $cols = $dbs->query("SELECT cols FROM lastused WHERE report = ? AND login = ? LIMIT 1", $report, $self->{login})->list;
+    $cols = $default_checked if !$cols;
+    my @colslist = split /,/, $cols;
+    for (@colslist){ $self->{"l_$_"} = 'checked' };
+}
+
+
+sub save_lastused {
+	my ( $self, $myconfig, $report, $cols, $cols2 ) = @_;
+	my $dbh = $self->dbconnect($myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    my $colslist;
+
+    for (@$cols) { $colslist .= "$_," if $self->{"l_$_"} }
+    for (@$cols2) { $colslist .= "$_," if $self->{"l_$_"} }
+    chop $report_columns;
+
+    my $exists = $dbs->query( "SELECT 1 FROM lastused WHERE report=? AND login = ? LIMIT 1", $report, $self->{login} )->list;
+    if ($exists) {
+        $dbs->query( "UPDATE lastused SET cols = ? WHERE report=? AND login = ?", $colslist, $report, $self->{login} );
+    } else {
+        $dbs->query( "INSERT INTO lastused (report, cols, login) VALUES (?, ?, ?)", $report, $colslist, $self->{login} );
+    }
+}
+
 
 package Locale;
 

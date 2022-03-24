@@ -2589,7 +2589,7 @@ sub im_gl {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(reference department department_id description transdate notes currency exchangerate accno accdescription debit credit source memo);
+  @column_index = qw(reference department department_id description transdate notes currency exchangerate accno accdescription debit credit source memo projectnumber project_id);
   @flds = @column_index;
   unshift @column_index, qw(runningnumber ndx);
 
@@ -2614,6 +2614,8 @@ sub im_gl {
   $column_data{credit} = $locale->text('Credit');
   $column_data{source} = $locale->text('Source');
   $column_data{memo} = $locale->text('Memo');
+  $column_data{projectnumber} = $locale->text('Project');
+  $column_data{project_id} = $locale->text('Project ID');
 
   $form->header;
  
@@ -2764,6 +2766,7 @@ sub import_gl {
       $newform->{"credit_$linenum"} = $form->{"credit_$i"};
       $newform->{"source_$linenum"} = $form->{"source_$i"};
       $newform->{"memo_$linenum"} = $form->{"memo_$i"};
+      $newform->{"projectnumber_$linenum"} = qq|$form->{"projectnumber_$i"}--$form->{"project_id_$i"}|;
       $linenum++;
     }
   }
@@ -2791,9 +2794,9 @@ sub im_transactions {
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
   if ($form->{vc} eq 'customer'){
-    @column_index = qw(ndx invnumber customernumber name transdate account account_description amount description notes source memo);
+    @column_index = qw(ndx invnumber invoicedescription customernumber name transdate account account_description amount description notes source memo);
   } else {
-    @column_index = qw(ndx invnumber vendornumber name transdate account account_description amount description notes source memo);
+    @column_index = qw(ndx invnumber invoicedescription vendornumber name transdate account account_description amount description notes source memo);
   }
   @flds = @column_index;
   push @flds, qw(vendor_id customer_id employee employee_id);
@@ -2813,6 +2816,7 @@ sub im_transactions {
 
   $column_data{runningnumber} = "&nbsp;";
   $column_data{invnumber} = $locale->text('Invoice Number');
+  $column_data{invoicedescription} = $locale->text('Description');
   $column_data{"$form->{vc}number"} = $locale->text('Number');
   $column_data{name} = $locale->text('Name');
   $column_data{transdate} = $locale->text('Invoice Date');
@@ -2937,6 +2941,7 @@ sub import_transactions {
          $newform->{"$form->{vc}_id"} = $form->{"$form->{vc}_id_$i"};
          $newform->{$form->{ARAP}}= $form->{arapaccount};
          $newform->{currency} = $form->{currency};
+         $newform->{description} = $form->{"invoicedescription_$i"};
          $newform->{defaultcurrency} = $form->{currency};
          $newform->{employee}= qq|$form->{"employee_$i"}--$form->{"employee_id_$i"}|;
 	 $linenum = 0;

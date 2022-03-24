@@ -1735,15 +1735,22 @@ sub income_statement {
 
 print q|
 <script>
-$(document).ready(function(){
-    $('.check:button').toggle(function(){
-        $('input:checkbox').attr('checked','checked');
-        $(this).val('uncheck all')
-    },function(){
-        $('input:checkbox').removeAttr('checked');
-        $(this).val('check all');        
-    })
-})
+$(document).ready(function() {
+  var radioState;
+
+  $('#csvexport').on('click', function() {
+        if (radioState === this) {
+            this.checked = false;
+            radioState = null;
+        } else {
+            radioState = this;
+        }
+  });
+
+$("#checkall").click(function(){
+    $('input:checkbox').not(this).prop('checked', this.checked);
+});
+});
 </script>
 |;
 
@@ -1759,7 +1766,7 @@ $(document).ready(function(){
 $selectfrom
 <tr>
     <th>&nbsp;</th>
-    <td><input name=l_csv type=checkbox class=checkbox value=1> |.$locale->text('CSV Export').qq|</td>
+    <td><input name=l_csv type=radio id="csvexport" value=1> |.$locale->text('CSV Export').qq|</td>
 </tr>
 <tr>
 <th>|.$locale->text('Include').qq|:</th>
@@ -1788,7 +1795,7 @@ $selectfrom
    my $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute || $form->dberror($query);
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description}<br>|;
+      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description} |;
       if ( $ref->{projectnumber} ) {
             print qq| ($ref->{projectnumber})|;
         }
@@ -1798,9 +1805,8 @@ $selectfrom
 print qq|
 </td></tr>
 <tr><td>&nbsp;</td><td>
-  <input type="button" class="check" value="|.$locale->text('check all').qq|" />
+  <input type="checkbox" id="checkall"><b>|.$locale->text('Check all').qq|</b>
 </td></tr>
-
 </table>
 <hr>
 <input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">|;
@@ -2040,7 +2046,28 @@ sub income_statement_by_department {
    }
 
   $form->header;
-  print qq|<body class="bill main2"><table width=100%><tr><td class=listtop>$form->{title}</td></tr></table><br/>|;
+  print qq|
+    <body class="bill main2">
+    <button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
+    event: 'urlToPdf',
+     url: window.location.href +
+     '&datefrom=$form->{datefrom}' +
+     '&dateto=$form->{dateto}' +
+     '&month=$form->{month}' +
+     '&year=$form->{year}' +
+     '&interval=$form->{interval}' +
+     '&action=$form->{action}' +
+     '&title=$form->{title}' +
+     '&path=$form->{path}' +
+     '&nextsub=$form->{nextsub}' +
+     '&login=$form->{login}' +
+     '&pivotby=$form->{pivotby}'
+      }}, '*');"
+    class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+  </button>
+  |;
+  print qq|<table width=100%><tr><td class=listtop>$form->{title}</td></tr></table><br/>|;
   print qq|<h2 align=center>|.$locale->text('Income Statement Departments').qq|</h2>|;
   print qq|<h2 align=center>|.$locale->text('For Period').qq|</h2>| if $form->{fromdate} && $form->{todate};
   print qq|<h2 align=center>|. $locale->text('From') . "&nbsp;".$locale->date(\%myconfig, $form->{fromdate}, 1) . qq|</h2>| if $form->{fromdate};
