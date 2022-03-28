@@ -114,6 +114,7 @@ sub search {
   
   $label{print}{title} = "Print";
   $label{queue}{title} = "Queued";
+  $label{queue}{title} = "E-Mail" if $form->{batch2} eq 'email'; # for reminders
   $label{email}{title} = "E-Mail";
 
   $checked{$form->{batch}} = "checked";
@@ -334,7 +335,7 @@ sub search {
 <input class=submit type=submit name=action value="|.$locale->text('Continue').qq|">
 |;
   
-  $form->hide_form(qw(path login));
+  $form->hide_form(qw(path login batch2));
   
   print qq|
 
@@ -537,7 +538,65 @@ sub print {
 }
 
 
-sub e_mail { &print }
+sub e_mail { 
+    if ($form->{type} eq 'reminder'){
+        use SL::Mailer;
+        my $mail = new Mailer;
+        my $dbh = $form->dbconnect(\%myconfig);
+        my $dbs = DBIx::Simple->connect($dbh);
+        for my $i (1 .. $form->{rowcount}){
+            if ($form->{"ndx_$i"}){
+                my $id = $form->{"id_$i"} *= 1;
+                my ($attachment) = $dbs->query("
+                    SELECT spoolfile
+                    FROM status
+                    WHERE trans_id = ?
+                    AND formname='reminder'
+                ", $id)->list;
+                ($form->{email}, $form->{cc}, $form->{bcc}, $form->{invnumber}, $form->{name}) = $dbs->query("
+                    SELECT vc.email, vc.cc, vc.bcc, ar.invnumber, vc.name
+                    FROM customer vc
+                    JOIN ar ON vc.id = ar.customer_id
+                    WHERE ar.id = ?
+                    ", $id
+                )->list;
+                $form->{format} = 'html';
+
+                my ($noreplyemail) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='noreplyemail'");
+                my ($company) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='company'");
+
+                for (qw(cc bcc subject message version format charset notify)) {
+                    $mail->{$_} = $form->{$_};
+                }
+                $noreply              = $myconfig{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
+                $mail->{to}           = qq|$form->{email}|;
+                $mail->{from}         = qq|"$myconfig{name} ($company)" <$noreply>|;
+                $mail->{'reply-to'}   = qq|"$myconfig{name}" <$myconfig{email}>|;
+
+                my $fileid  = time;
+                $mail->{fileid} = "$fileid.";
+
+                $form->{OUT} = "$sendmail";
+                my $br = "";
+                $br = "<br>" if $form->{format} eq 'html';
+                $mail->{contenttype} = "text/$form->{format}";
+
+                $mail->{message}       =~ s/\r?\n/$br\n/g;
+                $myconfig{signature} =~ s/\\n/$br\n/g;
+                $mail->{message} .= "$br\n-- $br\n$myconfig{signature}\n$br" if $myconfig{signature};
+
+                @{ $mail->{attachments} } = ( "spool/$attachment" );
+                $mail->send($form->{OUT});
+
+                $form->info("$form->{name} -- $form->{invnumber} ");
+                $form->info($locale->text("Reminder emailed ...\n"));
+            }
+        }
+        $form->info("Reminders emailed ...");
+    } else {
+        &print;
+    }
+}
 
 
 sub list_spool {
@@ -934,7 +993,7 @@ function CheckAll() {
   $format =~ s/(<option value="\Q$form->{format}\E")/$1 selected/;
   $format = qq|<td nowrap>$format</td>|;
  
-  if ($form->{batch} eq 'email') {
+  if ($form->{batch} eq 'email' or $form->{batch2} eq 'email') {
     $message = qq|<tr>
                     <td nowrap><b>|.$locale->text('Subject').qq|</b>&nbsp;<input name=subject size=30></td>
                   </tr>
@@ -994,7 +1053,7 @@ function CheckAll() {
     delete $button{'Print'};
   }
   if ($form->{batch} eq 'queue') {
-    delete $button{'E-mail'};
+    delete $button{'E-mail'} if $form->{batch2} ne 'email';
     delete $button{'Print'} if ! %printer;
   }
 
