@@ -395,8 +395,7 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
   $stylesheet
   $charset
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+  <script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
   <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
   <script src="js/rma.js" type="text/javascript"></script>
 |;
