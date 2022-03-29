@@ -93,7 +93,7 @@ sub new {
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
 	$self->{version}   = "2.8.33";
-	$self->{dbversion} = "2.8.21";
+	$self->{dbversion} = "2.8.22";
 
 	bless $self, $type;
 
@@ -394,7 +394,8 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
   $favicon
   $stylesheet
   $charset
-  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
+
+  <script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
   <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
   <script src="js/rma.js" type="text/javascript"></script>
 |;
@@ -4267,14 +4268,16 @@ sub get_lastused {
 
 
 sub save_lastused {
-	my ( $self, $myconfig, $report, $cols ) = @_;
+	my ( $self, $myconfig, $report, $cols, $cols2 ) = @_;
 	my $dbh = $self->dbconnect($myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
 
     my $colslist;
 
     for (@$cols) { $colslist .= "$_," if $self->{"l_$_"} }
+    for (@$cols2) { $colslist .= "$_," if $self->{"l_$_"} }
     chop $report_columns;
+
     my $exists = $dbs->query( "SELECT 1 FROM lastused WHERE report=? AND login = ? LIMIT 1", $report, $self->{login} )->list;
     if ($exists) {
         $dbs->query( "UPDATE lastused SET cols = ? WHERE report=? AND login = ?", $colslist, $report, $self->{login} );

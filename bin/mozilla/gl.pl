@@ -219,6 +219,9 @@ sub search {
 
     $form->{title} = $locale->text('General Ledger') . " " . $locale->text('Reports');
 
+    $default_checked = "transdate,reference,description,debit,credit,accno";
+    $form->get_lastused(\%myconfig, "gl-transactions", $default_checked);
+
     $form->{reportcode} = 'gl';
     $form->{dateformat} = $myconfig{dateformat};
 
@@ -840,6 +843,8 @@ sub transactions {
         }
         chop $form->{column_index};
     }
+
+    $form->save_lastused(\%myconfig, "gl-transactions", \@column_index);
 
     if ( $form->{accno} || $form->{gifi_accno} ) {
         @column_index = grep !/(accno|gifi_accno|contra|gifi_contra)/, @column_index;
