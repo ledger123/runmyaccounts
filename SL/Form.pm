@@ -1194,12 +1194,23 @@ Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
 
 }
 
+sub abbreviate_string {
+	my ($self, $string, $max_length) = @_;
+
+	if (length($string) > $max_length) {
+		$string = substr($string, 0, $max_length - 3);
+		$string = $string . "...";
+	}
+
+	return $string;
+}
+
 sub remove_percentage_sign {
-  	my ($self, $str) = @_;
+  	my ($self, $string) = @_;
   	
-	$str =~ s/%//ig;
+	$string =~ s/%//ig;
 	
-	return $str;
+	return $string;
 }
 
 sub format_line {

@@ -690,8 +690,8 @@ sub invoice_details {
 
   # conversion to QR variables
   $form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescriptionqr});
-  $form->{invdescriptionqr} = substr($form->{invdescriptionqr},0,140);
   $form->{invdescriptionqr} = $form->remove_percentage_sign($form->{invdescriptionqr});
+  $form->{invdescriptionqr} = $form->abbreviate_string($form->{invdescriptionqr}, 55);
   
   $form->{qribanqr} = $form->{qriban};
   $form->{qribanqr} =~ s/\s//g;
@@ -750,7 +750,7 @@ sub invoice_details {
   $form->{invdateqr} = $form->remove_percentage_sign($form->{invdateqr});
 
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
-  $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
+  $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,85);
   $form->{strdbkginfqr} = $form->remove_percentage_sign($form->{strdbkginfqr});
 
 }
