@@ -1194,6 +1194,14 @@ Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
 
 }
 
+sub remove_percentage_sign {
+  	my ($self, $str) = @_;
+  	
+	$str =~ s/%//ig;
+	
+	return $str;
+}
+
 sub format_line {
 	my $self = shift;
 	my $myconfig = shift;

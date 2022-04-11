@@ -691,22 +691,45 @@ sub invoice_details {
   # conversion to QR variables
   $form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescriptionqr});
   $form->{invdescriptionqr} = substr($form->{invdescriptionqr},0,140);
+  $form->{invdescriptionqr} = $form->remove_percentage_sign($form->{invdescriptionqr});
+  
   $form->{qribanqr} = $form->{qriban};
   $form->{qribanqr} =~ s/\s//g;
+  $form->{qribanqr} = $form->remove_percentage_sign($form->{qribanqr});
 
   $form->{companyqr} = substr($form->{company},0,70);
+  $form->{companyqr} = $form->remove_percentage_sign($form->{companyqr});
+  
   $form->{companyaddress1qr} = substr($form->{companyaddress1},0,70);
+  $form->{companyaddress1qr} = $form->remove_percentage_sign($form->{companyaddress1qr});
+
   $form->{companyzipqr} = substr($form->{companyzip},0,16);
+  $form->{companyzipqr} = $form->remove_percentage_sign($form->{companyzipqr});
+
   $form->{companycityqr} = substr($form->{companycity},0,35);
+  $form->{companycityqr} = $form->remove_percentage_sign($form->{companycityqr});
+
   $form->{nameqr} = substr($form->{name},0,70);
+  $form->{nameqr} = $form->remove_percentage_sign($form->{nameqr});
+
   $form->{address1qr} = substr($form->{address1},0,70);
+  $form->{address1qr} = $form->remove_percentage_sign($form->{address1qr});
+
   $form->{zipcodeqr}  = substr($form->{zipcode},0,16);
+  $form->{zipcodeqr} = $form->remove_percentage_sign($form->{zipcodeqr});
+
   $form->{cityqr} = substr($form->{city},0,35);
+  $form->{cityqr} = $form->remove_percentage_sign($form->{cityqr});
+
   my @nums = $form->{businessnumber} =~ /(\d+)/g;
   for (@nums) { $form->{businessnumberqr} .= $_ };
 
   $form->{swicotaxbaseqr}  = $form->{swicotaxbase};
+  $form->{swicotaxbaseqr} = $form->remove_percentage_sign($form->{swicotaxbaseqr});
+  
   $form->{swicotaxqr}  = $form->{swicotax};
+  $form->{swicotaxqr} = $form->remove_percentage_sign($form->{swicotaxqr});
+
   @taxaccounts = split (/ /, $form->{taxaccounts});
   for (@taxaccounts){
      if ($form->{"${_}_rate"}){
@@ -724,9 +747,11 @@ sub invoice_details {
   chop $form->{swicotaxbaseqr};
 
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
+  $form->{invdateqr} = $form->remove_percentage_sign($form->{invdateqr});
 
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
   $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
+  $form->{strdbkginfqr} = $form->remove_percentage_sign($form->{strdbkginfqr});
 
 }
 
