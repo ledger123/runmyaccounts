@@ -1194,7 +1194,7 @@ Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
 
 }
 
-sub abbreviate_string {
+sub string_abbreviate {
 	my ($self, $string, $max_length) = @_;
 
 	if (length($string) > $max_length) {
@@ -1205,10 +1205,10 @@ sub abbreviate_string {
 	return $string;
 }
 
-sub remove_percentage_sign {
-  	my ($self, $string) = @_;
+sub string_replace {
+  	my ($self, $string, $search_string, $replace_string) = @_;
   	
-	$string =~ s/%//ig;
+	$string =~ s/$search_string/$replace_string/ig;
 	
 	return $string;
 }
