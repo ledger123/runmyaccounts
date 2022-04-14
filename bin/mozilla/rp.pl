@@ -3250,6 +3250,7 @@ sub do_print_reminder {
 				else {
 					$filename = time;
 					$filename .= int rand 10000;
+                    $filename = "$myconfig{dbname}_$filename";
 				}
 
 				$filename .=
