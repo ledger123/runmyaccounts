@@ -758,7 +758,8 @@ sub list_spool {
   }
   
   push @columns, qw(description name vcnumber);
-  push @columns, "email" if $form->{batch} eq 'email';
+  push @columns, "email" if $form->{batch} eq 'email' or $form->{batch2} eq 'email';
+  push @columns, "cc" if $form->{batch} eq 'email' or $form->{batch2} eq 'email';
   push @columns, qw(city amount);
   push @columns, "spoolfile" if $form->{batch} eq 'queue';
   
@@ -778,6 +779,7 @@ sub list_spool {
 $column_header{vcnumber} = "<th><a class=listheading href=$href&sort=vcnumber>".$locale->text('Number')."</a></th>";
 
   $column_header{email} = "<th class=listheading>".$locale->text('E-mail')."</th>";
+  $column_header{cc} = "<th class=listheading>".$locale->text('CC')."</th>";
   $column_header{city} = "<th class=listheading>".$locale->text('City')."</th>";
   $column_header{id} = "<th><a class=listheading href=$href&sort=id>".$locale->text('ID')."</a></th>";
   $column_header{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</a></th>";
@@ -871,7 +873,7 @@ function CheckAll() {
     
     $column_data{runningnumber} = qq|<td>$i</td>|;
 
-    for (qw(description email city id invnumber ordnumber quonumber vcnumber)) { $column_data{$_} = qq|<td>$ref->{$_}</td>| }
+    for (qw(description email cc city id invnumber ordnumber quonumber vcnumber)) { $column_data{$_} = qq|<td>$ref->{$_}</td>| }
     $column_data{transdate} = qq|<td nowrap>$ref->{transdate}</td>|;
 
     $column_data{name} = qq|<td><a href=ct.pl?action=edit&id=$ref->{vc_id}&db=$ref->{db}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name}</a></td>|;
@@ -940,7 +942,7 @@ function CheckAll() {
 <br>
 |;
 
-  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed notprinted notemailed precision));
+  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed batch2 notprinted notemailed precision));
 
   $form->{copies} ||= 1;
 

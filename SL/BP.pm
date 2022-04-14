@@ -329,7 +329,7 @@ sub get_spoolfiles {
 		  a.$invnumber AS invnumber, a.transdate,
 		  a.ordnumber, a.quonumber, $invoice AS invoice,
 		  '$item' AS module, s.spoolfile, a.description, a.amount,
-		  ad.city, vc.email, '$arap{$form->{type}}{$item}' AS db,
+		  ad.city, vc.email, vc.cc, '$arap{$form->{type}}{$item}' AS db,
 		  vc.id AS vc_id
 		  FROM $item a
 		  JOIN $arap{$form->{type}}{$item} vc ON (a.$arap{$form->{type}}{$item}_id = vc.id)
