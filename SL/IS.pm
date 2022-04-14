@@ -687,6 +687,12 @@ sub invoice_details {
   my @oldvars = qw(company companyaddress1 companyzip companycity name address1 zipcode city businessnumber invdate invdescriptionqr qriban strdbkginf);
 
   # conversion to QR variables
+  $form->{invnumber} = substr($form->{invnumber}, 0, 24);
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "/", "");
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", "");
+  $form->{invnumberqr} = $form->{invnumber};
+
   $form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescriptionqr});
   $form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
   $form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55);
@@ -752,11 +758,6 @@ sub invoice_details {
   $form->{strdbkginf}  = substr($form->{strdbkginf},0,85);
   $form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
   $form->{strdbkginfqr} = $form->{strdbkginf};
-
-  $form->{invnumberqr} = substr($form->{invnumber}, 0, 24);
-  $form->{invnumberqr} = $form->string_replace($form->{invnumberqr}, "%", "");
-  $form->{invnumberqr} = $form->string_replace($form->{invnumberqr}, "/", "");
-  $form->{invnumberqr} = $form->string_replace($form->{invnumberqr}, "\Q\\\E", "");
 
 }
 
