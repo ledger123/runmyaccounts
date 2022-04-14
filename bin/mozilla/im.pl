@@ -3202,7 +3202,10 @@ sub export_datev {
 </tr>
 <tr>
       <th align="right">|.$locale->text('Options').qq|</th>
-      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
+      <td>
+      <input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|
+      <input name="l_delete_error_rows" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Delete error rows').qq|
+      </td>
 </tr>
 </table>
 <hr/>
@@ -3234,6 +3237,13 @@ sub export_datev {
     }
 
     if ($form->{runit}){
+
+        use DBIx::Simple;
+        $form->{dbh} = $form->dbconnect(\%myconfig);
+        $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+        $form->{dbs}->query("DELETE FROM debitscredits WHERE debit_accno = credit_accno")->list if $form->{l_delete_error_rows};
+
         if ($form->{accounttype} eq 'standard'){
            $query = qq|
             SELECT reference, d.description department, dc.description, transdate, debit_accno, credit_accno, amount,
@@ -3271,10 +3281,6 @@ sub export_datev {
            &export_to_csv($dbh, $query, 'datev');
            exit;
         }
-
-        use DBIx::Simple;
-        $form->{dbh} = $form->dbconnect(\%myconfig);
-        $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
         $table1 = $form->{dbs}->query($query
         )->xto(
