@@ -553,6 +553,12 @@ sub e_mail {
                     WHERE trans_id = ?
                     AND formname='reminder'
                 ", $id)->list;
+                my ($invoice) = $dbs->query("
+                    SELECT spoolfile
+                    FROM status
+                    WHERE trans_id = ?
+                    AND formname='invoice'
+                ", $id)->list;
                 ($form->{email}, $form->{cc}, $form->{bcc}, $form->{invnumber}, $form->{name}) = $dbs->query("
                     SELECT vc.email, vc.cc, vc.bcc, ar.invnumber, vc.name
                     FROM customer vc
@@ -586,6 +592,9 @@ sub e_mail {
                 $mail->{message} .= "$br\n-- $br\n$myconfig{signature}\n$br" if $myconfig{signature};
 
                 @{ $mail->{attachments} } = ( "spool/$attachment" );
+                if ($form->{attach_reminder_invoice}){
+                    push @{ $mail->{attachments} }, "spool/$invoice" if $invoice;
+                }
                 $mail->send($form->{OUT});
 
                 $form->info("$form->{name} -- $form->{invnumber} ");
@@ -1057,6 +1066,8 @@ function CheckAll() {
     delete $button{'Print'} if ! %printer;
   }
 
+  print qq|<input type=checkbox name="attach_reminder_invoice" value="1">|;
+  print $locale->text("Attach invoices from queue ...")."<br/><br/>" if $form->{type} eq 'reminder';
   for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { $form->print_button(\%button, $_) }
     
 
