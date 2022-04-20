@@ -755,10 +755,12 @@ sub invoice_details {
   $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
-  $form->{strdbkginf}  = substr($form->{strdbkginf},0,85);
+  $form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85);
   $form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
   $form->{strdbkginfqr} = $form->{strdbkginf};
-
+  $form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
+  $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
+  
 }
 
 
