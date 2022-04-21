@@ -3186,18 +3186,27 @@ sub save {
 
   use Email::Valid;
   if ($form->{email}){
-      unless (Email::Valid->address($form->{email})) {
-          $form->error($form->{email}. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      my @emails = split ',', $form->{email};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
       }
   }
   if ($form->{cc}){
-      unless (Email::Valid->address($form->{cc})) {
-          $form->error($form->{cc}. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      my @emails = split ',', $form->{cc};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
       }
   }
   if ($form->{bcc}){
-      unless (Email::Valid->address($form->{bcc})) {
-          $form->error($form->{bcc}. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      my @emails = split ',', $form->{bcc};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
       }
   }
 
