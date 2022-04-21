@@ -1,0 +1,400 @@
+\usepackage{keyval}
+\usepackage{etoolbox}
+\usepackage{alphalph}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{calc}
+\usepackage{fp}
+\usepackage{siunitx}
+\sisetup{group-separator = {\text{'}},group-minimum-digits=3,detect-all}
+
+\newlength{\TABtotalwidth}
+\newlength{\TABWIDcolX}
+\newlength{\TABWxiscolX}\setlength{\TABWxiscolX}{0pt}
+\newlength{\TABWIDcolXtemp}\setlength{\TABWIDcolXtemp}{0pt}
+
+\newlength{\DIMxinnersep}\setlength{\DIMxinnersep}{5pt}
+\newlength{\DIMyinnersep}\setlength{\DIMyinnersep}{5pt}
+
+\newlength{\COLsingletemp}\setlength{\COLsingletemp}{0pt}
+\newlength{\COLtottemp}\setlength{\COLtottemp}{0pt}
+
+\newlength{\COLWID}\setlength{\COLWID}{0pt}
+
+\newcounter{TABrow}\setcounter{TABrow}{0}
+\newcounter{TABcol}\setcounter{TABcol}{0}
+\newcounter{TABXcount}\setcounter{TABXcount}{0}
+\newcounter{TABXtotal}\setcounter{TABXtotal}{0}
+\csnumgdef{TABtotcol}{0}
+
+\makeatletter
+\gdef\gsetlength#1#2{%
+  \begingroup
+    \setlength\skip@{#2}
+    \global#1=\skip@
+  \endgroup
+}
+\makeatother
+
+\newcommand{\cellcontenttext}[3]{\ifthenelse{\equal{#1}{#2}}{\csgdef{CELL\columnlabel\rowlabel}{#3}}{}}
+\newcommand{\cellcontentnum}[3]{\ifthenelse{\equal{#1}{#2}}{\csnumgdef{CELL\columnlabel\rowlabel}{#3}}{}}
+
+\def\TABheadstyle{}
+\def\TABheadalign{}
+\def\TABcolalign{}
+\makeatletter
+    \def\OPTheadstyle{}\define@key{RMAtable}{headstyle}{\renewcommand{\OPTheadstyle}{#1}}
+    \def\OPTheadcolor{}\define@key{RMAtable}{headcolor}{\renewcommand{\OPTheadcolor}{#1}}
+    \def\OPTheadalign{}\define@key{RMAtable}{headalign}{\renewcommand{\OPTheadalign}{#1}}
+    \def\OPTcolwidth{}\define@key{RMAtable}{colwidth}{\renewcommand{\OPTcolwidth}{#1}}
+    \def\OPTcolstyle{}\define@key{RMAtable}{colstyle}{\renewcommand{\OPTcolstyle}{#1}}
+    \def\OPTcolcolor{}\define@key{RMAtable}{colcolor}{\renewcommand{\OPTcolcolor}{#1}}
+    \def\OPTcolalign{}\define@key{RMAtable}{colalign}{\renewcommand{\OPTcolalign}{#1}}
+\makeatother
+\setkeys{RMAtable}{headstyle={b},colstyle={n},headcolor=black,colwidth={a},colalign={l},colcolor={black}}
+
+%Pos. (<%runningnumber%>)
+%Artikel (<%number%>)
+%Beschreibung (<%description%>)
+%Anzahl (<%qty%>)
+%Einheit (<%unit%>)
+%Preis <%currency%> (<%sellprice%>)
+%Rabatt \% (<%discountrate%>)
+%Rabatt <%currency%> (<%discount%>)
+%MWST \% (<%taxrates%>)
+%MWST <%currency%> (<%linetax%>)
+%Total <%currency%> (<%linetotal%>)
+\FPeval\SUBTOTAL{0}
+% Declare column. #1 options, #2 column number, #3 head content, #4 column content
+\newcommand{\declarecolumn}[4][]{%
+    \begingroup
+    \setkeys{RMAtable}{headstyle={b},colwidth={a},colalign={l}}
+    \setkeys{RMAtable}{#1}% Options
+    % Tab row is 0
+    \setcounter{TABrow}{0}
+    % Tab column as #2
+    \setcounter{TABcol}{#2}
+    % Define column as alpha
+    \def\columnlabel{COL\alphalph{\theTABcol}}
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    % Define head colour
+    \csxdef{TABheadcolor\columnlabel}{\OPTheadcolor}
+    % Define head style
+    \ifcsstring{OPTheadstyle}{b}{\csgdef{TABheadstyle\columnlabel}{\bfseries}}{}
+    \ifcsstring{OPTheadstyle}{i}{\csgdef{TABheadstyle\columnlabel}{\itshape}}{}
+    \ifcsstring{OPTheadstyle}{n}{\csgdef{TABheadstyle\columnlabel}{}}{}
+    % Define head alignment
+    \ifcsstring{OPTheadalign}{l}{\csgdef{TABheadalign\columnlabel}{\raggedright}}{}
+    \ifcsstring{OPTheadalign}{r}{\csgdef{TABheadalign\columnlabel}{\raggedleft}}{}
+    \ifcsstring{OPTheadalign}{c}{\csgdef{TABheadalign\columnlabel}{\centering}}{}
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    % Define column color
+    \csxdef{TABcolcolor\columnlabel}{\OPTcolcolor}
+    % Define head style
+    \ifcsstring{OPTcolstyle}{b}{\csgdef{TABcolstyle\columnlabel}{\bfseries}}{}
+    \ifcsstring{OPTcolstyle}{i}{\csgdef{TABcolstyle\columnlabel}{\itshape}}{}
+    \ifcsstring{OPTcolstyle}{n}{\csgdef{TABcolstyle\columnlabel}{}}{}
+    % Define general column alignement
+    \ifcsstring{OPTcolalign}{c}%
+        {%
+            \csgdef{TABcolalign\columnlabel}{\centering}%
+            \ifcsdef{TABheadalign\columnlabel}{}{\csgdef{TABheadalign\columnlabel}{\centering}}
+        }{}
+    \ifcsstring{OPTcolalign}{r}%
+        {%
+            \csgdef{TABcolalign\columnlabel}{\raggedleft}
+            \ifcsdef{TABheadalign\columnlabel}{}{\csgdef{TABheadalign\columnlabel}{\raggedleft}}
+        }{}
+    \ifcsstring{OPTcolalign}{l}%
+        {%
+            \csgdef{TABcolalign\columnlabel}{\raggedright}%
+            \ifcsdef{TABheadalign\columnlabel}{}{\csgdef{TABheadalign\columnlabel}{\raggedright}}
+        }{}
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    % Width evaluation for the head
+    \gsetlength{\COLtottemp}{\widthof{\csuse{TABheadstyle\columnlabel}\strut#3}}
+    % Define the head content
+    \csgdef{HEAD\columnlabel}{#3}
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    % Define all single cell contents as \CELLCOL##ROW##
+    <%foreach number%>
+        \stepcounter{TABrow}%
+        \def\rowlabel{ROW\alphalph{\theTABrow}}%
+        \def\SUBline{<%linetotal%>}%
+        \ifthenelse{\equal{\SUBline}{}}{\def\SUBline{0}}{}%
+        \ifthenelse{\equal{\SUBline}{ }}{\def\SUBline{0}}{}%
+        \FPeval\SUBtotal{\SUBTOTAL+\SUBline}%
+        \FPeval\SUBTOTAL{round(\SUBtotal:2)}%
+        \def\printSUBtotal{\num{\SUBTOTAL}}%
+        \csnumgdef{ST\rowlabel}{\SUBTOTAL}%
+        \cellcontentnum{#4}{runningnumber}{<%runningnumber%>}
+        \cellcontenttext{#4}{number}{<%number%>}
+        \cellcontenttext{#4}{description}{%
+        <%description%>%
+        \ifstrempty{<%itemnotes%>}{}{\newline <%itemnotes%>} 
+        \ifstrempty{<%deliverydate%>}{}{\newline Lieferdatum: <%deliverydate%>} 
+        \ifstrempty{<%serialnumber%>}{}{\newline Seriennummer: <%serialnumber%>}
+        \ifstrempty{<%projectnumber%>}{}{\newline Projekt: <%projectnumber%>}
+        \ifstrempty{<%ordernumber%>}{}{\newline Bestellnummer: <%ordernumber%>}
+        \ifstrempty{<%customerponumber%>}{}{\newline Ihre Bestellnummer: <%customerponumber%>}
+        \ifstrempty{<%package%>}{}{\newline Verpackung: <%package%>}
+        \ifstrempty{<%netweight%>}{}{\newline Netto Gewicht: <%netweight%>}
+        \ifstrempty{<%grossweight%>}{}{\newline Brutto Gewicht: <%grossweight%>}}
+        \cellcontentnum{#4}{qty}{<%qty%>}
+        \cellcontenttext{#4}{unit}{<%unit%>}
+        \cellcontentnum{#4}{sellprice}{<%sellprice%>}
+        \cellcontentnum{#4}{discountrate}{<%discountrate%>}
+        \cellcontentnum{#4}{discount}{<%discount%>}
+        \cellcontentnum{#4}{taxrates}{<%taxrates%>}
+        \cellcontentnum{#4}{linetax}{<%linetax%>}
+        \cellcontentnum{#4}{linetotal}{<%linetotal%>}
+        \cellcontentnum{#4}{subtotal}{ST:\printSUBtotal}
+        \csxdef{TEMPcontent}{\csuse{CELL\columnlabel\rowlabel}}% temporary content
+        \ifcsstring{OPTcolwidth}{x}% if this is the X column
+            {\stepcounter{TABXcount}\gsetlength{\COLtottemp}{0pt}}
+            {% if not the X column
+                \ifcsstring{OPTcolwidth}{a}%
+                    {% if this is the auto column
+                        % set the cell width if it is the linetotal
+                        \ifthenelse{\equal{#4}{linetotal}}% if it is the line total use ST
+                            {\gsetlength{\COLsingletemp}{\widthof{\printSUBtotal}}}%
+                            {\gsetlength{\COLsingletemp}{\widthof{\csuse{CELL\columnlabel\rowlabel}}}}%
+                        % calc which is bigger between this value and the already stored
+                        \ifdimgreater% if
+                            {\COLsingletemp}% the single cell is bigger
+                            {\COLtottemp}% than the total
+                            {\gsetlength{\COLtottemp}{\COLsingletemp}}% the total is the single cell now
+                            {}
+                    }% end if auto column
+                    {% if a value is defined
+                        % assig the value if defined
+                        \gsetlength{\COLtottemp}{\OPTcolwidth}
+                    }
+            }% end if not x
+    <%end number%>
+    % assign the value of all column but X
+    % define the column width
+    \csxdef{COLWID\columnlabel}{\the\COLtottemp}
+    % Define max column value
+    \ifnumless{\value{TABcol}}{\TABtotcol}{}{\csnumgdef{TABtotcol}{\theTABcol}}
+    \endgroup
+    \addtolength{\TABWIDcolXtemp}{\COLtottemp}
+    \addtolength{\TABWxiscolX}{\DIMxinnersep}
+    \addtolength{\TABWxiscolX}{\DIMxinnersep}
+}% end declare column
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+% TABLE
+\newlength{\OPTbigline}
+\newlength{\OPTsmallline}
+\newlength{\thoffset}
+\newlength{\rowoffset}\setlength{\rowoffset}{0pt}
+\makeatletter
+    \setlength{\OPTbigline}{1.2pt}\define@key{LAYtable}{bigline}{\setlength{\OPTbigline}{#1}}
+    \setlength{\OPTsmallline}{0.3pt}\define@key{LAYtable}{smallline}{\setlength{\OPTsmallline}{#1}}
+    \def\OPTlinecolor{black}\define@key{LAYtable}{linecolor}{\renewcommand{\OPTlinecolor}{#1}}
+    \def\OPTtablehos{off}\define@key{LAYtable}{hos}{\renewcommand{\OPTtablehos}{#1}}
+    \def\OPTtablePtotal{on}\define@key{LAYtable}{total}{\renewcommand{\OPTtablePtotal}{#1}}
+    \def\OPTtablePsubtotal{on}\define@key{LAYtable}{subtotal}{\renewcommand{\OPTtablePsubtotal}{#1}}
+    \define@key{LAYtable}{rowvoffset}{\setlength{\rowoffset}{#1}}
+\makeatother
+\setkeys{LAYtable}{}
+\newcommand{\Tableoptions}[1]{\setkeys{LAYtable}{#1}}
+
+\newcommand{\DefineContents}[3]{\csdef{OPTtable#1}{#2}\csdef{OPTtable#1style}{#3}}
+\DefineContents{subtotalline}{Zwischensumme <%currency%>}{\bfseries}
+\DefineContents{continuefromline}{\"{U}bertrag von Seite~\thepreviouspage}{\bfseries}
+\DefineContents{invoiceamountline}{Zwischentotal <%currency%>}{}
+\DefineContents{subtotallineend}{Zwischentotal <%currency%>}{}
+\DefineContents{subtotal}{Zwischentotal <%currency%>}{\bfseries}
+\DefineContents{invoicetotal}{Rechnungstotal <%currency%>}{\bfseries}
+
+\newcommand{\PrintHeader}{%
+    \null\hspace{-\thoffset}\begin{tikzpicture}[x=1pt,y=1pt,outer sep=0pt]
+        \coordinate (P00) at (0,0);
+        \foreach \col [count=\coli,remember=\col as \lastcol (initially 0)] in {1,...,\TABtotcol}  {
+                \def\columnlabel{COL\alphalph{\col}}
+                %\def\rowlabel{ROW}
+                \def\currentalign{\csuse{TABheadalign\columnlabel}}
+                \def\currentcolor{\csuse{TABheadcolor\columnlabel}}
+                \setlength{\COLWID}{\csuse{COLWID\columnlabel}}
+            \ifdimequal{\COLWID}{0pt}
+                {\deflength{\COLWID}{\TABWIDcolX/\theTABXtotal}}
+                {}
+                \node[anchor=north west,text width=\COLWID,inner xsep=\DIMxinnersep,inner ysep=\DIMyinnersep,rectangle,\currentcolor,align=left,outer sep=0pt,line width=0pt] (P\col0) at (P\lastcol0.north east)%
+                {\begin{minipage}{\linewidth}\currentalign\csuse{TABheadstyle\columnlabel}\strut\csuse{HEAD\columnlabel}\end{minipage}};
+        }
+        % Horizontal top rule
+        \draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]P10.north west)--([xshift={-\thoffset}]P\TABtotcol0.north east|-P10.north);
+        % Horizontal bottom rule
+        \draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]P10.south west)--([xshift={-\thoffset}]P\TABtotcol0.south east|-P10.south);
+    \end{tikzpicture}\par
+}
+
+\newcommand{\PrintSingleRow}{
+    \null\hspace{-\thoffset}\begin{tikzpicture}[x=1pt,y=1pt,outer sep=0pt]
+            \coordinate (P0\row) at (0,0);
+            \foreach \col [count=\coli,remember=\col as \lastcol (initially 0)] in {1,...,\TABtotcol} {
+                    \def\columnlabel{COL\alphalph{\col}}
+                    \def\rowlabel{ROW\alphalph{\row}}
+                    \def\currentalign{\csuse{TABcolalign\columnlabel}}
+                    \def\currentcolor{\csuse{TABcolcolor\columnlabel}}
+                    \setlength{\COLWID}{\csuse{COLWID\columnlabel}}
+                \ifdimequal{\COLWID}{0pt}
+                    {\deflength{\COLWID}{\TABWIDcolX/\theTABXtotal}}
+                    {}
+                    \node[anchor=north west,text width=\COLWID,inner xsep=\DIMxinnersep,inner ysep=\DIMyinnersep,rectangle,\currentcolor,align=left,outer sep=0pt,line width=0pt] (P\col\row) at (P\lastcol\row.north east)%
+                    {\begin{minipage}{\linewidth}\currentalign\csuse{TABcolstyle\columnlabel}\strut\csuse{CELL\columnlabel\rowlabel}\end{minipage}};
+                % Vertical line left
+                %\draw[line width=\OPTsmallline,draw=\OPTlinecolor] (P\col\row.north west)--++(270:\singlerowheight);
+                }
+        % Horizontal line top
+        %\draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]P1\row.north west)--([xshift={-\thoffset}]P\TABtotcol\row.north east|-P1\row.north);
+    \end{tikzpicture}%
+}
+
+\newcommand{\PrintSTrow}{%
+    \null\hspace{-\thoffset}\begin{tikzpicture}[x=1pt,y=1pt,outer sep=0pt]
+            \coordinate (P0\row) at (0,0);
+            \node[anchor=north west,text width={\linewidth},inner xsep=\DIMxinnersep,inner ysep=\DIMyinnersep,rectangle,black,align=left,outer sep=0pt,line width=0pt] (PST) at (P00.north east)%
+                {\begin{minipage}{\linewidth}\currentalign{\OPTtablesubtotallinestyle\strut\OPTtablesubtotalline}\hfill{\OPTtablesubtotallinestyle\PrintST}\end{minipage}};
+        % Horizontal line top
+        \draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]PST.north west)--([xshift={-\thoffset}]PST.north east);
+        % Horizontal line bottom
+        \draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]PST.south west)--([xshift={-\thoffset}]PST.south east);
+    \end{tikzpicture}%
+}
+
+\newcounter{previouspage}
+\newcommand{\PrintSTCProw}{%
+    \null\hspace{-\thoffset}\begin{tikzpicture}[x=1pt,y=1pt,outer sep=0pt]\setcounter{previouspage}{\thepage-1}
+            \coordinate (P00) at (0,0);
+            \node[anchor=north west,text width={\TABtotalwidth-2*\thoffset},inner xsep=\DIMxinnersep,inner ysep=\DIMyinnersep,rectangle,black,align=left,outer sep=0pt,line width=0pt] (PSTCP) at (P00.north east)%
+                {\begin{minipage}{\linewidth}\currentalign{\OPTtablecontinuefromlinestyle\strut\OPTtablecontinuefromline}\hfill{\OPTtablecontinuefromlinestyle\PrintST}\end{minipage}};
+        % Horizontal line top
+        %\draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]PSTCP.north west)--([xshift={-\thoffset}]PSTCP.north east);
+        % Horizontal line bottom
+        \draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]PSTCP.south west)--([xshift={-\thoffset}]PSTCP.south east);
+    \end{tikzpicture}%
+}
+
+\newcommand{\PrintTOTALrow}{%
+    \null\hspace{-\thoffset}\begin{tikzpicture}[x=1pt,y=1pt,outer sep=0pt]\setcounter{previouspage}{\thepage-1}
+            \coordinate (P00) at (0,0);
+            \node[anchor=north west,text width={\TABtotalwidth-2*\thoffset},inner xsep=\DIMxinnersep,inner ysep=\DIMyinnersep,rectangle,black,align=left] (PTOT) at (P00.north east)%
+                {\begin{minipage}{\linewidth}\currentalign\strut{\OPTtableinvoiceamountlinestyle\OPTtableinvoiceamountline}\hfill{\OPTinvoiceamountlinestyle\PrintTotal}\end{minipage}};
+        % Horizontal line top
+        \draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]PTOT.north west)--([xshift={-\thoffset}]PTOT.north east);
+        % Horizontal line bottom
+        \draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]PTOT.south west)--([xshift={-\thoffset}]PTOT.south east);
+    \end{tikzpicture}%
+}
+
+\newcommand{\PrintTAXESrow}{%
+    \null\hspace{-\thoffset}\begin{tikzpicture}[x=1pt,y=1pt,outer sep=0pt]\setcounter{previouspage}{\thepage-1}
+            \coordinate (P00) at (0,0);
+            \node[anchor=north west,text width={\TABtotalwidth-2*\thoffset},inner xsep=\DIMxinnersep,inner ysep=\DIMyinnersep,rectangle,black,align=left] (PTOTf) at (P00.north east)%
+                {\begin{minipage}{\linewidth}\currentalign%
+                    \ifthenelse{\equal{<%tax%>}{}}%check if tax
+                        {% tax is empty (no tax)
+                            <%if ordtotal%>
+                                {\OPTtablesubtotalstyle\OPTtablesubtotal}\hfill{\OPTtablesubtotalstyle<%ordtotal%>}\\
+                            <%end ordtotal%>
+                            \rule[2pt]{\linewidth}{\OPTsmallline}\\
+                            \null\hfill{\footnotesize<%company%> ist nicht MWST-pflichtig.}
+                        }% end tax is empty
+                        {% tax not empty (yes tax)
+                            \ifthenelse{\equal{<%taxincluded%>}{1}}% check tax included is 1
+                                {% taxincluded is 1
+                                    <%if ordtotal%>
+                                        {\OPTtableinvoicetotalstyle\OPTtableinvoicetotal\ifthenelse{\equal{<%tax%>}{}}{} { inkl. MWST}}\hfill{\OPTtablesubtotalstyle<%ordtotal%>}\\
+                                    <%end ordtotal%>
+                                    \rule[2pt]{\linewidth}{\OPTsmallline}\\
+
+                                    \vspace{5pt}
+                                    {\footnotesize\noindent
+                                        \begin{tabular}{@{}lrrr@{}}
+                                        \textbf{MWST-Satz} & \textbf{Netto} &  \textbf{MWST} & \textbf{Total}\\
+                                        \hline
+                                        <%foreach tax%>
+                                        <%taxrate%> \%&<%taxbase%>  &<%tax%> & <%taxbaseinclusive%>\\
+                                        <%end tax%>
+                                        \end{tabular}
+                                    }
+                                }% end tax included is 1
+                                {% tax included is not 1
+                                    %{\OPTtablesubtotallineendstyle\OPTtablesubtotallineend}\hfill{\OPTtablesubtotallineendstyle<%subtotal%>}\\
+                                    <%foreach tax%>
+                                        MWST <%taxrate%> \% auf <%taxbase%>\hfill<%tax%>\\
+                                    <%end tax%>
+                                    \rule[6pt]{\linewidth}{\OPTsmallline}\\[-4pt]
+                                    <%if ordtotal%>
+                                        {\OPTtableinvoicetotalstyle\OPTtableinvoicetotal}\hfill\textbf{<%ordtotal%>}
+                                    <%end ordtotal%>
+                                    \rule[3pt]{\linewidth}{\OPTbigline}\\
+                                }
+                        }% end tax is not empty
+                \end{minipage}};
+        % Horizontal line top
+        %\draw[line width=\OPTsmallline,draw=\OPTlinecolor] ([xshift={\thoffset}]PTOTf.north west)--([xshift={-\thoffset}]PTOTf.north east);
+        % Horizontal line bottom
+        %\draw[line width=\OPTbigline,draw=\OPTlinecolor] ([xshift={\thoffset}]PTOTf.south west)--([xshift={-\thoffset}]PTOTf.south east);
+    \end{tikzpicture}%
+}
+
+\newlength{\singlerowheight}
+\newlength{\lastcheck}
+\newcommand\measurepage{\dimexpr\pagegoal-\pagetotal-\baselineskip\relax}
+\newlength{\pageremaining}
+\newcommand{\PrintInvoiceTable}{\begingroup%
+    \setlength{\parindent}{0pt}%
+    \setlength{\parskip}{-1.3pt}%
+    \ifthenelse{\equal{\OPTtablehos}{off}}{\setlength{\thoffset}{\DIMxinnersep}}{\setlength{\thoffset}{0pt}}%
+    \setlength{\TABtotalwidth}{\linewidth+2\thoffset}%
+    \setcounter{TABXtotal}{\theTABXcount/\theTABrow}%
+    \setlength{\TABWIDcolX}{\TABtotalwidth-\TABWIDcolXtemp-\TABWxiscolX}%
+    % HEADER
+    \PrintHeader%
+    \vspace{5pt}
+    % BODY
+    % check heigth and print
+    \foreach \row [count=\rowi,remember=\row as \lastrow (initially 0)] in {1,...,\theTABrow} {%
+        \setlength{\singlerowheight}{\heightof{\PrintSingleRow}+4\baselineskip}%
+        \setlength{\pageremaining}{\the\measurepage}%
+        %\ifthenelse{\equal{\row}{\theTABrow}}{\newlength{\lastcheck}{\singlerowheight+50pt}}{\newlength{\lastcheck}{\singlerowheight}}%
+        \ifdimgreater{\pageremaining}{\singlerowheight}%
+            {\null
+            \vspace*{-2.6\baselineskip}
+            \PrintSingleRow\par
+            \vspace{\rowoffset}}%
+            {\def\PrintST{\num{\csuse{STROW\alphalph{\lastrow}}}}%
+            \ifthenelse{\equal{\OPTtablePsubtotal}{off}}{
+            \vspace*{-0.5\baselineskip}
+            \noindent\rule[3pt]{\linewidth}{\OPTsmallline}
+            }{\vspace*{-1.1\baselineskip}
+            \PrintSTrow\par}%
+            \clearpage%
+            \PrintHeader%
+            \ifthenelse{\equal{\OPTtablePsubtotal}{off}}{}{\vspace*{-1.1\baselineskip}
+            \PrintSTCProw\par}%
+            \vspace*{-1.1\baselineskip}
+            \PrintSingleRow\par
+            \vspace{\rowoffset}}%
+        %
+    }% end for each row
+    % Print the subtotal before taxes
+    % TODO
+    % Print the last row with the total
+        \def\PrintTotal{\num{\csuse{STROW\alphalph{\theTABrow}}}}%
+        \ifthenelse{\equal{\OPTtablePtotal}{off}}{
+        \vspace*{-\rowoffset}
+        \vspace*{-0.5\baselineskip}
+        \noindent\rule[3pt]{\linewidth}{\OPTsmallline}
+        }{
+        \vspace*{-\rowoffset}
+        \vspace*{-1.1\baselineskip}
+        \PrintTOTALrow\par%
+        \vspace*{-1.1\baselineskip}
+        \PrintTAXESrow\par}%
+\endgroup
+}

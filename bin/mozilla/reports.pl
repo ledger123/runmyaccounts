@@ -1716,15 +1716,22 @@ sub income_statement {
 
 print q|
 <script>
-$(document).ready(function(){
-    $('.check:button').toggle(function(){
-        $('input:checkbox').attr('checked','checked');
-        $(this).val('uncheck all')
-    },function(){
-        $('input:checkbox').removeAttr('checked');
-        $(this).val('check all');        
-    })
-})
+$(document).ready(function() {
+  var radioState;
+
+  $('#csvexport').on('click', function() {
+        if (radioState === this) {
+            this.checked = false;
+            radioState = null;
+        } else {
+            radioState = this;
+        }
+  });
+
+$("#checkall").click(function(){
+    $('input:checkbox').not(this).prop('checked', this.checked);
+});
+});
 </script>
 |;
 
@@ -1740,7 +1747,7 @@ $(document).ready(function(){
 $selectfrom
 <tr>
     <th>&nbsp;</th>
-    <td><input name=l_csv type=checkbox class=checkbox value=1> |.$locale->text('CSV Export').qq|</td>
+    <td><input name=l_csv type=radio id="csvexport" value=1> |.$locale->text('CSV Export').qq|</td>
 </tr>
 <tr>
 <th>|.$locale->text('Include').qq|:</th>
@@ -1769,7 +1776,7 @@ $selectfrom
    my $sth = $dbh->prepare($query) || $form->dberror($query);
    $sth->execute || $form->dberror($query);
    while (my $ref = $sth->fetchrow_hashref(NAME_lc)){
-      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description}<br>|;
+      print qq|<input name=p_$ref->{id} type=checkbox class=checkbox value=1>$ref->{description} |;
       if ( $ref->{projectnumber} ) {
             print qq| ($ref->{projectnumber})|;
         }
@@ -1779,9 +1786,8 @@ $selectfrom
 print qq|
 </td></tr>
 <tr><td>&nbsp;</td><td>
-  <input type="button" class="check" value="|.$locale->text('check all').qq|" />
+  <input type="checkbox" id="checkall"><b>|.$locale->text('Check all').qq|</b>
 </td></tr>
-
 </table>
 <hr>
 <input type=submit class=submit name=action value="|.$locale->text('Continue').qq|">|;

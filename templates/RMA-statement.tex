@@ -1,75 +1,95 @@
 %%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
 
-% Typ: Zahlungserinnerung
-% Name: statement.tex
-% Sprache: Deutsch
-% Erstellungsdatum: 14. Oktober 2015
-% Mandant: 
-% Version: 
-% Ersteller: 
-% © by Run my Accounts AG
+\newcommand{\DocType}{Kontoauszug}
 
-%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%$
 
 <%include definitions_packages.tex%>
 
-<%include definitions_settings.tex%>
+<%include content_language.tex%>
+
+<%include definitions_language.tex%>
+
+%%%%%%%%%%%%% GENERAL SETTINGS FOR THE TEMPLATE %%%%%%%%%%%%
+
+%%% PAGE LAYOUT %%%
+\usepackage[a4paper,top=5cm,bottom=3.1cm,left=1.8cm,right=1.8cm]{geometry} 
+\textblockorigin{0.00cm}{0.00cm} % - nach links / + nach unten
+\newcommand{\PageNumber}{off}
+\newcommand{\PrintOnPaper}{off}
+\newcommand{\Greetings}{on}
+\newcommand{\Footer}{on}
+\newcommand{\StandardBackground}{../<%templates%>/background_with_footer.pdf}
+\newcommand{\BackgroundESRorange}{../<%templates%>/background_ESR.pdf}
+\newcommand{\BackgroundESRwhite}{../<%templates%>/background_without_footer.pdf}
+
+%%% PLACE OF ADDRESS %%%
+\newcommand{\Addressblock}{right}
+%\newcommand{\Addressblock}{left}
+%\newcommand{\Addressblock}{pingenleft}
+
+%Tabellendefinitionen
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcolumntype{Z}{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}X}
 
 <%include content_footer.tex%>
 
-%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
-\Footer
+<%include definitions_settings.tex%>
 
-%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  ELEMENTS  %%%%%%%%%%%%%
+
+\pagestyle{myfoot}
 
 <%include content_address.tex%>
 
 \null\vspace{4.2cm}
 
 \parbox{\textwidth}{
-\textbf{\large{Kontoauszug}} \hfill \textbf{Datum: <%statementdate%>}
+\textbf{\large{\LANGuse{doctype}}} \hfill \textbf{\LANGuse{invdate}: <%statementdate%>}
 }
 
 \vspace{0.5cm}
 
 \parbox{\textwidth}{
-Sehr geehrte Damen und Herren\\
+\LANGuse{accounttable_salutation}\\
 \\
-Wir mussten feststellen, dass untenstehende Betr\"{a}ge in der H\"{o}he von <%currency%> <%total%> offen sind. Wir bitten Sie h\"{o}flich, die ausstehenden Rechnungen baldm\"{o}glichst zu begleichen.
+\LANGuse{accounttable_part_1}
 }
 
 \vspace{0.5cm}
 
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
-\textbf{Rechnungsnr.} & \textbf{Datum} & \textbf{Fällig} & \textbf{Aktuell} & \textbf{30 Tage} & \textbf{60 Tage} & \textbf{90+ Tage} \\
+\begin{tabularx}{\textwidth}{@{}XL{2cm}L{2cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+\textbf{\LANGuse{accounttable_invoice}} & \textbf{\LANGuse{invdate}} & \textbf{\LANGuse{accounttable_due}} & \textbf{\LANGuse{accounttable_current}} & \textbf{30 \LANGuse{accounttable_days}} & \textbf{60 \LANGuse{accounttable_days}} & \textbf{90+ \LANGuse{accounttable_days}} \\
 \hline
 \end{tabularx}
 
 <%foreach invnumber%>
-\begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
+\begin{tabularx}{\textwidth}{@{}XL{2cm}L{2cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
 <%invnumber%> & <%invdate%> & <%duedate%> & <%c0%> & <%c30%> & <%c60%> & <%c90%> \\
 \end{tabularx}
 <%end invnumber%>
 
 \begin{tabularx}{\textwidth}{@{}XR{1.8cm}R{1.8cm}R{2.1cm}R{2.1cm}R{2.1cm}R{2.1cm}@{}}
 \hline
-Zwischentotal& & & <%c0total%>& <%c30total%> & <%c60total%> & <%c90total%>
+ \LANGuse{arttable_subtotal}& & & <%c0total%>& <%c30total%> & <%c60total%> & <%c90total%>
 \end{tabularx}
 
 \begin{tabularx}{\textwidth}{@{}Xr@{}}
-\textbf{Total ausstehend <%currency%>} & \textbf{<%total%>}\\
+\textbf{\LANGuse{accounttable_total} <%currency%>} & \textbf{<%total%>}\\
 \hline
 \end{tabularx}
 
 \vspace{0.5cm}
 
 \parbox{\textwidth}{
-Sollten Sie in der Zwischenzeit die ausstehenden Rechnungen bezahlt haben, beachten Sie bitte dieses Schreiben als gegenstandslos.
+\LANGuse{accounttable_part_2}
 
 \vspace{0.5cm}
 
-Freundliche Grüsse
+\LANGuse{greetings}
 
 \vspace{0.5cm}
 
