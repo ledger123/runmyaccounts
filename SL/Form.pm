@@ -2811,7 +2811,7 @@ sub create_links {
 		c.name AS $vc, c.${vc}number, a.department_id,
 		d.description AS department,
 		a.amount AS oldinvtotal, a.paid AS oldtotalpaid,
-		a.employee_id, e.name AS employee, c.language_code,
+		a.employee_id, e.name AS employee, a.language_code,
 		a.ponumber, a.approved,
 		br.id AS batchid, br.description AS batchdescription,
 		a.description, a.onhold, a.exchangerate, a.dcn,
