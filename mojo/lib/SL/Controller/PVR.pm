@@ -287,7 +287,8 @@ sub generate {
         text  => [$result_b9->[0], $headline],
     );   
 
-
+    # this fixes somehow some permission issue.
+    chdir $workdir;
     $doc->save; # Everything has been filled in.
 
     
