@@ -509,7 +509,7 @@ sub print {
 
       if ($myform->{"module_$i"} ne 'jc') {
 	if ($form->{formname} =~ /_invoice/) {
-	  $total -= $form->parse_amount(\%myconfig, $form->{"${inv}total"});
+	  $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
 	} else {
 	  $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
 	}
