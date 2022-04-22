@@ -347,11 +347,17 @@ sub isblank {
 }
 
 sub header {
-	my ( $self, $endsession, $nocookie ) = @_;
+	my ( $self, $endsession, $nocookie, $locale ) = @_;
 
 	return if $self->{header};
 
 	my ( $stylesheet, $javascript, $favicon, $charset );
+
+	my $selectNoEntriesText = 'No Results Found'; # Default select2 message
+
+	if ($locale) {
+		$selectNoEntriesText = $locale->text('No Entries');
+	}
 
 	if ( $ENV{HTTP_USER_AGENT} ) {
 
@@ -392,17 +398,35 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
   <title>$self->{titlebar}</title>
   <meta name="robots" content="noindex,nofollow" />
   $favicon
+
+  <link rel="stylesheet" href="css/select2-4.0.13.min.css" type="text/css"/>
+  <link rel="stylesheet" href="css/jquery-ui-1.12.1.min.css" type="text/css"/>
+
   $stylesheet
+
   $charset
 
   <script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.12.1.min.js" type="text/javascript"></script>
+
+  <script src="js/select2-4.0.13.min.js" type="text/javascript"></script>
+
   <script src="js/rma.js" type="text/javascript"></script>
 |;
 		print q|
 <script>
 $(document).ready(function() {
-    $('.js-basic-single-disabled').select2();
+	var select2Config = {
+		dropdownAutoWidth : false,
+    	width: 'resolve',
+    	language: {
+       		noResults: function() {
+           		return "|;print qq|$selectNoEntriesText|;print q|";
+       		}
+   		}
+	};
+
+	$('select').select2(select2Config);
 });
 $(document).on('select2:open', () => {
     document.querySelector('.select2-search__field').focus();
@@ -1443,8 +1467,8 @@ sub format_line {
 
 		s/<%(.+?)%>/$newstr/;
 
-		s/(²)/\\textsuperscript{2}/;
-		s/(³)/\\textsuperscript{3}/;
+		s/(ï¿½)/\\textsuperscript{2}/;
+		s/(ï¿½)/\\textsuperscript{3}/;
 
 	}
 
@@ -1674,7 +1698,7 @@ sub format_string {
 				quotemeta('\\'), '&', '\n', '\r',
 				'\$',            '%', '_',  '#',
 				quotemeta('^'),  '{', '}',  '<',
-				'>',             '£'
+				'>',             'ï¿½'
 			],
 			utf => [
 				quotemeta('\\'), '&', '\n', '\r', '\$', '%', '_', '#',
@@ -1701,7 +1725,7 @@ sub format_string {
 			'>'             => '$>$',
 			'\n'            => '\newline ',
 			'\r'            => '\newline ',
-			'£'            => '\pounds ',
+			'ï¿½'            => '\pounds ',
 			quotemeta('\\') => '/'
 		}
 	);

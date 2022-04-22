@@ -53,7 +53,7 @@ sub login_screen {
   $form->{stylesheet} = "sql-ledger.css";
   $form->{favicon} = "sql-ledger.ico";
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   if ($form->{login}) {
    $sf = qq|function sf() { document.forms[0].password.focus(); }|;
@@ -129,7 +129,7 @@ $sf
   </tr>
 </table>
   
-  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelöst!</div>
+  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelï¿½st!</div>
   
 </body>
 </html>
@@ -279,7 +279,7 @@ sub login {
       $form->{dbupdate} = "db$user->{dbname}";
       $form->{$form->{dbupdate}} = 1;
 
-      $form->header;
+      $form->header(0, 0, $locale);
       print $locale->text('Upgrading to Version')." $form->{version} ... ";
 
       # required for Oracle

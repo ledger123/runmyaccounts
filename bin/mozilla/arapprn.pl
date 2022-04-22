@@ -463,7 +463,7 @@ sub select_payment {
   push @column_index, "$form->{ARAP}_paid";
 
   # list payments with radio button on a form
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $title = $locale->text('Select payment');
 

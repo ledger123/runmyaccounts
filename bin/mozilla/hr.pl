@@ -67,7 +67,7 @@ sub search_employee {
   push @a, qq|<input name="l_notes" type=checkbox class=checkbox value=Y> |.$locale->text('Notes');
  
 
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <body>
@@ -268,7 +268,7 @@ sub list_employees {
   
   $form->{title} = $locale->text('Employees') . " / $form->{company}";
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -479,7 +479,7 @@ sub employee_header {
   
   $form->{deduction_rows}++;
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -774,7 +774,7 @@ sub search_deduction {
   
   $form->{title} = $locale->text('Deductions') . " / $form->{company}";
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -936,7 +936,7 @@ sub deduction_header {
   $form->{base_rows}++;
   $form->{after_rows}++;
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>

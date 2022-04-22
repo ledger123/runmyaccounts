@@ -11,10 +11,11 @@ $self{texts} = {
   'PDF'                         => 'PDF',
   'RVC missing!'                => 'Codierzeile fehlt!',
   'Screen'                      => 'Bildschirm',
-  'Select a Printer!'           => 'Drucker auswählen!',
-  'Select payment'              => 'Zahlung auswählen',
-  'Select postscript or PDF!'   => 'Postscript oder PDF auswählen!',
+  'Select a Printer!'           => 'Drucker auswï¿½hlen!',
+  'Select payment'              => 'Zahlung auswï¿½hlen',
+  'Select postscript or PDF!'   => 'Postscript oder PDF auswï¿½hlen!',
   'Source'                      => 'Beleg',
+  'No Entries'					=> 'Keine Eintrï¿½ge zur Auswahl',
 };
 
 $self{subs} = {

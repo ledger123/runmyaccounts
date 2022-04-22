@@ -1,6 +1,7 @@
 $self{charset} = 'ISO-8859-1';
 
 $self{texts} = {
+  'No Entries'					=> 'Keine Eintr�ge zur Auswahl',
 };
 
 $self{subs} = {

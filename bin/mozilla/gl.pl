@@ -385,7 +385,7 @@ sub search {
 
     $form->helpref( "search_gl_transactions", $myconfig{countrycode} );
 
-    $form->header;
+    $form->header(0, 0, $locale);
 
 	my $title = $locale->text('General Ledger');
 
@@ -916,7 +916,7 @@ sub transactions {
 
     $form->helpref( "list_gl_transactions", $myconfig{countrycode} );
 
-    $form->header;
+    $form->header(0, 0, $locale);
 
     my $today = $form->today(\%myconfig);
 
@@ -2074,7 +2074,7 @@ sub form_header {
 
     $form->{onhold} = ( $form->{onhold} ) ? "checked" : "";
 
-    $form->header;
+    $form->header(0, 0, $locale);
 
     print qq|
 <body onload="document.forms[0].${focus}.focus()" />
@@ -2266,7 +2266,7 @@ sub form_footer {
 
 sub delete {
 
-    $form->header;
+    $form->header(0, 0, $locale);
 
     print qq|
 <body>
@@ -2391,7 +2391,7 @@ sub post {
 
 
 sub view {
-    $form->header;
+    $form->header(0, 0, $locale);
 
     use DBIx::Simple;
     my $dbh = $form->dbconnect(\%myconfig);

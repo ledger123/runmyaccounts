@@ -59,7 +59,7 @@ sub import {
   for ( keys %defaults ) { $form->{$_} = $defaults{$_} }
   $form->closedto_user($myconfig, $form->{dbh});
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $form->{nextsub} = "im_$form->{type}";
   $form->{action} = "continue";
@@ -430,7 +430,7 @@ sub im_generic {
 
   $form->helpref("import_$form->{type}", $myconfig{countrycode});
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -524,7 +524,7 @@ sub export {
   $msg = "Export $title{$form->{type}}";
   $form->{title} = $locale->text($msg);
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $form->{nextsub} = "ex_$form->{type}";
   $form->{action} = "continue";
@@ -706,7 +706,7 @@ sub im_sales_invoice {
   $column_data{department} = $locale->text('Department');
   $column_data{warehouse} = $locale->text('Warehouse');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -869,7 +869,7 @@ sub im_sales_order {
   $column_data{duedate} = $locale->text('Due Date');
   $column_data{employee} = $locale->text('Salesperson');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -1017,7 +1017,7 @@ sub im_purchase_order {
   $column_data{duedate} = $locale->text('Due Date');
   $column_data{employee} = $locale->text('Employee');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -1477,7 +1477,7 @@ sub im_payment {
   $column_data{amount} = $locale->text('Paid');
   $column_data{exchangerate} = $locale->text('Exch');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -1676,7 +1676,7 @@ sub ex_payment {
   $column_data{memo} = $locale->text('Memo');
   $column_data{curr} = $locale->text('Curr');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <script language="JavaScript">
@@ -1884,7 +1884,7 @@ sub im_parts {
   $column_data{drawing} = $locale->text('Drawing');
   $column_data{notes} = $locale->text('Notes');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2090,7 +2090,7 @@ sub im_partscustomer {
   $column_data{validto} = $locale->text('To');
   $column_data{curr} = $locale->text('Curr');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|<body><form method=post action=$form->{script}>|;
   print qq|<table width=100%>|;
@@ -2202,7 +2202,7 @@ sub im_partsvendor {
   $column_data{curr} = $locale->text('Curr');
   $column_data{leadtime} = $locale->text('Leadtime');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|<body><form method=post action=$form->{script}>|;
   print qq|<table width=100%>|;
@@ -2312,7 +2312,7 @@ sub im_vc {
   $column_data{zipcode} = $locale->text('Zip');
   $column_data{country} = $locale->text('Country');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2465,7 +2465,7 @@ sub im_account {
   $column_data{category} = $locale->text('Category');
   $column_data{"link"} = $locale->text('Link');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2617,7 +2617,7 @@ sub im_gl {
   $column_data{projectnumber} = $locale->text('Project');
   $column_data{project_id} = $locale->text('Project ID');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2823,7 +2823,7 @@ sub im_transactions {
   $column_data{account} = $locale->text('Account');
   $column_data{amount} = $locale->text('Amount');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2978,7 +2978,7 @@ sub prepare_datev {
 
     if (!$form->{ok}){
         $form->{title} = $locale->text('Prepare DATEV export');
-        $form->header;
+        $form->header(0, 0, $locale);
         print qq|
 <body>
 <table width="100%">
@@ -3161,7 +3161,7 @@ sub export_datev {
     }
 
     if (!$form->{l_csv}){
-        $form->header;
+        $form->header(0, 0, $locale);
         print qq|
 <body>
 <table width="100%">
