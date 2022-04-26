@@ -129,7 +129,7 @@ $sf
   </tr>
 </table>
   
-  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelï¿½st!</div>
+  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelöst!</div>
   
 </body>
 </html>

@@ -1698,7 +1698,7 @@ sub format_string {
 				quotemeta('\\'), '&', '\n', '\r',
 				'\$',            '%', '_',  '#',
 				quotemeta('^'),  '{', '}',  '<',
-				'>',             'ï¿½'
+				'>',             '£'
 			],
 			utf => [
 				quotemeta('\\'), '&', '\n', '\r', '\$', '%', '_', '#',
@@ -1725,7 +1725,7 @@ sub format_string {
 			'>'             => '$>$',
 			'\n'            => '\newline ',
 			'\r'            => '\newline ',
-			'ï¿½'            => '\pounds ',
+			'£'            => '\pounds ',
 			quotemeta('\\') => '/'
 		}
 	);
