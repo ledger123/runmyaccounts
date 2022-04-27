@@ -686,16 +686,16 @@ sub invoice_details {
 
   my @oldvars = qw(company companyaddress1 companyzip companycity name address1 zipcode city businessnumber invdate invdescriptionqr qriban strdbkginf);
 
-  # conversion to QR variables
+  # conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
   $form->{invnumber} = substr($form->{invnumber}, 0, 24);
   $form->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
-  $form->{invnumber} = $form->string_replace($form->{invnumber}, "/", "");
-  $form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", "");
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "/", ""); # QR Standard requires "/" to be escaped. We just remove it ("/" is rarely used) (See #112446)
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
   $form->{invnumberqr} = $form->{invnumber};
 
   $form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescriptionqr});
   $form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
-  $form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55);
+  $form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
   $form->{invdescriptionqr2} = $form->{invdescriptionqr};
   
   $form->{qribanqr} = $form->{qriban};
@@ -755,9 +755,11 @@ sub invoice_details {
   $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
-  $form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85);
+  $form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
   $form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
   $form->{strdbkginfqr} = $form->{strdbkginf};
+  
+  # split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
   $form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
   $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
   
