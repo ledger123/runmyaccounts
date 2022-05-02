@@ -3188,6 +3188,32 @@ sub save {
   $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
   $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
 
+  use Email::Valid;
+  if ($form->{email}){
+      my @emails = split ',', $form->{email};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
+      }
+  }
+  if ($form->{cc}){
+      my @emails = split ',', $form->{cc};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
+      }
+  }
+  if ($form->{bcc}){
+      my @emails = split ',', $form->{bcc};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
+      }
+  }
+
   $msg = ucfirst $form->{db};
   $msg .= " saved!";
 
