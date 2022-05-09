@@ -1247,7 +1247,7 @@ sub get_name {
                  c.discount, c.creditlimit, c.terms,
                  c.email, c.cc, c.bcc, c.taxincluded,
 		 ad.address1, ad.address2, ad.city, ad.state,
-		 ad.zipcode, ad.country, c.curr AS currency,
+		 ad.zipcode, ad.country, c.curr AS currency, c.language_code,
 	         $duedate AS duedate, c.notes AS intnotes,
 		 b.discount AS tradediscount, b.description AS business,
 		 e.name AS employee, e.id AS employee_id,
@@ -1292,6 +1292,7 @@ sub get_name {
     for (qw(currency employee employee_id)) { delete $ref->{$_} }
   }
  
+  $ref->{language_code} = $form->{language_code} if $form->{id}; # Use language_code saved with transaction
   delete $ref->{intnotes} if $form->{intnotes};
   for (keys %$ref) { $form->{$_} = $ref->{$_} }
   $sth->finish;
