@@ -357,7 +357,7 @@ sub post_transaction {
 	      paid = $paid * $arapml,
 	      datepaid = $datepaid,
 	      netamount = $invnetamount * $arapml,
-	      fxamount = $fxinvamount,
+	      fxamount = $fxinvamount * $arapml,
 	      fxpaid = $fxpaid,
           linetax = '$linetax',
 	      terms = |.$form->dbclean($form->{terms}).qq|,
