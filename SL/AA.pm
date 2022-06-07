@@ -366,6 +366,7 @@ sub post_transaction {
 	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
 	      department_id = |.$form->dbclean($form->{department_id}).qq|,
 	      employee_id = |.$form->dbclean($form->{employee_id}).qq|,
+	      language_code = |.$dbh->quote($form->{language_code}).qq|,
 	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
 	      cashdiscount = |.$form->dbclean($form->{cashdiscount}).qq|,
 	      discountterms = |.$form->dbclean($form->{discountterms}).qq|,
@@ -1291,6 +1292,7 @@ sub get_name {
     for (qw(currency employee employee_id)) { delete $ref->{$_} }
   }
  
+  $ref->{language_code} = $form->{language_code} if $form->{id}; # Use language_code saved with transaction
   delete $ref->{intnotes} if $form->{intnotes};
   for (keys %$ref) { $form->{$_} = $ref->{$_} }
   $sth->finish;
