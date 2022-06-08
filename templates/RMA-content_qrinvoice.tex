@@ -38,28 +38,8 @@
 \newcommand{\QRpsubtitle}{\QRfontdef{6}{10.60}{b}}
 \newcommand{\QRpcontent}{\QRfontdef{8}{10.8}{m}}
 
-
 \renewcommand{\QRposX}{0}
 \renewcommand{\QRposY}{187}
-
-% code for building the rectangle
-\newlength{\BFthick}\setlength{\BFthick}{0.75pt}
-\newlength{\BFlength}\setlength{\BFlength}{3mm}
-\newcommand{\invoiceblankfield}[2]{\tikz[x=1mm,y=1mm]{%
-        \path (0,0) coordinate(BFbl) rectangle++(#1,#2) coordinate(BFtr);
-        \coordinate (BFbr) at (BFbl-|BFtr);
-        \coordinate (BFtl) at (BFbl|-BFtr);
-        \begin{scope}[line width=\BFthick]
-            \draw ([shift={(0.5*\BFthick,\BFlength)}]BFbl)|-([shift={(\BFlength,0.5*\BFthick)}]BFbl);
-            \draw ([shift={(-0.5*\BFthick,\BFlength)}]BFbr)|-([shift={(-\BFlength,0.5*\BFthick)}]BFbr);
-            \draw ([shift={(-0.5*\BFthick,-\BFlength)}]BFtr)|-([shift={(-\BFlength,-0.5*\BFthick)}]BFtr);
-            \draw ([shift={(0.5*\BFthick,-\BFlength)}]BFtl)|-([shift={(\BFlength,-0.5*\BFthick)}]BFtl);
-        \end{scope}
-    }%
-}
-% end of code for building the rectangle
-
-% REFORMATING OF VARIABLES
 
 \noindent
 % Block where the QR code is
@@ -99,11 +79,10 @@
                 \begin{minipage}{\linewidth}\raggedright
                     \begin{tabular}{@{}ll@{}}
                          \QRpsubtitle \LANGuse{qr_currency} & \QRpsubtitle \LANGuse{qr_amount} \\
-                        \QRpcontent <%currency%> & \\
+                        \QRpcontent <%currency%> & \QRrcontent \StrSubstitute[0]{<%total%>}{'}{ }\\
                     \end{tabular}
                 \end{minipage}
             };
-           \node[anchor=north east,align=right] at ([yshift=-3.5pt]RAS.north-|RIS.east) {\invoiceblankfield{30}{10}};
         % Acceptance point section
             \node (RAPS) at ([shift={(0pt,-\QRpad)}]RAS.south west) {
                 \begin{minipage}{\linewidth}\raggedleft\QRrsubtitle
@@ -126,7 +105,7 @@
         % Swiss QR Code section
             \node (PSQRCS) at ({\QRrwid+\QRpad},{\QRphei-2.34*\QRpad+5mm}) {
                 \begin{minipage}{\linewidth}\raggedright
-\unicodeqrcode{SPC\\0200\\1\\<%qribanqr%>\\K\\<%companyqr%>\\<%companyaddress1qr%>\\<%companyzipqr%> <%companycityqr%>\\\\\\CH\\\\\\\\\\\\\\\\\\<%currency%>\\K\\<%nameqr%>\\<%address1qr%>\\<%zipcodeqr%> <%cityqr%>\\\\\\CH\\QRR\\<%dcn%>\\<%invdescriptionqr%>\\EPD\\<%strdbkginfqr%>\\\\}
+\unicodeqrcode{SPC\\0200\\1\\<%qribanqr%>\\K\\<%companyqr%>\\<%companyaddress1qr%>\\<%companyzipqr%> <%companycityqr%>\\\\\\CH\\\\\\\\\\\\\\\\<%integer_out_amount%>.<%out_decimal%>\\<%currency%>\\K\\<%nameqr%>\\<%address1qr%>\\<%zipcodeqr%> <%cityqr%>\\\\\\CH\\QRR\\<%dcn%>\\<%invdescriptionqr%>\\EPD\\<%strdbkginfqr%>\\\\}
 
                 \end{minipage}
             };
@@ -135,7 +114,7 @@
                 \begin{minipage}{\linewidth}\raggedright
                     \begin{tabular}{@{}ll@{}}
                         \QRpsubtitle \LANGuse{qr_currency} & \QRpsubtitle \LANGuse{qr_amount} \\
-                        \QRpcontent <%currency%> & \\
+                        \QRpcontent <%currency%> & \QRrcontent \StrSubstitute[0]{<%total%>}{'}{ }\\
                     \end{tabular}
                 \end{minipage}
             };
@@ -172,7 +151,6 @@
                 \end{minipage}
             };
         \end{scope}
-        \node[anchor=north east,align=right] at ([yshift=-9.5pt]PAS.north-|PIS.west) {\invoiceblankfield{40}{15}};
         % Further information section
         \begin{scope}[every node/.style={anchor=north west,text width={\QRpwid-2*\QRpad},align=left,inner sep=0pt,outer sep=0pt}]
             \node at ([shift={(0pt,{-\QRpad})}]PAS.south west) {%
