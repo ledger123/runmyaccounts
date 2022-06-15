@@ -1901,6 +1901,7 @@ sub display_rows {
                 $fx_transaction2 = qq|<td>&nbsp;</td>|;
             }
 
+
         } else {
 
             $form->{totaldebit}     += $form->{"debit_$i"};
@@ -1955,16 +1956,26 @@ sub display_rows {
             }
         }
 
+        $form->{"lineitemdetail_$i"} = ($form->{allbox}) ? 1 : $form->{"lineitemdetail_$i"};
+        $form->{"lineitemdetail_$i"} = ($form->{"lineitemdetail_$i"}) ? "checked" : "";
+        if (!$form->{"lineitemdetail_$i"}){
+            $form->{"lineitemdetail_$i"} = ($form->{"memo_$i"} || $form->{"source_$i"} || $form->{"projectnumber_$i"}) ? "checked" : "";
+        }
+        $lineitemdetail = qq|<td align="center"><input name="lineitemdetail_$i" type=checkbox class=checkbox $form->{"lineitemdetail_$i"}></td>|;
+ 
         if ($form->{selecttax}){
             print qq|
             <tr valign=top>
                 <td>$accno</td>
+                $lineitemdetail
                 $fx_transaction
                 <td align="right"><input name="debit_$i" size=12 value="$form->{"debit_$i"}" accesskey=$i></td>
                 <td align="right"><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
                 <td>$tax<br/>
                 <td>$taxamount</td>
-            </tr>
+            </tr>|;
+            if ($form->{"lineitemdetail_$i"}){
+                print qq|
             <tr>
                 <td>$memo $source</td>
                 $fx_transaction2
@@ -1973,6 +1984,7 @@ sub display_rows {
                 <td>$project</td>
                 <td>&nbsp;</td>
             </tr>|;
+            }
         } else {
             print qq|
             <tr valign=top>
@@ -2130,10 +2142,13 @@ sub form_header {
       <table width=100%>
 	<tr class=listheading>
 |;
+    $form->{allbox} = ($form->{allbox}) ? "checked" : "";
+    $allbox = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll();"></th>|;
 
     if ( $form->{selecttax} ) {
         print qq|
 	  <th class=listheading>| . $locale->text('Account') . qq| / | . $locale->text('Memo') . qq| / | . $locale->text('Source') . qq|</th>
+      $allbox
 	  $fx_transaction
 	  <th class=listheading>| . $locale->text('Debit') . qq|</th>
 	  <th class=listheading>| . $locale->text('Credit') . qq|</th>
@@ -2156,6 +2171,26 @@ sub form_header {
     }
     print qq|
 	</tr>
+|;
+
+   print qq|
+<script language="JavaScript">
+<!--
+
+function CheckAll(v) {
+
+  var frm = document.forms[0]
+  var el = frm.elements
+  var re = /lineitemdetail_/;
+
+  for (i = 0; i < el.length; i++) {
+    if (el[i].type == 'checkbox' && re.test(el[i].name)) {
+      el[i].checked = frm.allbox.checked
+    }
+  }
+}
+// -->
+</script>
 |;
 
 }
@@ -2181,6 +2216,7 @@ sub form_footer {
 
     print qq|
         <tr class=listtotal>
+	  <th>&nbsp;</th>
 	  <th>&nbsp;</th>
 	  $fx_transaction
 	  <th class=listtotal align=right>$form->{totaldebit}</th>
