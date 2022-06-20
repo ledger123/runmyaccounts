@@ -1972,13 +1972,14 @@ sub display_rows {
                 <td align="right"><input name="debit_$i" size=12 value="$form->{"debit_$i"}" accesskey=$i></td>
                 <td align="right"><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
                 <td>$tax<br/>
-                <td>$taxamount</td>
+                <td align="right">$taxamount</td>
             </tr>|;
             if ($form->{"lineitemdetail_$i"}){
                 print qq|
             <tr>
                 <td>$memo $source</td>
                 $fx_transaction2
+                <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>$project</td>
