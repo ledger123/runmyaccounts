@@ -1837,7 +1837,7 @@ sub income_statement_by_project {
             SUM(ac.amount) amount
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
-        JOIN project p ON (p.id = ac.project_id)
+        LEFT JOIN project p ON (p.id = ac.project_id)
         WHERE $where 
         GROUP BY p.projectnumber, c.accno, c.description
         ORDER BY p.projectnumber, c.accno
@@ -2017,7 +2017,7 @@ sub income_statement_by_department {
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
         JOIN dpt_trans dt ON (dt.trans_id = ac.trans_id)
-        JOIN department d ON (d.id = dt.department_id)
+        LEFT JOIN department d ON (d.id = dt.department_id)
         WHERE $where 
         GROUP BY d.description, c.accno, c.description
         ORDER BY d.description, c.accno

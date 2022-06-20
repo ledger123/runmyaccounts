@@ -1091,6 +1091,10 @@ sub order_details {
   my $taxrate;
   my $taxamount;
 
+  my %defaults = $form->get_defaults($dbh, \@{['company', 'address1', 'address2', 'zip', 'city', 'country']});
+  $form->{company} = $defaults{company};
+  for (qw(address1 address2 zip city country)) { $form->{"company$_"} = $defaults{$_} }
+
   my %translations;
 
   $query = qq|SELECT p.description, t.description
