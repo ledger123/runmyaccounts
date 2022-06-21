@@ -284,7 +284,7 @@ sub search {
   $form->{sort} = "transdate";
   $form->{nextsub} = "list_spool";
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -364,7 +364,7 @@ sub remove {
  
   $form->{title} = $locale->text('Confirm!');
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -787,7 +787,7 @@ $column_header{vcnumber} = "<th><a class=listheading href=$href&sort=vcnumber>".
   $column_header{amount} = "<th class=listheading>".$locale->text('Amount')."</th>";
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <script language="JavaScript">

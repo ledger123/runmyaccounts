@@ -213,7 +213,7 @@ sub search {
   push @a, $l_time if $l_time;
   push @a, qq|<input name=l_allocated class=checkbox type=checkbox value=Y> |.$locale->text('Allocated');
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -487,7 +487,7 @@ sub timecard_header {
 	</tr>
 |;
    
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -731,7 +731,7 @@ sub storescard_header {
   }
    
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -1093,7 +1093,7 @@ sub resave {
   
   $form->{resave} = 1;
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -1145,7 +1145,7 @@ sub print_and_save {
 
 sub delete_timecard {
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $employee = $form->{employee};
   $employee =~ s/--.*//g;
@@ -1348,7 +1348,7 @@ sub list_cards {
   $column_header{sellprice} = "<th class=listheading>".$locale->text('Amount')."</th>";
 
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -1871,7 +1871,7 @@ sub select_item {
   $column_data{sellprice} .= qq|</th>|;
   
   # list items with radio button on a form
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $title = $locale->text('Select items');
 

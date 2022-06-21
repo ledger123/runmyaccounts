@@ -213,7 +213,7 @@ sub select_name {
   $column_data{address} = qq|<th class=listheading colspan=5>|.$locale->text('Address').qq|</th>|;
   
   # list items with radio button on a form
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $title = $locale->text('Select from one of the names below');
 
@@ -446,7 +446,7 @@ sub select_project {
   $column_data{description} = qq|<th>|.$locale->text('Description').qq|</th>|;
   
   # list items with radio button on a form
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $title = $locale->text('Select from one of the projects below');
 
@@ -606,7 +606,7 @@ sub repost {
   delete $form->{action};
   $form->{repost} = 1;
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -831,7 +831,7 @@ pdf--|.$locale->text('PDF');
     $description = qq|<input name=recurringdescription size=60 value="|.$form->quote($form->{recurringdescription}).qq|">|;
   }
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>

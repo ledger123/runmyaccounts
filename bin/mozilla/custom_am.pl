@@ -9,7 +9,7 @@ sub ask_dbcheck {
   $form->error($locale->text('Only for admin ...')) unless $myconfig{role} eq 'admin';
 
   $form->{title} = $locale->text('Ledger Doctor');
-  $form->header;
+  $form->header(0, 0, $locale);
   my $dbh = $form->dbconnect(\%myconfig);
   my ($firstdate) = $dbh->selectrow_array("SELECT MIN(transdate) FROM acc_trans");
   my ($lastdate) = $dbh->selectrow_array("SELECT MAX(transdate) FROM acc_trans");
@@ -55,7 +55,7 @@ sub do_dbcheck {
   $form->error($locale->text('Only for admin ...')) unless $myconfig{role} eq 'admin';
 
   $form->{title} = $locale->text('Ledger Doctor');
-  $form->header;
+  $form->header(0, 0, $locale);
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br />|;
   my $dbh = $form->dbconnect(\%myconfig);
   my $query, $sth, $i;
@@ -692,7 +692,7 @@ sub click_here_to_delete_blank_non_tax_rows {
 sub fix_invoicetax_for_alltaxes_report {
 
     $form->{title} = $locale->text('Fix Invoicetax table for all taxes report');
-    $form->header;
+    $form->header(0, 0, $locale);
     print qq|
 <body>
   <table width=100%>
