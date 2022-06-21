@@ -9,3 +9,5 @@ locale/*.zip
 /.DS_Store
 /.settings
 /spool
+.idea
+*.iml

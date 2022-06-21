@@ -132,6 +132,7 @@ $self{texts} = {
   'Warehouse2'                  => 'Warehouse2',
   'Year'                        => 'Jahr',
   'check all'                   => 'Alle auswählen',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

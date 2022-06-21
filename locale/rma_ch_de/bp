@@ -108,6 +108,7 @@ $self{texts} = {
   'Yes'                         => 'Ja',
   'html'                        => 'html',
   'ok'                          => 'ok',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

@@ -503,7 +503,7 @@ sub payments_header {
   }
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <script language="JavaScript">
@@ -1388,7 +1388,7 @@ sub payment_header {
   }
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <script language="JavaScript">

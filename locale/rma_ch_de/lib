@@ -13,6 +13,7 @@ $self{texts} = {
   'Summary'                     => 'Zusammenfassung',
   'Unit'                        => 'Einheit',
   'Year'                        => 'Jahr',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

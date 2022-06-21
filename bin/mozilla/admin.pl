@@ -76,7 +76,7 @@ sub adminlogin {
 
   $form->{title} = qq|Run my Accounts $form->{version} |.$locale->text('Administration');
   
-  $form->header;
+  $form->header(0, 0, $locale);
   
     print qq|
 <script language="JavaScript" type="text/javascript">
@@ -285,7 +285,7 @@ sub list_users {
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Administration');
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -450,7 +450,7 @@ sub form_header {
 
   }
   
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body class=admin>
@@ -983,7 +983,7 @@ sub change_admin_password {
 
   $form->{title} = qq|Run my Accounts |.$locale->text('Accounting')." ".$locale->text('Administration')." / ".$locale->text('Change Admin Password');
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -1189,7 +1189,7 @@ sub dbselect_source {
 
  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." / ".$locale->text('Database Administration');
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -1270,7 +1270,7 @@ sub update_dataset {
 
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Update Dataset');
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -1401,7 +1401,7 @@ sub create_dataset {
   
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -1519,7 +1519,7 @@ sub dbcreate {
   
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -1562,7 +1562,7 @@ sub delete_dataset {
 
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -1625,7 +1625,7 @@ sub dbdelete {
 
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class=admin>
@@ -1688,7 +1688,7 @@ sub software_administration {
 
   $form->{title} = "SQL-Ledger ".$locale->text('Accounting')." / ".$locale->text('Software Administration');
   $msg &&= "<pre>$msg</pre>"; 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class="admin">
@@ -1744,7 +1744,7 @@ sub switch_branch {
 
 sub update_software {
   $form->{title} = "SQL-Ledger ".$locale->text('Accounting')." / ".$locale->text('Update Software');
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body class="admin">

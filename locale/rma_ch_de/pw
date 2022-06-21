@@ -4,6 +4,7 @@ $self{texts} = {
   'Continue'                    => 'Weiter',
   'Password'                    => 'Passwort',
   'Session expired!'            => 'Sitzungsdauer abgelaufen!',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {
