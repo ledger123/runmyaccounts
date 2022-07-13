@@ -13,6 +13,8 @@
 
 package Mailer;
 
+use utf8;
+
 use POSIX;
 use JSON::XS;
 use MIME::Base64 ('encode_base64');
@@ -133,7 +135,7 @@ sub send {
   my $msgid = "$boundary\@$domain";
   $boundary = "SL-$self->{version}-$boundary";
   
-  $self->{charset} ||= "ISO-8859-1";
+  $self->{charset} = 'UTF-8';
   
   if ($out) {
     open(OUT, $out) or return "$out : $!";
@@ -142,6 +144,8 @@ sub send {
   }
 
   $self->{contenttype} ||= "text/plain";
+  
+  utf8::encode $self->{$_} for qw|from to cc bcc subject message|;
   
   my %h;
   for (qw(reply-to from to cc bcc)) {

@@ -9,6 +9,8 @@
 
 package Form;
 
+use utf8;
+
 use Date::Parse;
 use Time::Piece;
 use DBIx::Simple;
@@ -92,6 +94,7 @@ sub new {
 
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
+	$self->{charset} = 'UTF-8';
 	$self->{version}   = "2.8.33";
 	$self->{dbversion} = "2.8.22";
 
@@ -154,9 +157,11 @@ sub escape {
 		$str = $self->escape( $str, 1 ) if $1 == 0 && $2 < 44;
 	}
 
+	# encode $str in UTF-8
+	utf8::encode $str;
+	
 	$str =~ s/([^a-zA-Z0-9_.-])/sprintf("%%%02x", ord($1))/ge;
 	$str;
-
 }
 
 sub unescape {
@@ -167,6 +172,9 @@ sub unescape {
 
 	$str =~ s/%([0-9a-fA-Z]{2})/pack("c",hex($1))/eg;
 	$str =~ s/\r?\n/\n/g;
+	
+	# dencode $str in UTF-8
+	utf8::decode $str;
 
 	$str;
 
@@ -738,13 +746,9 @@ sub parse_template {
 	$self->{debuglatex} = $debuglatex;
 
 	if ( -f "$self->{templates}/$self->{language_code}/$self->{IN}" ) {
-		open( IN, "$self->{templates}/$self->{language_code}/$self->{IN}" )
-		  or $self->error(
-			"$self->{templates}/$self->{language_code}/$self->{IN} : $!");
-	}
-	else {
-		open( IN, "$self->{templates}/$self->{IN}" )
-		  or $self->error("$self->{templates}/$self->{IN} : $!");
+		open(IN, '<:utf8', "$self->{templates}/$self->{language_code}/$self->{IN}") or $self->error("$self->{templates}/$self->{language_code}/$self->{IN} : $!");
+	} else {
+		open(IN, '<:utf8', "$self->{templates}/$self->{IN}") or $self->error("$self->{templates}/$self->{IN} : $!");
 	}
 
 	my @texform = <IN>;
@@ -759,17 +763,15 @@ sub parse_template {
 
 	if ( $self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email' ) {
 		$out = $self->{OUT};
-		$self->{OUT} = ">$self->{tmpfile}";
+		$self->{OUT} = $self->{tmpfile};
 	}
 
 	if ( $self->{OUT} ) {
-		open( OUT, "$self->{OUT}" ) or $self->error("$self->{OUT} : $!");
-	}
-	else {
+		open( OUT, '>:utf8', $self->{OUT}) or $self->error("$self->{OUT} : $!");
+	} else {
 		open( OUT, ">-" ) or $self->error("STDOUT : $!");
 
 		$self->header;
-
 	}
 
 	$self->{copies} ||= 1;
@@ -1013,11 +1015,7 @@ sub parse_template {
 				# assume loop after 10 includes of the same file
 				next if $include{$var} > 10;
 
-				unless (
-					open( INC, "$self->{templates}/$self->{language_code}/$var"
-					)
-				  )
-				{
+				unless (open(INC, '<:utf8', "$self->{templates}/$self->{language_code}/$var")) {
 					$err = $!;
 					$self->cleanup;
 					$self->error(
@@ -2009,6 +2007,10 @@ qq|<input class="submit noprint" type=submit name=action value="$button->{$name}
 }
 
 # Database routines used throughout
+
+# TODO: if doesnt work:
+# my $dbh = DBI->connect($myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}, {AutoCommit => 0, pg_enable_utf8 => 0}) or $self->dberror;
+
 
 sub dbconnect {
 	my ( $self, $myconfig ) = @_;

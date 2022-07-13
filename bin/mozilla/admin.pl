@@ -22,7 +22,7 @@ use SL::User;
 $form = new Form;
 
 $locale = new Locale $language, "admin";
-$form->{charset} = $locale->{charset};
+# $form->{charset} = $locale->{charset};
 
 eval { require DBI; };
 $form->error($locale->text('DBI not installed!')) if ($@);
@@ -54,8 +54,8 @@ if ($form->{action}) {
 
   # create memberfile
   if (! -f $memberfile) {
-    open(FH, ">$memberfile") or $form->error("$memberfile : $!");
-    print FH qq|# Run my Accounts Accounting members
+      open(FH, '>:utf8', $memberfile) or $form->error("$memberfile : $!");    
+      print FH qq|# Run my Accounts Accounting members
 
 [root login]
 password=
@@ -233,7 +233,7 @@ $delete
 
 sub list_users {
 
-  open(FH, "$memberfile") or $form->error("$memberfile : $!");
+  open(FH, '<:utf8', $memberfile) or $form->error("$memberfile : $!");
 
   $nologin = qq|
 <input type=submit class=submit name=action value="|.$locale->text('Lock System').qq|">|;

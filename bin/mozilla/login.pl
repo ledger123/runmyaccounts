@@ -21,7 +21,7 @@ $form = new Form;
 
 
 $locale = new Locale $language, "login";
-$form->{charset} = $locale->{charset};
+# $form->{charset} = $locale->{charset};
 
 # customization
 if (-f "$form->{path}/custom_$form->{script}") {
