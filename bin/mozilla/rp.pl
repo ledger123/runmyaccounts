@@ -1162,7 +1162,8 @@ sub generate_income_statement {
 
 	$form->{pdf_button} = qq|
 	<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
-		event: 'urlToPdf',
+		 event: 'urlToPdf',
+		 orientation: 'portrait',
 		 url: window.location.href +
 		 '&department=$form->{department}' +
 		 '&fromdate=$form->{fromdate}' +
@@ -1247,7 +1248,8 @@ sub generate_balance_sheet {
 
 	$form->{pdf_button} = qq|
 	<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
-		event: 'urlToPdf',
+		 event: 'urlToPdf',
+		 orientation: 'portrait',
 		 url: window.location.href +
 		 '&level=$form->{level}' +
 		 '&report=$form->{report}' +
