@@ -3,7 +3,7 @@ use utf8;
 $self{charset} = 'UTF-8';
 
 $self{texts} = {
-  'No Entries'                  => 'Keine EintrÃ¤ge zur Auswahl',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {
