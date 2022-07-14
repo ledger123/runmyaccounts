@@ -1,11 +1,11 @@
-$self{charset} = 'UTF-8';
+$self{charset} = 'ISO-8859-1';
 
 $self{texts} = {
   'Access Denied!'              => 'Zugriff fehlgeschlagen!',
   'Company'                     => 'Firmenname',
   'Continue'                    => 'Weiter',
   'Dataset is newer than version!' => 'Datenset ist neuer als installierte Version',
-  'Incorrect Dataset version!'  => 'UngÃ¼ltige Datenset-Version',
+  'Incorrect Dataset version!'  => 'Ungültige Datenset-Version',
   'Login'                       => 'anmelden',
   'Name'                        => 'Benutzername',
   'Password'                    => 'Passwort',
@@ -13,7 +13,7 @@ $self{texts} = {
   'Version'                     => 'Version',
   'You did not enter a name!'   => 'Sie haben keinen Namen eingegeben!',
   'done'                        => 'fertig',
-  'No Entries'                  => 'Keine EintrÃ¤ge zur Auswahl',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

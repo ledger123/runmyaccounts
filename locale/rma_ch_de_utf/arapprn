@@ -1,4 +1,4 @@
-$self{charset} = 'UTF-8';
+$self{charset} = 'ISO-8859-1';
 
 $self{texts} = {
   'Account'                     => 'Konto',
@@ -11,11 +11,11 @@ $self{texts} = {
   'PDF'                         => 'PDF',
   'RVC missing!'                => 'Codierzeile fehlt!',
   'Screen'                      => 'Bildschirm',
-  'Select a Printer!'           => 'Drucker auswÃ¤hlen!',
-  'Select payment'              => 'Zahlung auswÃ¤hlen',
-  'Select postscript or PDF!'   => 'Postscript oder PDF auswÃ¤hlen!',
+  'Select a Printer!'           => 'Drucker auswählen!',
+  'Select payment'              => 'Zahlung auswählen',
+  'Select postscript or PDF!'   => 'Postscript oder PDF auswählen!',
   'Source'                      => 'Beleg',
-  'No Entries'                  => 'Keine EintrÃ¤ge zur Auswahl',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

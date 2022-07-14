@@ -1,4 +1,4 @@
-$self{charset} = 'UTF-8';
+$self{charset} = 'ISO-8859-1';
 
 $self{texts} = {
   'Continue'                    => 'Weiter',
