@@ -15,6 +15,7 @@ $self{texts} = {
   'Select payment'              => 'Zahlung auswählen',
   'Select postscript or PDF!'   => 'Postscript oder PDF auswählen!',
   'Source'                      => 'Beleg',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

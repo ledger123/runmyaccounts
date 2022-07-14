@@ -107,6 +107,7 @@ $self{texts} = {
   'You are not authorized to add a new item!' => 'Sie sind nicht befugt einen neuen Artikel zu erfassen!',
   'You are printing and saving an existing transaction!' => 'Sie drucken und speichern eine bereits existierende Buchung!',
   'You are saving an existing transaction!' => 'Sie speichern eine vorhande Buchung!',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {
