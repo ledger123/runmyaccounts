@@ -4,7 +4,7 @@ $self{texts} = {
   'AR or AP?'                   => 'Debitor oder Kreditor?',
   'Amount'                      => 'Betrag',
   'Date'                        => 'Datum',
-  'Description'                 => 'Überschrift',
+  'Description'                 => 'Ãœberschrift',
   'From date'                   => 'Von Datum',
   'GL Account'                  => 'GL Konto',
   'GL entry updated ...'        => 'GL Eintrag gespeichert ...',
@@ -12,7 +12,7 @@ $self{texts} = {
   'It is done ...'              => 'Abgeschlossen ...',
   'Order Number'                => 'Bestellnummer',
   'To date'                     => 'Bis Datum',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
+  'No Entries'                  => 'Keine EintrÃ¤ge zur Auswahl',
 };
 
 $self{subs} = {

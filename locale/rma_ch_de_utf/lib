@@ -9,11 +9,11 @@ $self{texts} = {
   'Onhand'                      => 'am Lager',
   'Period'                      => 'Zeitraum',
   'Quarter'                     => 'Quartal',
-  'Select Part Number'          => 'Teile Nummer auswählen',
+  'Select Part Number'          => 'Teile Nummer auswÃ¤hlen',
   'Summary'                     => 'Zusammenfassung',
   'Unit'                        => 'Einheit',
   'Year'                        => 'Jahr',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
+  'No Entries'                  => 'Keine EintrÃ¤ge zur Auswahl',
 };
 
 $self{subs} = {
