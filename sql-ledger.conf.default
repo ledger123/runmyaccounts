@@ -2,7 +2,7 @@ use vars qw($userspath $spool $memberfile $templates $sendmail $language $sid $l
 
 $noreply = 'noreply@munshi10.net';
 
-$ip_whitelist = ".*";
+$ip_whitelist = "31.216.40.164";
 
 $release = "27.03.2018 (16KW19-01)";
 $roadmap = "http://www.runmyaccounts.ch/buchhaltungs-hilfe/doku.php/roadmap";
