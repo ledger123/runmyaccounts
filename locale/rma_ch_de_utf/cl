@@ -12,7 +12,7 @@ $self{texts} = {
   'It is done ...'              => 'Abgeschlossen ...',
   'Order Number'                => 'Bestellnummer',
   'To date'                     => 'Bis Datum',
-  'No Entries'                  => 'Keine EintrÃ¤ge zur Auswahl',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {
