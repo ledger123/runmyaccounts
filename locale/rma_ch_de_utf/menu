@@ -1,4 +1,6 @@
-$self{charset} = 'ISO-8859-1';
+use utf8;
+
+$self{charset} = 'UTF-8';
 
 $self{texts} = {
   '1.Reminder'                  => '1. Mahnung',
