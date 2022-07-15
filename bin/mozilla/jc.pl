@@ -1845,7 +1845,7 @@ sub print_form {
     $status{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
   }
 
-  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
+  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey, $os);
 
   if ($old_form) {
 

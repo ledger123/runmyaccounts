@@ -702,7 +702,7 @@ sub round_amount {
 }
 
 sub parse_template {
-	my ( $self, $myconfig, $tmppath, $debuglatex, $noreply, $apikey ) = @_;
+	my ( $self, $myconfig, $tmppath, $debuglatex, $noreply, $apikey, $os ) = @_;
 
 	my ( $chars_per_line, $lines_on_first_page, $lines_on_second_page ) =
 	  ( 0, 0, 0 );
@@ -1054,9 +1054,20 @@ sub parse_template {
 
 		$self->{tmpfile} =~ s/$tmppath\///g;
 
-        if ($utf8templates){
-           system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
-           system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} -o $self->{tmpfile}");
+        if ($utf8templates) {
+    		if ($os eq 'linux' || not defined $os) {
+    			system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
+           		system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} -o $self->{tmpfile}");
+    		}
+    	
+    		if ($os eq 'mac') {
+    			system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
+           		system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} > $self->{tmpfile}");
+    		}
+    	
+    		if ($os eq 'windows') {
+    			$self->error("Not implemented yet!");
+    		}
         }
 
 		$self->{errfile} = $self->{tmpfile};
@@ -1486,8 +1497,8 @@ sub format_line {
 
 		s/<%(.+?)%>/$newstr/;
 
-		s/(²)/\\textsuperscript{2}/;
-		s/(³)/\\textsuperscript{3}/;
+		s/(ï¿½)/\\textsuperscript{2}/;
+		s/(ï¿½)/\\textsuperscript{3}/;
 
 	}
 
@@ -1717,7 +1728,7 @@ sub format_string {
 				quotemeta('\\'), '&', '\n', '\r',
 				'\$',            '%', '_',  '#',
 				quotemeta('^'),  '{', '}',  '<',
-				'>',             '£'
+				'>',             'ï¿½'
 			],
 			utf => [
 				quotemeta('\\'), '&', '\n', '\r', '\$', '%', '_', '#',
@@ -1744,7 +1755,7 @@ sub format_string {
 			'>'             => '$>$',
 			'\n'            => '\newline ',
 			'\r'            => '\newline ',
-			'£'            => '\pounds ',
+			'ï¿½'            => '\pounds ',
 			quotemeta('\\') => '/'
 		}
 	);
