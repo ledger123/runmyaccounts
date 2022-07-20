@@ -9,9 +9,12 @@
 
 package Form;
 
+use utf8;
+
 use Date::Parse;
 use Time::Piece;
 use DBIx::Simple;
+
 
 sub new {
 	my $type = shift;
@@ -154,9 +157,10 @@ sub escape {
 		$str = $self->escape( $str, 1 ) if $1 == 0 && $2 < 44;
 	}
 
+	utf8::encode $str;
+	
 	$str =~ s/([^a-zA-Z0-9_.-])/sprintf("%%%02x", ord($1))/ge;
 	$str;
-
 }
 
 sub unescape {
@@ -167,9 +171,10 @@ sub unescape {
 
 	$str =~ s/%([0-9a-fA-Z]{2})/pack("c",hex($1))/eg;
 	$str =~ s/\r?\n/\n/g;
+	
+	utf8::decode $str;
 
 	$str;
-
 }
 
 sub quote {
@@ -2027,7 +2032,7 @@ sub dbconnect {
 	# connect to database
 	my $dbh = DBI->connect(
 		$myconfig->{dbconnect}, $myconfig->{dbuser},
-		$myconfig->{dbpasswd}, { PrintError => 0 }
+		$myconfig->{dbpasswd}, { PrintError => 0, pg_enable_utf8 => 1 }
 	) or $self->dberror;
 	$dbh->{PrintError} = 0;
 
@@ -2047,7 +2052,7 @@ sub dbconnect_noauto {
 	# connect to database
 	$dbh = DBI->connect(
 		$myconfig->{dbconnect}, $myconfig->{dbuser},
-		$myconfig->{dbpasswd}, { PrintError => 0, AutoCommit => 0 }
+		$myconfig->{dbpasswd}, { PrintError => 0, AutoCommit => 0, pg_enable_utf8 => 1 }
 	) or $self->dberror;
 
 	# set db options
