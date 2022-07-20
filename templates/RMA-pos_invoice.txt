@@ -12,7 +12,7 @@ Gedruckt: <%dateprinted%>
       <%sellprice%>/<%unit%>
 <%end number%>
 
-  Anz. Stück: <%totalqty%>
+  Anz. StÃ¼ck: <%totalqty%>
 <%if taxincluded%>
                          ---------------
                         Total: <%invtotal align=right width=9%>
@@ -28,7 +28,7 @@ Gedruckt: <%dateprinted%>
                       Bezahlt: <%payment align=right width=9%> <%currency%>
 <%end payment%>
 <%if change%>
-                    Rückgeld: <%change align=right width=9%>
+                    RÃ¼ckgeld: <%change align=right width=9%>
 <%end change%>
 <%if total%>
                         Offen: <%total align=right width=9%>
@@ -42,4 +42,4 @@ Gedruckt: <%dateprinted%>
   MWST im Preis enthalten.
 <%end taxincluded%>
 
-         Danke für Ihren Einkauf!
+         Danke fÃ¼r Ihren Einkauf!

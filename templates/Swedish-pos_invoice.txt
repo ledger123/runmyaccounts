@@ -15,7 +15,7 @@ Utskriven: <%dateprinted%>
 Antal Produkter: <%rowcount%>
 <%if taxincluded%>
                          ---------------
-                   Belopp Från: <%invtotal align=right width=9%>
+                   Belopp FrÃ¥n: <%invtotal align=right width=9%>
 <%end taxincluded%>
 <%if not taxincluded%>
                             ------------
@@ -24,7 +24,7 @@ Antal Produkter: <%rowcount%>
 <%foreach tax%>
 <%taxdescription align=right width=23%> @ <%taxrate align=right width=2%>%: <%tax align=right width=9%>
 <%end tax%>
-                   Gällande Belopp: <%invtotal align=right width=9%>
+                   GÃ¤llande Belopp: <%invtotal align=right width=9%>
 <%foreach payment%>
 <%paymentaccount align=right width=29%>: <%payment align=right width=9%> <%currency%>
 <%end payment%>
@@ -39,10 +39,10 @@ Antal Produkter: <%rowcount%>
 <%discount%> % Rabbat avdragen
 <%end discount%>
 
-   Tack för att du handlar hos oss.
+   Tack fÃ¶r att du handlar hos oss.
 
 <%if taxincluded%>
-Momsen är inkluderad i priset.
+Momsen Ã¤r inkluderad i priset.
 <%end taxincluded%>
 
 

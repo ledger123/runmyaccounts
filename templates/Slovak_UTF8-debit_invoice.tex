@@ -45,7 +45,7 @@
 \markboth{<%company%>\hfill <%invnumber%>}{<%company%>\hfill <%invnumber%>}
 
 \begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
-  \textbf{Pol.} & \textbf{Číslo} & \textbf{Popis} & & \textbf{Množ.} &
+  \textbf{Pol.} & \textbf{ÄÃ­slo} & \textbf{Popis} & & \textbf{MnoÅ¾.} &
     \textbf{Jedn.} & \textbf{Cena} & \textbf{Zlava \%} & \textbf{Hodnota} \\ [0.5em]
   & carried forward from page <%lastpage%> & & & & & & & <%sumcarriedforward%> \\ [0.5em]
 <%end pagebreak%>
@@ -90,7 +90,7 @@ Fax: <%vendorfax%>
 <%vendortaxnumber%>
 }
 \parbox[t]{.5\textwidth}{
-\textbf{DODAŤ}
+\textbf{DODAÅ¤}
 \vspace{0.3cm}
 
 <%shiptoname%>
@@ -133,16 +133,16 @@ Fax: <%shiptofax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{*{8}{|X}|} \hline
-  \textbf{Faktúra} & \textbf{Dátum} & \textbf{Splat.} & \textbf{Objednávka}
+  \textbf{FaktÃºra} & \textbf{DÃ¡tum} & \textbf{Splat.} & \textbf{ObjednÃ¡vka}
   & \textbf{Osoba}
   <%if shippingpoint%>
   & \textbf{Miesto dod.}
   <%end shippingpoint>
   <%if ponumber%>
-  & \textbf{Objednávka}
+  & \textbf{ObjednÃ¡vka}
   <%end ponumber%>
   <%if shipvia%>
-  & \textbf{Spôs.dod.}
+  & \textbf{SpÃ´s.dod.}
   <%end shipvia%>
   \\ [0.5em]
   \hline
@@ -163,7 +163,7 @@ Fax: <%shiptofax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
-  \textbf{Pol.} & \textbf{Číslo} & \textbf{Popis} & & \textbf{Množ.} &
+  \textbf{Pol.} & \textbf{ÄÃ­slo} & \textbf{Popis} & & \textbf{MnoÅ¾.} &
     \textbf{Jedn.} & \textbf{Cena} & \textbf{Zlava \%} & \textbf{Suma} \\ [0.5em]
 <%foreach number%>
   <%runningnumber%> & <%number%> & <%description%> & <%deliverydate%> &
@@ -180,23 +180,23 @@ Fax: <%shiptofax%>
 \hfill
 \begin{tabularx}{\textwidth}{@{}Xr@{\hspace{1cm}}r@{}}
 <%if not taxincluded%>
- & Medzisučet & <%subtotal%> \\
+ & MedzisuÄet & <%subtotal%> \\
 <%end taxincluded%>
 <%if taxincluded%>
  & Celkom & <%invtotal%> \\
 <%end taxincluded%>
 <%foreach tax%>
- DIČ. <%taxnumber%> & <%taxdescription%> on <%taxbase%> @ <%taxrate%> \% & <%tax%> \\
+ DIÄ. <%taxnumber%> & <%taxdescription%> on <%taxbase%> @ <%taxrate%> \% & <%tax%> \\
 <%end tax%>
 <%if not taxincluded%>
  & Celkom & <%invtotal%> \\
 <%end taxincluded%>
 <%if paid%>
- & Platené  - <%paid%> \\
+ & PlatenÃ©  - <%paid%> \\
 <%end paid%>
   \cline{2-3}
 <%if total%>
-  & Zaplatiť & <%total%> \\
+  & ZaplatiÅ¥ & <%total%> \\
 <%end total%>
 \end{tabularx}
 
@@ -204,10 +204,10 @@ Fax: <%shiptofax%>
 
 <%text_amount%> ***** <%decimal%>/100
 \hfill
-Ceny sú v \textbf{<%currency%>}.
+Ceny sÃº v \textbf{<%currency%>}.
 
 <%if taxincluded%>
-Ceny sú s DPH.
+Ceny sÃº s DPH.
 <%end tax included%>
 
 \vspace{1em}
@@ -221,7 +221,7 @@ Ceny sú s DPH.
 \begin{tabularx}{10cm}{@{}lXlr@{}}
   \multicolumn{4}{c}{\textbf{Platby}} \\
   \hline
-  \textbf{Dátum} & & \textbf{Doklad} & \textbf{Hodnota} \\
+  \textbf{DÃ¡tum} & & \textbf{Doklad} & \textbf{Hodnota} \\
 <%end paid_1%>
 <%foreach payment%>
   <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\

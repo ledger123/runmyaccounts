@@ -28,7 +28,7 @@
   \rule[1.5em]{\textwidth}{0.5pt}
 }
 
-\centerline{\textbf{S T O R N O} \hspace{0.3cm} \textbf{Z Á V A Z O K}}
+\centerline{\textbf{S T O R N O} \hspace{0.3cm} \textbf{Z Ã V A Z O K}}
 
 \vspace*{0.5cm}
 
@@ -63,19 +63,19 @@ Fax: <%vendorfax%>
 <%email%>
 
 <%if vendortaxnumber%>
-DIČ: <%vendortaxnumber%>
+DIÄ: <%vendortaxnumber%>
 <%end vendortaxnumber%>
 }
 \hfill
 \begin{tabular}[t]{ll}
-  \textbf{Faktúra} & <%invnumber%> \\
-  \textbf{Dátum} & <%invdate%> \\
-  \textbf{Splatnosť} & <%duedate%> \\
+  \textbf{FaktÃºra} & <%invnumber%> \\
+  \textbf{DÃ¡tum} & <%invdate%> \\
+  \textbf{SplatnosÅ¥} & <%duedate%> \\
   <%if ponumber%>
     \textbf{PO} & <%ponumber%> \\
   <%end ponumber%>
   <%if ordnumber%>
-    \textbf{Objednávka} & <%ordnumber%> \\
+    \textbf{ObjednÃ¡vka} & <%ordnumber%> \\
   <%end ordnumber%>
   \textbf{Kontakt} & <%employee%> \\
 \end{tabular}
@@ -87,7 +87,7 @@ DIČ: <%vendortaxnumber%>
   <%accno%> & <%account%> & <%amount%> & <%description%> & <%projectnumber%> \\
 <%end amount%>
 
-  \multicolumn{2}{r}{\textbf{Medzisúčet}} & <%subtotal%> & \\
+  \multicolumn{2}{r}{\textbf{MedzisÃºÄet}} & <%subtotal%> & \\
 <%foreach tax%>
   \multicolumn{2}{r}{\textbf{<%taxdescription%> @ <%taxrate%> \%}} & <%tax%> & \\
 <%end tax%>
@@ -111,7 +111,7 @@ DIČ: <%vendortaxnumber%>
 \begin{tabular}{@{}llllr@{}}
   \multicolumn{5}{c}{\textbf{Platby}} \\
   \hline
-  \textbf{Dátum} & & \textbf{Doklad} & \textbf{Poznámka} & \textbf{Hodnota} \\
+  \textbf{DÃ¡tum} & & \textbf{Doklad} & \textbf{PoznÃ¡mka} & \textbf{Hodnota} \\
 <%end paid_1%>
 <%foreach payment%>
   <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%paymentmemo%> & <%payment%> \\

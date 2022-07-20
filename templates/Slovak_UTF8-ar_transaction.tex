@@ -14,7 +14,7 @@
 
 <%include letterhead.tex%>
 
-\centerline{\textbf{ } \hspace{0.3cm} \textbf{POHĽADÁVKA}}
+\centerline{\textbf{ } \hspace{0.3cm} \textbf{POHÄ½ADÃVKA}}
 
 \vspace*{0.5cm}
 
@@ -51,19 +51,19 @@ Fax: <%customerfax%>
 <%email%>
 
 <%if customertaxnumber%>
-IČ DPH: <%customertaxnumber%>
+IÄ DPH: <%customertaxnumber%>
 <%end customertaxnumber%>
 }
 \hfill
 \begin{tabular}[t]{ll}
-  \textbf{Faktúra \#} & <%invnumber%> \\
-  \textbf{Dátum} & <%invdate%> \\
-  \textbf{Splatnosť} & <%duedate%> \\
+  \textbf{FaktÃºra \#} & <%invnumber%> \\
+  \textbf{DÃ¡tum} & <%invdate%> \\
+  \textbf{SplatnosÅ¥} & <%duedate%> \\
   <%if ponumber%>
-    \textbf{Objednávka \#} & <%ponumber%> \\
+    \textbf{ObjednÃ¡vka \#} & <%ponumber%> \\
   <%end ponumber%>
   <%if ordnumber%>
-    \textbf{Objednávka \#} & <%ordnumber%> \\
+    \textbf{ObjednÃ¡vka \#} & <%ordnumber%> \\
   <%end ordnumber%>
   \textbf{Vystavil} & <%employee%> \\
 \end{tabular}
@@ -75,7 +75,7 @@ IČ DPH: <%customertaxnumber%>
   <%accno%> & <%account%> & <%amount%> & <%description%> & <%projectnumber%> \\
 <%end amount%>
 
-  \multicolumn{2}{r}{\textbf{Medzisúčet}} & <%subtotal%> & \\
+  \multicolumn{2}{r}{\textbf{MedzisÃºÄet}} & <%subtotal%> & \\
 <%foreach tax%>
   \multicolumn{2}{r}{\textbf{<%taxdescription%> @ <%taxrate%> \%}} & <%tax%> & \\
 <%end tax%>
@@ -99,7 +99,7 @@ IČ DPH: <%customertaxnumber%>
 \begin{tabular}{@{}lllr@{}}
   \multicolumn{5}{c}{\textbf{Platby}} \\
   \hline
-  \textbf{Dátum} & & \textbf{Doklad} & \textbf{Suma} \\
+  \textbf{DÃ¡tum} & & \textbf{Doklad} & \textbf{Suma} \\
 <%end paid_1%>
 <%foreach payment%>
   <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\
@@ -111,7 +111,7 @@ IČ DPH: <%customertaxnumber%>
 \vspace{0.5cm}
 
 <%foreach tax%>
-\textbf{\scriptsize <%taxdescription%> IČ DPH <%taxnumber%>} \\
+\textbf{\scriptsize <%taxdescription%> IÄ DPH <%taxnumber%>} \\
 <%end tax%>
   
 \end{document}

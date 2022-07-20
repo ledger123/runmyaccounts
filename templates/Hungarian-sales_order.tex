@@ -51,7 +51,7 @@
   
   \hfill
   \begin{tabularx}{7cm}{Xr@{}}
-  \textbf{RÈszˆsszeg} & \textbf{<%sumcarriedforward%>} \\
+  \textbf{R√©sz√∂sszeg} & \textbf{<%sumcarriedforward%>} \\
   \end{tabularx}
 
 \newpage
@@ -61,9 +61,9 @@
 \vspace*{-12pt}
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrrr@{}}
-  \textbf{Sz·m} & \textbf{Szˆveges leÌr·s} & \textbf{Menny.} &
-    \textbf{egys.} & \textbf{¡r} & \textbf{EngedmÈny} & \textbf{÷sszeg} \\
-  & folytat·s az elızı oldalrÛl: <%lastpage%> & & & & & <%sumcarriedforward%> \\
+  \textbf{Sz√°m} & \textbf{Sz√∂veges le√≠r√°s} & \textbf{Menny.} &
+    \textbf{egys.} & \textbf{√År} & \textbf{Engedm√©ny} & \textbf{√ñsszeg} \\
+  & folytat√°s az el√µz√µ oldalr√≥l: <%lastpage%> & & & & & <%sumcarriedforward%> \\
 <%end pagebreak%>
 
 
@@ -87,21 +87,21 @@
 
 \vspace{3.5cm}
 
-\textbf{V E V ’} \parbox{0.3cm}{\hfill} \textbf{R E N D E L … S}
+\textbf{V E V √ï} \parbox{0.3cm}{\hfill} \textbf{R E N D E L √â S}
 \hfill
 \begin{tabular}[t]{l@{\hspace{0.3cm}}l}
-  \textbf{RendelÈs d·tuma} & <%orddate%> \\
+  \textbf{Rendel√©s d√°tuma} & <%orddate%> \\
 <%if reqdate%>
-  \textbf{Lesz·llÌt·s} & <%reqdate%> \\
+  \textbf{Lesz√°ll√≠t√°s} & <%reqdate%> \\
 <%end reqdate%>
-  \textbf{Sz·m} & <%ordnumber%>
+  \textbf{Sz√°m} & <%ordnumber%>
 \end{tabular}
 
 \vspace{1cm}
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrrr@{}}
-  \textbf{Sz·m} & \textbf{Szˆveges leÌr·s} & \textbf{Menny.} &
-    \textbf{egys.} & \textbf{¡r} & \textbf{EngedmÈny} & \textbf{÷sszeg} \\
+  \textbf{Sz√°m} & \textbf{Sz√∂veges le√≠r√°s} & \textbf{Menny.} &
+    \textbf{egys.} & \textbf{√År} & \textbf{Engedm√©ny} & \textbf{√ñsszeg} \\
 <%foreach number%>
   <%number%> & <%description%> & <%qty%> &
     <%unit%> & <%sellprice%> & <%discount%> & <%linetotal%> \\
@@ -116,19 +116,19 @@
 
 \hfill
 \begin{tabularx}{9cm}{Xr@{}}
-  \textbf{NettÛ ˆsszeg} & \textbf{<%subtotal%>} \\
+  \textbf{Nett√≥ √∂sszeg} & \textbf{<%subtotal%>} \\
 <%foreach tax%>
   <%taxdescription%> alap <%taxbase%>  <%tax%>\\
 <%end tax%>
   \hline
-  \textbf{BruttÛ ˆsszeg} & \textbf{<%ordtotal%>}\\
+  \textbf{Brutt√≥ √∂sszeg} & \textbf{<%ordtotal%>}\\
 \end{tabularx}
 
 \vspace{0.3cm}
 
 \hfill
 %  All prices in \textbf{<%currency%>} funds.
-Az ·rak Forintban Èrtendık
+Az √°rak Forintban √©rtend√µk
 \vspace{12pt}
 
 <%if notes%>

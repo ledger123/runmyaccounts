@@ -51,7 +51,7 @@
   
   \hfill
   \begin{tabularx}{7cm}{Xr@{}}
-  \textbf{RÈszˆsszeg} & \textbf{<%sumcarriedforward%>} \\
+  \textbf{R√©sz√∂sszeg} & \textbf{<%sumcarriedforward%>} \\
   \end{tabularx}
 
 \newpage
@@ -61,9 +61,9 @@
 \vspace*{-12pt}
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrr@{}}
-  \textbf{Sz·m} & \textbf{Szˆveges leÌr·s} & \textbf{Menny.} &
-    \textbf{egys.} & \textbf{¡r} & \textbf{÷sszeg} \\
-  & folytat·s az elızı oldalrÛl: <%lastpage%> & & & & <%sumcarriedforward%> \\
+  \textbf{Sz√°m} & \textbf{Sz√∂veges le√≠r√°s} & \textbf{Menny.} &
+    \textbf{egys.} & \textbf{√År} & \textbf{√ñsszeg} \\
+  & folytat√°s az el√µz√µ oldalr√≥l: <%lastpage%> & & & & <%sumcarriedforward%> \\
 <%end pagebreak%>
 
 
@@ -73,7 +73,7 @@
 
 \parbox[t]{1cm}{\hfill}
 \parbox[t]{10.5cm}{
-\textbf{Sz·llÌtÛ}
+\textbf{Sz√°ll√≠t√≥}
 \vspace{0.5cm}
 
 <%name%>
@@ -93,7 +93,7 @@
 \vspace{0.3cm}
 
 <%if contact%>
-KapcsolattartÛ: <%contact%>
+Kapcsolattart√≥: <%contact%>
 \vspace{0.3cm}
 <%end contact%>
 
@@ -108,7 +108,7 @@ Fax: <%vendorfax%>
 <%email%>
 }
 \parbox[t]{7.5cm}{
-\textbf{Sz·llÌt·si cÌm}
+\textbf{Sz√°ll√≠t√°si c√≠m}
 \vspace{0.3cm}
 
 <%shiptoname%>
@@ -128,7 +128,7 @@ Fax: <%vendorfax%>
 \vspace{0.3cm}
 
 <%if shiptocontact%>
-Sz·llÌt·si kapcsolattartÛ: <%shiptocontact%>
+Sz√°ll√≠t√°si kapcsolattart√≥: <%shiptocontact%>
 \vspace{0.3cm}
 <%end shiptocontact%>
 
@@ -146,21 +146,21 @@ Fax: <%shiptofax%>
 
 \vspace{1cm}
 
-\textbf{B E S Z E R Z … S I} \parbox{0.3cm}{\hfill} \textbf{R E N D E L … S}
+\textbf{B E S Z E R Z √â S I} \parbox{0.3cm}{\hfill} \textbf{R E N D E L √â S}
 \hfill
 \begin{tabular}[t]{l@{\hspace{0.3cm}}l}
-  \textbf{D·tum} & <%orddate%> \\
+  \textbf{D√°tum} & <%orddate%> \\
 <%if reqdate%>
-  \textbf{Lesz·llÌt·s} & <%reqdate%> \\
+  \textbf{Lesz√°ll√≠t√°s} & <%reqdate%> \\
 <%end reqdate%>
-  \textbf{Sz·m} & <%ordnumber%>
+  \textbf{Sz√°m} & <%ordnumber%>
 \end{tabular}
 
 \vspace{1cm}
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrr@{}}
-  \textbf{Sz·m} & \textbf{Szˆveges leÌr·s} & \textbf{Menny.} &
-    \textbf{egys.} & \textbf{¡r} & \textbf{÷sszeg} \\
+  \textbf{Sz√°m} & \textbf{Sz√∂veges le√≠r√°s} & \textbf{Menny.} &
+    \textbf{egys.} & \textbf{√År} & \textbf{√ñsszeg} \\
 <%foreach number%>
   <%number%> & <%description%> & <%qty%> &
     <%unit%> & <%sellprice%> & <%linetotal%> \\
@@ -175,19 +175,19 @@ Fax: <%shiptofax%>
 
 \hfill
 \begin{tabularx}{9cm}{Xr@{}}
-  \textbf{NettÛ ˆsszeg} & \textbf{<%subtotal%>} \\
+  \textbf{Nett√≥ √∂sszeg} & \textbf{<%subtotal%>} \\
 <%foreach tax%>
   <%taxdescription%> alap <%taxbase%> & <%tax%>\\
 <%end tax%>
   \hline
-  \textbf{BruttÛ ˆsszeg} & \textbf{<%ordtotal%>}\\
+  \textbf{Brutt√≥ √∂sszeg} & \textbf{<%ordtotal%>}\\
 \end{tabularx}
 
 \vspace{0.3cm}
 
 \hfill
  % All prices in \textbf{<%currency%>} funds.
-Az ·rak Forintban Èrtendık
+Az √°rak Forintban √©rtend√µk
 \vspace{12pt}
 
 <%if notes%>

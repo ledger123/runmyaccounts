@@ -21,7 +21,7 @@
   
   \hfill
   \begin{tabularx}{7cm}{Xr@{\hspace{1cm}}r@{}}
-  & \textbf{Medzisúčet} & \textbf{<%sumcarriedforward%>} \\
+  & \textbf{MedzisÃºÄet} & \textbf{<%sumcarriedforward%>} \\
   \end{tabularx}
 
 \newpage
@@ -30,8 +30,8 @@
 
 
 \begin{tabularx}{\textwidth}{@{}rlXrlrrr@{}}
-  \textbf{Položky} & \textbf{Číslo} & \textbf{Popis} & \textbf{Množ} &
-  \textbf{MJ} & \textbf{Cena} & \textbf{Zľava \%} & \textbf{Hodnota} \\
+  \textbf{PoloÅ¾ky} & \textbf{ÄÃ­slo} & \textbf{Popis} & \textbf{MnoÅ¾} &
+  \textbf{MJ} & \textbf{Cena} & \textbf{ZÄ¾ava \%} & \textbf{Hodnota} \\
   & carried forward from <%lastpage%> & & & & & <%sumcarriedforward%> \\
 <%end pagebreak%>
 
@@ -39,7 +39,7 @@
 \vspace*{0.5cm}
 
 \parbox[t]{.5\textwidth}{
-\textbf{Odberateľ}
+\textbf{OdberateÄ¾}
 \vspace{0.3cm}
   
 <%name%>
@@ -74,7 +74,7 @@ Fax: <%customerfax%>
 <%email%>
 }
 \parbox[t]{.5\textwidth}{
-\textbf{Dodať}
+\textbf{DodaÅ¥}
 \vspace{0.3cm}
 
 <%shiptoname%>
@@ -112,13 +112,13 @@ Fax: <%shiptofax%>
 
 \vspace{1cm}
 
-\textbf{P R I J A T Á} \parbox{0.3cm}{\hfill} \textbf{O B J E D N Á V K A}
+\textbf{P R I J A T Ã} \parbox{0.3cm}{\hfill} \textbf{O B J E D N Ã V K A}
 \hfill
 
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{*{6}{|X}|} \hline
-  \textbf{Objednávka \#} & \textbf{Dátum obj.} & \textbf{Odberateľ} & \textbf{Predávajúca osoba} & \textbf{Miesto dodania} & \textbf{Spôsob dodania} \\ [0.5em]
+  \textbf{ObjednÃ¡vka \#} & \textbf{DÃ¡tum obj.} & \textbf{OdberateÄ¾} & \textbf{PredÃ¡vajÃºca osoba} & \textbf{Miesto dodania} & \textbf{SpÃ´sob dodania} \\ [0.5em]
   \hline
   <%ordnumber%> & <%orddate%> & <%reqdate%> & <%employee%> & <%shippingpoint%> & <%shipvia%> \\
   \hline
@@ -127,8 +127,8 @@ Fax: <%shiptofax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{@{}rlXrlrrr@{}}
-  \textbf{Položka} & \textbf{Číslo} & \textbf{Popis} & \textbf{Množ} &
-  \textbf{MJ} & \textbf{Cena} & \textbf{Zľava \%} & \textbf{Suma} \\
+  \textbf{PoloÅ¾ka} & \textbf{ÄÃ­slo} & \textbf{Popis} & \textbf{MnoÅ¾} &
+  \textbf{MJ} & \textbf{Cena} & \textbf{ZÄ¾ava \%} & \textbf{Suma} \\
 <%foreach number%>
   <%runningnumber%> & <%number%> & <%description%> & <%qty%> &
   <%unit%> & <%sellprice%> & <%discountrate%> & <%linetotal%> \\
@@ -143,22 +143,22 @@ Fax: <%shiptofax%>
 
 \hfill
 \begin{tabularx}{8cm}{Xr@{\hspace{0.01cm}}r@{}}
-  & Medzisúčet & <%subtotal%> \\
+  & MedzisÃºÄet & <%subtotal%> \\
 <%foreach tax%>
   & <%taxdescription%> on <%taxbase%> & <%tax%>\\
 <%end tax%>
   \hline
-  & Súčet & <%ordtotal%>\\
+  & SÃºÄet & <%ordtotal%>\\
 \end{tabularx}
 
 \vspace{0.3cm}
 
 <%text_amount%> ***** <%decimal%>/100
 \hfill
-Ceny sú v \textbf{<%currency%>}.
+Ceny sÃº v \textbf{<%currency%>}.
 
 <%if terms%>
-Termín: <%terms%> dní
+TermÃ­n: <%terms%> dnÃ­
 <%end terms%>
 
 \vspace{12pt}
@@ -169,7 +169,7 @@ Termín: <%terms%> dní
 
 \vfill
 
-\centerline{\textbf{Ďakujeme za Vašu objednávku !}}
+\centerline{\textbf{Äakujeme za VaÅ¡u objednÃ¡vku !}}
 
 \rule{\textwidth}{0.5pt}
 

@@ -14,7 +14,7 @@
 
 <%include letterhead.tex%>
 
-\centerline{\textbf{ } \hspace{0.3cm} \textbf{POH•AD¡VKA}}
+\centerline{\textbf{ } \hspace{0.3cm} \textbf{POH¬•AD√ÅVKA}}
 
 \vspace*{0.5cm}
 
@@ -51,19 +51,19 @@ Fax: <%customerfax%>
 <%email%>
 
 <%if customertaxnumber%>
-I» DPH: <%customertaxnumber%>
+I√à DPH: <%customertaxnumber%>
 <%end customertaxnumber%>
 }
 \hfill
 \begin{tabular}[t]{ll}
-  \textbf{Fakt˙ra \#} & <%invnumber%> \\
-  \textbf{D·tum} & <%invdate%> \\
-  \textbf{Splatnosª} & <%duedate%> \\
+  \textbf{Fakt√∫ra \#} & <%invnumber%> \\
+  \textbf{D√°tum} & <%invdate%> \\
+  \textbf{Splatnos¬ª} & <%duedate%> \\
   <%if ponumber%>
-    \textbf{Objedn·vka \#} & <%ponumber%> \\
+    \textbf{Objedn√°vka \#} & <%ponumber%> \\
   <%end ponumber%>
   <%if ordnumber%>
-    \textbf{Objedn·vka \#} & <%ordnumber%> \\
+    \textbf{Objedn√°vka \#} & <%ordnumber%> \\
   <%end ordnumber%>
   \textbf{Vystavil} & <%employee%> \\
 \end{tabular}
@@ -75,7 +75,7 @@ I» DPH: <%customertaxnumber%>
   <%accno%> & <%account%> & <%amount%> & <%description%> & <%projectnumber%> \\
 <%end amount%>
 
-  \multicolumn{2}{r}{\textbf{Medzis˙Ëet}} & <%subtotal%> & \\
+  \multicolumn{2}{r}{\textbf{Medzis√∫√®et}} & <%subtotal%> & \\
 <%foreach tax%>
   \multicolumn{2}{r}{\textbf{<%taxdescription%> @ <%taxrate%> \%}} & <%tax%> & \\
 <%end tax%>
@@ -99,7 +99,7 @@ I» DPH: <%customertaxnumber%>
 \begin{tabular}{@{}lllr@{}}
   \multicolumn{5}{c}{\textbf{Platby}} \\
   \hline
-  \textbf{D·tum} & & \textbf{Doklad} & \textbf{Suma} \\
+  \textbf{D√°tum} & & \textbf{Doklad} & \textbf{Suma} \\
 <%end paid_1%>
 <%foreach payment%>
   <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\
@@ -111,7 +111,7 @@ I» DPH: <%customertaxnumber%>
 \vspace{0.5cm}
 
 <%foreach tax%>
-\textbf{\scriptsize <%taxdescription%> I» DPH <%taxnumber%>} \\
+\textbf{\scriptsize <%taxdescription%> I√à DPH <%taxnumber%>} \\
 <%end tax%>
   
 \end{document}

@@ -19,15 +19,15 @@
 
           <td align=right>
             <h4>
-            電話： <%tel%>
-        <br>傳真： <%fax%>
+            é»è©±ï¼ <%tel%>
+        <br>å³çï¼ <%fax%>
             </h4>
           </td>
         </tr>
 
         <tr>
           <th colspan=3>
-            <h4>發票</h4>
+            <h4>ç¼ç¥¨</h4>
           </th>
         </tr>
       </table>
@@ -40,8 +40,8 @@
     <td>
       <table width=100% callspacing=0 cellpadding=0>
         <tr bgcolor=000000>
-          <th align=left width=50%><font color=ffffff>致</th>
-          <th align=left width=50%><font color=ffffff>付運到</th>
+          <th align=left width=50%><font color=ffffff>è´</th>
+          <th align=left width=50%><font color=ffffff>ä»éå°</th>
         </tr>
 
         <tr valign=top>
@@ -62,11 +62,11 @@
           <%end contact%>
 
           <%if customerphone%>
-          <br>電話： <%customerphone%>
+          <br>é»è©±ï¼ <%customerphone%>
           <%end customerphone%>
 
           <%if customerfax%>
-          <br>傳真： <%customerfax%>
+          <br>å³çï¼ <%customerfax%>
           <%end customerfax%>
 
           <%if email%>
@@ -91,11 +91,11 @@
           <%end shiptocontact%>
 
           <%if shiptophone%>
-          <br>電話： <%shiptophone%>
+          <br>é»è©±ï¼ <%shiptophone%>
           <%end shiptophone%>
 
           <%if shiptofax%>
-          <br>傳真： <%shiptofax%>
+          <br>å³çï¼ <%shiptofax%>
           <%end shiptofax%>
 
           <%if shiptoemail%>
@@ -115,13 +115,13 @@
     <td>
       <table width=100% border=1>
         <tr>
-	  <th width=14% align=left nowrap>發票編號</th>
-	  <th width=14% align=left nowrap>日期</th>
-	  <th width=14% align=left nowrap>到期日</th>
-	  <th width=14% align=left>訂單編號</th>
-	  <th width=14% align=left nowrap>銷售人員</th>
-	  <th width=14% align=left nowrap>付運點</th>
-	  <th width=14% align=left nowrap>付運公司</th>
+	  <th width=14% align=left nowrap>ç¼ç¥¨ç·¨è</th>
+	  <th width=14% align=left nowrap>æ¥æ</th>
+	  <th width=14% align=left nowrap>å°ææ¥</th>
+	  <th width=14% align=left>è¨å®ç·¨è</th>
+	  <th width=14% align=left nowrap>é·å®äººå¡</th>
+	  <th width=14% align=left nowrap>ä»éé»</th>
+	  <th width=14% align=left nowrap>ä»éå¬å¸</th>
 	</tr>
 
 	<tr>
@@ -143,15 +143,15 @@
     <td>
       <table width=100%>
         <tr bgcolor=000000>
-          <th align=right><font color=ffffff>編號</th>
-          <th align=left><font color=ffffff>號碼</th>
-          <th align=left><font color=ffffff>描述</th>
+          <th align=right><font color=ffffff>ç·¨è</th>
+          <th align=left><font color=ffffff>èç¢¼</th>
+          <th align=left><font color=ffffff>æè¿°</th>
           <th>&nbsp;</th>
-          <th align=right><font color=ffffff>數量</th>
+          <th align=right><font color=ffffff>æ¸é</th>
           <th>&nbsp;</th>
-          <th align=right><font color=ffffff>單價</th>
-          <th align=right><font color=ffffff>折扣 %</th>
-          <th align=right><font color=ffffff>總價</th>
+          <th align=right><font color=ffffff>å®å¹</th>
+          <th align=right><font color=ffffff>ææ£ %</th>
+          <th align=right><font color=ffffff>ç¸½å¹</th>
         </tr>
 
         <%foreach number%>
@@ -180,26 +180,26 @@ netprice = sellprice - discount
     
         <tr>
           <%if taxincluded%>
-          <th colspan=7 align=right>合計</th>
+          <th colspan=7 align=right>åè¨</th>
           <td colspan=2 align=right><%invtotal%></td>
           <%end taxincluded%>
 
           <%if not taxincluded%>
-          <th colspan=7 align=right>小計</th>
+          <th colspan=7 align=right>å°è¨</th>
           <td colspan=2 align=right><%subtotal%></td>
           <%end taxincluded%>
         </tr>
 
         <%foreach tax%>
         <tr>
-          <th colspan=7 align=right><%taxdescription%> 基於 <%taxbase%> @ <%taxrate%> %</th>
+          <th colspan=7 align=right><%taxdescription%> åºæ¼ <%taxbase%> @ <%taxrate%> %</th>
           <td colspan=2 align=right><%tax%></td>
         </tr>
         <%end tax%>
 
         <%if paid%>
         <tr>
-          <th colspan=7 align=right>已支付</th>
+          <th colspan=7 align=right>å·²æ¯ä»</th>
           <td colspan=2 align=right>- <%paid%></td>
         </tr>
         <%end paid%>
@@ -212,7 +212,7 @@ netprice = sellprice - discount
         <%if total%>
         <tr>
           <td colspan=5>&nbsp;</td>
-          <th colspan=2 align=right nowrap>尚欠金額</th>
+          <th colspan=2 align=right nowrap>å°æ¬ éé¡</th>
           <th colspan=2 align=right><%total%></th>
         </tr>
         <%end total%>
@@ -250,7 +250,7 @@ netprice = sellprice - discount
       <table width=60%>
 
         <tr>
-          <th align=left>付款</th>
+          <th align=left>ä»æ¬¾</th>
         </tr>
 
         <tr>
@@ -260,10 +260,10 @@ netprice = sellprice - discount
         </tr>
 
         <tr>
-          <th align=left>日期</th>
-          <th align=left>帳戶</th>
-          <th align=left>來源</th>
-          <th align=left>金額</th>
+          <th align=left>æ¥æ</th>
+          <th align=left>å¸³æ¶</th>
+          <th align=left>ä¾æº</th>
+          <th align=left>éé¡</th>
         </tr>
   <%end paid%>
 
@@ -288,7 +288,7 @@ netprice = sellprice - discount
     <td>&nbsp;</td>
 
     <th>
-多謝惠顧！
+å¤è¬æ é¡§ï¼
     </th>
   </tr>
 
@@ -299,8 +299,8 @@ netprice = sellprice - discount
       <table width=100%>
         <tr valign=top>
           <td width=60%><font size=-3>
-          請於<%duedate%>之前付款。退回的物品須支付10%的回收費用。若要退回物品，必須先取得<%company%>的授權。退回
-物品的運費和保險費自負。若在途中出現有損毀情況，<%company%>將不會負任何責任。
+          è«æ¼<%duedate%>ä¹åä»æ¬¾ãéåçç©åé æ¯ä»10%çåæ¶è²»ç¨ãè¥è¦éåç©åï¼å¿é ååå¾<%company%>çææ¬ãéå
+ç©åçéè²»åä¿éªè²»èªè² ãè¥å¨éä¸­åºç¾æææ¯ææ³ï¼<%company%>å°ä¸æè² ä»»ä½è²¬ä»»ã
           </font>
           </td>
 
@@ -316,7 +316,7 @@ netprice = sellprice - discount
   <tr>
     <td>&nbsp;</td>
 
-    <th colspan=9 align=left><font size=-2><%taxdescription%> 註冊 <%taxnumber%></th>
+    <th colspan=9 align=left><font size=-2><%taxdescription%> è¨»å <%taxnumber%></th>
   </tr>
   <%end tax%>
 
@@ -326,7 +326,7 @@ netprice = sellprice - discount
   </tr>
 
   <tr>
-    <th colspan=8 align=left><font size=-2>上述稅項已包括在價格中。</th>
+    <th colspan=8 align=left><font size=-2>ä¸è¿°ç¨é å·²åæ¬å¨å¹æ ¼ä¸­ã</th>
   </tr>
   <%end taxincluded%>
 

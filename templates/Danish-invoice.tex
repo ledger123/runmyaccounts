@@ -64,8 +64,8 @@
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrrr@{}}
   \textbf{Nummer} & \textbf{Beskrivelse} & \textbf{Antal} &
-    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{Beløb} \\
-  & overført fra side <%lastpage%> & & & & & <%sumcarriedforward%> \\
+    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{BelÃ¸b} \\
+  & overfÃ¸rt fra side <%lastpage%> & & & & & <%sumcarriedforward%> \\
 <%end pagebreak%>
 
 
@@ -101,7 +101,7 @@
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrrr@{}}
   \textbf{Nummer} & \textbf{Beskrivelse} & \textbf{Antal} &
-    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{Beløb} \\
+    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{BelÃ¸b} \\
 <%foreach number%>
   <%number%> & <%description%> & <%qty%> &
     <%unit%> & <%sellprice%> & <%discount%> & <%linetotal%> \\
@@ -118,7 +118,7 @@
 \begin{tabularx}{7cm}{Xr@{}}
   \textbf{Subtotal} & \textbf{<%subtotal%>} \\
 <%foreach tax%>
-  <%taxdescription%> på <%taxbase%> & <%tax%> \\
+  <%taxdescription%> pÃ¥ <%taxbase%> & <%tax%> \\
 <%end tax%>
 <%if paid%>
   \textbf{Betalt} & - <%paid%> \\
@@ -146,10 +146,10 @@
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
 \footnotetext[1]{\tiny
-Betalingsfrist <%terms%> dage fra fakturadato. Betaling herefter påregnes
-1.5\% per påbegyndt måned startende <%duedate%> og indtil det fulde beløb
+Betalingsfrist <%terms%> dage fra fakturadato. Betaling herefter pÃ¥regnes
+1.5\% per pÃ¥begyndt mÃ¥ned startende <%duedate%> og indtil det fulde belÃ¸b
 er betalt. Returnerede varer modregnes 10\% i ekspeditionsgebyr.
-Et returnummer skal tildeles af <%company%> før varer returneres.
+Et returnummer skal tildeles af <%company%> fÃ¸r varer returneres.
 Returvarer skal forsendes forudbetalt og forsvarligt forsikret.
 <%company%> kan ikke drages til ansvar for skade under transport.}
 

@@ -22,7 +22,7 @@
   
   \hfill
   \begin{tabularx}{7cm}{Xr@{\hspace{1cm}}r@{}}
-  & Medzisúčet & <%sumcarriedforward%> \\
+  & MedzisÃºÄet & <%sumcarriedforward%> \\
   \end{tabularx}
 
 \newpage
@@ -30,7 +30,7 @@
 \markboth{<%company%>\hfill <%ordnumber%>}{<%company%>\hfill <%ordnumber%>}
 
 \begin{tabularx}{\textwidth}{@{}lXrlrr@{}}
-  \textbf{Číslo} & \textbf{Popis} & \textbf{Množ} &
+  \textbf{ÄÃ­slo} & \textbf{Popis} & \textbf{MnoÅ¾} &
     \textbf{MJ} & \textbf{Cena} & \textbf{Suma} \\
   & carried forward from <%lastpage%> & & & & <%sumcarriedforward%> \\
 <%end pagebreak%>
@@ -39,7 +39,7 @@
 \vspace*{0.5cm}
 
 \parbox[t]{.5\textwidth}{
-\textbf{Dodavateľ}
+\textbf{DodavateÄ¾}
 \vspace{0.3cm}
   
 <%name%>
@@ -74,7 +74,7 @@ Fax: <%vendorfax%>
 <%email%>
 }
 \parbox[t]{.5\textwidth}{
-\textbf{Dodať}
+\textbf{DodaÅ¥}
 \vspace{0.3cm}
 
 <%shiptoname%>
@@ -112,12 +112,12 @@ Fax: <%shiptofax%>
 
 \vspace{1cm}
 
-\textbf{V Y S T A V E N Á} \parbox{0.3cm}{\hfill} \textbf{O B J E D N Á V K A}
+\textbf{V Y S T A V E N Ã} \parbox{0.3cm}{\hfill} \textbf{O B J E D N Ã V K A}
 \hfill
 
 \vspace{1cm}
 \begin{tabularx}{\textwidth}{*{6}{|X}|} \hline
-  \textbf{Objednávka} & \textbf{Dátum} & \textbf{Žiadateľ} & \textbf{Kontakt} & \textbf{Miesto dodania} & \textbf{Spôsob dodania} \\ [0.5ex]
+  \textbf{ObjednÃ¡vka} & \textbf{DÃ¡tum} & \textbf{Å½iadateÄ¾} & \textbf{Kontakt} & \textbf{Miesto dodania} & \textbf{SpÃ´sob dodania} \\ [0.5ex]
   \hline
   <%ordnumber%> & <%orddate%> & <%reqdate%> & <%employee%> & <%shippingpoint%> & <%shipvia%> \\
   \hline
@@ -126,7 +126,7 @@ Fax: <%shiptofax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{@{}lXrlrr@{}}
-  \textbf{Číslo} & \textbf{Popis} & \textbf{Množ} &
+  \textbf{ÄÃ­slo} & \textbf{Popis} & \textbf{MnoÅ¾} &
     \textbf{MJ} & \textbf{Cena} & \textbf{Suma} \\
 <%foreach number%>
   <%number%> & <%description%> & <%qty%> &
@@ -142,7 +142,7 @@ Fax: <%shiptofax%>
 
 \hfill
 \begin{tabularx}{8cm}{Xr@{\hspace{0.01cm}}r@{}}
-  & Medzisúčet & <%subtotal%> \\
+  & MedzisÃºÄet & <%subtotal%> \\
 <%foreach tax%>
   & <%taxdescription%> on <%taxbase%> & <%tax%>\\
 <%end tax%>
@@ -153,7 +153,7 @@ Fax: <%shiptofax%>
 \vspace{0.3cm}
 
 \hfill
-  Ceny sú v \textbf{<%currency%>}.
+  Ceny sÃº v \textbf{<%currency%>}.
 
 \vspace{12pt}
 

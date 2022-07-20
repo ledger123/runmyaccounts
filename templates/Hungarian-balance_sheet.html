@@ -5,13 +5,13 @@
 <%company%>
 <br><%address%>
 
-<p>MÉRLEG
+<p>MÃ‰RLEG
 <br><%period%>
 </h2>
 
 <table border=0>
 <tr>
-  <th align=left width=400 colspan=2>ESZKÖZÖK<br><hr align=left width=250 size=5 noshade></th>
+  <th align=left width=400 colspan=2>ESZKÃ–ZÃ–K<br><hr align=left width=250 size=5 noshade></th>
   <th><%this_period%></th>
   <th><%last_period%></th>
 </tr>
@@ -32,12 +32,12 @@
 </tr>
 
 <tr valign=top>
-  <th align=left colspan=2>Eszközök összesen</th>
+  <th align=left colspan=2>EszkÃ¶zÃ¶k Ã¶sszesen</th>
   <td align=right><%total_assets_this_period%><hr noshade size=2></td>
   <td align=right><%total_assets_last_period%><hr noshade size=2></td>
 </tr>
 <tr>
-  <th align=left colspan=4>SAJÁT TÕKE<br><hr align=left width=250 size=5 noshade></th>
+  <th align=left colspan=4>SAJÃT TÃ•KE<br><hr align=left width=250 size=5 noshade></th>
 </tr>
 
 <%foreach equity_account%>
@@ -57,13 +57,13 @@
 
 <tr valign=top>
   <td></td>
-  <th align=left>Tõke összesen</th>
+  <th align=left>TÃµke Ã¶sszesen</th>
   <td align=right><%total_equity_this_period%><br><hr noshade size=2</td>
   <td align=right><%total_equity_last_period%><br><hr noshade size=2</td>
 </tr>
 
 <tr>
-  <th align=left colspan=4>KÖTELEZETTSÉGEK<b><hr align=left width=250 size=5 noshade></th>
+  <th align=left colspan=4>KÃ–TELEZETTSÃ‰GEK<b><hr align=left width=250 size=5 noshade></th>
 </tr>
 
 <%foreach liability_account%>
@@ -83,14 +83,14 @@
 
 <tr valign=top>
   <td></td>
-  <th align=left>Kötelezettségek összesen</th>
+  <th align=left>KÃ¶telezettsÃ©gek Ã¶sszesen</th>
   <td align=right><%total_liabilities_this_period%><br><hr noshade size=2</td>
   <td align=right><%total_liabilities_last_period%><br><hr noshade size=2</td>
 </tr>
 
 
 <tr valign=top>
-  <th align=left colspan=2>KÖTELEZETTSÉGEK & TÕKE ÖSSZESEN</th>
+  <th align=left colspan=2>KÃ–TELEZETTSÃ‰GEK & TÃ•KE Ã–SSZESEN</th>
   <td align=right><%total_this_period%><br><hr noshade size=2></td>
   <td align=right><%total_last_period%><br><hr noshade size=2></td>
 </tr>

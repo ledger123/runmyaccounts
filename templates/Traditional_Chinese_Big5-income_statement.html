@@ -5,21 +5,21 @@
 <%company%>
 <br><%address%>
 
-<p>�l�q��
+<p>·l¯qªí
 <br><%period%>
 </h2>
 
 <%if department%>
-<h4>�����G <%department%></h4>
+<h4>³¡ªù¡G <%department%></h4>
 <%end department%>
 
 <%if projectnumber%>
-<h4>��׽s���G <%projectnumber%></h4>
+<h4>¤è®×½s¸¹¡G <%projectnumber%></h4>
 <%end projectnumber%>
 
 <table width=100% border=0>
 <tr>
-  <th width=400 align=left colspan=2>���J<br><hr width=300 size=5 align=left noshade></th>
+  <th width=400 align=left colspan=2>¦¬¤J<br><hr width=300 size=5 align=left noshade></th>
   <th><%this_period%></th>
   <th><%last_period%></th>
 </tr>
@@ -41,13 +41,13 @@
 
 <tr valign=top>
   <td> </td>
-  <th align=left>���J�X�p</th>
+  <th align=left>¦¬¤J¦X­p</th>
   <td align=right><%total_income_this_period%><hr noshade size=2></td>
   <td align=right><%total_income_last_period%><hr noshade size=2></td>
 </tr>
 
 <tr>
-  <th align=left colspan=2>�O��<br><hr width=300 size=5 align=left noshade></th>
+  <th align=left colspan=2>¶O¥Î<br><hr width=300 size=5 align=left noshade></th>
 </tr>
 
 <%foreach expense_account%>
@@ -67,13 +67,13 @@
 
 <tr valign=top>
   <td> </td>
-  <th align=left>�O�ΦX�p</th>
+  <th align=left>¶O¥Î¦X­p</th>
   <td align=right><%total_expenses_this_period%><br><hr noshade size=2</td>
   <td align=right><%total_expenses_last_period%><br><hr noshade size=2</td>
 </tr>
 
 <tr valign=top>
-  <th align=left colspan=2>���J / (���l)</th>
+  <th align=left colspan=2>¦¬¤J / (Á«·l)</th>
   <td align=right><%total_this_period%><br><hr noshade size=2></td>
   <td align=right><%total_last_period%><br><hr noshade size=2></td>
 </tr>

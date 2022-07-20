@@ -19,8 +19,8 @@
 
     <td align=right>
       <h4>
-      電話： <%tel%>
-      <br>傳真： <%fax%>
+      é»è©±ï¼ <%tel%>
+      <br>å³çï¼ <%fax%>
       </h4>
     </td>
   </tr>
@@ -29,7 +29,7 @@
 
   <tr>
     <th colspan=3>
-      <h4>報價單</h4>
+      <h4>å ±å¹å®</h4>
     </th>
   </tr>
 
@@ -54,15 +54,15 @@
 
       <br>
       <%if contact%>
-      <br>致： <%contact%>
+      <br>è´ï¼ <%contact%>
       <%end contact%>
 
       <%if customerphone%>
-      <br>電話： <%customerphone%>
+      <br>é»è©±ï¼ <%customerphone%>
       <%end customerphone%>
 
       <%if customerfax%>
-      <br>傳真： <%customerfax%>
+      <br>å³çï¼ <%customerfax%>
       <%end customerfax%>
 
       <%if email%>
@@ -81,12 +81,12 @@
     <td colspan=2>
       <table width=100% border=1>
         <tr>
-	  <th width=17% align=left nowrap>號碼</th>
-	  <th width=17% align=left>日期</th>
-	  <th width=17% align=left>有效期</th>
-	  <th width=17% align=left nowrap>聯絡人</th>
-	  <th width=17% align=left nowrap>付運點</th>
-	  <th width=15% align=left nowrap>付運公司</th>
+	  <th width=17% align=left nowrap>èç¢¼</th>
+	  <th width=17% align=left>æ¥æ</th>
+	  <th width=17% align=left>æææ</th>
+	  <th width=17% align=left nowrap>è¯çµ¡äºº</th>
+	  <th width=17% align=left nowrap>ä»éé»</th>
+	  <th width=15% align=left nowrap>ä»éå¬å¸</th>
 	</tr>
 
 	<tr>
@@ -109,14 +109,14 @@
     <td>
     <table width=100%>
     <tr bgcolor=000000>
-      <th align=right><font color=ffffff>號碼</th>
-      <th align=left><font color=ffffff>號碼</th>
-      <th align=left><font color=ffffff>描述</th>
-      <th><font color=ffffff>數量</th>
+      <th align=right><font color=ffffff>èç¢¼</th>
+      <th align=left><font color=ffffff>èç¢¼</th>
+      <th align=left><font color=ffffff>æè¿°</th>
+      <th><font color=ffffff>æ¸é</th>
       <th>&nbsp;</th>
-      <th><font color=ffffff>價格</th>
-      <th><font color=ffffff>折扣 %</th>
-      <th><font color=ffffff>金額</th>
+      <th><font color=ffffff>å¹æ ¼</th>
+      <th><font color=ffffff>ææ£ %</th>
+      <th><font color=ffffff>éé¡</th>
     </tr>
 
 <%foreach number%>
@@ -139,19 +139,19 @@
     
     <tr>
 <%if taxincluded%>
-      <th colspan=6 align=right>合計</th>
+      <th colspan=6 align=right>åè¨</th>
       <td colspan=2 align=right><%invtotal%></td>
 <%end taxincluded%>
 
 <%if not taxincluded%>
-      <th colspan=6 align=right>小計</th>
+      <th colspan=6 align=right>å°è¨</th>
       <td colspan=2 align=right><%subtotal%></td>
 <%end taxincluded%>
     </tr>
 
 <%foreach tax%>
     <tr>
-      <th colspan=6 align=right><%taxdescription%> 基於 <%taxbase%> @ <%taxrate%> %</th>
+      <th colspan=6 align=right><%taxdescription%> åºæ¼ <%taxbase%> @ <%taxrate%> %</th>
       <td colspan=2 align=right><%tax%></td>
     </tr>
 <%end tax%>
@@ -164,10 +164,10 @@
     <tr>
       <td colspan=4>&nbsp;
 <%if terms%>
-      有效期為淨<b><%terms%></b>日
+      æææçºæ·¨<b><%terms%></b>æ¥
 <%end terms%>
       </td>
-      <th colspan=2 align=right>合計</th>
+      <th colspan=2 align=right>åè¨</th>
       <th colspan=2 align=right><%quototal%></th>
     </tr>
     
@@ -184,11 +184,11 @@
   <table width=100%>
     <tr valign=top>
 <%if notes%>
-      <td>備註</td>
+      <td>åè¨»</td>
       <td><%notes%></td>
 <%end notes%>
       <td align=right>
-      所有價格均為<b><%currency%></b>
+      ææå¹æ ¼åçº<b><%currency%></b>
       </td>
     </tr>
 
@@ -203,7 +203,7 @@
   <table width=100%>
   <tr valign=top>
     <td width=60%><font size=-3>
-若要取消訂購特價品的訂單，須支付10%的訂單取消費用。
+è¥è¦åæ¶è¨è³¼ç¹å¹åçè¨å®ï¼é æ¯ä»10%çè¨å®åæ¶è²»ç¨ã
     </font>
     </td>
     <td width=40%>
