@@ -258,7 +258,7 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 	</tr>
 |;
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>
@@ -1380,7 +1380,7 @@ sub list_accounts {
        exit;
     }
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>
@@ -1728,7 +1728,7 @@ sub aging {
 	%vc_ids = ();
 	$form->{curr} = "";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	$vcnumber =
 	  ( $form->{vc} eq 'customer' )
@@ -2430,7 +2430,7 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 
 	$title = "$form->{title} / $form->{company}";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <script language="JavaScript">
@@ -2856,7 +2856,7 @@ sub prepare_e_mail {
 
 	$form->{media} = "email";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>
@@ -3656,7 +3656,7 @@ qq|<th><a class=listheading href=$href&sort=$form->{vc}number>$vcnumber</a></th>
 	$option .= '<br>' . $locale->text( uc $form->{db} );
 
 	my $header = $form->{header};
-	$form->header;
+	$form->header(0, 0, $locale);
 	$form->{title} = $locale->text('Taxes') if $form->{alltaxes};
 
 	print qq|
@@ -4157,7 +4157,7 @@ sub list_payments {
 
 	$title = "$form->{title} / $form->{company}";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>

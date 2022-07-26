@@ -301,6 +301,7 @@ $self{texts} = {
   'localhost'                   => 'localhost',
   'ok'                          => 'ok',
   'qriban'                      => 'QR-IBAN',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

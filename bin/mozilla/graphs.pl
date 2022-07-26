@@ -30,7 +30,7 @@ sub continue { &{$form->{nextsub}} };
 #---------------------------------------
 sub sales_search {
   $form->{title} = $locale->text('Sales Graph');
-  $form->header;
+  $form->header(0, 0, $locale);
   print qq|
 <body>
 <form method=post action=$form->{script}>

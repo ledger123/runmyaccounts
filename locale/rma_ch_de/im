@@ -142,6 +142,7 @@ $self{texts} = {
   'notes'                       => 'Notiz',
   'ok'                          => 'ok',
   'sample'                      => 'Beispiel',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {
