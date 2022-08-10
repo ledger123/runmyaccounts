@@ -432,7 +432,7 @@ sub form_header {
   $form->{onhold} = ($form->{onhold}) ? "checked" : "";
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
@@ -1284,7 +1284,7 @@ sub print_and_post {
 
 sub delete {
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1321,7 +1321,7 @@ sub yes {
 
 
 sub view {
-    $form->header(0, 0, $locale);
+    $form->header;
 
     $db = lc $form->{ARAP};
     $vc = $form->{vc};

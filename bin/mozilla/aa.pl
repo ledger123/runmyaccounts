@@ -651,7 +651,7 @@ sub form_header {
 
     $form->{onhold} = ( $form->{onhold} ) ? "checked" : "";
 
-    $form->header(0, 0, $locale);
+    $form->header;
 
     print qq|
 <body onload="document.forms[0].${focus}.focus()" />
@@ -1561,7 +1561,7 @@ sub delete {
 
     $form->{title} = $locale->text('Confirm!');
 
-    $form->header(0, 0, $locale);
+    $form->header;
 
     print qq|
 <body>
@@ -1857,7 +1857,7 @@ sub search {
     push @a, qq|<input name="l_email" class=checkbox type=checkbox value=Y $form->{l_email}> | . $locale->text('Email');
 
 
-    $form->header(0, 0, $locale);
+    $form->header;
     print qq|
 <body>
 
@@ -2261,7 +2261,7 @@ sub transactions {
 
     $form->{title} .= " / $form->{company}";
 
-    $form->header(0, 0, $locale);
+    $form->header;
 
     my $today = $form->today(\%myconfig);
 
@@ -2824,7 +2824,7 @@ sub subtotal {
 }
 
 sub view {
-    $form->header(0, 0, $locale);
+    $form->header;
 
     $db = lc $form->{ARAP};
     $vc = $form->{vc};

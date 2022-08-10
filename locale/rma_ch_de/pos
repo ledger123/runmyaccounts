@@ -50,7 +50,6 @@ $self{texts} = {
   'Update'                      => 'Aktualisieren',
   'Warehouse'                   => 'Warenlager',
   'Year'                        => 'Jahr',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

@@ -247,7 +247,7 @@ sub form_header {
   }
 
   
-  $form->header(0, 0, $locale);
+  $form->header;
  
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
@@ -911,7 +911,7 @@ sub receipts {
 |;
   }
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>

@@ -347,17 +347,11 @@ sub isblank {
 }
 
 sub header {
-	my ( $self, $endsession, $nocookie, $locale ) = @_;
+	my ( $self, $endsession, $nocookie ) = @_;
 
 	return if $self->{header};
 
 	my ( $stylesheet, $javascript, $favicon, $charset );
-
-	my $selectNoEntriesText = 'No Results Found'; # Default select2 message
-
-	if ($locale) {
-		$selectNoEntriesText = $locale->text('No Entries');
-	}
 
 	if ( $ENV{HTTP_USER_AGENT} ) {
 
@@ -398,35 +392,17 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
   <title>$self->{titlebar}</title>
   <meta name="robots" content="noindex,nofollow" />
   $favicon
-
-  <link rel="stylesheet" href="css/select2-4.0.13.min.css" type="text/css"/>
-  <link rel="stylesheet" href="css/jquery-ui-1.12.1.min.css" type="text/css"/>
-
   $stylesheet
-
   $charset
 
   <script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.12.1.min.js" type="text/javascript"></script>
-
-  <script src="js/select2-4.0.13.min.js" type="text/javascript"></script>
-
+  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
   <script src="js/rma.js" type="text/javascript"></script>
 |;
 		print q|
 <script>
 $(document).ready(function() {
-	var select2Config = {
-		dropdownAutoWidth : false,
-    	width: 'resolve',
-    	language: {
-       		noResults: function() {
-           		return "|;print qq|$selectNoEntriesText|;print q|";
-       		}
-   		}
-	};
-
-	$('select').select2(select2Config);
+    $('.js-basic-single-disabled').select2();
 });
 $(document).on('select2:open', () => {
     document.querySelector('.select2-search__field').focus();
@@ -2854,7 +2830,7 @@ sub create_links {
 		c.name AS $vc, c.${vc}number, a.department_id,
 		d.description AS department,
 		a.amount AS oldinvtotal, a.paid AS oldtotalpaid,
-		a.employee_id, e.name AS employee, a.language_code,
+		a.employee_id, e.name AS employee, c.language_code,
 		a.ponumber, a.approved,
 		br.id AS batchid, br.description AS batchdescription,
 		a.description, a.onhold, a.exchangerate, a.dcn,

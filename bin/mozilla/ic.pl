@@ -619,7 +619,7 @@ sub form_header {
   }
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1081,7 +1081,7 @@ sub search {
     $form->{title} = $locale->text($title{$form->{searchitems}});
   }
    
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -1584,7 +1584,7 @@ sub generate_report {
       exit;
   }
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   $i = 1;
   if (! $form->{changeup}) {
@@ -1925,7 +1925,7 @@ sub parts_subtotal {
 sub history {
   $form->{title} = $locale->text('History');
   $title = "$form->{title} / $form->{company}";
-  $form->header(0, 0, $locale);
+  $form->header;
 
   $form->{id} *= 1;
   my $arap;
@@ -2085,7 +2085,7 @@ sub requirements {
 
   $form->{title} = $locale->text('Parts Requirements');
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -2214,7 +2214,7 @@ sub requirements_report {
   
   $form->{title} = $locale->text('Parts Requirements');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2423,7 +2423,7 @@ sub so_requirements {
 
   $form->{title} = $locale->text('Sales Order Requirements');
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -2582,7 +2582,7 @@ sub so_requirements_report {
   
   $title = "$form->{title} / $form->{company}";
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -3186,7 +3186,7 @@ sub select_name {
   $column_data{address} = qq|<th class=listheading colspan=5>|.$locale->text('Address').qq|</th>|;
   
   # list items with radio button on a form
-  $form->header(0, 0, $locale);
+  $form->header;
 
   $title = $locale->text('Select from one of the names below');
 
@@ -3462,7 +3462,7 @@ sub stock_assembly {
 
   $form->{title} = $locale->text('Stock Assembly');
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -3596,7 +3596,7 @@ sub list_assemblies {
 	      </tr>
 | if $form->{selectwarehouse};
  
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>

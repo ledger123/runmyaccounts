@@ -59,7 +59,6 @@ $self{texts} = {
   'To'                          => 'Bis',
   'Update'                      => 'Aktualisieren',
   'Year'                        => 'Jahr',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

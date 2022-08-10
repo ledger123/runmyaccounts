@@ -161,7 +161,6 @@ $self{texts} = {
   'Year'                        => 'Jahr',
   'Yes'                         => 'Ja',
   'days'                        => 'Tage',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

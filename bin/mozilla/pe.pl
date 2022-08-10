@@ -245,7 +245,7 @@ sub job_header {
 
   $form->{title} = ($form->{id}) ? $locale->text('Edit Job') : $locale->text('Add Job');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -439,7 +439,7 @@ sub list_stock {
   $column_header{stock} = "<th class=listheading>" . $locale->text('Add') . "</a></th>";
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   if (@{ $form->{all_project} }) {
     $sameitem = $form->{all_project}->[0]->{$form->{sort}};
@@ -689,7 +689,7 @@ sub search {
   }
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -844,7 +844,7 @@ sub list_projects {
   $column_header{name} = "<th class=listheading>" . $locale->text('Customer') . "</th>";
   
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
   if (@{ $form->{all_project} }) {
     $sameitem = $form->{all_project}->[0]->{$form->{sort}};
@@ -1001,7 +1001,7 @@ sub project_header {
   }
   
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1220,7 +1220,7 @@ sub partsgroup_report {
 
   $form->{title} = $locale->text('Groups') . " / $form->{company}";
 
-  $form->header(0, 0, $locale);
+  $form->header;
  
   print qq|
 <body>
@@ -1324,7 +1324,7 @@ sub partsgroup_header {
   $form->{partsgroup} = $form->quote($form->{partsgroup});
   $form->{pos} = ($form->{pos}) ? "checked" : "";
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1421,7 +1421,7 @@ sub pricegroup_report {
 
   $form->{title} = $locale->text('Pricegroups') . " / $form->{company}";
 
-  $form->header(0, 0, $locale);
+  $form->header;
  
   print qq|
 <body>
@@ -1522,7 +1522,7 @@ sub pricegroup_header {
   $form->{pricegroup} = $form->quote($form->{pricegroup});
 
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1630,7 +1630,7 @@ sub translation {
   }
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -1717,7 +1717,7 @@ sub list_translations {
   $column_header{language} = qq|<th nowrap class=listheading>|.$locale->text('Language').qq|</a></th>|;
   $column_header{translation} = qq|<th nowrap width=40% class=listheading>|.$locale->text('Translation').qq|</a></th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1847,7 +1847,7 @@ sub translation_header {
 
   $form->{translation_rows}++;
 
-  $form->header(0, 0, $locale);
+  $form->header;
  
   print qq|
 <body>
@@ -2068,7 +2068,7 @@ sub select_name {
   $column_data{"$form->{vc}number"} = qq|<th class=listheading>$labelnumber</th>|;
   $column_data{address} = qq|<th class=listheading colspan=5>|.$locale->text('Address').qq|</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
   $title = $locale->text('Select from one of the names below');
   print qq|
 <body>
@@ -2249,7 +2249,7 @@ sub project_sales_order {
   $form->{vc} = "customer";
   $form->{type} = "sales_order";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2413,7 +2413,7 @@ sub jcitems {
     $form->{title} = $locale->text('Generate Sales Orders');
   }
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2518,7 +2518,7 @@ sub select_customer {
 
   $label = ($form->{vc} eq 'customer') ? $locale->text('Customer') : $locale->text('Vendor');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body onLoad="document.forms[0].$form->{vc}.focus()" />

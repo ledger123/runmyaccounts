@@ -602,7 +602,7 @@ sub form_header {
   $title = " / $title{$form->{formname}}" if $form->{formname} !~ /(sales_order|purchase_order|quotation)/;
 
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
@@ -1369,7 +1369,7 @@ sub search {
   push @a, qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}> |.$locale->text('Internal Notes');
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1810,7 +1810,7 @@ function CheckAll() {
   
   $title = "$form->{title} / $form->{company}";
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2122,7 +2122,7 @@ sub print_and_save {
 
 sub delete {
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   if ($form->{type} =~ /_order$/) {
     $msg = $locale->text('Are you sure you want to delete Order Number');
@@ -2497,7 +2497,7 @@ sub display_ship_receive {
 |;
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -2807,7 +2807,7 @@ sub search_transfer {
   
   $form->{title} = $locale->text('Transfer Inventory');
  
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2930,7 +2930,7 @@ sub list_transfer {
 
   $callback .= "&sort=$form->{sort}";
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -3134,7 +3134,7 @@ sub po_orderitems {
 
   $form->{title} = $locale->text('Generate Purchase Orders');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -3281,7 +3281,7 @@ sub select_vendor {
 
   $form->error($locale->text('Nothing selected!')) unless $ok;
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body onload="document.forms[0].vendor.focus()" />

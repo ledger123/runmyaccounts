@@ -536,7 +536,7 @@ sub search_name {
  
   $focus = "name";
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   $accept_charset = "";
   if ( $dbencoding ne "" ) {
@@ -1007,7 +1007,7 @@ sub list_names {
       exit;
   }
 
-  $form->header(0, 0, $locale);
+  $form->header;
   print qq|
 <body>
 
@@ -1392,7 +1392,7 @@ sub list_history {
 
   $colspan = $#column_index + 1;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1925,7 +1925,7 @@ sub form_header {
 
   $form->{remittancevoucher} = ($form->{remittancevoucher}) ? "checked" : "";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2298,7 +2298,7 @@ sub shipping_address {
 	  fax => { i => 10, label => $locale->text('Fax') },
 	  email => { i => 11, label => $locale->text('E-mail') } );
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   $vcname = $locale->text('Name');
 
@@ -2634,7 +2634,7 @@ sub pricelist_header {
   
   $form->{title} = ($form->{typeofcontact} ne 'company') ? "$form->{firstname} $form->{lastname}" : $form->{name};
  
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2897,7 +2897,7 @@ sub select_item {
   $column_data{sellprice} = qq|<th class=listheading>|.$locale->text('Sell Price').qq|</th>|;
   $column_data{lastcost} = qq|<th class=listheading>|.$locale->text('Cost').qq|</th>|;
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
   $title = $locale->text('Select items');
   

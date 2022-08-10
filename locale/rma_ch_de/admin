@@ -98,7 +98,6 @@ $self{texts} = {
   'successfully created!'       => 'wurde erfolgreich erstellt',
   'successfully deleted!'       => 'wurde erfolgreich gelöscht',
   'website'                     => 'Webseite',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

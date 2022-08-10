@@ -114,7 +114,6 @@ sub search {
   
   $label{print}{title} = "Print";
   $label{queue}{title} = "Queued";
-  $label{queue}{title} = "E-Mail" if $form->{batch2} eq 'email'; # for reminders
   $label{email}{title} = "E-Mail";
 
   $checked{$form->{batch}} = "checked";
@@ -284,7 +283,7 @@ sub search {
   $form->{sort} = "transdate";
   $form->{nextsub} = "list_spool";
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -335,7 +334,7 @@ sub search {
 <input class=submit type=submit name=action value="|.$locale->text('Continue').qq|">
 |;
   
-  $form->hide_form(qw(path login batch2));
+  $form->hide_form(qw(path login));
   
   print qq|
 
@@ -364,7 +363,7 @@ sub remove {
  
   $form->{title} = $locale->text('Confirm!');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -510,7 +509,7 @@ sub print {
 
       if ($myform->{"module_$i"} ne 'jc') {
 	if ($form->{formname} =~ /_invoice/) {
-	  $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
+	  $total -= $form->parse_amount(\%myconfig, $form->{"${inv}total"});
 	} else {
 	  $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
 	}
@@ -538,74 +537,7 @@ sub print {
 }
 
 
-sub e_mail { 
-    if ($form->{type} eq 'reminder'){
-        use SL::Mailer;
-        my $mail = new Mailer;
-        my $dbh = $form->dbconnect(\%myconfig);
-        my $dbs = DBIx::Simple->connect($dbh);
-        for my $i (1 .. $form->{rowcount}){
-            if ($form->{"ndx_$i"}){
-                my $id = $form->{"id_$i"} *= 1;
-                my ($attachment) = $dbs->query("
-                    SELECT spoolfile
-                    FROM status
-                    WHERE trans_id = ?
-                    AND formname='reminder'
-                ", $id)->list;
-                my ($invoice) = $dbs->query("
-                    SELECT spoolfile
-                    FROM status
-                    WHERE trans_id = ?
-                    AND formname='invoice'
-                ", $id)->list;
-                ($form->{email}, $form->{cc}, $form->{bcc}, $form->{invnumber}, $form->{name}) = $dbs->query("
-                    SELECT vc.email, vc.cc, vc.bcc, ar.invnumber, vc.name
-                    FROM customer vc
-                    JOIN ar ON vc.id = ar.customer_id
-                    WHERE ar.id = ?
-                    ", $id
-                )->list;
-                $form->{format} = 'html';
-
-                my ($noreplyemail) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='noreplyemail'");
-                my ($company) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='company'");
-
-                for (qw(cc bcc subject message version format charset notify)) {
-                    $mail->{$_} = $form->{$_};
-                }
-                $noreply              = $myconfig{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
-                $mail->{to}           = qq|$form->{email}|;
-                $mail->{from}         = qq|"$myconfig{name} ($company)" <$noreply>|;
-                $mail->{'reply-to'}   = qq|"$myconfig{name}" <$myconfig{email}>|;
-
-                my $fileid  = time;
-                $mail->{fileid} = "$fileid.";
-
-                $form->{OUT} = "$sendmail";
-                my $br = "";
-                $br = "<br>" if $form->{format} eq 'html';
-                $mail->{contenttype} = "text/$form->{format}";
-
-                $mail->{message}       =~ s/\r?\n/$br\n/g;
-                $myconfig{signature} =~ s/\\n/$br\n/g;
-                $mail->{message} .= "$br\n-- $br\n$myconfig{signature}\n$br" if $myconfig{signature};
-
-                @{ $mail->{attachments} } = ( "spool/$attachment" );
-                if ($form->{attach_reminder_invoice}){
-                    push @{ $mail->{attachments} }, "spool/$invoice" if $invoice;
-                }
-                $mail->send($form->{OUT});
-
-                $form->info("$form->{name} -- $form->{invnumber} ");
-                $form->info($locale->text("Reminder emailed ...\n"));
-            }
-        }
-        $form->info("Reminders emailed ...");
-    } else {
-        &print;
-    }
-}
+sub e_mail { &print }
 
 
 sub list_spool {
@@ -758,8 +690,7 @@ sub list_spool {
   }
   
   push @columns, qw(description name vcnumber);
-  push @columns, "email" if $form->{batch} eq 'email' or $form->{batch2} eq 'email';
-  push @columns, "cc" if $form->{batch} eq 'email' or $form->{batch2} eq 'email';
+  push @columns, "email" if $form->{batch} eq 'email';
   push @columns, qw(city amount);
   push @columns, "spoolfile" if $form->{batch} eq 'queue';
   
@@ -779,7 +710,6 @@ sub list_spool {
 $column_header{vcnumber} = "<th><a class=listheading href=$href&sort=vcnumber>".$locale->text('Number')."</a></th>";
 
   $column_header{email} = "<th class=listheading>".$locale->text('E-mail')."</th>";
-  $column_header{cc} = "<th class=listheading>".$locale->text('CC')."</th>";
   $column_header{city} = "<th class=listheading>".$locale->text('City')."</th>";
   $column_header{id} = "<th><a class=listheading href=$href&sort=id>".$locale->text('ID')."</a></th>";
   $column_header{description} = "<th><a class=listheading href=$href&sort=description>".$locale->text('Description')."</a></th>";
@@ -787,7 +717,7 @@ $column_header{vcnumber} = "<th><a class=listheading href=$href&sort=vcnumber>".
   $column_header{amount} = "<th class=listheading>".$locale->text('Amount')."</th>";
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <script language="JavaScript">
@@ -873,7 +803,7 @@ function CheckAll() {
     
     $column_data{runningnumber} = qq|<td>$i</td>|;
 
-    for (qw(description email cc city id invnumber ordnumber quonumber vcnumber)) { $column_data{$_} = qq|<td>$ref->{$_}</td>| }
+    for (qw(description email city id invnumber ordnumber quonumber vcnumber)) { $column_data{$_} = qq|<td>$ref->{$_}</td>| }
     $column_data{transdate} = qq|<td nowrap>$ref->{transdate}</td>|;
 
     $column_data{name} = qq|<td><a href=ct.pl?action=edit&id=$ref->{vc_id}&db=$ref->{db}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{name}</a></td>|;
@@ -942,7 +872,7 @@ function CheckAll() {
 <br>
 |;
 
-  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed batch2 notprinted notemailed precision));
+  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed notprinted notemailed precision));
 
   $form->{copies} ||= 1;
 
@@ -1004,7 +934,7 @@ function CheckAll() {
   $format =~ s/(<option value="\Q$form->{format}\E")/$1 selected/;
   $format = qq|<td nowrap>$format</td>|;
  
-  if ($form->{batch} eq 'email' or $form->{batch2} eq 'email') {
+  if ($form->{batch} eq 'email') {
     $message = qq|<tr>
                     <td nowrap><b>|.$locale->text('Subject').qq|</b>&nbsp;<input name=subject size=30></td>
                   </tr>
@@ -1064,12 +994,10 @@ function CheckAll() {
     delete $button{'Print'};
   }
   if ($form->{batch} eq 'queue') {
-    delete $button{'E-mail'} if $form->{batch2} ne 'email';
+    delete $button{'E-mail'};
     delete $button{'Print'} if ! %printer;
   }
 
-  print qq|<input type=checkbox name="attach_reminder_invoice" value="1">|;
-  print $locale->text("Attach invoices from queue ...")."<br/><br/>" if $form->{type} eq 'reminder';
   for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { $form->print_button(\%button, $_) }
     
 

@@ -6,7 +6,6 @@ $self{texts} = {
   'Name'                        => 'Name',
   'Sales Graph'                 => 'Umsatzgrafik',
   'To'                          => 'Bis',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

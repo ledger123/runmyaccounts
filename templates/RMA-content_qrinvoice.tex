@@ -3,7 +3,7 @@
 % Name: content-qrinvoice.tex
 % Sprache: Deutsch
 % Erstellungsdatum: 25. Juni 2020
-% Â© by Run my Accounts AG
+% © by Run my Accounts AG
 
 \ifthenelse{\equal{<%qriban%>}{}}{}{
 \ifthenelse{\equal{<%invtotal%>}{0.00}}{\end{document}}{}
@@ -38,8 +38,15 @@
 \newcommand{\QRpsubtitle}{\QRfontdef{6}{10.60}{b}}
 \newcommand{\QRpcontent}{\QRfontdef{8}{10.8}{m}}
 
+
 \renewcommand{\QRposX}{0}
 \renewcommand{\QRposY}{187}
+
+% REFORMATING OF VARIABLES
+
+\StrMid{<%strdbkginf%>}{1}{50}[\strdbkginfi]
+\StrMid{<%strdbkginf%>}{51}{100}[\strdbkginfii]
+\StrMid{<%strdbkginf%>}{100}{140}[\strdbkginfiii]
 
 \noindent
 % Block where the QR code is
@@ -69,8 +76,8 @@
                     \vspace{2pt}
                     {\par\medskip
 \QRrsubtitle \LANGuse{qr_payableby}}\par
-                    \strut \ifthenelse{\equal{<%typeofcontact%>}{company}}{<%name%>}{<%firstname%> <%lastname%>}\par
-                    \strut <%address1%> \par
+                    \strut <%name%>\par
+                    \strut <%address1%> <%address2%>\par
                     \strut <%zipcode%> <%city%> \par
                 \end{minipage}
             };
@@ -139,14 +146,15 @@
                     \vskip1ex
                     {\par\medskip
 \QRpsubtitle \LANGuse{qr_additionalinformation}}\par
-                   \ifthenelse{\equal{<%invdescriptionqr2%>}{}}{}{\strut <%invdescriptionqr2%> \par}
-                   \ifthenelse{\equal{<%strdbkginfline1qr%>}{}}{}{\strut <%strdbkginfline1qr%> \par}
-                   \ifthenelse{\equal{<%strdbkginfline2qr%>}{}}{}{\strut <%strdbkginfline2qr%>}
+                    \strut <%invdescriptionqr2%> \par
+                   \strut \strdbkginfi \par
+                   \strut \strdbkginfii \par
+                   \strut \strdbkginfiii
                     \vskip1ex
                     {\par\medskip
 \QRpsubtitle \LANGuse{qr_payableby}}\par
-                    \strut \ifthenelse{\equal{<%typeofcontact%>}{company}}{<%name%>}{<%firstname%> <%lastname%>}\par
-                    \strut <%address1%>\par
+                    \strut <%name%>\par
+                    \strut <%address1%> <%address2%>\par
                     \strut <%zipcode%> <%city%> \par
                 \end{minipage}
             };

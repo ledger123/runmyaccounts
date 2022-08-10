@@ -351,7 +351,7 @@ sub delete {
   $transdate = $form->datetonum(\%myconfig, $form->{transdate});
   $form->error($locale->text('Cannot delete transfer for a closed period!')) if ($transdate <= $form->{closedto});
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -481,7 +481,7 @@ sub search {
    &bld_warehouse('selectfrom_warehouse');
    &bld_warehouse('selectto_warehouse');
 
-   $form->header(0, 0, $locale);
+   $form->header;
    print qq|
 <body>
 

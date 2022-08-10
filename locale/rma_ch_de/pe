@@ -108,7 +108,6 @@ $self{texts} = {
   'Vendor not on file!'         => 'Lieferant ist nicht in der Datenbank!',
   'Weight'                      => 'Gewicht',
   'Year'                        => 'Jahr',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

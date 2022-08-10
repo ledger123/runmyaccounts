@@ -181,7 +181,6 @@ $self{texts} = {
   'for Period'                  => 'für den Zeitraum',
   'sent'                        => 'verschickt',
   'time(s)'                     => 'mal',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

@@ -82,7 +82,7 @@ sub reconciliation {
   }
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -219,7 +219,7 @@ sub display_form {
 
   $form->{title} = "$form->{accno}--$form->{account} / $form->{company}";
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <script language="JavaScript">

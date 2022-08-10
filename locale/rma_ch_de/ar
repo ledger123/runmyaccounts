@@ -207,7 +207,6 @@ $self{texts} = {
   'for'                         => 'für',
   'sent'                        => 'verschickt',
   'time(s)'                     => 'mal',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

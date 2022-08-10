@@ -226,7 +226,6 @@ $self{texts} = {
   'posted!'                     => 'gebucht!',
   'sent'                        => 'verschickt',
   'time(s)'                     => 'Mal',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

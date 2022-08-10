@@ -48,7 +48,7 @@ use SL::VR;
 
 sub add_batch {
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   $transdate = qq|
  	<tr>
@@ -227,7 +227,7 @@ sub edit_payment_reversal {
     $form->{title} .= " / $form->{batchdescription}";
   }
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body onload="document.forms[0].account.focus()" />
@@ -337,7 +337,7 @@ sub delete_batch {
 
   $form->{title} = $locale->text('Confirm!');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -457,7 +457,7 @@ sub search {
 
   $form->{title} = $locale->text($title{$form->{batch}});
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -632,7 +632,7 @@ sub list_batches {
   
   $title = "$form->{title} / $form->{company}";
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -914,7 +914,7 @@ sub list_vouchers {
   }
     
  
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>

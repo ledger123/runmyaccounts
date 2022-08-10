@@ -86,7 +86,9 @@ sub logged_in {
     
     my ($controller, $username) = @_;
 
-    my $ip_whitelist = "31.216.40.164";
+    
+
+    my $ip_whitelist = "";
 
     open(FILE, "sql-ledger.conf");
     ($ip_whitelist) = grep{/ip_whitelist = /} <FILE>;
@@ -99,6 +101,7 @@ sub logged_in {
 	  	return 1;
   	}
     }
+
 
     my $cookievalue = $controller->cookies->{"SL-$username"};
     

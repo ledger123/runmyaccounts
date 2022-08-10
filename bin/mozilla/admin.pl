@@ -20,6 +20,9 @@ use SL::User;
 
 
 $form = new Form;
+my $form_method = 'post';
+#my $form_method = 'get'; # For testing purposes; to see generated URLs
+
 
 $locale = new Locale $language, "admin";
 $form->{charset} = $locale->{charset};
@@ -76,7 +79,7 @@ sub adminlogin {
 
   $form->{title} = qq|Run my Accounts $form->{version} |.$locale->text('Administration');
   
-  $form->header(0, 0, $locale);
+  $form->header;
   
     print qq|
 <script language="JavaScript" type="text/javascript">
@@ -285,7 +288,7 @@ sub list_users {
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Administration');
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -366,6 +369,19 @@ $software
 </html>
 |;
 
+}
+
+sub mojo_admin_button {
+    my ($label, $path) = @_;
+    
+    return "\n" .
+        qq|<input type="submit" class="submit" | .
+        qq|name="action" value="| . $locale->text($label) . qq|" | .
+        qq|formmethod="$form_method" | .
+        qq|formaction="mojo.pl$path" />\n| .
+        qq|<input type="hidden" name="login" value="root login" />\n|;
+
+    # Localization: see locale/*/admin
 }
 
 
@@ -450,7 +466,7 @@ sub form_header {
 
   }
   
-  $form->header(0, 0, $locale);
+  $form->header;
  
   print qq|
 <body class=admin>
@@ -983,7 +999,7 @@ sub change_admin_password {
 
   $form->{title} = qq|Run my Accounts |.$locale->text('Accounting')." ".$locale->text('Administration')." / ".$locale->text('Change Admin Password');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -1189,7 +1205,7 @@ sub dbselect_source {
 
  $form->{title} = $myconfig{provider}.$locale->text('Accounting')." / ".$locale->text('Database Administration');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -1241,6 +1257,10 @@ sub dbselect_source {
 <input type=submit class=submit name=action value="|.$locale->text('Create Dataset').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Update Dataset').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Delete Dataset').qq|">
+
+|
+    . mojo_admin_button("Backup/Restore", "/admin/backup_restore/start")
+    . qq|
 </form>
 
     </td>
@@ -1270,7 +1290,7 @@ sub update_dataset {
 
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Update Dataset');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -1401,7 +1421,7 @@ sub create_dataset {
   
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -1446,12 +1466,12 @@ sub create_dataset {
 
   </tr>
   
-  <tr>
+  <!-- <tr>
 
     <th align=right nowrap>LC_CTYPE/LC_COLLATE</th>
     <td><select name=ctype><option value="de_CH.ISO-8859-1" selected="selected">de_CH.ISO-8859-1</option></select></td>
 
-  </tr>
+  </tr> -->
 |;
   }
 
@@ -1519,7 +1539,7 @@ sub dbcreate {
   
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Create Dataset');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -1562,7 +1582,7 @@ sub delete_dataset {
 
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -1625,7 +1645,7 @@ sub dbdelete {
 
   $form->{title} = $myconfig{provider}.$locale->text('Accounting')." ".$locale->text('Database Administration')." / ".$locale->text('Delete Dataset');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class=admin>
@@ -1688,7 +1708,7 @@ sub software_administration {
 
   $form->{title} = "SQL-Ledger ".$locale->text('Accounting')." / ".$locale->text('Software Administration');
   $msg &&= "<pre>$msg</pre>"; 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class="admin">
@@ -1744,7 +1764,7 @@ sub switch_branch {
 
 sub update_software {
   $form->{title} = "SQL-Ledger ".$locale->text('Accounting')." / ".$locale->text('Update Software');
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body class="admin">

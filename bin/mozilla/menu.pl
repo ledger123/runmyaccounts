@@ -25,7 +25,7 @@ sub display {
   $menuwidth = ($ENV{HTTP_USER_AGENT} =~ /links/i) ? "240" : "155";
   $menuwidth = $myconfig{menuwidth} if $myconfig{menuwidth};
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   $callbacks = { 
 	'ar:ar_reports:ar_reports_transactions' => 'ar.pl?action=search&nextsub=transactions&level=AR--Reports--Transactions',
@@ -65,7 +65,7 @@ sub acc_menu {
   
   $form->{title} = $locale->text('Accounting Menu');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <script type="text/javascript">
@@ -109,6 +109,7 @@ function SwitchMenuAndSub(menu, submenu) {
 
 <body class=menu>
 
+<img src=$images/sql-ledger.gif width=80 border=0>
 |;
 
   if ($form->{js}) {

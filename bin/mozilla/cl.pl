@@ -37,7 +37,7 @@ sub list_trans {
     my $dbh = $form->dbconnect(\%myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
 
-    $form->header(0, 0, $locale);
+    $form->header;
     print qq|<h1>Clearing Account Adjustment</h1>|;
     my $query = "
       SELECT gl.reference, ac.transdate, c.accno, c.description as account_description, gl.description, ac.source, ac.memo, fx_transaction fx, gl.curr,
@@ -290,7 +290,7 @@ sub book_selected_transactions {
     my $dbh = $form->dbconnect(\%myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
 
-    $form->header(0, 0, $locale);
+    $form->header;
     print qq|<h1>Final step: Clearing Account Adjustment</h1>|;
     my $query = "
       SELECT gl.id, gl.reference, ac.transdate, c.id acc_id, c.accno, c.description account_description, gl.description, ac.source, ac.memo,

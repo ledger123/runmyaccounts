@@ -958,7 +958,7 @@ sub gl_search {
 |;
    }
 
-   $form->header(0, 0, $locale);
+   $form->header;
    print qq|
 <body>
 <table width=100%><tr><th class=listtop>$form->{title}</th></tr></table> <br />
@@ -1335,7 +1335,7 @@ sub gl_list {
        $sth->execute || $form->dberror($query);
 
        $form->{title} = $locale->text('General Ledger') . " / $form->{company}";
-       $form->header(0, 0, $locale);
+       $form->header;
        print qq|<body><table class="noprint report-header" width=100%>|;
        print qq|<tr><th class="listtop">$form->{title}</th></tr>|;
        print qq|<tr><th class="listtopheader" align=left colspan=7>| . $locale->text('From') . qq| $form->{fromdate}</th></tr>| if $form->{fromdate};
@@ -1684,7 +1684,7 @@ sub audit_list {
 #-------------------------------
 sub income_statement {
    $form->{title} = $locale->text('Income Statement');
-   $form->header(0, 0, $locale);
+   $form->header;
 
   $form->all_years(\%myconfig);
   if (@{ $form->{all_years} }) {
@@ -1837,7 +1837,7 @@ sub income_statement_by_project {
             SUM(ac.amount) amount
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
-        LEFT JOIN project p ON (p.id = ac.project_id)
+        JOIN project p ON (p.id = ac.project_id)
         WHERE $where 
         GROUP BY p.projectnumber, c.accno, c.description
         ORDER BY p.projectnumber, c.accno
@@ -1846,7 +1846,7 @@ sub income_statement_by_project {
     exit;
    }
 
-  $form->header(0, 0, $locale);
+  $form->header;
   print qq|<body><table width=100%><tr><th class=listtop>$form->{title}</th></tr></table><br/>|;
   print qq|<h4>|.$locale->text('Income Statement Projects').qq|</h4>|;
   print qq|<h4>|.$locale->text('For Period').qq|</h4>|;
@@ -2017,7 +2017,7 @@ sub income_statement_by_department {
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.chart_id)
         JOIN dpt_trans dt ON (dt.trans_id = ac.trans_id)
-        LEFT JOIN department d ON (d.id = dt.department_id)
+        JOIN department d ON (d.id = dt.department_id)
         WHERE $where 
         GROUP BY d.description, c.accno, c.description
         ORDER BY d.description, c.accno
@@ -2026,7 +2026,7 @@ sub income_statement_by_department {
     exit;
    }
 
-  $form->header(0, 0, $locale);
+  $form->header;
   print qq|
     <body class="bill main2">
     <button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
@@ -4750,7 +4750,7 @@ sub search_reminders {
 | if $form->{selectdepartment};
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
   print qq|
 <form method=post action=$form->{script}>
 
@@ -4904,7 +4904,7 @@ sub list_reminders {
   $column_data{duedate} = qq|<th class=listheading nowrap>|.$locale->text('Due Date').qq|</th>|;
   $column_data{due} = qq|<th class=listheading nowrap>|.$locale->text('Due').qq|</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>

@@ -161,7 +161,6 @@ $self{texts} = {
   'Vendors'                     => 'Lieferanten',
   'Zip/Postal Code'             => 'PLZ',
   'days'                        => 'Tage',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

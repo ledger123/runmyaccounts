@@ -372,7 +372,7 @@ sub fractional_correction {
     $form->{dbs}->query("UPDATE tmp1 SET debit = 0 WHERE debit < 0");
 
     my $form1 = &fractional_correction_form($title, \@searchcols);
-    $form->header(0, 0, $locale);
+    $form->header;
     print $form1->render;
 
     my $totalcols = [qw(debit credit)];

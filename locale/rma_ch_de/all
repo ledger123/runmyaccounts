@@ -1148,7 +1148,6 @@ $self{texts} = {
   'successfully deleted!'       => 'wurde erfolgreich gelöscht',
   'time(s)'                     => 'mal',
   'website'                     => 'Webseite',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 1;

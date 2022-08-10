@@ -84,7 +84,6 @@ $self{texts} = {
   'Work Mobile'                 => 'Mobile Geschäft',
   'Work Phone'                  => 'Tel Arbeit',
   'Zip/Postal Code'             => 'PLZ',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

@@ -81,7 +81,7 @@ sub account_header {
 
   $form->{type} = "account";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -309,7 +309,7 @@ sub list_account {
   $column_data{allow_gl} = qq|<th class=listtop>|.$locale->text('GL').qq|</a></th>|;
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   my $colspan = $#column_index + 1;
 
@@ -429,7 +429,7 @@ sub list_gifi {
   $column_data{description} = qq|<th class=listheading>|.$locale->text('Description').qq|</a></th>|;
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   my $colspan = $#column_index + 1;
 
@@ -517,7 +517,7 @@ sub gifi_header {
 
   for (qw(accno description)) { $form->{$_} = $form->quote($form->{$_}) }
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -674,7 +674,7 @@ sub list_department {
   $column_data{cost} = qq|<th class=listheading nowrap>|.$locale->text('Cost Center').qq|</th>|;
   $column_data{profit} = qq|<th class=listheading nowrap>|.$locale->text('Profit Center').qq|</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -775,7 +775,7 @@ sub department_header {
   $checked{C} = "checked" if $form->{role} eq "C";
   $checked{P} = "checked" if $form->{role} eq "P";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -873,7 +873,7 @@ sub list_business {
   $column_data{description} = qq|<th width=90%><a class=listheading href=$href>|.$locale->text('Description').qq|</a></th>|;
   $column_data{discount} = qq|<th class=listheading>|.$locale->text('Discount').qq| %</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -958,7 +958,7 @@ sub business_header {
   $form->{description} = $form->quote($form->{description});
   $form->{discount} = $form->format_amount(\%myconfig, $form->{discount} * 100);
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1061,7 +1061,7 @@ sub list_dispatch {
 
   $column_data{description} = qq|<th width=90%><a class=listheading href=$href>|.$locale->text('Description').qq|</a></th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1141,7 +1141,7 @@ sub dispatch_header {
 
   $form->{description} = $form->quote($form->{description});
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1245,7 +1245,7 @@ sub list_paymentmethod {
   $column_data{plus} = qq|<th class=listheading>&nbsp;</th>|;
   $column_data{minus} = qq|<th class=listheading>&nbsp;</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1333,7 +1333,7 @@ sub paymentmethod_header {
   $form->{description} = $form->quote($form->{description});
   $form->{fee} = $form->format_amount(\%myconfig, $form->{fee}, $form->{precision});
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1439,7 +1439,7 @@ sub list_sic {
   $column_data{code} = qq|<th><a class=listheading href=$href&sort=code>|.$locale->text('Code').qq|</a></th>|;
   $column_data{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1533,7 +1533,7 @@ sub sic_header {
   my %checked;
   $checked{H} = ($form->{sictype} eq 'H') ? "checked" : "";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1638,7 +1638,7 @@ sub list_language {
   $column_data{code} = qq|<th><a class=listheading href=$href&sort=code>|.$locale->text('Code').qq|</a></th>|;
   $column_data{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1719,7 +1719,7 @@ sub language_header {
 
   for (qw(code description)) { $form->{$_} = $form->quote($form->{$_}) }
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1798,7 +1798,7 @@ sub delete_language {
 
   $form->{title} = $locale->text('Confirm!');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1881,7 +1881,7 @@ sub list_templates {
   $column_data{code} = qq|<th><a class=listheading href=$href&sort=code>|.$locale->text('Code').qq|</a></th>|;
   $column_data{description} = qq|<th><a class=listheading href=$href&sort=description>|.$locale->text('Description').qq|</a></th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -1977,7 +1977,7 @@ sub display_form {
     $form->{body} = "<pre>\n$form->{body}\n</pre>";
   }
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2020,7 +2020,7 @@ sub edit_template {
 
   $form->{callback} = "$form->{script}?action=display_form&file=$form->{file}&code=$form->{code}&path=$form->{path}&login=$form->{login}";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2089,7 +2089,7 @@ sub display_taxes {
 
   $form->{type} = "taxes";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2251,7 +2251,7 @@ sub defaults {
 
   $form->{title} = $locale->text('System Defaults');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2557,7 +2557,7 @@ sub config {
 
   $form->{old_password} = $myconfig{password};
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2778,7 +2778,7 @@ sub audit_control {
   my %checked;
   for (qw(revtrans audittrail aruniq apuniq gluniq souniq pouniq trackingitemsuniq nontrackingitemsuniq extendedlog)) { $checked{$_} = "checked" if $form->{$_} }
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -2954,7 +2954,7 @@ sub list_warehouse {
   $column_data{description} = qq|<th width=30%><a class=listheading href=$href>|.$locale->text('Description').qq|</a></th>|;
   $column_data{address} = qq|<th class=listheading>|.$locale->text('Address').qq|</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -3046,7 +3046,7 @@ sub warehouse_header {
   }
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -3161,7 +3161,7 @@ sub yearend {
 
   $form->{title} = $locale->text('Yearend');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -3340,7 +3340,7 @@ sub company_logo {
   }
 
   # create the logo screen
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -3354,11 +3354,13 @@ sub company_logo {
 </pre>
 <div class="mainpage">
 <center>
-<a class="mainpageref" href="http://www.runmyaccounts.com" target="_blank"><img src=$images/sql-ledger.gif border=0></a>
+<a class="mainpageref" href="http://www.sql-ledger-network.com" target="_blank"><img src=$images/sql-ledger.gif border=0></a>
 <h1 class=login>|.$locale->text('Version').qq| $release</h1>
+<!--
 <p>
 <a class="roadmapref" href="$roadmap" target="_blank">roadmap</a>
 </p>
+-->
 <br/>
 <h1 class=login>
 $form->{company}
@@ -3432,7 +3434,7 @@ sub recurring_transactions {
   $callback = $form->escape("$callback&sort=$form->{sort}");
 
   # create the logo screen
-  $form->header(0, 0, $locale);
+  $form->header;
 
 print qq|
 <script language="JavaScript">
@@ -4087,7 +4089,7 @@ sub clear_locks {
 
   $form->{title} = $locale->text('Confirm!');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -4149,7 +4151,7 @@ sub bank_accounts {
   $column_header{strdbkginf} = qq|<th class=listheading>|.$locale->text('strdbkginf').qq|</th>|;
   $column_header{invdescriptionqr} = qq|<th class=listheading>|.$locale->text('invdescriptionqr').qq|</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -4221,7 +4223,7 @@ sub bank_header {
 
   $form->{title} = $locale->text('Bank Account Details');
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -4399,7 +4401,7 @@ sub search_exchangerates {
 |;
   }
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -4506,7 +4508,7 @@ sub list_exchangerates {
   $column_header{transdate} = "<th><a class=listheading href=$href&sort=$form->{sort}>".$locale->text('Date')."</a></th>";
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -4691,7 +4693,7 @@ sub add_exchange_rate {
 
 sub exchangerate_header {
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -4779,7 +4781,7 @@ sub list_currencies {
   $column_data{plus} = qq|<th class=listheading>&nbsp;</th>|;
   $column_data{minus} = qq|<th class=listheading>&nbsp;</th>|;
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -4907,7 +4909,7 @@ sub move {
 
 sub currency_header {
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   $form->{type} = "currency";
 

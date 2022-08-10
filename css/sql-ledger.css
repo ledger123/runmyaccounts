@@ -83,7 +83,7 @@ body.admin {
 }
 
 table.login td.login a img, center a img {
-    display: none;
+    /* display: none; */
 }
 
 .company_logo_envelop {

@@ -263,7 +263,7 @@ sub print_hidden {
 
 ###############################
 sub print_title {
-	$form->header(0, 0, $locale);
+	$form->header;
     print qq|<body><table width=100%><tr><th class="listtop">$form->{title}</th></tr></table>\n|;				
 }
 

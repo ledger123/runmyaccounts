@@ -54,7 +54,6 @@ $self{texts} = {
   'Subtotal'                    => 'Zwischensumme',
   'To'                          => 'Bis',
   'Year'                        => 'Jahr',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

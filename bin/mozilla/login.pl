@@ -53,7 +53,7 @@ sub login_screen {
   $form->{stylesheet} = "sql-ledger.css";
   $form->{favicon} = "sql-ledger.ico";
 
-  $form->header(0, 0, $locale);
+  $form->header;
 
   if ($form->{login}) {
    $sf = qq|function sf() { document.forms[0].password.focus(); }|;
@@ -93,8 +93,8 @@ $sf
 <center>
 <table class=login border=3 cellpadding=20>
   <tr>
-    <td class=login align=center><a class="mainpageref" href="http://www.runmyaccounts.com" target="_blank"><img src=$images/sql-ledger.gif border=0></a>
-<h1 class=login align=center>|.$locale->text('Version').qq| $form->{version}
+    <td class=login align=center><a class="mainpageref" href="http://www.sql-ledger-network.com" target="_blank"><img src=$images/sql-ledger.gif border=0></a>
+<h1 class=login align=center>|.$locale->text('Community Version').qq| $form->{version}
 </h1>
 
 <form method=post action=$form->{script}>
@@ -128,8 +128,6 @@ $sf
     </td>
   </tr>
 </table>
-  
-  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelöst!</div>
   
 </body>
 </html>
@@ -279,7 +277,7 @@ sub login {
       $form->{dbupdate} = "db$user->{dbname}";
       $form->{$form->{dbupdate}} = 1;
 
-      $form->header(0, 0, $locale);
+      $form->header;
       print $locale->text('Upgrading to Version')." $form->{version} ... ";
 
       # required for Oracle

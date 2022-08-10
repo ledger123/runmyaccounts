@@ -187,7 +187,6 @@ $self{texts} = {
   'Work Order'                  => 'Arbeitsblatt',
   'Work Orders'                 => 'Arbeitsblätter',
   'Yearend'                     => 'Jahresabschluss',
-  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

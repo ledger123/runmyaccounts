@@ -63,7 +63,7 @@ sub chart_of_accounts {
 
   $colspan = $#column_index + 1;
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
@@ -196,7 +196,7 @@ sub list {
   }
 
 
-  $form->header(0, 0, $locale);
+  $form->header;
   
   print qq|
 <body>
@@ -360,7 +360,7 @@ sub list_transactions {
   for (qw(path direction oldsort accno login fromdate todate accounttype gifi_accno l_heading l_subtotal l_accno prevreport fx_transaction filter_marked)) { $form->{callback} .= "&$_=$form->{$_}" }
  
   
-  $form->header(0, 0, $locale);
+  $form->header;
 
   print qq|
 <body>
