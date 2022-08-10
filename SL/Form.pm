@@ -419,6 +419,7 @@ $(document).ready(function() {
 	var select2Config = {
 		dropdownAutoWidth : false,
     	width: 'resolve',
+    	matcher: matchStartStringOnly,
     	language: {
        		noResults: function() {
            		return "|;print qq|$selectNoEntriesText|;print q|";
@@ -428,6 +429,27 @@ $(document).ready(function() {
 
 	$('select').select2(select2Config);
 });
+
+function matchStartStringOnly(params, data) {
+  // If there are no search terms, return all of the data
+  if ($.trim(params.term) === '') {
+    return data;
+  }
+
+  // Skip if there is no 'children' property
+  if (typeof data.id === 'undefined') {
+    return null;
+  }
+
+  if (data.id.toUpperCase().indexOf(params.term.toUpperCase()) == 0) {
+    return data;
+  }
+
+  // Return `null` if the term should not be displayed
+  return null;
+}
+
+
 $(document).on('select2:open', () => {
     document.querySelector('.select2-search__field').focus();
 });
