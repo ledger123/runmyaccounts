@@ -1,0 +1,105 @@
+
+<body bgcolor=ffffff>
+
+  <table width=100%>
+  <tr>
+    <td>
+      <h4>
+      <%company%>
+      <br><%address%>
+
+      </h4>
+    </td>
+
+    <td align=right>
+      <h4>
+      Tél: <%tel%>
+      <br>Web: <%companywebsite%>
+      </h4>
+    </td>
+  </tr>
+
+  <tr>
+    <th colspan=3>
+      <h4>1 E R er &nbsp; R A P P E L</h4>
+    </th>
+  </tr>
+
+  </table>
+
+  <tr>
+     
+   <td ><%statementdate%></td>
+  </tr>
+  <p>
+  <p>
+  <tr>
+    <td>&nbsp;</td>
+    
+    <td>
+      <table width=100%>
+	<tr valign=top>
+	  <td><%name%>
+	  <br><%address1%>
+	  <%if address2%>
+	  <br><%address2%>
+	  <%end address2%>
+	  <br><%city%>
+	  <%if state%>
+	  , <%state%>
+	  <%end state%>
+	  <%zipcode%>
+	  <%if country%>
+	  <br><%country%>
+	  <%end country%>
+	  <br>
+          <%if customerphone%>
+	  <br>Tél: <%customerphone%>
+          <%end customerphone%>
+          <%if customerfax%>
+	  <br>Fax: <%customerfax%>
+          <%end customerfax%>
+          <%if email%>
+	  <br><%email%>
+          <%end email%>
+	  </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+  
+  <tr height=10></tr>
+  
+  <tr>
+    <td>&nbsp;</td>
+    
+  </tr>
+  
+  <tr height=10></tr>
+  
+  <tr>
+    <td>&nbsp;</td>
+    <td>
+
+  <p>
+  <p>
+Chère Madame, cher Monsieur,
+  <p>
+Nous attirons votre attention sur le fait que la facture No <%invnumber%> en date du <%invdate%> au montant de <%currency%> <%due%> n'a pas encore été réglée. Les paiements ont été pris en compte jusqu'au <%statementdate%>.
+<p>
+Nous vous remercions de bien vouloir procéder au règlement du montant dû dans les 10 jours par virement sur notre compte bancaire. Si votre règlement et ce rappel se sont croisés, nous vous prions de ne pas en tenir compte.
+<p>
+
+Sincères salutations,  
+
+<p>
+
+<%company%>
+
+    </td>
+  </tr>
+
+</table>
+
+</body>
+</html>

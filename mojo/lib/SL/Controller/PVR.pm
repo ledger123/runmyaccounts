@@ -288,9 +288,6 @@ sub generate {
     );   
 
 
-    # this fixes somehow some permission issue.
-    chdir $workdir;
-
     $doc->save; # Everything has been filled in.
 
     

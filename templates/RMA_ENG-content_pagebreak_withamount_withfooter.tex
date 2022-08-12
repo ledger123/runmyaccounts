@@ -1,0 +1,32 @@
+% Pagebreak mit Betrag
+
+<%pagebreak 58 27 38%>
+
+%Die Artikeltabelle auf der aktuellen Seite wird damit abgeschlossen.
+\end{tabularx} 
+
+%Eine Zwischensummentabelle wird eingefügt
+\begin{tabularx}{\textwidth}{@{}Xr@{}} 
+\hline
+Sub-total &<%sumcarriedforward%> \\
+\hline
+\end{tabularx}
+
+%Eine neue Seite wird initialisiert.
+\newpage
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+%Die Artikeltabelle auf der neuen Seite wird initialisiert.
+\begin{tabularx}{\textwidth}{@{}X@{}R{1.4cm}@{}R{1.4cm}@{}R{2cm}L{0.7cm}@{}R{2cm}@{}}
+
+\hline
+\textbf{Description} & \textbf{Amount} & \textbf{Unit} & \textbf{<%currency%> price} & & \textbf{<%currency%> amount} \\
+\hline
+
+%Der Übertrag der letzten Seite wird geschrieben.
+
+Sum carried forward from page <%lastpage%> & & & & & <%sumcarriedforward%> \\
+
+<%end pagebreak%>

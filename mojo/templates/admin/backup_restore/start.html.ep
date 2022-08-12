@@ -98,8 +98,7 @@
 % use File::Basename;
 % my $prefix = dirname(url_for('/')); 
 
-
-<form method="post" action="<%= $prefix %>/admin.pl">
+<form method="post" action="<%= $prefix %>admin.pl">
 %= tag 'hidden', name => 'login', value => 'root login';
 
 <button type="submit" class="submit" name="action" value="pg_database_administration"><%= l 'Database Administration' %></button>

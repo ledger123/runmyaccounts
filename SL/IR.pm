@@ -207,7 +207,7 @@ sub invoice_details {
 	  }
     
 	  push(@{ $form->{description} }, $item->[2]);
-	  for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate discountrate_percent linetotal itemnotes package netweight grossweight volume countryorigin hscode barcode xml_linetotal)) { push(@{ $form->{$_} }, "") }
+	  for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate linetotal itemnotes package netweight grossweight volume countryorigin hscode barcode)) { push(@{ $form->{$_} }, "") }
 	  push(@{ $form->{lineitems} }, { amount => 0, tax => 0 });
 	}
       }
@@ -263,19 +263,12 @@ sub invoice_details {
       
       push(@{ $form->{discount} }, $discount);
       push(@{ $form->{discountrate} }, $form->format_amount($myconfig, $form->{"discount_$i"}));
-      if ($form->{"discount_$i"}){
-         push(@{ $form->{discountrate_percent} }, $form->format_amount($myconfig, $form->{"discount_$i"}) . '\%');
-      } else {
-         push(@{ $form->{discountrate_percent} }, $form->format_amount($myconfig, $form->{"discount_$i"}));
-      }
-
 
       $form->{total} += $linetotal;
 
       # this is for the subtotals for grouping
       $subtotal += $linetotal;
 
-      push(@{ $form->{xml_linetotal} }, $linetotal);
       $form->{"linetotal_$i"} = $form->format_amount($myconfig, $linetotal, $form->{precision}, "0");
       push(@{ $form->{linetotal} }, $form->{"linetotal_$i"});
       

@@ -1,0 +1,25 @@
+\renewcommand{\arraystretch}{1.2} %Abstand zwischen den Zeilen
+
+\begin{tabularx}{\textwidth}{@{}X@{}R{1.4cm}@{}R{1.4cm}@{}R{2cm}L{0.7cm}@{}R{2cm}@{}}
+
+ \hline
+
+\textbf{Description} & \textbf{Amount} & \textbf{Unit} & \textbf{<%currency%> price} & &\textbf{<%currency%> amount} \\
+
+\hline
+
+<%foreach number%>
+ \IfSubStr{<%number%>}{Titel}{\textbf{<%description%>}}{<%description%>} \ifthenelse{\equal{<%itemnotes%>}{}}{}{\newline <%itemnotes%>} 
+ \ifthenelse{\equal{<%deliverydate%>}{}}{}{\newline Delivery date: <%deliverydate%>} 
+ \ifthenelse{\equal{<%serialnumber%>}{}}{}{\newline Serial no.: <%serialnumber%>}
+ \ifthenelse{\equal{<%projectnumber%>}{}}{}{\newline Project: <%projectnumber%>}
+ \ifthenelse{\equal{<%ordernumber%>}{}}{}{\newline Order no.: <%ordernumber%>}
+ \ifthenelse{\equal{<%customerponumber%>}{}}{}{\newline Your order no.: <%customerponumber%>}
+ \ifthenelse{\equal{<%package%>}{}}{}{\newline Package: <%package%>}
+ \ifthenelse{\equal{<%netweight%>}{}}{}{\newline Net weight: <%netweight%>}
+ \ifthenelse{\equal{<%grossweight%>}{}}{}{\newline Gross weight: <%grossweight%>}
+ & \IfSubStr{<%number%>}{Titel}{}{<%qty%>} & \IfSubStr{<%number%>}{Titel}{}{<%unit%>} & \IfSubStr{<%number%>}{Titel}{}{<%sellprice%>}& \ifthenelse{\equal{<%discountrate%>}{}}{}{<%discountrate%>\%} & \IfSubStr{<%number%>}{Titel}{}{<%linetotal%>}\\
+ <%end number%>
+ \end{tabularx}
+ 
+ \renewcommand{\arraystretch}{1}

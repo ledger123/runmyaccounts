@@ -1,0 +1,90 @@
+%%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
+
+% Typ: Kreditorenrechnung
+% Name: vendor_invoice.tex
+% Sprache: Deutsch
+% Erstellungsdatum: 10. Oktober 2015
+% Mandant: 
+% Version: 
+% Ersteller: 
+% © by Run my Accounts AG
+
+%%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
+
+<%include definitions_packages.tex%>
+
+<%include definitions_settings.tex%>
+
+%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
+\Footer
+
+\newcommand{\DocType}{Rechnung}
+
+\newcommand{\AmountType}{Rechnungsbetrag}
+
+%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+
+<%include content_pagebreak_withamount_withfooter.tex%>
+
+<%include content_vendoraddress.tex%>
+
+\null\vspace{3.2cm}
+
+\textbf{\Large{\DocType}}\\
+Date: <%invdate%><%orddate%><%quodate%>\\
+\ifthenelse{\equal{<%invnumber%>}{}}{}{Facture No: <%invnumber%>\\}
+\ifthenelse{\equal{<%quonumber%>}{}}{}{Offre No: <%quonumber%>\\}
+\ifthenelse{\equal{<%ordnumber%>}{}}{}{No de commande: <%ordnumber%>\\}
+\ifthenelse{\equal{<%ponumber%>}{}}{}{Votre No de commande: <%ponumber%>\\}
+\ifthenelse{\equal{<%customernumber%>}{}}{}{No de client: <%customernumber%>\\}
+\ifthenelse{\equal{<%businessnumber%>}{}}{}{No TVA: <%businessnumber%>\\}
+
+\vspace{1.0cm}
+
+%Rechnungstitel
+\textbf{\ifthenelse{\equal{\DocType }{Rechnung}}{<%invdescription%>}{}\ifthenelse{\equal{\DocType }{Angebot}}{<%quodescription%>}{}\ifthenelse{\equal{\DocType }{Bestellung}}{<%quodescription%>}{}}
+\vspace{0.1cm}
+%}
+
+%Text-Feld 1
+\ifthenelse{\equal{<%shippingpoint%>}{}}{}{<%shippingpoint%>
+\vspace{0.1cm}
+}
+
+%Text-Feld 2
+\ifthenelse{\equal{<%shipvia%>}{}}{}{<%shipvia%>
+\vspace{0.1cm}
+}
+
+%Text-Feld 3
+\ifthenelse{\equal{<%waybill%>}{}}{}{<%waybill%>
+\vspace{0.1cm}
+}
+
+<%include content_articles_withamount.tex%>
+
+<%include content_sum_articles_invoices.tex%>
+
+\parbox{\textwidth}{
+Fällig innerhalb von <%terms%> Tagen bis zum <%duedate%>. 
+}
+
+\vspace{0.5cm}
+
+% Hier haben die Bankenvariablen die Funktion der Lieferanten-Banken-Infos.
+\ifthenelse{\equal{<%iban%>}{}}{}{
+\vspace{0.5cm}
+Bankverbindung: \\
+IBAN: <%iban%>\\
+BIC: <%bic%>\\
+}
+
+\vspace{0.5cm}
+
+\ifthenelse{\equal{<%notes%>}{}}{}{
+<%notes%>
+}
+
+%%%%%%%%%%%%%  END  %%%%%%%%%%%%%
+ 
+\end{document}
