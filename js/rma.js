@@ -45,6 +45,17 @@ $(document).ready(function() {
 	$(document).mousemove( function(e) {
 		window.parent.parent.postMessage('mousemoved' ,'*');
 	});
+
+	let buttons = document.getElementsByTagName("input");
+       for(let ind = 0; ind< buttons.length; ind++) {
+               if(buttons[ind].type.toLowerCase() == 'submit') {
+                       let isDisabled = false;
+                       buttons[ind].addEventListener('click', function() {
+                               buttons[ind].disabled = isDisabled;
+                               isDisabled = true;
+                       });
+               }
+       }
 	
 	/*
 	//Navigation Frame

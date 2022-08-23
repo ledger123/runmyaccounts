@@ -11,6 +11,7 @@ package Form;
 
 use Date::Parse;
 use Time::Piece;
+use DBIx::Simple;
 
 sub new {
 	my $type = shift;
@@ -92,7 +93,7 @@ sub new {
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
 	$self->{version}   = "2.8.33";
-	$self->{dbversion} = "2.8.19";
+	$self->{dbversion} = "2.8.22";
 
 	bless $self, $type;
 
@@ -346,11 +347,17 @@ sub isblank {
 }
 
 sub header {
-	my ( $self, $endsession, $nocookie ) = @_;
+	my ( $self, $endsession, $nocookie, $locale ) = @_;
 
 	return if $self->{header};
 
 	my ( $stylesheet, $javascript, $favicon, $charset );
+
+	my $selectNoEntriesText = 'No Results Found'; # Default select2 message
+
+	if ($locale) {
+		$selectNoEntriesText = $locale->text('No Entries');
+	}
 
 	if ( $ENV{HTTP_USER_AGENT} ) {
 
@@ -391,14 +398,61 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
   <title>$self->{titlebar}</title>
   <meta name="robots" content="noindex,nofollow" />
   $favicon
+
+  <link rel="stylesheet" href="css/select2-4.0.13.min.css" type="text/css"/>
+  <link rel="stylesheet" href="css/jquery-ui-1.12.1.min.css" type="text/css"/>
+
   $stylesheet
+
   $charset
-  <script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.8.6.custom.min.js" type="text/javascript"></script>
+
+  <script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.12.1.min.js" type="text/javascript"></script>
+
+  <script src="js/select2-4.0.13.min.js" type="text/javascript"></script>
+
   <script src="js/rma.js" type="text/javascript"></script>
 |;
 		print q|
 <script>
+$(document).ready(function() {
+	var select2Config = {
+		dropdownAutoWidth : false,
+    	width: 'resolve',
+    	matcher: matchStartStringOnly,
+    	language: {
+       		noResults: function() {
+           		return "|;print qq|$selectNoEntriesText|;print q|";
+       		}
+   		}
+	};
+
+	$('select').select2(select2Config);
+});
+
+function matchStartStringOnly(params, data) {
+  // If there are no search terms, return all of the data
+  if ($.trim(params.term) === '') {
+    return data;
+  }
+
+  // Skip if there is no 'children' property
+  if (typeof data.id === 'undefined') {
+    return null;
+  }
+
+  if (data.id.toUpperCase().indexOf(params.term.toUpperCase()) == 0) {
+    return data;
+  }
+
+  // Return `null` if the term should not be displayed
+  return null;
+}
+
+
+$(document).on('select2:open', () => {
+    document.querySelector('.select2-search__field').focus();
+});
 $(document).ready(function(){
     var str = $("div.redirectmsg").text();
     if ( str.length > 0 ) {
@@ -670,7 +724,7 @@ sub round_amount {
 }
 
 sub parse_template {
-	my ( $self, $myconfig, $userspath, $debuglatex, $noreply, $apikey ) = @_;
+	my ( $self, $myconfig, $tmppath, $debuglatex, $noreply, $apikey ) = @_;
 
 	my ( $chars_per_line, $lines_on_first_page, $lines_on_second_page ) =
 	  ( 0, 0, 0 );
@@ -685,6 +739,7 @@ sub parse_template {
 	my $dbh = $self->dbconnect($myconfig);
 	my ($noreplyemail) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='noreplyemail'");
 	my ($utf8templates) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='utf8templates'");
+	my ($company) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='company'");
 
 	my $query =
 	  "SELECT fldname, fldvalue FROM defaults WHERE fldname LIKE 'latex'";
@@ -722,7 +777,7 @@ sub parse_template {
 	my $fileid  = time;
 	my $tmpfile = $self->{IN};
 	$tmpfile =~ s/\./_$self->{fileid}./ if $self->{fileid};
-	$self->{tmpfile} = "$userspath/${fileid}_${tmpfile}";
+	$self->{tmpfile} = "$tmppath/${fileid}_${tmpfile}";
 
 	if ( $self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email' ) {
 		$out = $self->{OUT};
@@ -755,7 +810,7 @@ sub parse_template {
 			if ( $i == 1 ) {
 				@_ = ();
 				while ( $_ = shift @texform ) {
-					if (/\\end{document}/) {
+					if (/\\end\{document\}/) {
 						push @_, qq|\\newpage\n|;
 						last;
 					}
@@ -766,7 +821,7 @@ sub parse_template {
 
 			if ( $i == 2 ) {
 				while ( $_ = shift @texform ) {
-					last if /\\begin{document}/;
+					last if /\\begin\{document\}/;
 				}
 			}
 
@@ -1011,15 +1066,15 @@ sub parse_template {
 
 		use Cwd;
 		$self->{cwd}    = cwd();
-		$self->{tmpdir} = "$self->{cwd}/$userspath";
+		$self->{tmpdir} = "$self->{cwd}/$tmppath";
 
-		unless ( chdir("$userspath") ) {
+		unless ( chdir("$tmppath") ) {
 			$err = $!;
 			$self->cleanup;
 			$self->error("chdir : $err");
 		}
 
-		$self->{tmpfile} =~ s/$userspath\///g;
+		$self->{tmpfile} =~ s/$tmppath\///g;
 
         if ($utf8templates){
            system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
@@ -1078,7 +1133,7 @@ sub parse_template {
 			}
             $noreply              = $myconfig->{email} if !$noreplyemail; # armaghan 2020-03-31 do not use noreply email if not enabled in defaults
 			$mail->{to}           = qq|$self->{email}|;
-            $mail->{from}         = qq|"$myconfig->{name}" <$noreply>|;
+            $mail->{from}         = qq|"$myconfig->{name} ($company)" <$noreply>|;
             $mail->{'reply-to'}   = qq|"$myconfig->{name}" <$myconfig->{email}>|;
 			$mail->{fileid} = "$fileid.";
 
@@ -1122,7 +1177,7 @@ sub parse_template {
             my $err;
             if ($noreplyemail){
                $mail->{from}         = $noreply;
-               $mail->{fromname}     = $myconfig->{name};
+               $mail->{fromname}     = "$myconfig->{name} ($company)";
                $mail->{replyto}   = $myconfig->{email};
                $mail->{apikey} = $apikey;
 			   $err = $mail->apisend($out);
@@ -1183,6 +1238,25 @@ Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
 
 	}
 
+}
+
+sub string_abbreviate {
+	my ($self, $string, $max_length) = @_;
+
+	if (length($string) > $max_length) {
+		$string = substr($string, 0, $max_length - 3);
+		$string = $string . "...";
+	}
+
+	return $string;
+}
+
+sub string_replace {
+  	my ($self, $string, $search_string, $replace_string) = @_;
+  	
+	$string =~ s/$search_string/$replace_string/ig;
+	
+	return $string;
 }
 
 sub format_line {
@@ -2802,7 +2876,7 @@ sub create_links {
 		c.name AS $vc, c.${vc}number, a.department_id,
 		d.description AS department,
 		a.amount AS oldinvtotal, a.paid AS oldtotalpaid,
-		a.employee_id, e.name AS employee, c.language_code,
+		a.employee_id, e.name AS employee, a.language_code,
 		a.ponumber, a.approved,
 		br.id AS batchid, br.description AS batchdescription,
 		a.description, a.onhold, a.exchangerate, a.dcn,
@@ -4245,6 +4319,38 @@ sub save_form {
 		$self->info('Saved');
 	}
 }
+
+
+sub get_lastused {
+	my ( $self, $myconfig, $report, $default_checked ) = @_;
+	my $dbh = $self->dbconnect($myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+    my $cols = $dbs->query("SELECT cols FROM lastused WHERE report = ? AND login = ? LIMIT 1", $report, $self->{login})->list;
+    $cols = $default_checked if !$cols;
+    my @colslist = split /,/, $cols;
+    for (@colslist){ $self->{"l_$_"} = 'checked' };
+}
+
+
+sub save_lastused {
+	my ( $self, $myconfig, $report, $cols, $cols2 ) = @_;
+	my $dbh = $self->dbconnect($myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    my $colslist;
+
+    for (@$cols) { $colslist .= "$_," if $self->{"l_$_"} }
+    for (@$cols2) { $colslist .= "$_," if $self->{"l_$_"} }
+    chop $report_columns;
+
+    my $exists = $dbs->query( "SELECT 1 FROM lastused WHERE report=? AND login = ? LIMIT 1", $report, $self->{login} )->list;
+    if ($exists) {
+        $dbs->query( "UPDATE lastused SET cols = ? WHERE report=? AND login = ?", $colslist, $report, $self->{login} );
+    } else {
+        $dbs->query( "INSERT INTO lastused (report, cols, login) VALUES (?, ?, ?)", $report, $colslist, $self->{login} );
+    }
+}
+
 
 package Locale;
 
