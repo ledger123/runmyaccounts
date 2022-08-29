@@ -2221,7 +2221,7 @@ sub add_shipto {
 
 	my $shipto;
 	foreach my $item (
-		qw(name address1 address2 city state zipcode country contact phone fax email)
+		qw(name addressline additional_addressline place state zip country contact phone fax email)
 	  )
 	{
 		if ( $self->{"shipto$item"} ne "" ) {
@@ -2230,16 +2230,16 @@ sub add_shipto {
 	}
 
 	if ($shipto) {
-		my $query = qq|INSERT INTO shipto (trans_id, shiptoname, shiptoaddress1,
-                   shiptoaddress2, shiptocity, shiptostate,
-		   shiptozipcode, shiptocountry, shiptocontact,
+		my $query = qq|INSERT INTO shipto (trans_id, shiptoname, shiptoaddressline,
+                   shiptoadditional_addressline, shiptoplace, shiptostate,
+		   shiptozip, shiptocountry, shiptocontact,
 		   shiptophone, shiptofax, shiptoemail) VALUES ($id, |
 		  . $dbh->quote( $self->{shiptoname} ) . qq|, |
-		  . $dbh->quote( $self->{shiptoaddress1} ) . qq|, |
-		  . $dbh->quote( $self->{shiptoaddress2} ) . qq|, |
-		  . $dbh->quote( $self->{shiptocity} ) . qq|, |
+		  . $dbh->quote( $self->{shiptoaddressline} ) . qq|, |
+		  . $dbh->quote( $self->{shiptoadditional_addressline} ) . qq|, |
+		  . $dbh->quote( $self->{shiptoplace} ) . qq|, |
 		  . $dbh->quote( $self->{shiptostate} ) . qq|, |
-		  . $dbh->quote( $self->{shiptozipcode} ) . qq|, |
+		  . $dbh->quote( $self->{shiptozip} ) . qq|, |
 		  . $dbh->quote( $self->{shiptocountry} ) . qq|, |
 		  . $dbh->quote( $self->{shiptocontact} ) . qq|, |
 		  . $dbh->quote( $self->{shiptophone} ) . qq|, |
@@ -2298,8 +2298,8 @@ sub get_name {
 	}
 
 	my $query = qq|SELECT ct.*,
-                 ad.address1, ad.address2, ad.city, ad.state,
-		 ad.zipcode, ad.country
+                 ad.addressline, ad.additional_addressline, ad.place, ad.state,
+		 ad.zip, ad.country
                  FROM $table ct
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 WHERE $where
@@ -2447,7 +2447,7 @@ sub all_vc {
 		# ISNA: 00021 tekki
 		$query =
 		  qq|SELECT vc.id, vc.name, c.firstname, c.lastname, c.typeofcontact,
-		  ad.city, ad.address1, ${vc}number
+		  ad.place, ad.addressline, ${vc}number
 		FROM $vc vc
 		LEFT JOIN contact c
 		  ON vc.id=c.trans_id AND c.typeofcontact='company'
@@ -2456,7 +2456,7 @@ sub all_vc {
 		$joinarap
 		WHERE $where
 		UNION SELECT vc.id, vc.name, c.firstname, c.lastname, c.typeofcontact,
-		  ad.city, ad.address1, ${vc}number
+		  ad.place, ad.addressline, ${vc}number
 		FROM $vc vc
 		LEFT JOIN contact c
 		  ON vc.id=c.trans_id AND c.typeofcontact='company' 
@@ -2475,10 +2475,10 @@ sub all_vc {
 			# ISNA: 00021 tekki
 			my $name_ext;
 			if ( $ref->{typeofcontact} eq 'company' ) {
-				$name_ext = "$ref->{lastname} $ref->{firstname}, $ref->{city}";
+				$name_ext = "$ref->{lastname} $ref->{firstname}, $ref->{place}";
 			}
 			else {
-				$name_ext = "$ref->{city}, $ref->{address1}";
+				$name_ext = "$ref->{place}, $ref->{addressline}";
 			}
 			$name_ext =~ s/^\s+//;
 			$name_ext =~ s/\s+$//;

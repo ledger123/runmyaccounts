@@ -281,7 +281,7 @@ sub form_header {
 		<td colspan=3>
 		  <table>
 		    <tr>
-		      <td colspan=4>$form->{city}, $form->{state} $form->{country}</td>
+		      <td colspan=4>$form->{place}, $form->{state} $form->{country}</td>
 		    </tr>
 		    <tr>
 		      <th align=right nowrap>|.$locale->text('Credit Limit').qq|</th>
@@ -325,7 +325,7 @@ sub form_header {
   </tr>
 |;
 
-  $form->hide_form(qw(city state country taxaccounts duedate invnumber transdate defaultcurrency));
+  $form->hide_form(qw(place state country taxaccounts duedate invnumber transdate defaultcurrency));
 
   foreach $accno (split / /, $form->{taxaccounts}) { $form->hide_form(map {"${accno}_$_" } qw(rate description taxnumber)) }
 

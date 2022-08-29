@@ -45,9 +45,9 @@ sub search_employee {
   push @a, qq|<input name="l_name" type=checkbox class=checkbox value=Y checked> |.$locale->text('Employee Name');
   push @a, qq|<input name="l_employeenumber" type=checkbox class=checkbox value=Y checked> |.$locale->text('Employee Number');
   push @a, qq|<input name="l_address" type=checkbox class=checkbox value=Y> |.$locale->text('Address');
-  push @a, qq|<input name="l_city" type=checkbox class=checkbox value=Y> |.$locale->text('City');
+  push @a, qq|<input name="l_place" type=checkbox class=checkbox value=Y> |.$locale->text('City');
   push @a, qq|<input name="l_state" type=checkbox class=checkbox value=Y> |.$locale->text('State/Province');
-  push @a, qq|<input name="l_zipcode" type=checkbox class=checkbox value=Y> |.$locale->text('Zip/Postal Code');
+  push @a, qq|<input name="l_zip" type=checkbox class=checkbox value=Y> |.$locale->text('Zip/Postal Code');
   push @a, qq|<input name="l_country" type=checkbox class=checkbox value=Y> |.$locale->text('Country');
   push @a, qq|<input name="l_workphone" type=checkbox class=checkbox value=Y checked> |.$locale->text('Work Phone');
   push @a, qq|<input name="l_workfax" type=checkbox class=checkbox value=Y checked> |.$locale->text('Work Fax');
@@ -170,7 +170,7 @@ sub list_employees {
 
   $callback = "$form->{script}?action=list_employees&direction=$form->{direction}&oldsort=$form->{oldsort}&db=$form->{db}&path=$form->{path}&login=$form->{login}&status=$form->{status}";
   
-  @columns = $form->sort_columns(qw(id employeenumber name address city state zipcode country workphone workfax workmobile homephone email startdate enddate ssn dob iban bic sales role manager login notes));
+  @columns = $form->sort_columns(qw(id employeenumber name address place state zip country workphone workfax workmobile homephone email startdate enddate ssn dob iban bic sales role manager login notes));
   unshift @columns, "ndx";
 
   foreach $item (@columns) {
@@ -244,9 +244,9 @@ sub list_employees {
   $column_header{name} = qq|<th><a class=listheading href=$href&sort=name>|.$locale->text('Name').qq|</a></th>|;
   $column_header{manager} = qq|<th><a class=listheading href=$href&sort=manager>|.$locale->text('Manager').qq|</a></th>|;
   $column_header{address} = qq|<th class=listheading>|.$locale->text('Address').qq|</a></th>|;
-  $column_header{city} = qq|<th><a class=listheading href=$href&sort=city>|.$locale->text('City').qq|</a></th>|;
+  $column_header{place} = qq|<th><a class=listheading href=$href&sort=place>|.$locale->text('City').qq|</a></th>|;
   $column_header{state} = qq|<th><a class=listheading href=$href&sort=state>|.$locale->text('State/Province').qq|</a></th>|;
-  $column_header{zipcode} = qq|<th><a class=listheading href=$href&sort=zipcode>|.$locale->text('Zip/Postal Code').qq|</a></th>|;
+  $column_header{zip} = qq|<th><a class=listheading href=$href&sort=zip>|.$locale->text('Zip/Postal Code').qq|</a></th>|;
   $column_header{country} = qq|<th><a class=listheading href=$href&sort=country>|.$locale->text('Country').qq|</a></th>|;
   $column_header{workphone} = qq|<th><a class=listheading href=$href&sort=workphone>|.$locale->text('Work Phone').qq|</a></th>|;
   $column_header{workfax} = qq|<th><a class=listheading href=$href&sort=workfax>|.$locale->text('Work Fax').qq|</a></th>|;
@@ -305,7 +305,7 @@ sub list_employees {
     
     $column_data{sales} = ($ref->{sales}) ? "<td>x</td>" : "<td>&nbsp;</td>";
     $column_data{role} = qq|<td>$role{"$ref->{role}"}&nbsp;</td>|;
-    $column_date{address} = qq|$ref->{address1} $ref->{address2}|;
+    $column_date{address} = qq|$ref->{addressline} $ref->{additional_addressline}|;
 
     $column_data{name} = "<td><a href=$form->{script}?action=edit&db=employee&id=$ref->{id}&path=$form->{path}&login=$form->{login}&status=$form->{status}&callback=$callback>$ref->{name}&nbsp;</a></td>";
 
@@ -513,15 +513,15 @@ sub employee_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Address').qq|</th>
-		<td><input name=address1 size=35 maxlength=32 value="|.$form->quote($form->{address1}).qq|"></td>
+		<td><input name=addressline size=35 maxlength=32 value="|.$form->quote($form->{addressline}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th></th>
-		<td><input name=address2 size=35 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+		<td><input name=additional_addressline size=35 maxlength=32 value="|.$form->quote($form->{additional_addressline}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
-		<td><input name=city size=35 maxlength=32 value="|.$form->quote($form->{city}).qq|"></td>
+		<td><input name=place size=35 maxlength=32 value="|.$form->quote($form->{place}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('State/Province').qq|</th>
@@ -529,7 +529,7 @@ sub employee_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-		<td><input name=zipcode size=10 maxlength=10 value="|.$form->quote($form->{zipcode}).qq|"></td>
+		<td><input name=zip size=10 maxlength=10 value="|.$form->quote($form->{zip}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>

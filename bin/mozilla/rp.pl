@@ -3225,16 +3225,16 @@ sub do_print_reminder {
 	);
 
 	@a =
-	  qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
+	  qw(id invnumber name addressline additional_addressline place state zip country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";
 	push @a, 'email' if !$form->{media} eq 'email';
 	push @a,
 	  map { "shipto$_" }
-	  qw(name address1 address2 city state zipcode country contact phone fax email);
+	  qw(name addressline additional_addressline place state zip country contact phone fax email);
 	push @a,
 	  map { "bank$_" }
-	  qw(name address1 address2 city state zipcode country bic);
+	  qw(name addressline additional_addressline place state zip country bic);
 
 	my $dbh = $form->dbconnect( \%myconfig );
 
@@ -3246,9 +3246,9 @@ sub do_print_reminder {
 		if ( $form->{"ndx_$ref->{id}"} ) {
 
 			# default shipto to main address if shipto address is empty.
-			if ( !$ref->{shiptoaddress1} ) {
+			if ( !$ref->{shiptoaddressline} ) {
 				for (
-					qw(name address1 address2 city state zipcode country contact phone fax email)
+					qw(name addressline additional_addressline place state zip country contact phone fax email)
 				  )
 				{
 					$ref->{"shipto$_"} = $ref->{$_};
@@ -3380,13 +3380,13 @@ sub do_print_statement {
 	);
 
 	@a =
-	  qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname);
+	  qw(name addressline additional_addressline place state zip country contact typeofcontact salutation firstname lastname);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";
 	push @a, 'email' if !$form->{media} eq 'email';
 	push @a,
 	  map { "shipto$_" }
-	  qw(name address1 address2 city state zipcode country contact phone fax email);
+	  qw(name addressline additional_addressline place state zip country contact phone fax email);
 
 	$i = 0;
 	while ( @{ $form->{AG} } ) {

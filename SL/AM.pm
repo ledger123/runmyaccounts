@@ -347,7 +347,7 @@ sub warehouses {
 
   $form->sort_order();
   my $query = qq|SELECT w.id, w.description,
-                 a.address1, a.address2, a.city, a.state, a.zipcode, a.country
+                 a.addressline, a.additional_addressline, a.place, a.state, a.zip, a.country
                  FROM warehouse w
 		 JOIN address a ON (a.trans_id = w.id)
 		 ORDER BY 2 $form->{direction}|;
@@ -374,8 +374,8 @@ sub get_warehouse {
 
   $form->{id} *= 1;
 
-  my $query = qq|SELECT w.description, a.address1, a.address2, a.city,
-                 a.state, a.zipcode, a.country
+  my $query = qq|SELECT w.description, a.addressline, a.additional_addressline, a.place,
+                 a.state, a.zip, a.country
                  FROM warehouse w
 		 JOIN address a ON (a.trans_id = w.id)
 	         WHERE w.id = $form->{id}|;
@@ -438,11 +438,11 @@ sub save_warehouse {
   $dbh->do($query) || $form->dberror($query);
 
   $query = qq|UPDATE address SET
-              address1 = |.$dbh->quote($form->{address1}).qq|,
-              address2 = |.$dbh->quote($form->{address2}).qq|,
-              city = |.$dbh->quote($form->{city}).qq|,
+              addressline = |.$dbh->quote($form->{addressline}).qq|,
+              additional_addressline = |.$dbh->quote($form->{additional_addressline}).qq|,
+              place = |.$dbh->quote($form->{place}).qq|,
               state = |.$dbh->quote($form->{state}).qq|,
-              zipcode = |.$dbh->quote($form->{zipcode}).qq|,
+              zip = |.$dbh->quote($form->{zip}).qq|,
               country = |.$dbh->quote($form->{country}).qq|
 	      WHERE trans_id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
@@ -1917,8 +1917,8 @@ sub bank_accounts {
   my $query = qq|SELECT c.id, c.accno, c.description,
                  bk.name, bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc,
                  bk.qriban, bk.strdbkginf, bk.invdescriptionqr,
-		 ad.address1, ad.address2, ad.city,
-                 ad.state, ad.zipcode, ad.country,
+		 ad.addressline, ad.additional_addressline, ad.place,
+                 ad.state, ad.zip, ad.country,
 		 l.description AS translation
                  FROM chart c
 		 LEFT JOIN bank bk ON (bk.id = c.id)
@@ -1934,7 +1934,7 @@ sub bank_accounts {
 
   while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
     $ref->{address} = "";
-    for (qw(address1 address2 city state zipcode country)) {
+    for (qw(addressline additional_addressline place state zip country)) {
       $ref->{address} .= "$ref->{$_}\n" if $ref->{$_};
     }
     chop $ref->{address};
@@ -1961,8 +1961,8 @@ sub get_bank {
   $query = qq|SELECT c.accno, c.description,
               bk.name, bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc,
               bk.qriban, bk.strdbkginf, bk.invdescriptionqr,
-	      ad.address1, ad.address2, ad.city,
-              ad.state, ad.zipcode, ad.country,
+	      ad.addressline, ad.additional_addressline, ad.place,
+              ad.state, ad.zip, ad.country,
 	      l.description AS translation
 	      FROM chart c
 	      LEFT JOIN bank bk ON (c.id = bk.id)
@@ -1996,7 +1996,7 @@ sub save_bank {
   my ($id) = $dbh->selectrow_array($query);
 
   my $ok;
-  for (qw(name iban bic address1 address2 city state zipcode country membernumber rvc dcn qriban strdbkginf invdescriptionqr)) {
+  for (qw(name iban bic addressline additional_addressline place state zip country membernumber rvc dcn qriban strdbkginf invdescriptionqr)) {
     if ($form->{$_}) {
       $ok = 1;
       last;
@@ -2042,11 +2042,11 @@ sub save_bank {
     }
 
     $query = qq|UPDATE address SET
-		address1 = |.$dbh->quote($form->{address1}).qq|,
-		address2 = |.$dbh->quote($form->{address2}).qq|,
-		city = |.$dbh->quote($form->{city}).qq|,
+		addressline = |.$dbh->quote($form->{addressline}).qq|,
+		additional_addressline = |.$dbh->quote($form->{additional_addressline}).qq|,
+		place = |.$dbh->quote($form->{place}).qq|,
 		state = |.$dbh->quote($form->{state}).qq|,
-		zipcode = |.$dbh->quote($form->{zipcode}).qq|,
+		zip = |.$dbh->quote($form->{zip}).qq|,
 		country = |.$dbh->quote($form->{country}).qq|
 		WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);

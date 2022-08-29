@@ -2275,15 +2275,15 @@ sub defaults {
 	</tr>
 	<tr valign=top>
 	  <th align=right>&nbsp;</th>
-	  <td><input name=address1 size=35 value="$form->{address1}"></td>
+	  <td><input name=addressline size=35 value="$form->{addressline}"></td>
 	</tr>
 	<tr valign=top>
 	  <th align=right>&nbsp;</th>
-	  <td><input name=address2 size=35 value="$form->{address2}"></td>
+	  <td><input name=additional_addressline size=35 value="$form->{additional_addressline}"></td>
 	</tr>
 	<tr valign=top>
 	  <th align=right>|.$locale->text('City').qq|</th>
-	  <td><input name=city size=35 value="$form->{city}"></td>
+	  <td><input name=place size=35 value="$form->{place}"></td>
 	</tr>
 	<tr valign=top>
 	  <th align=right>|.$locale->text('State').qq|</th>
@@ -2475,7 +2475,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail utf8templates showtaxper namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address addressline additional_addressline place state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail utf8templates showtaxper namesbynumber typeofcontact";
 
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 
@@ -2987,7 +2987,7 @@ sub list_warehouse {
 |;
 
    $column_data{description} = qq|<td><a href=$form->{script}?action=edit_warehouse&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{description}</a></td>|;
-   $column_data{address} = qq|<td>$ref->{address1} $ref->{address2} $ref->{city} $ref->{state} $ref->{zipcode} $ref->{country}</td>|;
+   $column_data{address} = qq|<td>$ref->{addressline} $ref->{additional_addressline} $ref->{place} $ref->{state} $ref->{zip} $ref->{country}</td>|;
 
    for (@column_index) { print "$column_data{$_}\n" }
 
@@ -3067,15 +3067,15 @@ sub warehouse_header {
   </tr>
   <tr>
     <th align=right nowrap>|.$locale->text('Address').qq|</th>
-    <td><input name=address1 size=35 maxlength=32 value="|.$form->quote($form->{address1}).qq|"></td>
+    <td><input name=addressline size=35 maxlength=32 value="|.$form->quote($form->{addressline}).qq|"></td>
   </tr>
   <tr>
     <th></th>
-    <td><input name=address2 size=35 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+    <td><input name=additional_addressline size=35 maxlength=32 value="|.$form->quote($form->{additional_addressline}).qq|"></td>
   </tr>
   <tr>
     <th align=right nowrap>|.$locale->text('City').qq|</th>
-    <td><input name=city size=35 maxlength=32 value="|.$form->quote($form->{city}).qq|"></td>
+    <td><input name=place size=35 maxlength=32 value="|.$form->quote($form->{place}).qq|"></td>
   </tr>
   <tr>
     <th align=right nowrap>|.$locale->text('State/Province').qq|</th>
@@ -3083,7 +3083,7 @@ sub warehouse_header {
   </tr>
   <tr>
     <th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-    <td><input name=zipcode size=10 maxlength=10 value="|.$form->quote($form->{zipcode}).qq|"></td>
+    <td><input name=zip size=10 maxlength=10 value="|.$form->quote($form->{zip}).qq|"></td>
   </tr>
   <tr>
     <th align=right nowrap>|.$locale->text('Country').qq|</th>
@@ -4254,15 +4254,15 @@ sub bank_header {
 	</tr>
 	<tr>
 	  <th align=right nowrap>|.$locale->text('Address').qq|</th>
-	  <td><input name=address1 size=32 maxlength=32 value="|.$form->quote($form->{address1}).qq|"></td>
+	  <td><input name=addressline size=32 maxlength=32 value="|.$form->quote($form->{addressline}).qq|"></td>
 	</tr>
 	<tr>
 	  <th></th>
-	  <td><input name=address2 size=32 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+	  <td><input name=additional_addressline size=32 maxlength=32 value="|.$form->quote($form->{additional_addressline}).qq|"></td>
 	</tr>
 	<tr>
 	  <th align=right nowrap>|.$locale->text('City').qq|</th>
-	  <td><input name=city size=32 maxlength=32 value="|.$form->quote($form->{city}).qq|"></td>
+	  <td><input name=place size=32 maxlength=32 value="|.$form->quote($form->{place}).qq|"></td>
 	</tr>
 	<tr>
 	  <th align=right nowrap>|.$locale->text('State/Province').qq|</th>
@@ -4270,7 +4270,7 @@ sub bank_header {
 	</tr>
 	<tr>
 	  <th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-	  <td><input name=zipcode size=11 maxlength=10 value="|.$form->quote($form->{zipcode}).qq|"></td>
+	  <td><input name=zip size=11 maxlength=10 value="|.$form->quote($form->{zip}).qq|"></td>
 	</tr>
 	<tr>
 	  <th align=right nowrap>|.$locale->text('Country').qq|</th>

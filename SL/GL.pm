@@ -734,8 +734,8 @@ sub transactions {
 		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
-		 '' AS address1, '' AS address2, '' AS city,
-		 '' AS zipcode, '' AS country, c.description AS accdescription,
+		 '' AS addressline, '' AS additional_addressline, '' AS place,
+		 '' AS zip, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl g
@@ -751,8 +751,8 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
-		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country, c.description AS accdescription,
+		 ad.addressline, ad.additional_addressline, ad.place,
+		 ad.zip, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ar a
@@ -771,8 +771,8 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
-		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country, c.description AS accdescription,
+		 ad.addressline, ad.additional_addressline, ad.place,
+		 ad.zip, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap a
@@ -798,8 +798,8 @@ sub transactions {
 		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
-		 '' AS address1, '' AS address2, '' AS city,
-		 '' AS zipcode, '' AS country, c.description AS accdescription,
+		 '' AS addressline, '' AS additional_addressline, '' AS place,
+		 '' AS zip, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl g
@@ -815,8 +815,8 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
-		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country, c.description AS accdescription,
+		 ad.addressline, ad.additional_addressline, ad.place,
+		 ad.zip, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ar a
@@ -835,8 +835,8 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
-		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country, c.description AS accdescription,
+		 ad.addressline, ad.additional_addressline, ad.place,
+		 ad.zip, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap a
@@ -861,8 +861,8 @@ sub transactions {
 		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
-		 '' AS address1, '' AS address2, '' AS city,
-		 '' AS zipcode, '' AS country, c.description AS accdescription,
+		 '' AS addressline, '' AS additional_addressline, '' AS place,
+		 '' AS zip, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
                  FROM gl_log_deleted g
@@ -878,8 +878,8 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
-		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country, c.description AS accdescription,
+		 ad.addressline, ad.additional_addressline, ad.place,
+		 ad.zip, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ar_log_deleted a
@@ -898,8 +898,8 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
-		 ad.address1, ad.address2, ad.city,
-		 ad.zipcode, ad.country, c.description AS accdescription,
+		 ad.addressline, ad.additional_addressline, ad.place,
+		 ad.zip, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
 		 FROM ap_log_deleted a
@@ -956,7 +956,7 @@ sub transactions {
       $ref->{debit} = 0;
     }
 
-    for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
+    for (qw(addressline additional_addressline place zip country)) { $ref->{address} .= "$ref->{$_} " }
 
     push @{ $form->{GL} }, $ref;
     

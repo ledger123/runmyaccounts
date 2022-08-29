@@ -198,7 +198,7 @@ sub get_openvc {
 
   # build selection list
   $query = qq|SELECT vc.*,
-              ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
+              ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip,
 	      ad.country, a.amount, a.paid,
  	      a.exchangerate,
 	      l.description AS translation

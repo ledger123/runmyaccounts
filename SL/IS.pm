@@ -39,13 +39,13 @@ sub invoice_details {
   $form->{xml_invdate} = $form->datetonum($myconfig, $form->{transdate});
   $form->{qr_invdate} = $form->format_date('yyyy-mm-dd', $form->{xml_invdate});
 
-  my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
+  my %defaults = $form->get_defaults($dbh, \@{[qw(addressline additional_addressline place state zip country)]});
 
   my ($utf8templates) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='utf8templates'");
 
-  $form->{companyaddress1} = $defaults{address1};
-  $form->{companyaddress2} = $defaults{address2};
-  $form->{companycity} = $defaults{city};
+  $form->{companyaddressline} = $defaults{addressline};
+  $form->{companyadditional_addressline} = $defaults{additional_addressline};
+  $form->{companyplace} = $defaults{place};
   $form->{companystate} = $defaults{state};
   $form->{companyzip} = $defaults{zip};
   $form->{companycountry} = $defaults{country};
@@ -684,7 +684,7 @@ sub invoice_details {
 
   $dbh->disconnect;
 
-  my @oldvars = qw(company companyaddress1 companyzip companycity name address1 zipcode city businessnumber invdate invdescriptionqr qriban strdbkginf);
+  my @oldvars = qw(company companyaddressline companyzip companyplace name addressline zip place businessnumber invdate invdescriptionqr qriban strdbkginf);
 
   # conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
   $form->{invnumber} = substr($form->{invnumber}, 0, 24);
@@ -705,26 +705,26 @@ sub invoice_details {
   $form->{companyqr} = substr($form->{company},0,70);
   $form->{companyqr} = $form->string_replace($form->{companyqr}, "%", "");
   
-  $form->{companyaddress1qr} = substr($form->{companyaddress1},0,70);
-  $form->{companyaddress1qr} = $form->string_replace($form->{companyaddress1qr}, "%", "");
+  $form->{companyaddresslineqr} = substr($form->{companyaddressline},0,70);
+  $form->{companyaddresslineqr} = $form->string_replace($form->{companyaddresslineqr}, "%", "");
 
   $form->{companyzipqr} = substr($form->{companyzip},0,16);
   $form->{companyzipqr} = $form->string_replace($form->{companyzipqr}, "%", "");
 
-  $form->{companycityqr} = substr($form->{companycity},0,35);
-  $form->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
+  $form->{companyplaceqr} = substr($form->{companyplace},0,35);
+  $form->{companyplaceqr} = $form->string_replace($form->{companyplaceqr}, "%", "");
 
   $form->{nameqr} = substr($form->{name},0,70);
   $form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
 
-  $form->{address1qr} = substr($form->{address1},0,70);
-  $form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
+  $form->{addresslineqr} = substr($form->{addressline},0,70);
+  $form->{addresslineqr} = $form->string_replace($form->{addresslineqr}, "%", "");
 
-  $form->{zipcodeqr}  = substr($form->{zipcode},0,16);
-  $form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
+  $form->{zipqr}  = substr($form->{zip},0,16);
+  $form->{zipqr} = $form->string_replace($form->{zipqr}, "%", "");
 
-  $form->{cityqr} = substr($form->{city},0,35);
-  $form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
+  $form->{placeqr} = substr($form->{place},0,35);
+  $form->{placeqr} = $form->string_replace($form->{placeqr}, "%", "");
 
   my @nums = $form->{businessnumber} =~ /(\d+)/g;
   for (@nums) { $form->{businessnumberqr} .= $_ };

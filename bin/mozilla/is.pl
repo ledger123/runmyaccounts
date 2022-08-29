@@ -511,7 +511,7 @@ sub form_header {
 		<td colspan=3>
 		  <table>
 		    <tr>
-		      <td colspan=4>$form->{city} $form->{state} $form->{country}</td>
+		      <td colspan=4>$form->{place} $form->{state} $form->{country}</td>
 		    </tr>
 		    <tr>
 		      <th align=right nowrap>|.$locale->text('Credit Limit').qq|</th>
@@ -593,8 +593,8 @@ sub form_header {
 </tr>
 |;
 
-  $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
-  $form->hide_form(qw(city state country message email subject cc bcc taxaccounts dcn));
+  $form->hide_form(map { "shipto$_" } qw(name addressline additional_addressline place state zip country contact phone fax email));
+  $form->hide_form(qw(place state country message email subject cc bcc taxaccounts dcn));
   
   foreach $accno (split / /, $form->{taxaccounts}) { $form->hide_form(map { "${accno}_$_" } qw(rate description taxnumber)) }
 

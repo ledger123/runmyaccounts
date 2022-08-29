@@ -598,7 +598,7 @@ sub search_name {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
-		<td><input name=city size=32></td>
+		<td><input name=place size=32></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('State/Province').qq|</th>
@@ -606,7 +606,7 @@ sub search_name {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-		<td><input name=zipcode size=10></td>
+		<td><input name=zip size=10></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
@@ -681,7 +681,7 @@ sub list_names {
   @columns = (id, name, typeofcontact, "$form->{db}number");
   
   if ($form->{l_address}) {
-    for (address1, address2, city, state, zipcode, country) {
+    for (addressline, additional_addressline, place, state, zip, country) {
       $form->{"l_$_"} = "Y";
       push @columns, $_;
     }
@@ -717,7 +717,7 @@ sub list_names {
              business, dispatch, pricegroup, language, curr, bankname);
   
   if ($form->{l_bankaddress}) {
-    for (bankaddress1, bankaddress2, bankcity, bankstate, bankzipcode, bankcountry) {
+    for (bankaddressline, bankadditional_addressline, bankplace, bankstate, bankzip, bankcountry) {
       $form->{"l_$_"} = "Y";
       push @columns, $_;
     }
@@ -796,20 +796,20 @@ sub list_names {
     $href .= "&address=".$form->escape($form->{address});
     $option .= "\n<br>".$locale->text('Address')." : $form->{address}";
   }
-  if ($form->{city}) {
-    $callback .= "&city=".$form->escape($form->{city},1);
-    $href .= "&city=".$form->escape($form->{city});
-    $option .= "\n<br>".$locale->text('City')." : $form->{city}";
+  if ($form->{place}) {
+    $callback .= "&place=".$form->escape($form->{place},1);
+    $href .= "&place=".$form->escape($form->{place});
+    $option .= "\n<br>".$locale->text('City')." : $form->{place}";
   }
   if ($form->{state}) {
     $callback .= "&state=".$form->escape($form->{state},1);
     $href .= "&state=".$form->escape($form->{state});
     $option .= "\n<br>".$locale->text('State')." : $form->{state}";
   }
-  if ($form->{zipcode}) {
-    $callback .= "&zipcode=".$form->escape($form->{zipcode},1);
-    $href .= "&zipcode=".$form->escape($form->{zipcode});
-    $option .= "\n<br>".$locale->text('Zip/Postal Code')." : $form->{zipcode}";
+  if ($form->{zip}) {
+    $callback .= "&zip=".$form->escape($form->{zip},1);
+    $href .= "&zip=".$form->escape($form->{zip});
+    $option .= "\n<br>".$locale->text('Zip/Postal Code')." : $form->{zip}";
   }
   if ($form->{country}) {
     $callback .= "&country=".$form->escape($form->{country},1);
@@ -908,11 +908,11 @@ sub list_names {
   $column_header{typeofcontact} = qq|<th><a class=listheading href=$href&sort=typeofcontact>|.$locale->text('Type').qq|</a></th>|;
   $column_header{"$form->{db}number"} = qq|<th><a class=listheading href=$href&sort=$form->{db}number>$vcnumber</a></th>|;
   $column_header{name} = qq|<th><a class=listheading href=$href&sort=name>$vcname</a></th>|;
-  $column_header{address1} = qq|<th class=listheading>|.$locale->text('Address').qq|</th>|;
-  $column_header{address2} = qq|<th class=listheading>&nbsp;</th>|;
-  $column_header{city} = qq|<th><a class=listheading href=$href&sort=city>|.$locale->text('City').qq|</a></th>|;
+  $column_header{addressline} = qq|<th class=listheading>|.$locale->text('Address').qq|</th>|;
+  $column_header{additional_addressline} = qq|<th class=listheading>&nbsp;</th>|;
+  $column_header{place} = qq|<th><a class=listheading href=$href&sort=place>|.$locale->text('City').qq|</a></th>|;
   $column_header{state} = qq|<th><a class=listheading href=$href&sort=state>|.$locale->text('State/Province').qq|</a></th>|;
-  $column_header{zipcode} = qq|<th><a class=listheading href=$href&sort=zipcode>|.$locale->text('Zip/Postal Code').qq|</a></th>|;
+  $column_header{zip} = qq|<th><a class=listheading href=$href&sort=zip>|.$locale->text('Zip/Postal Code').qq|</a></th>|;
   $column_header{country} = qq|<th><a class=listheading href=$href&sort=country>|.$locale->text('Country').qq|</a></th>|;
   $column_header{salutation} = qq|<th>|.$locale->text('Salutation').qq|</th>|;
   $column_header{firstname} = qq|<th>&nbsp;</th>|;
@@ -949,11 +949,11 @@ sub list_names {
 
   $column_header{bank} = qq|<th class=listheading>|.$locale->text('Bank').qq|</th>|;
   $column_header{bankname} = qq|<th class=listheading>|.$locale->text('Bank').qq|</th>|;
-  $column_header{bankaddress1} = qq|<th class=listheading>|.$locale->text('Address').qq|</th>|;
-  $column_header{bankaddress2} = qq|<th class=listheading>&nbsp;</th>|;
-  $column_header{bankcity} = qq|<th class=listheading>|.$locale->text('City').qq|</th>|;
+  $column_header{bankaddressline} = qq|<th class=listheading>|.$locale->text('Address').qq|</th>|;
+  $column_header{bankadditional_addressline} = qq|<th class=listheading>&nbsp;</th>|;
+  $column_header{bankplace} = qq|<th class=listheading>|.$locale->text('City').qq|</th>|;
   $column_header{bankstate} = qq|<th class=listheading>|.$locale->text('State/Province').qq|</th>|;
-  $column_header{bankzipcode} = qq|<th class=listheading>|.$locale->text('Zip/Postal Code').qq|</th>|;
+  $column_header{bankzip} = qq|<th class=listheading>|.$locale->text('Zip/Postal Code').qq|</th>|;
   $column_header{bankcountry} = qq|<th class=listheading>|.$locale->text('Country').qq|</th>|;
   $column_header{iban} = qq|<th class=listheading>|.$locale->text('IBAN').qq|</th>|;
   $column_header{bic} = qq|<th class=listheading>|.$locale->text('BIC').qq|</th>|;
@@ -1956,24 +1956,32 @@ sub form_header {
 	      $name
 	      
 	      <tr>
-		<th align=right nowrap>|.$locale->text('Address').qq|</th>
-		<td><input name=address1 size=32 maxlength=64 value="|.$form->quote($form->{address1}).qq|"></td>
+		<th align=right nowrap>|.$locale->text('Address Line').qq|</th>
+		<td><input name=addressline size=32 maxlength=64 value="|.$form->quote($form->{addressline}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th></th>
-		<td><input name=address2 size=32 maxlength=64 value="|.$form->quote($form->{address2}).qq|"></td>
+		<td><input name=additional_addressline size=32 maxlength=64 value="|.$form->quote($form->{additional_addressline}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
-		<td><input name=city size=32 maxlength=32 value="|.$form->quote($form->{city}).qq|"></td>
+		<td><input name=place size=32 maxlength=32 value="|.$form->quote($form->{place}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('State/Province').qq|</th>
 		<td><input name=state size=32 maxlength=32 value="|.$form->quote($form->{state}).qq|"></td>
 	      </tr>
 	      <tr>
-		<th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-		<td><input name=zipcode size=11 maxlength=32 value="|.$form->quote($form->{zipcode}).qq|"></td>
+		<th align=right nowrap>|.$locale->text('Post Office').qq|</th>
+		<td><input name=postoffice size=11 maxlength=32 value="|.$form->quote($form->{postoffice}).qq|"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Zip').qq|</th>
+		<td><input name=zip size=11 maxlength=32 value="|.$form->quote($form->{zip}).qq|"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Place').qq|</th>
+		<td><input name=place size=11 maxlength=32 value="|.$form->quote($form->{place}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
@@ -2092,15 +2100,15 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Address').qq|</th>
-		<td><input name=bankaddress1 size=32 maxlength=32 value="|.$form->quote($form->{bankaddress1}).qq|"></td>
+		<td><input name=bankaddressline size=32 maxlength=32 value="|.$form->quote($form->{bankaddressline}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th></th>
-		<td><input name=bankaddress2 size=32 maxlength=32 value="|.$form->quote($form->{bankaddress2}).qq|"></td>
+		<td><input name=bankadditional_addressline size=32 maxlength=32 value="|.$form->quote($form->{bankadditional_addressline}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
-		<td><input name=bankcity size=32 maxlength=32 value="|.$form->quote($form->{bankcity}).qq|"></td>
+		<td><input name=bankplace size=32 maxlength=32 value="|.$form->quote($form->{bankplace}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('State/Province').qq|</th>
@@ -2108,7 +2116,7 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Zip/Postal Code').qq|</th>
-		<td><input name=bankzipcode size=11 maxlength=10 value="|.$form->quote($form->{bankzipcode}).qq|"></td>
+		<td><input name=bankzip size=11 maxlength=10 value="|.$form->quote($form->{bankzip}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
@@ -2129,7 +2137,7 @@ sub form_header {
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
   $form->hide_form(map { "select$_" } qw(currency arap discount payment business dispatch pricegroup language employee paymentmethod));
-  $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
+  $form->hide_form(map { "shipto$_" } qw(name addressline additional_addressline place state zip country contact phone fax email));
 
 }
 
@@ -2287,11 +2295,11 @@ sub shipping_address {
   CT->ship_to(\%myconfig, \%$form);
 
   %shipto = (
-          address1 => { i => 2, label => $locale->text('Address') },
-	  address2 => { i => 3, label => '' },
-	  city => { i => 4, label => $locale->text('City') },
+          addressline => { i => 2, label => $locale->text('Address') },
+	  additional_addressline => { i => 3, label => '' },
+	  place => { i => 4, label => $locale->text('City') },
 	  state => { i => 5, label => $locale->text('State/Province') },
-	  zipcode => { i => 6, label => $locale->text('Zip/Postal Code') },
+	  zip => { i => 6, label => $locale->text('Zip/Postal Code') },
 	  country => { i => 7, label => $locale->text('Country') },
 	  contact => { i => 8, label => $locale->text('Contact') },
 	  phone => { i => 9, label => $locale->text('Phone') },
@@ -2325,18 +2333,18 @@ sub shipping_address {
 	</tr>
 	<tr>
 	  <td></td>
-	  <th align=right nowrap>$shipto{address1}{label}</th>
-	  <td><input name=shiptoaddress1 size=32 maxlength=32 value="|.$form->quote($form->{shiptoaddress1}).qq|"></td>
+	  <th align=right nowrap>$shipto{addressline}{label}</th>
+	  <td><input name=shiptoaddressline size=32 maxlength=32 value="|.$form->quote($form->{shiptoaddressline}).qq|"></td>
 	</tr>
 	<tr>
 	  <td></td>
 	  <td></td>
-	  <td><input name=shiptoaddress2 size=32 maxlength=32 value="|.$form->quote($form->{shiptoaddress2}).qq|"></td>
+	  <td><input name=shiptoadditional_addressline size=32 maxlength=32 value="|.$form->quote($form->{shiptoadditional_addressline}).qq|"></td>
 	</tr>
 	<tr>
 	  <td></td>
-	  <th align=right nowrap>$shipto{city}{label}</th>
-	  <td><input name=shiptocity size=32 maxlength=32 value="|.$form->quote($form->{shiptocity}).qq|"></td>
+	  <th align=right nowrap>$shipto{place}{label}</th>
+	  <td><input name=shiptoplace size=32 maxlength=32 value="|.$form->quote($form->{shiptoplace}).qq|"></td>
 	</tr>
 	<tr>
 	  <td></td>
@@ -2345,8 +2353,8 @@ sub shipping_address {
 	</tr>
 	<tr>
 	  <td></td>
-	  <th align=right nowrap>$shipto{zipcode}{label}</th>
-	  <td><input name=shiptozipcode size=11 maxlength=10 value="|.$form->quote($form->{shiptozipcode}).qq|"></td>
+	  <th align=right nowrap>$shipto{zip}{label}</th>
+	  <td><input name=shiptozip size=11 maxlength=10 value="|.$form->quote($form->{shiptozip}).qq|"></td>
 	</tr>
 	<tr>
 	  <td></td>
@@ -2416,7 +2424,7 @@ sub shipping_address {
 </table>
 |;
 
-  for (qw(name address1 address2 city state zipcode country contact phone fax email)) {
+  for (qw(name addressline additional_addressline place state zip country contact phone fax email)) {
     delete $form->{"shipto$_"};
     $form->{flds} .= "$_ ";
   }

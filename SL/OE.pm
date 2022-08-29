@@ -1091,9 +1091,9 @@ sub order_details {
   my $taxrate;
   my $taxamount;
 
-  my %defaults = $form->get_defaults($dbh, \@{['company', 'address1', 'address2', 'zip', 'city', 'country']});
+  my %defaults = $form->get_defaults($dbh, \@{['company', 'addressline', 'additional_addressline', 'zip', 'place', 'country']});
   $form->{company} = $defaults{company};
-  for (qw(address1 address2 zip city country)) { $form->{"company$_"} = $defaults{$_} }
+  for (qw(addressline additional_addressline zip place country)) { $form->{"company$_"} = $defaults{$_} }
 
   my %translations;
 
@@ -2272,13 +2272,13 @@ sub generate_orders {
     $sth->execute || $form->dberror($query);
     $ref = $sth->fetchrow_hashref(NAME_lc);
 
-    $query = qq|INSERT INTO shipto (trans_id, shiptoname, shiptoaddress1,
-                shiptoaddress2, shiptocity, shiptostate, shiptozipcode,
+    $query = qq|INSERT INTO shipto (trans_id, shiptoname, shiptoaddressline,
+                shiptoadditional_addressline, shiptoplace, shiptostate, shiptozip,
 		shiptocountry, shiptocontact, shiptophone, shiptofax,
 		shiptoemail) VALUES ($id, '$ref->{shiptoname}',
-		'$ref->{shiptoaddress1}', '$ref->{shiptoaddress2}',
-		'$ref->{shiptocity}', '$ref->{shiptostate}',
-		'$ref->{shiptozipcode}', '$ref->{shiptocountry}',
+		'$ref->{shiptoaddressline}', '$ref->{shiptoadditional_addressline}',
+		'$ref->{shiptoplace}', '$ref->{shiptostate}',
+		'$ref->{shiptozip}', '$ref->{shiptocountry}',
 		'$ref->{shiptocontact}', '$ref->{shiptophone}',
 		'$ref->{shiptofax}', '$ref->{shiptoemail}')|;
     $dbh->do($query) || $form->dberror($query);

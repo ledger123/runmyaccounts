@@ -571,7 +571,7 @@ sub form_header {
   </tr>
 |;
 
-  $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
+  $form->hide_form(map { "shipto$_" } qw(name addressline additional_addressline place state zip country contact phone fax email));
   $form->hide_form(qw(message email subject cc bcc taxaccounts));
   foreach $accno (split / /, $form->{taxaccounts}) { $form->hide_form(map { "${accno}_$_" } qw(rate description taxnumber)) }
 
