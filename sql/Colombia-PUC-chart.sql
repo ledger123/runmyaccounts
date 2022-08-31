@@ -1,7 +1,7 @@
 --
--- Plan único de Cuentas de Colombia, elaborado por Rene Real Hernandez (SDI S.A.), Francico Padilla (SDI S.A.), 
+-- Plan Ãºnico de Cuentas de Colombia, elaborado por Rene Real Hernandez (SDI S.A.), Francico Padilla (SDI S.A.), 
 -- Silfredo Godoy Chavez (CaribeNet S.A.),
--- Lourdes Mejía Martinez (CaribeNet S.A.) y Dirk Enrique Seiffert (CaribeNet S.A.) 
+-- Lourdes MejÃ­a Martinez (CaribeNet S.A.) y Dirk Enrique Seiffert (CaribeNet S.A.) 
 -- Si quieres aportar: Contactenos www.caribenet.com - info@caribenet.com
 --
 
@@ -412,7 +412,7 @@ INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VA
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('521030', 'ASESORIA FINANCIERA', 'H', 'E', '', '521030');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('521035', 'ASESORIA TECNICA', 'H', 'E', '', '521035');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('521095', 'OTROS HONORARIOS', 'H', 'E', '', '521095');
-INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5210950001', 'Estudio y Dise¤o de Planos', 'A', 'E', '', '5210950001');
+INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5210950001', 'Estudio y DiseÂ¤o de Planos', 'A', 'E', '', '5210950001');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5215', 'IMPUESTOS', 'H', 'E', '', '5215');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('521505', 'INDUSTRIA Y COMERCIO', 'H', 'E', '', '521505');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5215050001', 'Impuesto de Industria y Comercio', 'A', 'E', '', '5215050001');
@@ -455,7 +455,7 @@ INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VA
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('523595', 'OTROS SERVICIOS', 'H', 'E', '', '523595');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5235950002', 'Fabricacion  y Elaboracion', 'A', 'E', '', '5235950002');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5235950004', 'Capacitacion a Contratistas', 'A', 'E', '', '5235950004');
-INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5235950007', 'Digitación y archivo documentos', 'A', 'E', '', '5235950007');
+INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5235950007', 'DigitaciÃ³n y archivo documentos', 'A', 'E', '', '5235950007');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('5240', 'GASTOS LEGALES', 'H', 'E', '', '5240');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('524005', 'NOTARIALES', 'H', 'E', '', '524005');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('524010', 'REGISTRO MERCANTIL', 'H', 'E', '', '524010');
@@ -693,7 +693,7 @@ INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VA
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1120050013', 'Banco Ganadero Ahorro xxxxxxxx', 'A', 'A', 'AR_paid:AP_paid', '1120050013');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1120050019', 'Banco Colpatria Ahor. xxxxxxxxx', 'A', 'A', 'AR_paid:AP_paid', '1120050019');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1120051302', 'Bco Ganadero Ahorro xxxxxxxxxx', 'A', 'A', 'AR_paid:AP_paid', '1120051302');
-INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1355150020', 'Retencion en la Fuente Año Anter', 'A', 'A', '', '1355150020');
+INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1355150020', 'Retencion en la Fuente AÃ±o Anter', 'A', 'A', '', '1355150020');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1410050001', 'Muebles', 'A', 'A', 'IC', '1410050001');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1410050002', 'Inventario 1', 'A', 'A', 'IC', '1410050002');
 INSERT INTO chart (accno, description, charttype, category, link, gifi_accno) VALUES ('1410050003', 'Inventario 2', 'A', 'A', 'IC', '1410050003');
