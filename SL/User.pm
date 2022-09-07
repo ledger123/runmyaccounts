@@ -860,7 +860,7 @@ sub create_config {
   }
 
   umask(002);
-  open(CONF, ">$filename") or $self->error("$filename : $!");
+  open(CONF, '>', $filename) or $self->error("$filename : $!");
   
   # create the config file
   print CONF qq|# configuration file for $self->{login}
@@ -899,7 +899,7 @@ sub save_member {
   open(FH, ">${memberfile}.LCK") or $self->error("${memberfile}.LCK : $!");
   close(FH);
   
-  if (! open(CONF, "+<$memberfile")) {
+  if (! open(CONF, '+<:utf8', $memberfile)) {
     unlink "${memberfile}.LCK";
     $self->error("$memberfile : $!");
   }

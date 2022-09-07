@@ -54,7 +54,7 @@ if ($form->{action}) {
 
   # create memberfile
   if (! -f $memberfile) {
-    open(FH, ">$memberfile") or $form->error("$memberfile : $!");
+    open(FH, ">:utf8$memberfile") or $form->error("$memberfile : $!");
     print FH qq|# Run my Accounts Accounting members
 
 [root login]
@@ -878,7 +878,7 @@ sub delete {
   open(FH, ">${memberfile}.LCK") or $form->error("${memberfile}.LCK : $!");
   close(FH);
   
-  if (! open(CONF, "+<$memberfile")) {
+  if (! open(CONF, '+<:utf8', $memberfile)) {
     unlink "${memberfile}.LCK";
     $form->error("$memberfile : $!");
   }
