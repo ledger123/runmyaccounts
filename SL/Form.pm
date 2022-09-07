@@ -95,6 +95,8 @@ sub new {
 
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
+	$self->{charset} = 'UTF-8';
+
 	$self->{version}   = "2.8.33";
 	$self->{dbversion} = "2.8.22";
 
@@ -399,6 +401,7 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
 
 		print qq|Content-Type: text/html
 
+<html>
 <head>
   <title>$self->{titlebar}</title>
   <meta name="robots" content="noindex,nofollow" />
@@ -743,13 +746,10 @@ sub parse_template {
 	$self->{debuglatex} = $debuglatex;
 
 	if ( -f "$self->{templates}/$self->{language_code}/$self->{IN}" ) {
-		open( IN, "$self->{templates}/$self->{language_code}/$self->{IN}" )
-		  or $self->error(
-			"$self->{templates}/$self->{language_code}/$self->{IN} : $!");
+		open( IN, '<:utf8', "$self->{templates}/$self->{language_code}/$self->{IN}" ) or $self->error("$self->{templates}/$self->{language_code}/$self->{IN} : $!");
 	}
 	else {
-		open( IN, "$self->{templates}/$self->{IN}" )
-		  or $self->error("$self->{templates}/$self->{IN} : $!");
+		open( IN, '<:utf8', "$self->{templates}/$self->{IN}" ) or $self->error("$self->{templates}/$self->{IN} : $!");
 	}
 
 	my @texform = <IN>;
@@ -764,11 +764,11 @@ sub parse_template {
 
 	if ( $self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email' ) {
 		$out = $self->{OUT};
-		$self->{OUT} = ">$self->{tmpfile}";
+		$self->{OUT} = $self->{tmpfile};
 	}
 
 	if ( $self->{OUT} ) {
-		open( OUT, "$self->{OUT}" ) or $self->error("$self->{OUT} : $!");
+		open( OUT, '>:utf8', $self->{OUT} ) or $self->error("$self->{OUT} : $!");
 	}
 	else {
 		open( OUT, ">-" ) or $self->error("STDOUT : $!");
@@ -1018,10 +1018,7 @@ sub parse_template {
 				# assume loop after 10 includes of the same file
 				next if $include{$var} > 10;
 
-				unless (
-					open( INC, "$self->{templates}/$self->{language_code}/$var"
-					)
-				  )
+				unless (open( INC, '<:utf8', "$self->{templates}/$self->{language_code}/$var"))
 				{
 					$err = $!;
 					$self->cleanup;
@@ -1145,6 +1142,8 @@ sub parse_template {
 				$mail->{message} .= "$br\n-- $br\n$myconfig->{signature}\n$br"
 				  if $myconfig->{signature};
 
+				# this is causing a problem with the output
+				# unless ( open( IN, '<:utf8', $self->{tmpfile} ) ) {
 				unless ( open( IN, $self->{tmpfile} ) ) {
 					$err = $!;
 					$self->cleanup;
@@ -1187,6 +1186,7 @@ sub parse_template {
 		else {
 
 			$self->{OUT} = $out;
+			# unless ( open( IN, '>:utf8', $self->{tmpfile} ) ) {
 			unless ( open( IN, $self->{tmpfile} ) ) {
 				$err = $!;
 				$self->cleanup;
@@ -2032,7 +2032,7 @@ sub dbconnect {
 	# connect to database
 	my $dbh = DBI->connect(
 		$myconfig->{dbconnect}, $myconfig->{dbuser},
-		$myconfig->{dbpasswd}, { PrintError => 0, pg_enable_utf8 => 1 }
+		$myconfig->{dbpasswd}, { PrintError => 0 }
 	) or $self->dberror;
 	$dbh->{PrintError} = 0;
 
@@ -2052,7 +2052,7 @@ sub dbconnect_noauto {
 	# connect to database
 	$dbh = DBI->connect(
 		$myconfig->{dbconnect}, $myconfig->{dbuser},
-		$myconfig->{dbpasswd}, { PrintError => 0, AutoCommit => 0, pg_enable_utf8 => 1 }
+		$myconfig->{dbpasswd}, { PrintError => 0, AutoCommit => 0 }
 	) or $self->dberror;
 
 	# set db options
