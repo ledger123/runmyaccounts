@@ -1056,21 +1056,6 @@ sub parse_template {
 
 		$self->{tmpfile} =~ s/$tmppath\///g;
 
-        if ($utf8templates) {
-    		if ($os eq 'linux' || not defined $os) {
-    			system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
-           		system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} -o $self->{tmpfile}");
-    		}
-    	
-    		if ($os eq 'mac') {
-    			system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
-           		system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} > $self->{tmpfile}");
-    		}
-    	
-    		if ($os eq 'windows') {
-    			$self->error("Not implemented yet!");
-    		}
-        }
 
 		$self->{errfile} = $self->{tmpfile};
 		$self->{errfile} =~ s/tex$/err/;
@@ -1198,7 +1183,7 @@ sub parse_template {
 			chdir("$self->{cwd}");
 
 			if ( $self->{OUT} ) {
-				unless ( open( OUT, $self->{OUT} ) ) {
+				unless ( open( OUT, '<:utf8', $self->{OUT} ) ) {
 					$err = $!;
 					$self->cleanup;
 					$self->error("$self->{OUT} : $err");
@@ -1210,7 +1195,7 @@ sub parse_template {
 				print qq|Content-Type: application/$self->{format}
 Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
 
-				unless ( open( OUT, ">-" ) ) {
+				unless ( open( OUT, '>-:utf8', $self->{OUT} ) ) {
 					$err = $!;
 					$self->cleanup;
 					$self->error("STDOUT : $err");
