@@ -1127,8 +1127,6 @@ sub parse_template {
 				$mail->{message} .= "$br\n-- $br\n$myconfig->{signature}\n$br"
 				  if $myconfig->{signature};
 
-				# this is causing a problem with the output
-				# unless ( open( IN, '<:utf8', $self->{tmpfile} ) ) {
 				unless ( open( IN, $self->{tmpfile} ) ) {
 					$err = $!;
 					$self->cleanup;
@@ -1171,7 +1169,6 @@ sub parse_template {
 		else {
 
 			$self->{OUT} = $out;
-			# unless ( open( IN, '>:utf8', $self->{tmpfile} ) ) {
 			unless ( open( IN, $self->{tmpfile} ) ) {
 				$err = $!;
 				$self->cleanup;
