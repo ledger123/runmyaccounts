@@ -967,7 +967,7 @@ sub transactions {
 		 a.ponumber, a.warehouse_id, w.description AS warehouse,
 		 a.description, a.dcn, pm.description AS paymentmethod,
 		 a.datepaid - a.duedate AS paymentdiff,
-		 ad.addressline, ad.additional_addressline, ad.place, ad.zip, ad.country, vc.email
+		 ad.address1, ad.address2, ad.city, ad.zipcode, ad.country, vc.email
 		 $acc_trans_flds
 	         FROM $table a
 	      JOIN $form->{vc} vc ON (a.$form->{vc}_id = vc.id)
@@ -1163,7 +1163,7 @@ sub transactions {
       next if $form->round_amount($ref->{amount}, $form->{precision}) == $form->round_amount($ref->{paid}, $form->{precision});
     }
 
-    for (qw(addressline additional_addressline place zip country)) { $ref->{address} .= "$ref->{$_} " }
+    for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
     
     if ($form->{summary}) {
       if ($sameid != $ref->{id}) {
@@ -1246,8 +1246,8 @@ sub get_name {
   my $query = qq|SELECT c.name AS $form->{vc}, c.$form->{vc}number,
                  c.discount, c.creditlimit, c.terms,
                  c.email, c.cc, c.bcc, c.taxincluded,
-		 ad.addressline, ad.additional_addressline, ad.place, ad.state,
-		 ad.zip, ad.country, c.curr AS currency, c.language_code,
+		 ad.address1, ad.address2, ad.city, ad.state,
+		 ad.zipcode, ad.country, c.curr AS currency, c.language_code,
 	         $duedate AS duedate, c.notes AS intnotes,
 		 b.discount AS tradediscount, b.description AS business,
 		 e.name AS employee, e.id AS employee_id,
@@ -1468,8 +1468,8 @@ sub company_details {
   
   # get rest for the customer/vendor
   $form->{"$form->{vc}_id"} *= 1;
-  my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.addressline, ad.additional_addressline,
-                 ad.place, ad.state, ad.zip, ad.country,
+  my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2,
+                 ad.city, ad.state, ad.zipcode, ad.country,
 	         ct.contact, ct.phone as $form->{vc}phone,
 		 ct.fax as $form->{vc}fax,
 		 ct.taxnumber AS $form->{vc}taxnumber, ct.sic_code AS sic,
@@ -1508,7 +1508,7 @@ sub company_details {
   for (@a) { $form->{$_} = $defaults{$_} }
 
   if ($form->{warehouse_id} *= 1) {
-    $query = qq|SELECT addressline, additional_addressline, place, state, zip, country
+    $query = qq|SELECT address1, address2, city, state, zipcode, country
 		FROM address
 		WHERE trans_id = |.$form->dbclean($form->{warehouse_id}).qq||;
     $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -1555,16 +1555,16 @@ sub ship_to {
   my $table = ($form->{vc} eq 'customer') ? 'ar' : 'ap';
 
   my $query = qq|SELECT
-                 s.shiptoname, s.shiptoaddressline, s.shiptoadditional_addressline,
-		 s.shiptoplace, s.shiptostate, s.shiptozip,
+                 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
 		 WHERE trans_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
 		 UNION
 		 SELECT
-		 s.shiptoname, s.shiptoaddressline, s.shiptoadditional_addressline,
-		 s.shiptoplace, s.shiptostate, s.shiptozip,
+		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
@@ -1572,8 +1572,8 @@ sub ship_to {
 		 WHERE o.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
 		 UNION
 		 SELECT
-		 s.shiptoname, s.shiptoaddressline, s.shiptoadditional_addressline,
-		 s.shiptoplace, s.shiptostate, s.shiptozip,
+		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
@@ -1584,8 +1584,8 @@ sub ship_to {
     $query .= qq|
                  EXCEPT
 		 SELECT
-		 s.shiptoname, s.shiptoaddressline, s.shiptoadditional_addressline,
-		 s.shiptoplace, s.shiptostate, s.shiptozip,
+		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s

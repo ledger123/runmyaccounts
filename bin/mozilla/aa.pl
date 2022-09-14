@@ -690,7 +690,7 @@ sub form_header {
 		<td colspan=3>
 		  <table>
 		    <tr>
-		      <td colspan=4>$form->{place} $form->{state} $form->{country}</td>
+		      <td colspan=4>$form->{city} $form->{state} $form->{country}</td>
 		    </tr>
 		    <tr>
 		      <th align=right nowrap>| . $locale->text('Credit Limit') . qq|</th>
@@ -1088,7 +1088,7 @@ sub form_header {
         }
     }
 
-    $form->hide_form(qw(place state country paidaccounts payment_accno discount_accno payment_method));
+    $form->hide_form(qw(city state country paidaccounts payment_accno discount_accno payment_method));
 
     print qq|
       </table>

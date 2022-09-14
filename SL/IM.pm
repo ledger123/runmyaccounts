@@ -51,7 +51,7 @@ sub sales_invoice {
   $query = qq|SELECT cv.id, cv.name, cv.customernumber, cv.terms,
               e.id AS employee_id, e.name AS employee,
 	      c.accno AS taxaccount, a.accno AS arap_accno,
-	      ad.place
+	      ad.city
 	      FROM customer cv
 	      JOIN address ad ON (ad.trans_id = cv.id)
 	      LEFT JOIN employee e ON (e.id = cv.employee_id)
@@ -134,7 +134,7 @@ sub sales_invoice {
 	  $terms = $ref->{terms};
 	  $form->{"customer_id_$i"} = $ref->{id};
 	  $form->{"customer_$i"} = $ref->{name};
-	  $form->{"place_$i"} = $ref->{place};
+	  $form->{"city_$i"} = $ref->{city};
 	  $form->{"employee_$i"} = $ref->{employee};
 	  $form->{"employee_id_$i"} = $ref->{employee_id};
 	  $form->{"curr_$i"} = $form->{currency} if !$form->{"curr_$i"};
@@ -278,11 +278,11 @@ sub import_sales_invoice {
   }
 
   my $language_code;
-  $query = qq|SELECT c.customernumber, c.language_code, a.place
+  $query = qq|SELECT c.customernumber, c.language_code, a.city
               FROM customer c
 	      JOIN address a ON (a.trans_id = c.id)
 	      WHERE c.id = $form->{customer_id}|;
-  ($form->{customernumber}, $language_code, $form->{place}) = $dbh->selectrow_array($query);
+  ($form->{customernumber}, $language_code, $form->{city}) = $dbh->selectrow_array($query);
 
   $form->{language_code} ||= $language_code;
 
@@ -350,7 +350,7 @@ sub sales_order {
   $query = qq|SELECT cv.id, cv.name, cv.customernumber, cv.terms,
               e.id AS employee_id, e.name AS employee,
 	      c.accno AS taxaccount, a.accno AS arap_accno,
-	      ad.place
+	      ad.city
 	      FROM customer cv
 	      JOIN address ad ON (ad.trans_id = cv.id)
 	      LEFT JOIN employee e ON (e.id = cv.employee_id)
@@ -434,7 +434,7 @@ sub sales_order {
 	  $terms = $ref->{terms};
 	  $form->{"customer_id_$i"} = $ref->{id};
 	  $form->{"customer_$i"} = $ref->{name};
-	  $form->{"place_$i"} = $ref->{place};
+	  $form->{"city_$i"} = $ref->{city};
 	  $form->{"employee_$i"} = $ref->{employee};
 	  $form->{"employee_id_$i"} = $ref->{employee_id};
 	  $customertax{$ref->{accno}} = 1;
@@ -541,11 +541,11 @@ sub import_sales_order {
   $form->{currency} = $form->{curr};
 
   my $language_code;
-  $query = qq|SELECT c.customernumber, c.language_code, a.place
+  $query = qq|SELECT c.customernumber, c.language_code, a.city
               FROM customer c
 	      JOIN address a ON (a.trans_id = c.id)
 	      WHERE c.id = $form->{customer_id}|;
-  ($form->{customernumber}, $language_code, $form->{place}) = $dbh->selectrow_array($query);
+  ($form->{customernumber}, $language_code, $form->{city}) = $dbh->selectrow_array($query);
 
   $form->{language_code} ||= $language_code;
 
@@ -614,7 +614,7 @@ sub purchase_order {
   $query = qq|SELECT cv.id, cv.name, cv.vendornumber, cv.terms,
               e.id AS employee_id, e.name AS employee,
 	      c.accno AS taxaccount, a.accno AS arap_accno,
-	      ad.place
+	      ad.city
 	      FROM vendor cv
 	      JOIN address ad ON (ad.trans_id = cv.id)
 	      LEFT JOIN employee e ON (e.id = cv.employee_id)
@@ -698,7 +698,7 @@ sub purchase_order {
 	  $terms = $ref->{terms};
 	  $form->{"vendor_id_$i"} = $ref->{id};
 	  $form->{"vendor_$i"} = $ref->{name};
-	  $form->{"place_$i"} = $ref->{place};
+	  $form->{"city_$i"} = $ref->{city};
 	  $form->{"employee_$i"} = $ref->{employee};
 	  $form->{"employee_id_$i"} = $ref->{employee_id};
 	  $vendortax{$ref->{accno}} = 1;
@@ -805,11 +805,11 @@ sub import_purchase_order {
   $form->{currency} = $form->{curr};
 
   my $language_code;
-  $query = qq|SELECT v.vendornumber, v.language_code, a.place
+  $query = qq|SELECT v.vendornumber, v.language_code, a.city
               FROM vendor v
 	      JOIN address a ON (a.trans_id = v.id)
 	      WHERE v.id = $form->{vendor_id}|;
-  ($form->{vendornumber}, $language_code, $form->{place}) = $dbh->selectrow_array($query);
+  ($form->{vendornumber}, $language_code, $form->{city}) = $dbh->selectrow_array($query);
 
   $form->{language_code} ||= $language_code;
 
@@ -954,7 +954,7 @@ sub payments {
   my %defaults = $form->get_defaults($dbh, \@{['precision']});
   $form->{precision} = ($defaults{precision}) ? $defaults{precision} : 2;
   
-  $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.place,
+  $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.city,
               a.id, a.invnumber, a.description, a.exchangerate,
 	      (a.amount - a.paid) / a.exchangerate AS amount,
 	      a.transdate, a.paymentmethod_id, 'customer' AS vc,
@@ -964,7 +964,7 @@ sub payments {
 	      LEFT JOIN address ad ON (ad.trans_id = c.id)
 	      WHERE a.amount != a.paid
 	      UNION
-	      SELECT c.name, c.vendornumber AS companynumber, ad.place,
+	      SELECT c.name, c.vendornumber AS companynumber, ad.city,
 	      a.id, a.invnumber, a.description, a.exchangerate,
 	      (a.amount - a.paid) / a.exchangerate AS amount,
 	      a.transdate, a.paymentmethod_id, 'vendor' AS vc,
@@ -986,7 +986,7 @@ sub payments {
   $sth->finish;
 	
   # retrieve invoice by dcn
-  $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.place,
+  $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.city,
               a.id, a.invnumber, a.description, a.dcn,
 	      a.paymentmethod_id, 'customer' AS vc, 'ar' AS arap
 	      FROM ar a
@@ -995,7 +995,7 @@ sub payments {
 	      WHERE a.amount != a.paid
 	      AND a.dcn = ?
 	      UNION
-	      SELECT c.name, c.vendornumber AS companynumber, ad.place,
+	      SELECT c.name, c.vendornumber AS companynumber, ad.city,
               a.id, a.invnumber, a.description, a.dcn,
 	      a.paymentmethod_id, 'vendor' AS vc, 'ap' AS arap
 	      FROM ap a
@@ -1052,7 +1052,7 @@ sub payments {
 	    }
 
             $vc = $ref->{vc};
-	    for (qw(id invnumber description name companynumber vc arap place paymentmethod_id)) { $form->{"${_}_$i"} = $ref->{$_} }
+	    for (qw(id invnumber description name companynumber vc arap city paymentmethod_id)) { $form->{"${_}_$i"} = $ref->{$_} }
 	    $form->{"amount_$i"} = $amount;
 	  }
 	  $sth->finish;
@@ -1075,7 +1075,7 @@ sub payments {
 	    }
 
             $vc = $amount{$amount}->[0]->{vc};
-	    for (qw(id invnumber description name companynumber vc arap place paymentmethod_id)) { $form->{"${_}_$i"} = $amount{$amount}->[0]->{$_} }
+	    for (qw(id invnumber description name companynumber vc arap city paymentmethod_id)) { $form->{"${_}_$i"} = $amount{$amount}->[0]->{$_} }
 	    $form->{"amount_$i"} = $amount;
 
 	    shift @{ $amount{$amount} };
@@ -1243,13 +1243,13 @@ sub vc {
   my $contact = $dbh->prepare($query);
  
   $query = qq|
-	SELECT id AS addressid, addressline, additional_addressline, place, state, zip, country
+	SELECT id AS addressid, address1, address2, city, state, zipcode, country
 	FROM address WHERE trans_id = ?
   |;
   my $address = $dbh->prepare($query);
 
   $query = qq|
-	SELECT shiptoname, shiptoaddressline, shiptoadditional_addressline, shiptoplace, shiptostate, shiptozip, shiptocountry, shiptophone, shiptofax, shiptoemail
+	SELECT shiptoname, shiptoaddress1, shiptoaddress2, shiptocity, shiptostate, shiptozipcode, shiptocountry, shiptophone, shiptofax, shiptoemail
 	FROM shipto WHERE trans_id = ?
   |;
   my $shipto = $dbh->prepare($query);
@@ -1261,7 +1261,7 @@ sub vc {
   my $bank = $dbh->prepare($query);
 
   $query = qq|
-	SELECT addressline AS bankaddressline, additional_addressline AS bankadditional_addressline, place AS bankplace, state AS bankstate, zip AS bankzip, country AS bankcountry
+	SELECT address1 AS bankaddress1, address2 AS bankaddress2, city AS bankcity, state AS bankstate, zipcode AS bankzipcode, country AS bankcountry
 	FROM address WHERE trans_id = ?
   |;
   my $bankaddress = $dbh->prepare($query);
@@ -1544,7 +1544,7 @@ sub transactions {
   $query = qq|SELECT vc.id, vc.name, vc.$form->{vc}number, vc.terms,
               e.id AS employee_id, e.name AS employee,
               c.accno AS taxaccount, a.accno AS arap_accno,
-              ad.place
+              ad.city
               FROM $form->{vc} vc
               JOIN address ad ON (ad.trans_id = vc.id)
               LEFT JOIN employee e ON (e.id = vc.employee_id)
@@ -1583,7 +1583,7 @@ sub transactions {
           $terms = $ref->{terms};
           $form->{"$form->{vc}_id_$i"} = $ref->{id};
           $form->{"name_$i"} = $ref->{name};
-          $form->{"place_$i"} = $ref->{place};
+          $form->{"city_$i"} = $ref->{city};
           $form->{"employee_$i"} = $ref->{employee};
           $form->{"employee_id_$i"} = $ref->{employee_id};
           $customertax{$ref->{accno}} = 1;

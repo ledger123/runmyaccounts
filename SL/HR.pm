@@ -119,11 +119,11 @@ sub save_employee {
   $query = qq|UPDATE employee SET
               employeenumber = |.$dbh->quote($form->{employeenumber}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,
-	      addressline = |.$dbh->quote($form->{addressline}).qq|,
-	      additional_addressline = |.$dbh->quote($form->{additional_addressline}).qq|,
-	      place = |.$dbh->quote($form->{place}).qq|,
+	      address1 = |.$dbh->quote($form->{address1}).qq|,
+	      address2 = |.$dbh->quote($form->{address2}).qq|,
+	      city = |.$dbh->quote($form->{city}).qq|,
 	      state = |.$dbh->quote($form->{state}).qq|,
-	      zip = |.$dbh->quote($form->{zip}).qq|,
+	      zipcode = |.$dbh->quote($form->{zipcode}).qq|,
 	      country = |.$dbh->quote($form->{country}).qq|,
 	      workphone = |.$dbh->quote($form->{workphone}).qq|,
 	      workfax = |.$dbh->quote($form->{workfax}).qq|,
@@ -229,7 +229,7 @@ sub employees {
 
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
     $ref->{address} = "";
-    for (qw(addressline additional_addressline place state zip country)) { $ref->{address} .= "$ref->{$_} " }
+    for (qw(address1 address2 city state zipcode country)) { $ref->{address} .= "$ref->{$_} " }
     push @{ $form->{all_employee} }, $ref;
   }
 

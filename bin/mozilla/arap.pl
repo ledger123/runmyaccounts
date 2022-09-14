@@ -238,7 +238,7 @@ sub select_name {
 	</tr>
 |;
 
-  @column_index = qw(ndx name number address place state zip country);
+  @column_index = qw(ndx name number address city state zipcode country);
   
   my $i = 0;
   foreach $ref (@{ $form->{name_list} }) {
@@ -249,8 +249,8 @@ sub select_name {
    $column_data{ndx} = qq|<td><input name=ndx class=radio type=radio value=$i $checked></td>|;
    $column_data{number} = qq|<td><input name="new_${table}number_$i" type=hidden value="|.$form->quote($ref->{"${table}number"}).qq|">$ref->{"${table}number"}</td>|;
    $column_data{name} = qq|<td><input name="new_name_$i" type=hidden value="|.$form->quote($ref->{name}).qq|">$ref->{name}</td>|;
-   $column_data{address} = qq|<td>$ref->{addressline} $ref->{additional_addressline}</td>|;
-   for (qw(place state zip country)) { $column_data{$_} = qq|<td>$ref->{$_}&nbsp;</td>| }
+   $column_data{address} = qq|<td>$ref->{address1} $ref->{address2}</td>|;
+   for (qw(city state zipcode country)) { $column_data{$_} = qq|<td>$ref->{$_}&nbsp;</td>| }
     
     $j++; $j %= 2;
     print qq|

@@ -494,7 +494,7 @@ sub get_customer {
   my ($count) = $dbh->selectrow_array($query);
 
   if ($count < $myconfig->{vclimit}) {
-    $query = qq|SELECT c.id, c.name, c.customernumber, ct.firstname, ct.lastname, ad.place
+    $query = qq|SELECT c.id, c.name, c.customernumber, ct.firstname, ct.lastname, ad.city
 		FROM customer c
 		LEFT JOIN contact ct ON (c.id = ct.trans_id)
 		LEFT JOIN address ad ON (c.id = ad.trans_id)
@@ -502,7 +502,7 @@ sub get_customer {
 
     if ($form->{customer_id} *= 1) {
       $query .= qq|
-		UNION SELECT c.id, c.name, c.customernumber, ct.firstname, ct.lastname, ad.place
+		UNION SELECT c.id, c.name, c.customernumber, ct.firstname, ct.lastname, ad.city
 		FROM customer c
 		LEFT JOIN contact ct ON (c.id = ct.trans_id)
 		LEFT JOIN address ad ON (c.id = ad.trans_id)
@@ -516,7 +516,7 @@ sub get_customer {
 
     @{ $form->{all_customer} } = ();
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-      $ref->{name} .= " - $ref->{lastname} $ref->{firstname}, $ref->{place} ($ref->{customernumber})";
+      $ref->{name} .= " - $ref->{lastname} $ref->{firstname}, $ref->{city} ($ref->{customernumber})";
       push @{ $form->{all_customer} }, $ref;
     }
     $sth->finish;

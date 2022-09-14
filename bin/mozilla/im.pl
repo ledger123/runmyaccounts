@@ -674,7 +674,7 @@ sub im_sales_invoice {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(ndx transdate invnumber customer customernumber place dcn invoicedescription total curr exchangerate totalqty unit duedate employee department warehouse);
+  @column_index = qw(ndx transdate invnumber customer customernumber city dcn invoicedescription total curr exchangerate totalqty unit duedate employee department warehouse);
   @flds = @column_index;
   shift @flds;
   push @flds, qw(ordnumber quonumber customer_id datepaid dcn shippingpoint shipvia waybill terms notes intnotes language_code ponumber cashdiscount discountterms employee_id parts_id description sellprice discount qty unit serialnumber projectnumber deliverydate AR taxincluded department_id warehouse_id);
@@ -695,7 +695,7 @@ sub im_sales_invoice {
   $column_data{dcn} = $locale->text('DCN');
   $column_data{customer} = $locale->text('Customer');
   $column_data{customernumber} = $locale->text('Customer Number');
-  $column_data{place} = $locale->text('City');
+  $column_data{city} = $locale->text('City');
   $column_data{total} = $locale->text('Total');
   $column_data{totalqty} = $locale->text('Qty');
   $column_data{curr} = $locale->text('Curr');
@@ -841,7 +841,7 @@ sub im_sales_order {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(ndx transdate ordnumber customer customernumber place orderdescription total curr totalqty unit duedate employee);
+  @column_index = qw(ndx transdate ordnumber customer customernumber city orderdescription total curr totalqty unit duedate employee);
   @flds = @column_index;
   shift @flds;
   push @flds, qw(ordnumber quonumber customer_id datepaid shippingpoint shipvia waybill terms notes intnotes language_code ponumber discountterms employee_id parts_id description sellprice discount qty unit serialnumber projectnumber deliverydate);
@@ -861,7 +861,7 @@ sub im_sales_order {
   $column_data{orderdescription} = $locale->text('Description');
   $column_data{customer} = $locale->text('Customer');
   $column_data{customernumber} = $locale->text('Customer Number');
-  $column_data{place} = $locale->text('City');
+  $column_data{city} = $locale->text('City');
   $column_data{total} = $locale->text('Total');
   $column_data{totalqty} = $locale->text('Qty');
   $column_data{curr} = $locale->text('Curr');
@@ -989,7 +989,7 @@ sub im_purchase_order {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(ndx transdate ordnumber vendor vendornumber place orderdescription total curr totalqty unit duedate employee);
+  @column_index = qw(ndx transdate ordnumber vendor vendornumber city orderdescription total curr totalqty unit duedate employee);
   @flds = @column_index;
   shift @flds;
   push @flds, qw(ordnumber quonumber vendor_id datepaid shippingpoint shipvia waybill terms notes intnotes language_code ponumber discountterms employee_id parts_id description sellprice discount qty unit serialnumber projectnumber deliverydate);
@@ -1009,7 +1009,7 @@ sub im_purchase_order {
   $column_data{orderdescription} = $locale->text('Description');
   $column_data{vendor} = $locale->text('Vendor');
   $column_data{vendornumber} = $locale->text('Vendor Number');
-  $column_data{place} = $locale->text('City');
+  $column_data{city} = $locale->text('City');
   $column_data{total} = $locale->text('Total');
   $column_data{totalqty} = $locale->text('Qty');
   $column_data{curr} = $locale->text('Curr');
@@ -1261,7 +1261,7 @@ sub import_sales_invoices {
      } else {
       $form->info("${m}. ".$locale->text('Posting Invoice ...'));
       if (IM->import_sales_invoice(\%myconfig, \%$newform)) {
-	$form->info(qq| $newform->{invnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{place}, |);
+	$form->info(qq| $newform->{invnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
 	$myconfig{numberformat} = "1000.00";
@@ -1346,7 +1346,7 @@ sub import_sales_orders {
       if ($form->{locked}){
         $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
       } elsif (IM->import_sales_order(\%myconfig, \%$newform)) {
-	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{place}, |);
+	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
 	$myconfig{numberformat} = "1000.00";
@@ -1430,7 +1430,7 @@ sub import_purchase_orders {
       if ($form->{locked}){
         $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
       } elsif (IM->import_purchase_order(\%myconfig, \%$newform)) {
-	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{vendornumber}, $newform->{name}, $newform->{place}, |);
+	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{vendornumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
 	$myconfig{numberformat} = "1000.00";
@@ -1452,7 +1452,7 @@ sub im_payment {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(runningnumber ndx invnumber description dcn name companynumber place datepaid amount);
+  @column_index = qw(runningnumber ndx invnumber description dcn name companynumber city datepaid amount);
   push @column_index, "exchangerate" if $form->{currency} ne $form->{defaultcurrency};
   @flds = @column_index;
   shift @flds;
@@ -1472,7 +1472,7 @@ sub im_payment {
   $column_data{description} = $locale->text('Description');
   $column_data{name} = $locale->text('Company');
   $column_data{company} = $locale->text('Company Number');
-  $column_data{place} = $locale->text('City');
+  $column_data{city} = $locale->text('City');
   $column_data{dcn} = $locale->text('DCN');
   $column_data{amount} = $locale->text('Paid');
   $column_data{exchangerate} = $locale->text('Exch');
@@ -1611,7 +1611,7 @@ sub import_payments {
       if ($form->{locked}){
         $form->info($locale->text('Cannot post payment in closed period. ') . $newform->{source} . "\n");
       }	elsif (CP->post_payment(\%myconfig, \%$newform)) {
-	$form->info(qq| $form->{"invnumber_$i"}, $form->{"description_$i"}, $form->{"companynumber_$i"}, $form->{"name_$i"}, $form->{"place_$i"}, |);
+	$form->info(qq| $form->{"invnumber_$i"}, $form->{"description_$i"}, $form->{"companynumber_$i"}, $form->{"name_$i"}, $form->{"city_$i"}, |);
 	$form->info($form->{"amount_$i"});
 	$form->info(" ... ".$locale->text('ok')."\n");
       } else {
@@ -1668,7 +1668,7 @@ sub ex_payment {
   $column_data{description} = $locale->text('Description');
   $column_data{name} = $locale->text('Company');
   $column_data{companynumber} = $locale->text('Company Number');
-  $column_data{place} = $locale->text('City');
+  $column_data{city} = $locale->text('City');
   $column_data{dcn} = $locale->text('DCN');
   $column_data{amount} = $locale->text('Paid');
   $column_data{paymentmethod} = $locale->text('Payment Method');
@@ -2282,9 +2282,9 @@ sub im_vc {
 
   @column_index = qw(ndx);
   push @column_index, "$form->{db}number";
-  push @column_index, qw(id name salutation firstname lastname contacttitle phone fax email notes addressline additional_addressline place state zip country);
+  push @column_index, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
   @flds = @column_index;
-  push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddressline shiptoadditional_addressline shiptoplace shiptostate shiptozip shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddressline bankadditional_addressline bankplace bankstate bankzip bankcountry dcn rvc membernumber);
+  push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
   unshift @column_index, "runningnumber";
 
   $form->{callback} = "$form->{script}?action=import";
@@ -2305,11 +2305,11 @@ sub im_vc {
   $column_data{fax} = $locale->text('Fax');
   $column_data{email} = $locale->text('Email');
   $column_data{notes} = $locale->text('notes');
-  $column_data{addressline} = $locale->text('Address1');
-  $column_data{additional_addressline} = $locale->text('Address2');
-  $column_data{place} = $locale->text('City');
+  $column_data{address1} = $locale->text('Address1');
+  $column_data{address2} = $locale->text('Address2');
+  $column_data{city} = $locale->text('City');
   $column_data{state} = $locale->text('State');
-  $column_data{zip} = $locale->text('Zip');
+  $column_data{zipcode} = $locale->text('Zip');
   $column_data{country} = $locale->text('Country');
 
   $form->header(0, 0, $locale);
@@ -2407,8 +2407,8 @@ sub import_vc {
       $m++;
       
       push @flds, "$form->{db}number";
-      push @flds, qw(id name salutation firstname lastname contacttitle phone fax email notes addressline additional_addressline place state zip country);
-      push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddressline shiptoadditional_addressline shiptoplace shiptostate shiptozip shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddressline bankadditional_addressline bankplace bankstate bankzip bankcountry dcn rvc membernumber);
+      push @flds, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
+      push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
 
       for (keys %$newform) { delete $newform->{$_} };
 

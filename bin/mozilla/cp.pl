@@ -1222,7 +1222,7 @@ sub payment_header {
 # $locale->text('Vendor Number')
 
   if ($form->{$form->{vc}} eq "") {
-    for (qw(addressline additional_addressline place zip state country)) { $form->{$_} = "" }
+    for (qw(address1 address2 city zipcode state country)) { $form->{$_} = "" }
   }
   
   if ($form->{defaultcurrency}) {
@@ -1450,18 +1450,18 @@ javascript:window.history.forward(1);
 		<td colspan=2>
 		  <table>
 		    <tr>
-		      <td>$form->{addressline}</td>
+		      <td>$form->{address1}</td>
 		    </tr>
 		    <tr>
-		      <td>$form->{additional_addressline}</td>
+		      <td>$form->{address2}</td>
 		    </tr>
-		      <td>$form->{place}</td>
+		      <td>$form->{city}</td>
 		    </tr>
 		    </tr>
 		      <td>$form->{state}</td>
 		    </tr>
 		    </tr>
-		      <td>$form->{zip}</td>
+		      <td>$form->{zipcode}</td>
 		    </tr>
 		    <tr>
 		      <td>$form->{country}</td>
@@ -1515,7 +1515,7 @@ javascript:window.history.forward(1);
   </tr>
 |;
 
-  $form->hide_form(qw(addressline additional_addressline place state zip country));
+  $form->hide_form(qw(address1 address2 city state zipcode country));
 
 }
 
@@ -2061,7 +2061,7 @@ sub print_payment {
  
   &check_form;
   
-  @a = qw(name text_amount text_decimal addressline additional_addressline place state zip country memo);
+  @a = qw(name text_amount text_decimal address1 address2 city state zipcode country memo);
 
   %temp = ();
   for (@a) { $temp{$_} = $form->{$_} }
@@ -2157,7 +2157,7 @@ sub check_openvc {
 
       if ($form->{"old$form->{vc}"} ne $form->{$form->{vc}}) {
 
-	for (qw(addressline additional_addressline place state zip country)) { $form->{$_} = "" }
+	for (qw(address1 address2 city state zipcode country)) { $form->{$_} = "" }
 
 	$form->remove_locks(\%myconfig, undef, $form->{arap});
 	$form->{locks_removed} = 1;

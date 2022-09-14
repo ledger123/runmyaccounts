@@ -1599,7 +1599,7 @@ if($form->{payed}){
 
     $query .= qq|$union
     SELECT c.id AS vc_id, c.$form->{vc}number, c.name,
-    ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip, ad.country,
+    ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
     c.contact, c.email,
     c.phone as $form->{vc}phone, c.fax as $form->{vc}fax,
     c.$form->{vc}number, c.taxnumber as $form->{vc}taxnumber,
@@ -1765,7 +1765,7 @@ sub reminder {
 
   $exclude_credits = 'AND a.amount > 0' if $form->{exclude_credits};
   $query = qq|SELECT c.id AS vc_id, c.$form->{vc}number, c.name, c.terms,
-              ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip, ad.country,
+              ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
 	      c.contact, c.email,
 	      c.phone as $form->{vc}phone, c.fax as $form->{vc}fax,
 	      c.$form->{vc}number, c.taxnumber as $form->{vc}taxnumber,
@@ -1781,8 +1781,8 @@ sub reminder {
 	      s.*,
           bank.name bankname, bank.iban, bank.bic bankbic,
           bank.dcn, bank.rvc, bank.membernumber,
-          ad2.addressline bankaddressline, ad2.additional_addressline bankadditional_addressline, ad2.place bankplace,
-          ad2.state bankstate, ad2.zip bankzip, ad2.country bankcountry
+          ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
+          ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
 	      FROM ar a
 	      JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
 	      JOIN address ad ON (ad.trans_id = c.id)

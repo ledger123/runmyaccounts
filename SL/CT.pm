@@ -30,8 +30,8 @@ sub create_links {
 
   if ($form->{id} *= 1) {
     $query = qq/SELECT ct.*,
-                ad.id AS addressid, ad.addressline, ad.additional_addressline, ad.place,
-		ad.state, ad.zip, ad.country,
+                ad.id AS addressid, ad.address1, ad.address2, ad.city,
+		ad.state, ad.zipcode, ad.country,
 		b.description || '--' || b.id AS business,
 		d.description || '--' || d.id AS dispatch,
         s.*,
@@ -39,11 +39,11 @@ sub create_links {
 		g.pricegroup || '--' || g.id AS pricegroup,
 		m.description || '--' || m.id AS paymentmethod,
 		bk.name AS bankname,
-		ad1.addressline AS bankaddressline,
-		ad1.additional_addressline AS bankadditional_addressline,
-		ad1.place AS bankplace,
+		ad1.address1 AS bankaddress1,
+		ad1.address2 AS bankaddress2,
+		ad1.city AS bankcity,
 		ad1.state AS bankstate,
-		ad1.zip AS bankzip,
+		ad1.zipcode AS bankzipcode,
 		ad1.country AS bankcountry,
 		ct.curr
                 FROM $form->{db} ct
@@ -368,17 +368,17 @@ sub save {
 
   }
   
-  for (qw(addressline additional_addressline place state zip country)) {
+  for (qw(address1 address2 city state zipcode country)) {
     if ($form->{"bank$_"}) {
       if ($bank_address_id) {
-	$query = qq|INSERT INTO address (id, trans_id, addressline, additional_addressline,
-		    place, state, zip, country) VALUES (
+	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
+		    city, state, zipcode, country) VALUES (
 		    $bank_address_id, $bank_address_id,
-		    |.$dbh->quote(uc $form->{bankaddressline}).qq|,
-		    |.$dbh->quote(uc $form->{bankadditional_addressline}).qq|,
-		    |.$dbh->quote(uc $form->{bankplace}).qq|,
+		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
+		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
+		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
-		    |.$dbh->quote(uc $form->{bankzip}).qq|,
+		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
 		    |.$dbh->quote(uc $form->{bankcountry}).qq|)|;
 	$dbh->do($query) || $form->dberror($query);
 
@@ -393,14 +393,14 @@ sub save {
 		    WHERE id = $form->{id}|;
 	($bank_address_id) = $dbh->selectrow_array($query);
 
-	$query = qq|INSERT INTO address (id, trans_id, addressline, additional_addressline,
-		    place, state, zip, country) VALUES (
+	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
+		    city, state, zipcode, country) VALUES (
 		    $bank_address_id, $bank_address_id,
-		    |.$dbh->quote(uc $form->{bankaddressline}).qq|,
-		    |.$dbh->quote(uc $form->{bankadditional_addressline}).qq|,
-		    |.$dbh->quote(uc $form->{bankplace}).qq|,
+		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
+		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
+		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
-		    |.$dbh->quote(uc $form->{bankzip}).qq|,
+		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
 		    |.$dbh->quote(uc $form->{bankcountry}).qq|)|;
 	$dbh->do($query) || $form->dberror($query);
       }
@@ -493,14 +493,14 @@ sub save {
     $var = "$form->{addressid}, ";
   }
   
-  $query = qq|INSERT INTO address ($id trans_id, addressline, additional_addressline,
-              place, state, zip, country) VALUES ($var
+  $query = qq|INSERT INTO address ($id trans_id, address1, address2,
+              city, state, zipcode, country) VALUES ($var
 	      $form->{id},
-	      |.$dbh->quote($form->{addressline}).qq|,
-	      |.$dbh->quote($form->{additional_addressline}).qq|,
-	      |.$dbh->quote($form->{place}).qq|,
+	      |.$dbh->quote($form->{address1}).qq|,
+	      |.$dbh->quote($form->{address2}).qq|,
+	      |.$dbh->quote($form->{city}).qq|,
 	      |.$dbh->quote($form->{state}).qq|,
-	      |.$dbh->quote($form->{zip}).qq|,
+	      |.$dbh->quote($form->{zipcode}).qq|,
 	      |.$dbh->quote($form->{country}).qq|)|;
   $dbh->do($query) || $form->dberror($query);
 
@@ -618,7 +618,7 @@ sub search {
   }
 
   @a = ();
-  push @a, qw(place state zip country);
+  push @a, qw(city state zipcode country);
   foreach $item (@a) {
     if ($form->{$item} ne "") {
       $var = $form->like(lc $form->{$item});
@@ -628,7 +628,7 @@ sub search {
 
   if ($form->{address} ne "") {
     $var = $form->like(lc $form->{address});
-    $where .= " AND (lower(ad.addressline) LIKE '$var' OR lower(ad.additional_addressline) LIKE '$var')";
+    $where .= " AND (lower(ad.address1) LIKE '$var' OR lower(ad.address2) LIKE '$var')";
   }
   
   if ($form->{startdatefrom}) {
@@ -672,7 +672,7 @@ sub search {
   my $query = qq|SELECT c.*, b.description AS business, d.description AS dispatch,
                  e.name AS employee, g.pricegroup, l.description AS language,
 		 m.name AS manager,
-		 ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip,
+		 ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
 		 ad.country,
 		 pm.description AS paymentmethod,
 		 ct.salutation, ct.firstname, ct.lastname, ct.contacttitle,
@@ -722,7 +722,7 @@ sub search {
 		  '$ar' AS module, 'invoice' AS formtype,
 		  (a.amount = a.paid) AS closed, a.amount, a.netamount,
 		  e.name AS employee, m.name AS manager,
-		  ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip,
+		  ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
 		  ad.country,
 		  pm.description AS paymentmethod,
 		  ct.salutation, ct.firstname, ct.lastname, ct.contacttitle,
@@ -761,7 +761,7 @@ sub search {
 		   '$module' AS module, 'invoice' AS formtype,
 		   (a.amount = a.paid) AS closed, a.amount, a.netamount,
 		   e.name AS employee, m.name AS manager,
-		   ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip,
+		   ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
 		   ad.country,
 		   pm.description AS paymentmethod,
 		   ct.salutation, ct.firstname, ct.lastname, ct.contacttitle,
@@ -797,7 +797,7 @@ sub search {
 		   'oe' AS module, 'order' AS formtype,
 		   o.closed, o.amount, o.netamount,
 		   e.name AS employee, m.name AS manager,
-		   ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip,
+		   ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
 		   ad.country,
 		   pm.description AS paymentmethod,
 		   ct.salutation, ct.firstname, ct.lastname, ct.contacttitle,
@@ -833,7 +833,7 @@ sub search {
 		   'oe' AS module, 'quotation' AS formtype,
 		   o.closed, o.amount, o.netamount,
 		   e.name AS employee, m.name AS manager,
-		   ad.addressline, ad.additional_addressline, ad.place, ad.state, ad.zip,
+		   ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
 		   ad.country,
 		   pm.description AS paymentmethod,
 		   ct.salutation, ct.firstname, ct.lastname, ct.contacttitle,
@@ -892,7 +892,7 @@ sub search {
   while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
     $bth->execute($ref->{id});
     $bref = $bth->fetchrow_hashref(NAME_lc);
-    for (qw(name addressline additional_addressline place state zip country)) {
+    for (qw(name address1 address2 city state zipcode country)) {
       $ref->{"bank$_"} = $bref->{$_};
     }
     $bth->finish;
@@ -907,7 +907,7 @@ sub search {
     for (qw(arap payment discount)) { $ref->{"${_}_accno"} = $accno{$ref->{"${_}_accno_id"}} }
     
     $ref->{address} = "";
-    for (qw(addressline additional_addressline place state zip country)) { $ref->{address} .= "$ref->{$_} " }
+    for (qw(address1 address2 city state zipcode country)) { $ref->{address} .= "$ref->{$_} " }
 
     push @{ $form->{CT} }, $ref;
 
@@ -954,7 +954,7 @@ sub get_history {
   }
   if ($form->{address} ne "") {
     $var = $form->like(lc $form->{address});
-    $where .= " AND lower(ad.addressline) LIKE '$var'";
+    $where .= " AND lower(ad.address1) LIKE '$var'";
   }
   for (qw(name contact email phone notes)) {
     if ($form->{$_} ne "") {
@@ -962,7 +962,7 @@ sub get_history {
       $where .= " AND lower(ct.$_) LIKE '$var'";
     }
   }
-  for (qw(place state zip country)) {
+  for (qw(city state zipcode country)) {
     if ($form->{$_} ne "") {
       $var = $form->like(lc $form->{$_});
       $where .= " AND lower(ad.$_) LIKE '$var'";
@@ -1059,13 +1059,13 @@ sub get_history {
   $form->{direction} =~ s/;//g;
   $sortorder = "2 $form->{direction}, 1, $ordinal{$sortorder} $form->{direction}";
     
-  $query = qq|SELECT ct.id AS ctid, ct.$form->{db}number, a.transdate, ct.name, ad.addressline,
-	      ad.additional_addressline, ad.place, ad.state,
+  $query = qq|SELECT ct.id AS ctid, ct.$form->{db}number, a.transdate, ct.name, ad.address1,
+	      ad.address2, ad.city, ad.state,
 	      p.id AS pid, p.partnumber, a.id AS invid,
 	      a.$invnumber, a.curr, i.description,
 	      i.qty, i.$sellprice AS sellprice, i.discount,
 	      i.$deldate, i.serialnumber, pr.projectnumber,
-	      e.name AS employee, ad.zip, ad.country, i.unit,
+	      e.name AS employee, ad.zipcode, ad.country, i.unit,
               (SELECT $buysell FROM exchangerate ex
 		    WHERE a.curr = ex.curr
 		    AND a.transdate = ex.transdate) AS exchangerate
@@ -1085,7 +1085,7 @@ sub get_history {
   while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
     $ref->{address} = "";
     $ref->{exchangerate} ||= 1;
-    for (qw(addressline additional_addressline place state zip country)) { $ref->{address} .= "$ref->{$_} " }
+    for (qw(address1 address2 city state zipcode country)) { $ref->{address} .= "$ref->{$_} " }
     $ref->{id} = $ref->{ctid};
     push @{ $form->{CT} }, $ref;
   }
@@ -1294,8 +1294,8 @@ sub ship_to {
 
   if ($form->{id} *= 1) {
     $query = qq|SELECT
-                s.shiptoname, s.shiptoaddressline, s.shiptoadditional_addressline,
-                s.shiptoplace, s.shiptostate, s.shiptozip,
+                s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+                s.shiptocity, s.shiptostate, s.shiptozipcode,
 		s.shiptocountry, s.shiptocontact, s.shiptophone,
 		s.shiptofax, s.shiptoemail
 	        FROM shipto s
@@ -1303,8 +1303,8 @@ sub ship_to {
 		WHERE o.$form->{db}_id = |.$form->dbclean($form->{id}).qq|
 		UNION
 		SELECT
-                s.shiptoname, s.shiptoaddressline, s.shiptoadditional_addressline,
-                s.shiptoplace, s.shiptostate, s.shiptozip,
+                s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+                s.shiptocity, s.shiptostate, s.shiptozipcode,
 		s.shiptocountry, s.shiptocontact, s.shiptophone,
 		s.shiptofax, s.shiptoemail
 		FROM shipto s
@@ -1312,8 +1312,8 @@ sub ship_to {
 	        WHERE a.$form->{db}_id = |.$form->dbclean($form->{id}).qq|
 		EXCEPT
 		SELECT
-	        s.shiptoname, s.shiptoaddressline, s.shiptoadditional_addressline,
-                s.shiptoplace, s.shiptostate, s.shiptozip,
+	        s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+                s.shiptocity, s.shiptostate, s.shiptozipcode,
 		s.shiptocountry, s.shiptocontact, s.shiptophone,
 		s.shiptofax, s.shiptoemail
 		FROM shipto s
