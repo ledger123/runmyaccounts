@@ -1927,6 +1927,8 @@ sub form_header {
 
   $form->header(0, 0, $locale);
 
+  $form->{is_migrated} = ($form->{is_migrated}) ? "checked" : "";
+
   print qq|
 <body>
 
@@ -1978,6 +1980,14 @@ sub form_header {
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
 		<td><input name=country size=32 maxlength=64 value="|.$form->quote($form->{country}).qq|"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Post office').qq|</th>
+		<td><input name=post_office size=20 value="|.$form->quote($form->{post_office}).qq|"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Is migrated').qq|</th>
+		<td><input name="is_migrated" type=checkbox class=checkbox value=Y $form->{is_migrated}></td>
 	      </tr>
 	    </table>
 	  </td>

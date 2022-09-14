@@ -45,6 +45,8 @@ sub create_links {
 		ad1.state AS bankstate,
 		ad1.zipcode AS bankzipcode,
 		ad1.country AS bankcountry,
+        ad.post_office,
+        ad.is_migrated,
 		ct.curr
                 FROM $form->{db} ct
 		LEFT JOIN address ad ON (ct.id = ad.trans_id)
@@ -426,6 +428,8 @@ sub save {
   $gifi = qq|
 	      gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|,| if $form->{db} eq 'vendor';
 
+  $form->{is_migrated} = ($form->{is_migrated}) ? '1' : '0';
+
   # SQLI: use of dbh->quote for all columns
   $query = qq|UPDATE $form->{db} SET
               $form->{db}number = |.$dbh->quote($form->{"$form->{db}number"}).qq|,
@@ -492,16 +496,34 @@ sub save {
     $id = "id, ";
     $var = "$form->{addressid}, ";
   }
-  
+
+  my @expr = (
+      "post office",
+      "postoffice",
+      "postbox",
+  );
+
+  if (!$form->{post_office}){
+      for (@expr){
+        if ($form->{address1} =~ $_){
+            $form->{post_office} = $form->{address1};
+            $form->{address1} = '';
+        }
+      }
+  }
+
   $query = qq|INSERT INTO address ($id trans_id, address1, address2,
-              city, state, zipcode, country) VALUES ($var
+              city, state, zipcode, country, post_office, is_migrated) VALUES ($var
 	      $form->{id},
 	      |.$dbh->quote($form->{address1}).qq|,
 	      |.$dbh->quote($form->{address2}).qq|,
 	      |.$dbh->quote($form->{city}).qq|,
 	      |.$dbh->quote($form->{state}).qq|,
 	      |.$dbh->quote($form->{zipcode}).qq|,
-	      |.$dbh->quote($form->{country}).qq|)|;
+	      |.$dbh->quote($form->{country}).qq|,
+	      |.$dbh->quote($form->{post_office}).qq|,
+	      |."'$form->{is_migrated}'".qq|
+          )|;
   $dbh->do($query) || $form->dberror($query);
 
   $id = "";
