@@ -503,6 +503,19 @@ sub save {
       "postbox",
   );
 
+  my @careof = (
+      "careof",
+      "c/o",
+  );
+
+  for (@careof){
+    if ($form->{address1} =~ $_){
+        my $address1 = $form->{address1};
+        $form->{address1} = $form->{address2};
+        $form->{address2} = $address1
+    }
+  }
+
   if (!$form->{post_office}){
       for (@expr){
         if ($form->{address1} =~ $_){
