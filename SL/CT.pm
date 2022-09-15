@@ -47,6 +47,8 @@ sub create_links {
 		ad1.country AS bankcountry,
         ad.post_office,
         ad.is_migrated,
+        ad1.post_office as bankpostoffice,
+        ad1.is_migrated as bankis_migrated,
 		ct.curr
                 FROM $form->{db} ct
 		LEFT JOIN address ad ON (ct.id = ad.trans_id)
@@ -374,14 +376,16 @@ sub save {
     if ($form->{"bank$_"}) {
       if ($bank_address_id) {
 	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
-		    city, state, zipcode, country) VALUES (
+		    city, state, zipcode, country, postoffice, is_migrated) VALUES (
 		    $bank_address_id, $bank_address_id,
 		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
 		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
 		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
 		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
-		    |.$dbh->quote(uc $form->{bankcountry}).qq|)|;
+		    |.$dbh->quote(uc $form->{bankcountry}).qq|,
+        |.$dbh->quote(uc $form->{bankpostoffice}).qq|,
+        |.$dbh->quote(uc $form->{bankis_migrated}).qq|)|;
 	$dbh->do($query) || $form->dberror($query);
 
       } else {
@@ -403,7 +407,9 @@ sub save {
 		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
 		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
-		    |.$dbh->quote(uc $form->{bankcountry}).qq|)|;
+		    |.$dbh->quote(uc $form->{bankcountry}).qq|,
+        |.$dbh->quote(uc $form->{bankpostoffice}).qq|,
+        |.$dbh->quote(uc $form->{bankis_migrated}).qq|)|;
 	$dbh->do($query) || $form->dberror($query);
       }
       last;
