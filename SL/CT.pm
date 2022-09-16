@@ -371,12 +371,14 @@ sub save {
     ($bank_address_id) = $dbh->selectrow_array($query);
 
   }
+
+  $form->{bankis_migrated} = ($form->{bankis_migrated}) ? '1' : '0';
   
   for (qw(address1 address2 city state zipcode country)) {
     if ($form->{"bank$_"}) {
       if ($bank_address_id) {
 	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
-		    city, state, zipcode, country, postoffice, is_migrated) VALUES (
+		    city, state, zipcode, country, post_office, is_migrated) VALUES (
 		    $bank_address_id, $bank_address_id,
 		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
 		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
@@ -400,7 +402,7 @@ sub save {
 	($bank_address_id) = $dbh->selectrow_array($query);
 
 	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
-		    city, state, zipcode, country) VALUES (
+		    city, state, zipcode, country, post_office, is_migrated) VALUES (
 		    $bank_address_id, $bank_address_id,
 		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
 		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,

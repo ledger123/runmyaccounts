@@ -2128,7 +2128,7 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Post office').qq|</th>
-		<td><input name=bankpostoffice size=20 value="|.$form->quote($form->{post_office}).qq|"></td>
+		<td><input name=bankpostoffice size=20 value="|.$form->quote($form->{bankpost_office}).qq|"></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Is migrated').qq|</th>
