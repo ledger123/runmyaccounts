@@ -373,6 +373,7 @@ sub save {
   }
 
   $form->{bankis_migrated} = ($form->{bankis_migrated}) ? '1' : '0';
+  $form->{bankis_migrated} = '1';
   
   for (qw(address1 address2 city state zipcode country)) {
     if ($form->{"bank$_"}) {
@@ -437,6 +438,7 @@ sub save {
 	      gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|,| if $form->{db} eq 'vendor';
 
   $form->{is_migrated} = ($form->{is_migrated}) ? '1' : '0';
+  $form->{is_migrated} = '1';
 
   # SQLI: use of dbh->quote for all columns
   $query = qq|UPDATE $form->{db} SET
