@@ -32,6 +32,8 @@ sub create_links {
     $query = qq/SELECT ct.*,
                 ad.id AS addressid, ad.address1, ad.address2, ad.city,
 		ad.state, ad.zipcode, ad.country,
+        ad.post_office,
+        ad.is_migrated,
 		b.description || '--' || b.id AS business,
 		d.description || '--' || d.id AS dispatch,
         s.*,
@@ -45,8 +47,8 @@ sub create_links {
 		ad1.state AS bankstate,
 		ad1.zipcode AS bankzipcode,
 		ad1.country AS bankcountry,
-        ad.post_office,
-        ad.is_migrated,
+        ad1.post_office AS bankpost_office,
+        ad1.is_migrated AS bankis_migrated,
 		ct.curr
                 FROM $form->{db} ct
 		LEFT JOIN address ad ON (ct.id = ad.trans_id)
@@ -253,6 +255,17 @@ sub save {
   my $sth;
   my $null;
   
+  my @postoffice = (
+      "post office",
+      "postoffice",
+      "postbox",
+  );
+
+  my @careof = (
+      "careof",
+      "c/o",
+  );
+
   $form->{name} ||= "$form->{lastname} $form->{firstname}";
   $form->{contact} = "$form->{firstname} $form->{lastname}";
   $form->{name} =~ s/^\s+//;
@@ -327,6 +340,7 @@ sub save {
     }
 
   } else {
+
     my $uid = localtime;
     $uid .= $$;
     
@@ -370,19 +384,42 @@ sub save {
 
   }
   
+    if ($form->{"bankaddress1"}) {
+        # c/o processing
+        for (@careof){
+          if (lc($form->{bankaddress1}) =~ $_){
+              my $bankaddress1 = $form->{bankaddress1};
+              $form->{bankaddress1} = $form->{bankaddress2};
+              $form->{bankaddress2} = $bankaddress1
+          }
+        }
+        # bankpost_office processing
+        if (!$form->{bankpost_office}){
+            for (@postoffice){
+              if (lc($form->{bankaddress1}) =~ $_){
+                  $form->{bankpost_office} = $form->{bankaddress1};
+                  $form->{bankaddress1} = '';
+              }
+            }
+        }
+    }
+
   for (qw(address1 address2 city state zipcode country)) {
     if ($form->{"bank$_"}) {
       if ($bank_address_id) {
-	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
-		    city, state, zipcode, country) VALUES (
+	    $query = qq|INSERT INTO address (id, trans_id, address1, address2,
+		    city, state, zipcode, country, post_office, is_migrated) VALUES (
 		    $bank_address_id, $bank_address_id,
 		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
 		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
 		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
 		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
-		    |.$dbh->quote(uc $form->{bankcountry}).qq|)|;
-	$dbh->do($query) || $form->dberror($query);
+	        |.$dbh->quote(uc $form->{bankcountry}).qq|,
+	        |.$dbh->quote($form->{bankpost_office}).qq|,
+	        |."'$form->{bankis_migrated}'".qq|
+          )|;
+	    $dbh->do($query) || $form->dberror($query);
 
       } else {
 	$query = qq|INSERT INTO bank (id, name)
@@ -403,7 +440,10 @@ sub save {
 		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
 		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
-		    |.$dbh->quote(uc $form->{bankcountry}).qq|)|;
+	        |.$dbh->quote(uc $form->{bankcountry}).qq|,
+	        |.$dbh->quote($form->{bankpost_office}).qq|,
+	        |."'$form->{bankis_migrated}'".qq|
+          )|;
 	$dbh->do($query) || $form->dberror($query);
       }
       last;
@@ -497,28 +537,19 @@ sub save {
     $var = "$form->{addressid}, ";
   }
 
-  my @expr = (
-      "post office",
-      "postoffice",
-      "postbox",
-  );
-
-  my @careof = (
-      "careof",
-      "c/o",
-  );
-
+  # c/o processing
   for (@careof){
-    if ($form->{address1} =~ $_){
+    if (lc($form->{address1}) =~ $_){
         my $address1 = $form->{address1};
         $form->{address1} = $form->{address2};
         $form->{address2} = $address1
     }
   }
 
+  # post_office processing
   if (!$form->{post_office}){
-      for (@expr){
-        if ($form->{address1} =~ $_){
+      for (@postoffice){
+        if (lc($form->{address1}) =~ $_){
             $form->{post_office} = $form->{address1};
             $form->{address1} = '';
         }
