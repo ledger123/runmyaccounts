@@ -103,9 +103,11 @@ sub new {
 sub countries {
     my ($self, $myconfig) = @_;
 
-    my $countrycode = 'en_GB';
+    $countrycode = $myconfig->{countrycode};
+    $countrycode = 'default' if !$countrycode;
+
     my $countries = { 
-        en_GB => {
+        ch => {
           'Austria' => 'AT',
           'Germany' => 'DE',
           'Switzerland' => 'CH',
@@ -121,6 +123,7 @@ sub countries {
     for (sort keys %{$countries->{$countrycode}}){
        $self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
     }
+
 }
 
 
