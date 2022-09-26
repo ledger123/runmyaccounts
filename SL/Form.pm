@@ -99,6 +99,31 @@ sub new {
 
 }
 
+
+sub countries {
+    my ($self, $myconfig) = @_;
+
+    my $countrycode = 'en_GB';
+    my $countries = { 
+        en_GB => {
+          'Austria' => 'AT',
+          'Germany' => 'DE',
+          'Switzerland' => 'CH',
+        },
+        default => {
+          'Austria' => 'AT',
+          'Germany' => 'DE',
+          'Switzerland' => 'CH',
+        }
+    };
+
+    $self->{selectcountry} = "<option value=''>\n";
+    for (sort keys %{$countries->{$countrycode}}){
+       $self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
+    }
+}
+
+
 sub logtofile {
 	my ( $self, $txt ) = @_;
 	open( FH, '>> logtofile.txt' );
