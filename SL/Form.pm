@@ -93,11 +93,39 @@ sub new {
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
 	$self->{version}   = "2.8.33";
-	$self->{dbversion} = "2.8.22";
+	$self->{dbversion} = "2.8.23";
 
 	bless $self, $type;
 
 }
+
+
+sub countries {
+    my ($self, $myconfig) = @_;
+
+    $countrycode = $myconfig->{countrycode};
+    $countrycode = 'default' if !$countrycode;
+
+    my $countries = { 
+        ch => {
+          'Austria' => 'AT',
+          'Germany' => 'DE',
+          'Switzerland' => 'CH',
+        },
+        default => {
+          'Austria' => 'AT',
+          'Germany' => 'DE',
+          'Switzerland' => 'CH',
+        }
+    };
+
+    $self->{selectcountry} = "<option value=''>\n";
+    for (sort keys %{$countries->{$countrycode}}){
+       $self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
+    }
+
+}
+
 
 sub logtofile {
 	my ( $self, $txt ) = @_;
@@ -1508,8 +1536,8 @@ sub format_line {
 
 		s/<%(.+?)%>/$newstr/;
 
-		s/(²)/\\textsuperscript{2}/;
-		s/(³)/\\textsuperscript{3}/;
+		s/(ï¿½)/\\textsuperscript{2}/;
+		s/(ï¿½)/\\textsuperscript{3}/;
 
 	}
 
@@ -1739,7 +1767,7 @@ sub format_string {
 				quotemeta('\\'), '&', '\n', '\r',
 				'\$',            '%', '_',  '#',
 				quotemeta('^'),  '{', '}',  '<',
-				'>',             '£'
+				'>',             'ï¿½'
 			],
 			utf => [
 				quotemeta('\\'), '&', '\n', '\r', '\$', '%', '_', '#',
@@ -1766,7 +1794,7 @@ sub format_string {
 			'>'             => '$>$',
 			'\n'            => '\newline ',
 			'\r'            => '\newline ',
-			'£'            => '\pounds ',
+			'ï¿½'            => '\pounds ',
 			quotemeta('\\') => '/'
 		}
 	);

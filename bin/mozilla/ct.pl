@@ -56,6 +56,7 @@ sub create_links {
   $form->{ARAP} = ($form->{db} eq 'customer') ? 'AR' : 'AP';
   
   CT->create_links(\%myconfig, \%$form);
+  $form->countries(\%myconfig);
 
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
@@ -610,7 +611,7 @@ sub search_name {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
-		<td><input name=country size=32></td>
+		<td><select name=country>$form->{selectcountry}</select></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Startdate').qq|</th>
@@ -1979,7 +1980,7 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
-		<td><input name=country size=32 maxlength=64 value="|.$form->quote($form->{country}).qq|"></td>
+		<td><select name=country>$form->{selectcountry}</select></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Post office').qq|</th>

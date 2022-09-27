@@ -542,7 +542,8 @@ sub save {
     if (lc($form->{address1}) =~ $_){
         my $address1 = $form->{address1};
         $form->{address1} = $form->{address2};
-        $form->{address2} = $address1
+        $form->{address2} = $address1;
+        last;
     }
   }
 
@@ -552,6 +553,7 @@ sub save {
         if (lc($form->{address1}) =~ $_){
             $form->{post_office} = $form->{address1};
             $form->{address1} = '';
+            last;
         }
       }
   }
