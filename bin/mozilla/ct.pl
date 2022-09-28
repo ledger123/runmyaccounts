@@ -56,7 +56,8 @@ sub create_links {
   $form->{ARAP} = ($form->{db} eq 'customer') ? 'AR' : 'AP';
   
   CT->create_links(\%myconfig, \%$form);
-  $form->countries(\%myconfig,$form->{country});
+  $form->countries(\%myconfig,$form->{country}, 0);
+  $form->countries(\%myconfig,$form->{bankcountry}, 1);
 
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
@@ -2122,7 +2123,7 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
-		<td><input name=bankcountry size=32 maxlength=32 value="|.$form->quote($form->{bankcountry}).qq|"></td>
+		<td><select name=bankcountry>$form->{selectbankcountry}</select></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Post office').qq|</th>

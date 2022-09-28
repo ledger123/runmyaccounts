@@ -101,7 +101,7 @@ sub new {
 
 
 sub countries {
-    my ($self, $myconfig, $s_country) = @_;
+    my ($self, $myconfig, $s_country, $is_bank) = @_;
 
     $countrycode = $myconfig->{countrycode};
     $countrycode = 'default' if !$countrycode;
@@ -2629,16 +2629,25 @@ sub countries {
         }
     };
 
-    $self->{selectcountry} = "<option value=''>\n";
-    for (sort keys %{$countries->{$countrycode}}){
-		print STDERR "COMPARING $s_country and $countries->{$countrycode}->{$_}";
-		if ($s_country eq $countries->{$countrycode}->{$_}) {
-			print STDERR "EQUAL";
-    		$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_} selected>$_</option>\n";
-		} else {
-    		$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
+	if ($is_bank) {
+		$self->{selectbankcountry} = "<option value=''>\n";
+		for (sort keys %{$countries->{$countrycode}}){
+			if ($s_country eq $countries->{$countrycode}->{$_}) {
+				$self->{selectbankcountry} .= "<option value=$countries->{$countrycode}->{$_} selected>$_</option>\n";
+			} else {
+				$self->{selectbankcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
+			}
 		}
-    }
+	} else {
+		$self->{selectcountry} = "<option value=''>\n";
+		for (sort keys %{$countries->{$countrycode}}){
+			if ($s_country eq $countries->{$countrycode}->{$_}) {
+				$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_} selected>$_</option>\n";
+			} else {
+				$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
+			}
+		}
+	}
 
 }
 
