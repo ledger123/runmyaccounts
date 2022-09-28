@@ -1987,7 +1987,6 @@ sub form_header {
 		<td><input name=post_office size=20 value="|.$form->quote($form->{post_office}).qq|"></td>
 	      </tr>
 	      <tr>
-		<th align=right nowrap>|.$locale->text('Is migrated').qq|</th>
 		<td><input name="is_migrated" type=hidden class=checkbox value=Y $form->{is_migrated}></td>
 	      </tr>
 	    </table>
@@ -2130,8 +2129,7 @@ sub form_header {
 		<td><input name=bankpost_office size=20 value="|.$form->quote($form->{bankpost_office}).qq|"></td>
 	      </tr>
 	      <tr>
-		<th align=right nowrap>|.$locale->text('Is migrated').qq|</th>
-		<td><input name="bankis_migrated" type=checkbox class=checkbox value=Y $form->{bankis_migrated}></td>
+		<td><input name="bankis_migrated" type=hidden class=checkbox value=Y $form->{bankis_migrated}></td>
 	      </tr>
 	    </table>
 	  </td>
