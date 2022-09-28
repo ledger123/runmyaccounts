@@ -56,7 +56,7 @@ sub create_links {
   $form->{ARAP} = ($form->{db} eq 'customer') ? 'AR' : 'AP';
   
   CT->create_links(\%myconfig, \%$form);
-  $form->countries(\%myconfig);
+  $form->countries(\%myconfig,$form->{country});
 
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
@@ -1988,7 +1988,7 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Is migrated').qq|</th>
-		<td><input name="is_migrated" type=checkbox class=checkbox value=Y $form->{is_migrated}></td>
+		<td><input name="is_migrated" type=hidden class=checkbox value=Y $form->{is_migrated}></td>
 	      </tr>
 	    </table>
 	  </td>

@@ -404,6 +404,7 @@ sub save {
         }
     }
 
+  $form->{bankis_migrated} = ($form->{bankis_migrated}) ? '1' : '0';
   for (qw(address1 address2 city state zipcode country)) {
     if ($form->{"bank$_"}) {
       if ($bank_address_id) {
@@ -433,7 +434,7 @@ sub save {
 	($bank_address_id) = $dbh->selectrow_array($query);
 
 	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
-		    city, state, zipcode, country) VALUES (
+		    city, state, zipcode, country, post_office, is_migrated) VALUES (
 		    $bank_address_id, $bank_address_id,
 		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
 		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
@@ -469,7 +470,7 @@ sub save {
 	      gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|,| if $form->{db} eq 'vendor';
 
   $form->{is_migrated} = ($form->{is_migrated}) ? '1' : '0';
-
+  
   # SQLI: use of dbh->quote for all columns
   $query = qq|UPDATE $form->{db} SET
               $form->{db}number = |.$dbh->quote($form->{"$form->{db}number"}).qq|,
