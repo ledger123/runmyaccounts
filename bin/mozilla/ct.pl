@@ -56,6 +56,8 @@ sub create_links {
   $form->{ARAP} = ($form->{db} eq 'customer') ? 'AR' : 'AP';
   
   CT->create_links(\%myconfig, \%$form);
+  $form->countries(\%myconfig,$form->{country}, 0);
+  $form->countries(\%myconfig,$form->{bankcountry}, 1);
 
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
@@ -610,7 +612,7 @@ sub search_name {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
-		<td><input name=country size=32></td>
+		<td><select name=country>$form->{selectcountry}</select></td>
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Startdate').qq|</th>
@@ -1927,6 +1929,8 @@ sub form_header {
 
   $form->header(0, 0, $locale);
 
+  for (qw(is_migrated bankis_migrated)) { "checked" }
+
   print qq|
 <body>
 
@@ -1977,7 +1981,14 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
-		<td><input name=country size=32 maxlength=64 value="|.$form->quote($form->{country}).qq|"></td>
+		<td><select name=country>$form->{selectcountry}</select></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Post office').qq|</th>
+		<td><input name=post_office size=20 value="|.$form->quote($form->{post_office}).qq|"></td>
+	      </tr>
+	      <tr>
+		<td><input name="is_migrated" type=hidden class=checkbox value=Y $form->{is_migrated}></td>
 	      </tr>
 	    </table>
 	  </td>
@@ -2112,7 +2123,14 @@ sub form_header {
 	      </tr>
 	      <tr>
 		<th align=right nowrap>|.$locale->text('Country').qq|</th>
-		<td><input name=bankcountry size=32 maxlength=32 value="|.$form->quote($form->{bankcountry}).qq|"></td>
+		<td><select name=bankcountry>$form->{selectbankcountry}</select></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Post office').qq|</th>
+		<td><input name=bankpost_office size=20 value="|.$form->quote($form->{bankpost_office}).qq|"></td>
+	      </tr>
+	      <tr>
+		<td><input name="bankis_migrated" type=hidden class=checkbox value=Y $form->{bankis_migrated}></td>
 	      </tr>
 	    </table>
 	  </td>
