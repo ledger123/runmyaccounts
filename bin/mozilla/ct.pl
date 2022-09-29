@@ -1929,7 +1929,7 @@ sub form_header {
 
   $form->header(0, 0, $locale);
 
-  for (qw(is_migrated bankis_migrated)) { $form->{$_} = ($form->{$_}) ? "checked" : "" }
+  for (qw(is_migrated bankis_migrated)) { "checked" }
 
   print qq|
 <body>
