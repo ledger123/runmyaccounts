@@ -439,7 +439,7 @@ sub save {
           if (lc($form->{bankaddress1}) =~ $_){
               my $bankaddress1 = $form->{bankaddress1};
               $form->{bankaddress1} = $form->{bankaddress2};
-              $form->{bankaddress2} = $bankaddress1
+              $form->{bankaddress2} = $bankaddress1;
               last;
           }
         }
