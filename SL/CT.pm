@@ -256,9 +256,58 @@ sub save {
   my $null;
   
   my @postoffice = (
-      "post office",
-      "postoffice",
-      "postbox",
+            # EN
+            "postoffice",
+            "post office",
+            "postbox",
+            "post box",
+            "po box",
+            "pobox",
+            "p.o. box",
+            "p.o.box",
+            "p.o.",
+            "letter box",
+            "letterbox",
+
+            # DE
+            "postfach",
+            "post fach",
+            "postkasten",
+            "post kasten",
+            "briefkasten",
+            "brief kasten",
+            "briefbox",
+            "brief box",
+            "postbriefkasten",
+            "p.o. kasten",
+
+            # FR
+            "boîte postale",
+            "boîtepostale",
+            "b.p.",
+            "boite postale",
+            "boitepostale",
+            "boîte aux lettres",
+            "boite aux lettres",
+            "boîte à lettres",
+            "boîte a lettres",
+            "boite à lettres",
+            "boite a lettres",
+
+            # IT
+            "cassetta delle lettere",
+            "cassetta per le lettere",
+            "cassetta per lettere",
+            "casella postale",
+            "casellapostale",
+            "cassetta postale",
+            "cassettapostale",
+            "case postale",
+
+            # RM
+            "caum postal",
+            "uffizi postal",
+            "chascha da brevs",
   );
 
   my @careof = (
@@ -391,6 +440,7 @@ sub save {
               my $bankaddress1 = $form->{bankaddress1};
               $form->{bankaddress1} = $form->{bankaddress2};
               $form->{bankaddress2} = $bankaddress1
+              last;
           }
         }
         # bankpost_office processing
@@ -398,7 +448,11 @@ sub save {
             for (@postoffice){
               if (lc($form->{bankaddress1}) =~ $_){
                   $form->{bankpost_office} = $form->{bankaddress1};
-                  $form->{bankaddress1} = '';
+                  $form->{bankaddress1} = $form->{bankaddress2};
+              }
+              if (lc($form->{bankaddress2}) =~ $_){
+                  $form->{bankpost_office} = $form->{bankaddress2};
+                  $form->{bankaddress2} = '';
               }
             }
         }
@@ -553,8 +607,11 @@ sub save {
       for (@postoffice){
         if (lc($form->{address1}) =~ $_){
             $form->{post_office} = $form->{address1};
-            $form->{address1} = '';
-            last;
+            $form->{address1} = $form->{address2};
+        }
+        if (lc($form->{address2}) =~ $_){
+            $form->{post_office} = $form->{address2};
+            $form->{address2} = '';
         }
       }
   }
