@@ -1,11 +1,11 @@
-CREATE TABLE lastused (
+CREATE TABLE IF NOT EXISTS lastused (
     id      serial primary key,
     report  varchar(40),
     cols    text,
     login   varchar(255)
 );
 
-CREATE TABLE chat (
+CREATE TABLE IF NOT EXISTS chat (
 	id SERIAL PRIMARY KEY,
 	trans_id INT NOT NULL,
 	message VARCHAR(255) NOT NULL,
