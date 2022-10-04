@@ -2684,6 +2684,7 @@ sub countries {
 
 }
 
+# https://www.perlmonks.org/?node_id=118961
 sub is_array {
   my ($ref) = @_;
   # Firstly arrays need to be references, throw
