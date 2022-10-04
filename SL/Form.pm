@@ -106,6 +106,13 @@ sub countries {
     $countrycode = $myconfig->{countrycode};
     $countrycode = 'default' if !$countrycode;
 
+	@chTranslations = qw(CH CHE SCHWEIZ SWITZERLAND);
+	@atTranslations = qw(AT ÖSTERREICH AUSTRIA);
+	@frTranslations = qw(FR FRANCE FRANKREICH);
+	@usTranslations = ("US", "UNITED STATES", "VEREINIGTE STAATEN VON AMERICA", "VEREINIGTE STAATEN VON AMERIKA", "VEREINIGTE STAATEN");
+	@ukTranslations = ("GB", "UK", "UNITED KINGDOM", "VEREINIGTES KÖNIGREICH", "GREAT BRITAIN", "GROSS BRITANNIEN");
+	@deTranslations = qw(DE DEUTSCHLAND GERMANY);
+
     my $countries = { 
         rma_ch_de => {
 			'Andorra' => 'AD',
@@ -119,7 +126,6 @@ sub countries {
 			'Antarktis' => 'AQ',
 			'Argentinien' => 'AR',
 			'Amerikanisch Samoa' => 'AS',
-			'Ästerreich' => 'AT',
 			'Australien' => 'AU',
 			'Aruba' => 'AW',
 			'Åland' => 'AX',
@@ -150,7 +156,6 @@ sub countries {
 			'Demokratische Republik Kongo' => 'CD',
 			'Zentralafrikanische Republik' => 'CF',
 			'Kongo' => 'CG',
-			'Schweiz' => 'CH',
 			'Elfenbeinküste' => 'CI',
 			'Cookinseln' => 'CK',
 			'Chile' => 'CL',
@@ -164,7 +169,6 @@ sub countries {
 			'Weihnachtsinsel' => 'CX',
 			'Zypern' => 'CY',
 			'Tschechische Republik' => 'CZ',
-			'Deutschland' => 'DE',
 			'Dschibuti' => 'DJ',
 			'Dänemark' => 'DK',
 			'Dominica' => 'DM',
@@ -182,9 +186,7 @@ sub countries {
 			'Falklandinseln' => 'FK',
 			'Mikronesien' => 'FM',
 			'Färöer-Inseln' => 'FO',
-			'Frankreich' => 'FR',
 			'Gabun' => 'GA',
-			'Vereinigtes Königreich' => 'GB',
 			'Grenada' => 'GD',
 			'Georgien' => 'GE',
 			'Französisch-Guayana' => 'GF',
@@ -340,7 +342,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'Vereinigte Staaten von Amerika' => 'US',
 			'Uruguay' => 'UY',
 			'Usbekistan' => 'UZ',
 			'Vatikanstadt' => 'VA',
@@ -358,6 +359,12 @@ sub countries {
 			'Südafrika' => 'ZA',
 			'Sambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Schweiz' => \@chTranslations,
+			'Vereinigtes Königreich' => \@ukTranslations,
+			'Vereinigte Staaten von Amerika' => \@usTranslations,
+			'Deutschland' => \@deTranslations,
+			'Frankreich' => \@frTranslations,
+			'Österreich' => \@atTranslations,
         },
 		ch => {
 			'Andorra' => 'AD',
@@ -371,7 +378,6 @@ sub countries {
 			'Antarktis' => 'AQ',
 			'Argentinien' => 'AR',
 			'Amerikanisch Samoa' => 'AS',
-			'Ästerreich' => 'AT',
 			'Australien' => 'AU',
 			'Aruba' => 'AW',
 			'Åland' => 'AX',
@@ -402,7 +408,6 @@ sub countries {
 			'Demokratische Republik Kongo' => 'CD',
 			'Zentralafrikanische Republik' => 'CF',
 			'Kongo' => 'CG',
-			'Schweiz' => 'CH',
 			'Elfenbeinküste' => 'CI',
 			'Cookinseln' => 'CK',
 			'Chile' => 'CL',
@@ -416,7 +421,6 @@ sub countries {
 			'Weihnachtsinsel' => 'CX',
 			'Zypern' => 'CY',
 			'Tschechische Republik' => 'CZ',
-			'Deutschland' => 'DE',
 			'Dschibuti' => 'DJ',
 			'Dänemark' => 'DK',
 			'Dominica' => 'DM',
@@ -434,9 +438,7 @@ sub countries {
 			'Falklandinseln' => 'FK',
 			'Mikronesien' => 'FM',
 			'Färöer-Inseln' => 'FO',
-			'Frankreich' => 'FR',
 			'Gabun' => 'GA',
-			'Vereinigtes Königreich' => 'GB',
 			'Grenada' => 'GD',
 			'Georgien' => 'GE',
 			'Französisch-Guayana' => 'GF',
@@ -592,7 +594,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'Vereinigte Staaten von Amerika' => 'US',
 			'Uruguay' => 'UY',
 			'Usbekistan' => 'UZ',
 			'Vatikanstadt' => 'VA',
@@ -610,6 +611,12 @@ sub countries {
 			'Südafrika' => 'ZA',
 			'Sambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Schweiz' => \@chTranslations,
+			'Vereinigtes Königreich' => \@ukTranslations,
+			'Vereinigte Staaten von Amerika' => \@usTranslations,
+			'Deutschland' => \@deTranslations,
+			'Frankreich' => \@frTranslations,
+			'Österreich' => \@atTranslations,
         },
 		ch_utf => {
 			'Andorra' => 'AD',
@@ -623,7 +630,6 @@ sub countries {
 			'Antarktis' => 'AQ',
 			'Argentinien' => 'AR',
 			'Amerikanisch Samoa' => 'AS',
-			'Ästerreich' => 'AT',
 			'Australien' => 'AU',
 			'Aruba' => 'AW',
 			'Åland' => 'AX',
@@ -654,7 +660,6 @@ sub countries {
 			'Demokratische Republik Kongo' => 'CD',
 			'Zentralafrikanische Republik' => 'CF',
 			'Kongo' => 'CG',
-			'Schweiz' => 'CH',
 			'Elfenbeinküste' => 'CI',
 			'Cookinseln' => 'CK',
 			'Chile' => 'CL',
@@ -668,7 +673,6 @@ sub countries {
 			'Weihnachtsinsel' => 'CX',
 			'Zypern' => 'CY',
 			'Tschechische Republik' => 'CZ',
-			'Deutschland' => 'DE',
 			'Dschibuti' => 'DJ',
 			'Dänemark' => 'DK',
 			'Dominica' => 'DM',
@@ -686,9 +690,7 @@ sub countries {
 			'Falklandinseln' => 'FK',
 			'Mikronesien' => 'FM',
 			'Färöer-Inseln' => 'FO',
-			'Frankreich' => 'FR',
 			'Gabun' => 'GA',
-			'Vereinigtes Königreich' => 'GB',
 			'Grenada' => 'GD',
 			'Georgien' => 'GE',
 			'Französisch-Guayana' => 'GF',
@@ -844,7 +846,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'Vereinigte Staaten von Amerika' => 'US',
 			'Uruguay' => 'UY',
 			'Usbekistan' => 'UZ',
 			'Vatikanstadt' => 'VA',
@@ -862,6 +863,12 @@ sub countries {
 			'Südafrika' => 'ZA',
 			'Sambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Schweiz' => \@chTranslations,
+			'Vereinigtes Königreich' => \@ukTranslations,
+			'Vereinigte Staaten von Amerika' => \@usTranslations,
+			'Deutschland' => \@deTranslations,
+			'Frankreich' => \@frTranslations,
+			'Österreich' => \@atTranslations,
         },
 		chd_utf => {
 			'Andorra' => 'AD',
@@ -875,7 +882,6 @@ sub countries {
 			'Antarktis' => 'AQ',
 			'Argentinien' => 'AR',
 			'Amerikanisch Samoa' => 'AS',
-			'Ästerreich' => 'AT',
 			'Australien' => 'AU',
 			'Aruba' => 'AW',
 			'Åland' => 'AX',
@@ -906,7 +912,6 @@ sub countries {
 			'Demokratische Republik Kongo' => 'CD',
 			'Zentralafrikanische Republik' => 'CF',
 			'Kongo' => 'CG',
-			'Schweiz' => 'CH',
 			'Elfenbeinküste' => 'CI',
 			'Cookinseln' => 'CK',
 			'Chile' => 'CL',
@@ -920,7 +925,6 @@ sub countries {
 			'Weihnachtsinsel' => 'CX',
 			'Zypern' => 'CY',
 			'Tschechische Republik' => 'CZ',
-			'Deutschland' => 'DE',
 			'Dschibuti' => 'DJ',
 			'Dänemark' => 'DK',
 			'Dominica' => 'DM',
@@ -938,9 +942,7 @@ sub countries {
 			'Falklandinseln' => 'FK',
 			'Mikronesien' => 'FM',
 			'Färöer-Inseln' => 'FO',
-			'Frankreich' => 'FR',
 			'Gabun' => 'GA',
-			'Vereinigtes Königreich' => 'GB',
 			'Grenada' => 'GD',
 			'Georgien' => 'GE',
 			'Französisch-Guayana' => 'GF',
@@ -1096,7 +1098,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'Vereinigte Staaten von Amerika' => 'US',
 			'Uruguay' => 'UY',
 			'Usbekistan' => 'UZ',
 			'Vatikanstadt' => 'VA',
@@ -1114,6 +1115,12 @@ sub countries {
 			'Südafrika' => 'ZA',
 			'Sambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Schweiz' => \@chTranslations,
+			'Vereinigtes Königreich' => \@ukTranslations,
+			'Vereinigte Staaten von Amerika' => \@usTranslations,
+			'Deutschland' => \@deTranslations,
+			'Frankreich' => \@frTranslations,
+			'Österreich' => \@atTranslations,
         },
 		de => {
 			'Andorra' => 'AD',
@@ -1127,7 +1134,6 @@ sub countries {
 			'Antarktis' => 'AQ',
 			'Argentinien' => 'AR',
 			'Amerikanisch Samoa' => 'AS',
-			'Ästerreich' => 'AT',
 			'Australien' => 'AU',
 			'Aruba' => 'AW',
 			'Åland' => 'AX',
@@ -1158,7 +1164,6 @@ sub countries {
 			'Demokratische Republik Kongo' => 'CD',
 			'Zentralafrikanische Republik' => 'CF',
 			'Kongo' => 'CG',
-			'Schweiz' => 'CH',
 			'Elfenbeinküste' => 'CI',
 			'Cookinseln' => 'CK',
 			'Chile' => 'CL',
@@ -1172,7 +1177,6 @@ sub countries {
 			'Weihnachtsinsel' => 'CX',
 			'Zypern' => 'CY',
 			'Tschechische Republik' => 'CZ',
-			'Deutschland' => 'DE',
 			'Dschibuti' => 'DJ',
 			'Dänemark' => 'DK',
 			'Dominica' => 'DM',
@@ -1190,9 +1194,7 @@ sub countries {
 			'Falklandinseln' => 'FK',
 			'Mikronesien' => 'FM',
 			'Färöer-Inseln' => 'FO',
-			'Frankreich' => 'FR',
 			'Gabun' => 'GA',
-			'Vereinigtes Königreich' => 'GB',
 			'Grenada' => 'GD',
 			'Georgien' => 'GE',
 			'Französisch-Guayana' => 'GF',
@@ -1348,7 +1350,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'Vereinigte Staaten von Amerika' => 'US',
 			'Uruguay' => 'UY',
 			'Usbekistan' => 'UZ',
 			'Vatikanstadt' => 'VA',
@@ -1366,6 +1367,12 @@ sub countries {
 			'Südafrika' => 'ZA',
 			'Sambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Schweiz' => \@chTranslations,
+			'Vereinigtes Königreich' => \@ukTranslations,
+			'Vereinigte Staaten von Amerika' => \@usTranslations,
+			'Deutschland' => \@deTranslations,
+			'Frankreich' => \@frTranslations,
+			'Österreich' => \@atTranslations,
         },
 		de_utf => {
 			'Andorra' => 'AD',
@@ -1379,7 +1386,6 @@ sub countries {
 			'Antarktis' => 'AQ',
 			'Argentinien' => 'AR',
 			'Amerikanisch Samoa' => 'AS',
-			'Ästerreich' => 'AT',
 			'Australien' => 'AU',
 			'Aruba' => 'AW',
 			'Åland' => 'AX',
@@ -1410,7 +1416,6 @@ sub countries {
 			'Demokratische Republik Kongo' => 'CD',
 			'Zentralafrikanische Republik' => 'CF',
 			'Kongo' => 'CG',
-			'Schweiz' => 'CH',
 			'Elfenbeinküste' => 'CI',
 			'Cookinseln' => 'CK',
 			'Chile' => 'CL',
@@ -1424,7 +1429,6 @@ sub countries {
 			'Weihnachtsinsel' => 'CX',
 			'Zypern' => 'CY',
 			'Tschechische Republik' => 'CZ',
-			'Deutschland' => 'DE',
 			'Dschibuti' => 'DJ',
 			'Dänemark' => 'DK',
 			'Dominica' => 'DM',
@@ -1442,9 +1446,7 @@ sub countries {
 			'Falklandinseln' => 'FK',
 			'Mikronesien' => 'FM',
 			'Färöer-Inseln' => 'FO',
-			'Frankreich' => 'FR',
 			'Gabun' => 'GA',
-			'Vereinigtes Königreich' => 'GB',
 			'Grenada' => 'GD',
 			'Georgien' => 'GE',
 			'Französisch-Guayana' => 'GF',
@@ -1600,7 +1602,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'Vereinigte Staaten von Amerika' => 'US',
 			'Uruguay' => 'UY',
 			'Usbekistan' => 'UZ',
 			'Vatikanstadt' => 'VA',
@@ -1618,6 +1619,12 @@ sub countries {
 			'Südafrika' => 'ZA',
 			'Sambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Schweiz' => \@chTranslations,
+			'Vereinigtes Königreich' => \@ukTranslations,
+			'Vereinigte Staaten von Amerika' => \@usTranslations,
+			'Deutschland' => \@deTranslations,
+			'Frankreich' => \@frTranslations,
+			'Österreich' => \@atTranslations,
         },
 		en_GB => {
 			'Andorra' => 'AD',
@@ -1631,7 +1638,6 @@ sub countries {
 			'Antarctica' => 'AQ',
 			'Argentina' => 'AR',
 			'American Samoa' => 'AS',
-			'Austria' => 'AT',
 			'Australia' => 'AU',
 			'Aruba' => 'AW',
 			'Åland Islands' => 'AX',
@@ -1662,7 +1668,6 @@ sub countries {
 			'DR Congo' => 'CD',
 			'Central African Republic' => 'CF',
 			'Republic of the Congo' => 'CG',
-			'Switzerland' => 'CH',
 			'Ivory Coast' => 'CI',
 			'Cook Islands' => 'CK',
 			'Chile' => 'CL',
@@ -1676,7 +1681,6 @@ sub countries {
 			'Christmas Island' => 'CX',
 			'Cyprus' => 'CY',
 			'Czechia' => 'CZ',
-			'Germany' => 'DE',
 			'Djibouti' => 'DJ',
 			'Denmark' => 'DK',
 			'Dominica' => 'DM',
@@ -1694,9 +1698,7 @@ sub countries {
 			'Falkland Islands' => 'FK',
 			'Micronesia' => 'FM',
 			'Faroe Islands' => 'FO',
-			'France' => 'FR',
 			'Gabon' => 'GA',
-			'United Kingdom' => 'GB',
 			'Grenada' => 'GD',
 			'Georgia' => 'GE',
 			'French Guiana' => 'GF',
@@ -1852,7 +1854,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'United States' => 'US',
 			'Uruguay' => 'UY',
 			'Uzbekistan' => 'UZ',
 			'Vatican City' => 'VA',
@@ -1870,6 +1871,12 @@ sub countries {
 			'South Africa' => 'ZA',
 			'Zambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Switzerland' => \@chTranslations,
+			'United Kingdom' => \@ukTranslations,
+			'United States' => \@usTranslations,
+			'Germany' => \@deTranslations,
+			'France' => \@frTranslations,
+			'Austria' => \@atTranslations,
 		},
 		ca_en => {
 			'Andorra' => 'AD',
@@ -1883,7 +1890,6 @@ sub countries {
 			'Antarctica' => 'AQ',
 			'Argentina' => 'AR',
 			'American Samoa' => 'AS',
-			'Austria' => 'AT',
 			'Australia' => 'AU',
 			'Aruba' => 'AW',
 			'Åland Islands' => 'AX',
@@ -1914,7 +1920,6 @@ sub countries {
 			'DR Congo' => 'CD',
 			'Central African Republic' => 'CF',
 			'Republic of the Congo' => 'CG',
-			'Switzerland' => 'CH',
 			'Ivory Coast' => 'CI',
 			'Cook Islands' => 'CK',
 			'Chile' => 'CL',
@@ -1928,7 +1933,6 @@ sub countries {
 			'Christmas Island' => 'CX',
 			'Cyprus' => 'CY',
 			'Czechia' => 'CZ',
-			'Germany' => 'DE',
 			'Djibouti' => 'DJ',
 			'Denmark' => 'DK',
 			'Dominica' => 'DM',
@@ -1946,9 +1950,7 @@ sub countries {
 			'Falkland Islands' => 'FK',
 			'Micronesia' => 'FM',
 			'Faroe Islands' => 'FO',
-			'France' => 'FR',
 			'Gabon' => 'GA',
-			'United Kingdom' => 'GB',
 			'Grenada' => 'GD',
 			'Georgia' => 'GE',
 			'French Guiana' => 'GF',
@@ -2104,7 +2106,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'United States' => 'US',
 			'Uruguay' => 'UY',
 			'Uzbekistan' => 'UZ',
 			'Vatican City' => 'VA',
@@ -2122,6 +2123,12 @@ sub countries {
 			'South Africa' => 'ZA',
 			'Zambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Switzerland' => \@chTranslations,
+			'United Kingdom' => \@ukTranslations,
+			'United States' => \@usTranslations,
+			'Germany' => \@deTranslations,
+			'France' => \@frTranslations,
+			'Austria' => \@atTranslations,
 		},
 		fr => {
 			'Andorre' => 'AD',
@@ -2135,7 +2142,6 @@ sub countries {
 			'Antarctique' => 'AQ',
 			'Argentine' => 'AR',
 			'Samoa américaines' => 'AS',
-			'Autriche' => 'AT',
 			'Australie' => 'AU',
 			'Aruba' => 'AW',
 			'Ahvenanmaa' => 'AX',
@@ -2166,7 +2172,6 @@ sub countries {
 			'Congo (Rép. dém.)' => 'CD',
 			'République centrafricaine' => 'CF',
 			'Congo' => 'CG',
-			'Suisse' => 'CH',
 			'Côte d\'Ivoire' => 'CI',
 			'Îles Cook' => 'CK',
 			'Chili' => 'CL',
@@ -2180,7 +2185,6 @@ sub countries {
 			'Île Christmas' => 'CX',
 			'Chypre' => 'CY',
 			'Tchéquie' => 'CZ',
-			'Allemagne' => 'DE',
 			'Djibouti' => 'DJ',
 			'Danemark' => 'DK',
 			'Dominique' => 'DM',
@@ -2198,9 +2202,7 @@ sub countries {
 			'Îles Malouines' => 'FK',
 			'Micronésie' => 'FM',
 			'Îles Féroé' => 'FO',
-			'France' => 'FR',
 			'Gabon' => 'GA',
-			'Royaume-Uni' => 'GB',
 			'Grenade' => 'GD',
 			'Géorgie' => 'GE',
 			'Guyane' => 'GF',
@@ -2356,7 +2358,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Ouganda' => 'UG',
 			'Îles mineures éloignées des États-Unis' => 'UM',
-			'États-Unis' => 'US',
 			'Uruguay' => 'UY',
 			'Ouzbékistan' => 'UZ',
 			'Cité du Vatican' => 'VA',
@@ -2374,6 +2375,12 @@ sub countries {
 			'Afrique du Sud' => 'ZA',
 			'Zambie' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Royaume-Uni' => \@ukTranslations,
+			'Allemagne' => \@deTranslations,
+			'Suisse' => \@chTranslations,
+			'Autriche' => \@atTranslations,
+			'France' => \@frTranslations,
+			'États-Unis' => \@usTranslations,
 		},
         default => {
 			'Andorra' => 'AD',
@@ -2387,7 +2394,6 @@ sub countries {
 			'Antarctica' => 'AQ',
 			'Argentina' => 'AR',
 			'American Samoa' => 'AS',
-			'Austria' => 'AT',
 			'Australia' => 'AU',
 			'Aruba' => 'AW',
 			'Åland Islands' => 'AX',
@@ -2418,7 +2424,6 @@ sub countries {
 			'DR Congo' => 'CD',
 			'Central African Republic' => 'CF',
 			'Republic of the Congo' => 'CG',
-			'Switzerland' => 'CH',
 			'Ivory Coast' => 'CI',
 			'Cook Islands' => 'CK',
 			'Chile' => 'CL',
@@ -2432,7 +2437,6 @@ sub countries {
 			'Christmas Island' => 'CX',
 			'Cyprus' => 'CY',
 			'Czechia' => 'CZ',
-			'Germany' => 'DE',
 			'Djibouti' => 'DJ',
 			'Denmark' => 'DK',
 			'Dominica' => 'DM',
@@ -2450,9 +2454,7 @@ sub countries {
 			'Falkland Islands' => 'FK',
 			'Micronesia' => 'FM',
 			'Faroe Islands' => 'FO',
-			'France' => 'FR',
 			'Gabon' => 'GA',
-			'United Kingdom' => 'GB',
 			'Grenada' => 'GD',
 			'Georgia' => 'GE',
 			'French Guiana' => 'GF',
@@ -2608,7 +2610,6 @@ sub countries {
 			'Ukraine' => 'UA',
 			'Uganda' => 'UG',
 			'United States Minor Outlying Islands' => 'UM',
-			'United States' => 'US',
 			'Uruguay' => 'UY',
 			'Uzbekistan' => 'UZ',
 			'Vatican City' => 'VA',
@@ -2626,31 +2627,85 @@ sub countries {
 			'South Africa' => 'ZA',
 			'Zambia' => 'ZM',
 			'Zimbabwe' => 'ZW',
+			'Switzerland' => \@chTranslations,
+			'United Kingdom' => \@ukTranslations,
+			'United States' => \@usTranslations,
+			'Germany' => \@deTranslations,
+			'France' => \@frTranslations,
+			'Austria' => \@atTranslations,
         }
     };
 
+	$s_country = (uc $s_country);
 	if ($is_bank) {
+		# Uppercase countries
+		#$form->{country} = uc $form->{country};
+		#print STDERR "Country: $form->{country}";
 		$self->{selectbankcountry} = "<option value=''>\n";
-		for (sort keys %{$countries->{$countrycode}}){
-			if ($s_country eq $countries->{$countrycode}->{$_}) {
-				$self->{selectbankcountry} .= "<option value=$countries->{$countrycode}->{$_} selected>$_</option>\n";
+		for (sort keys %{$countries->{$countrycode}}) {
+			$country_key = $_;
+			if (is_array($countries->{$countrycode}->{$country_key})) {
+				$country_translations = $countries->{$countrycode}->{$country_key};
+				$country_code = @$country_translations[0];
+				if (grep {$s_country eq $_} @$country_translations) {
+					$self->{selectbankcountry} .= "<option value=$country_code selected>$country_key</option>\n";
+				} else {
+					$self->{selectbankcountry} .= "<option value=$country_code>$country_key</option>\n";
+				}
 			} else {
-				$self->{selectbankcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
+				if ($s_country eq $countries->{$countrycode}->{$country_key}) {
+					$self->{selectbankcountry} .= "<option value=$countries->{$countrycode}->{$country_key} selected>$country_key</option>\n";
+				} else {
+					$self->{selectbankcountry} .= "<option value=$countries->{$countrycode}->{$country_key}>$country_key</option>\n";
+				}
 			}
 		}
 	} else {
 		$self->{selectcountry} = "<option value=''>\n";
-		for (sort keys %{$countries->{$countrycode}}){
-			if ($s_country eq $countries->{$countrycode}->{$_}) {
-				$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_} selected>$_</option>\n";
+		for (sort keys %{$countries->{$countrycode}}) {
+			$country_key = $_;
+			if (is_array($countries->{$countrycode}->{$country_key})) {
+				$country_translations = $countries->{$countrycode}->{$country_key};
+				$country_code = @$country_translations[0];
+				if (grep {$s_country eq $_} @$country_translations) {
+					$self->{selectcountry} .= "<option value=$country_code selected>$country_key</option>\n";
+				} else {
+					$self->{selectcountry} .= "<option value=$country_code>$country_key</option>\n";
+				}
 			} else {
-				$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$_}>$_</option>\n";
+				if ($s_country eq $countries->{$countrycode}->{$country_key}) {
+					$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$country_key} selected>$country_key</option>\n";
+				} else {
+					$self->{selectcountry} .= "<option value=$countries->{$countrycode}->{$country_key}>$country_key</option>\n";
+				}
 			}
 		}
 	}
 
 }
 
+sub is_array {
+  my ($ref) = @_;
+  # Firstly arrays need to be references, throw
+  #  out non-references early.
+  return 0 unless ref $ref;
+
+  # Now try and eval a bit of code to treat the
+  #  reference as an array.  If it complains
+  #  in the 'Not an ARRAY reference' then we're
+  #  sure it's not an array, otherwise it was.
+  eval {
+    my $a = @$ref;
+  };
+  if ($@=~/^Not an ARRAY reference/) {
+    return 0;
+  } elsif ($@) {
+    die "Unexpected error in eval: $@\n";
+  } else {
+    return 1;
+  }
+
+}
 
 sub logtofile {
 	my ( $self, $txt ) = @_;
@@ -2994,7 +3049,9 @@ function matchStartStringOnly(params, data) {
     return null;
   }
 
-  if (data.id.toUpperCase().indexOf(params.term.toUpperCase()) == 0) {
+  if (data.id.toUpperCase().indexOf(params.term.toUpperCase()) == 0
+    |;print"||";print q|
+	data.text.toUpperCase().indexOf(params.term.toUpperCase()) == 0) {
     return data;
   }
 
@@ -3007,17 +3064,17 @@ $(document).on('select2:open', () => {
     document.querySelector('.select2-search__field').focus();
 });
 $(document).ready(function(){
-    var str = $("div.redirectmsg").text();
+    var str = $('div.redirectmsg').text();
     if ( str.length > 0 ) {
     	setTimeout(function(){
     	
-	    	$("div.redirectmsg").show();
-	        $("div.redirectmsg").fadeOut("slow", function () {
-	            $("div.redirectmsg").remove();
+	    	$('div.redirectmsg').show();
+	        $('div.redirectmsg').fadeOut('slow', function () {
+	            $('div.redirectmsg').remove();
 	        });
 		}, 2000);
 	} else {
-	   	$("div.redirectmsg").hide();
+	   	$('div.redirectmsg').hide();
 	}
 |;
 
