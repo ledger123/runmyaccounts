@@ -24,6 +24,7 @@ $(document).ready(function() {
 	$("form").filter(function(){
 		if($(this).attr('action').match(/[a-z]+.pl/)){
 			$(this).closest("form").append('<input type="hidden" name="FRONTEND_HEADER" value="'+getCookie("FRONTEND_COOKIE")+'" />');
+			$(this).closest("form").append('<input type="hidden" name="_csrf" value="'+getCookie("XSRF-TOKEN")+'" />');
 		}
 	});
 	
@@ -45,6 +46,17 @@ $(document).ready(function() {
 	$(document).mousemove( function(e) {
 		window.parent.parent.postMessage('mousemoved' ,'*');
 	});
+
+	let buttons = document.getElementsByTagName("input");
+       for(let ind = 0; ind< buttons.length; ind++) {
+               if(buttons[ind].type.toLowerCase() == 'submit') {
+                       let isDisabled = false;
+                       buttons[ind].addEventListener('click', function() {
+                               buttons[ind].disabled = isDisabled;
+                               isDisabled = true;
+                       });
+               }
+       }
 	
 	/*
 	//Navigation Frame

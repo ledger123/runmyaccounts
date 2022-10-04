@@ -1160,6 +1160,42 @@ sub generate_income_statement {
 
 	$form->{templates} = $myconfig{templates};
 
+	$form->{pdf_button} = qq|
+	<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
+		 event: 'urlToPdf',
+		 orientation: 'portrait',
+		 url: window.location.href +
+		 '&department=$form->{department}' +
+		 '&fromdate=$form->{fromdate}' +
+		 '&todate=$form->{todate}' +
+		 '&frommonth=$form->{frommonth}' +
+		 '&fromyear=$form->{fromyear}' +
+		 '&interval=$form->{interval}' +
+		 '&comparefromdate=$form->{comparefromdate}' +
+		 '&comparetodate=$form->{comparetodate}' +
+		 '&comparemonth=$form->{comparemonth}' +
+		 '&compareyear=$form->{compareyear}' +
+		 '&fx_transaction=$form->{fx_transaction}' +
+		 '&currency=$form->{currency}' +
+		 '&defaultcurrency=$form->{defaultcurrency}' +
+		 '&decimalplaces=$form->{decimalplaces}' +
+		 '&language_code=$form->{language_code}' +
+		 '&method=$form->{method}' +
+		 '&l_heading=$form->{l_heading}' +
+		 '&l_subtotal=$form->{l_subtotal}' +
+		 '&l_accno=$form->{l_accno}' +
+		 '&accounttype=$form->{accounttype}' +
+		 '&action=$form->{action}' +
+		 '&title=$form->{title}' +
+		 '&nextsub=$form->{nextsub}' +
+		 '&path=$form->{path}' +
+		 '&login=$form->{login}'
+		  }}, '*')"
+		class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+	  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+	</button>
+	|;
+
 	$form->{IN} = "income_statement.html";
 
   	$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey, $os);
@@ -1209,6 +1245,41 @@ sub generate_balance_sheet {
 	$form->{this_period} = $locale->date( \%myconfig, $form->{asofdate}, 0 );
 	$form->{last_period} =
 	  $locale->date( \%myconfig, $form->{compareasofdate}, 0 );
+
+	$form->{pdf_button} = qq|
+	<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
+		 event: 'urlToPdf',
+		 orientation: 'portrait',
+		 url: window.location.href +
+		 '&level=$form->{level}' +
+		 '&report=$form->{report}' +
+		 '&asofdate=$form->{asofdate}' +
+		 '&asofmonth=$form->{asofmonth}' +
+		 '&asofyear=$form->{asofyear}' +
+		 '&compareasofdate=$form->{compareasofdate}' +
+		 '&compareasofmonth=$form->{compareasofmonth}' +
+		 '&compareasofyear=$form->{compareasofyear}' +
+		 '&currency=$form->{currency}' +
+		 '&defaultcurrency=$form->{defaultcurrency}' +
+		 '&decimalplaces=$form->{decimalplaces}' +
+		 '&language_code=$form->{language_code}' +
+		 '&method=$form->{method}' +
+		 '&l_heading=$form->{l_heading}' +
+		 '&l_subtotal=$form->{l_subtotal}' +
+		 '&l_accno=$form->{l_accno}' +
+		 '&action=$form->{action}' +
+		 '&fx_transaction=$form->{fx_transaction}' +
+		 '&login=$form->{login}' +
+		 '&path=$form->{path}' +
+		 '&nextsub=$form->{nextsub}' +
+		 '&title=$form->{title}' +
+		 '&accounttype=$form->{accounttype}' +
+		 '&department=$form->{department}'
+		  }}, '*')"
+		class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+	  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+	</button>
+	|;
 
 	$form->{IN} = "balance_sheet.html";
 
