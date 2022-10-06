@@ -21,7 +21,7 @@
   
   \hfill
   \begin{tabularx}{7cm}{Xr@{}}
-  \textbf{MedzisÃºÄet} & \textbf{<%sumcarriedforward%>} \\
+  \textbf{Medzisúčet} & \textbf{<%sumcarriedforward%>} \\
   \end{tabularx}
 
 \newpage
@@ -29,7 +29,7 @@
 \markright{<%company%>\hfill <%invnumber%>}
 
 \begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
-  \textbf{Pol} & \textbf{ÄÃ­slo} & \textbf{Popis} & & \textbf{MnoÂ} &
+  \textbf{Pol} & \textbf{Číslo} & \textbf{Popis} & & \textbf{Mno} &
     \textbf{Jedn} & \textbf{Cena} & \textbf{Zlava \%} & \textbf{Suma} \\ [0.5em]
   & carried forward from page <%lastpage%> & & & & & & & <%sumcarriedforward%> \\ [0.5em]
 <%end pagebreak%>
@@ -112,12 +112,12 @@ Fax: <%shiptofax%>
 
 \vspace{1cm}
 
-\textbf{D O D Ã V A T E L S K Ã \hspace{0.3cm} F A K T Ã R A}
+\textbf{D O D Á V A T E L S K Á \hspace{0.3cm} F A K T Ú R A}
 
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{*{8}{|X}|} \hline
-  \textbf{FaktÃºra} & \textbf{DÃ¡tum} & \textbf{SplatnosÂ} & \textbf{ObjednÃ¡vka}
+  \textbf{Faktúra} & \textbf{Dátum} & \textbf{Splatnos} & \textbf{Objednávka}
   & \textbf{Kontakt}
   <%if shippingpoint%>
   & \textbf{Miesto dodania}
@@ -126,7 +126,7 @@ Fax: <%shiptofax%>
   & \textbf{PO}
   <%end ponumber%>
   <%if shipvia%>
-  & \textbf{SpÃ´sob dodania}
+  & \textbf{Spôsob dodania}
   <%end shipvia%>
   \\ [0.5em]
   \hline
@@ -147,7 +147,7 @@ Fax: <%shiptofax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
-  \textbf{Pol} & \textbf{ÄÃ­slo} & \textbf{Popis} & & \textbf{MnoÂ} &
+  \textbf{Pol} & \textbf{Číslo} & \textbf{Popis} & & \textbf{Mno} &
     \textbf{Jedn} & \textbf{Cena} & \textbf{Zlava \%} & \textbf{Suma} \\ [0.5em]
 <%foreach number%>
   <%runningnumber%> & <%number%> & <%description%> & <%deliverydate%> &
@@ -164,7 +164,7 @@ Fax: <%shiptofax%>
 \hfill
 \begin{tabularx}{\textwidth}{@{}Xr@{\hspace{1cm}}r@{}}
 <%if not taxincluded%>
- & MedzisÃºÄet & <%subtotal%> \\
+ & Medzisúčet & <%subtotal%> \\
 <%end taxincluded%>
 <%if taxincluded%>
  & Celkom & <%invtotal%> \\
@@ -176,7 +176,7 @@ Fax: <%shiptofax%>
  & Celkom & <%invtotal%> \\
 <%end taxincluded%>
 <%if paid%>
- & PlatenÃ© & - <%paid%> \\
+ & Platené & - <%paid%> \\
 <%end paid%>
   \cline{2-3}
 <%if total%>
@@ -188,10 +188,10 @@ Fax: <%shiptofax%>
 
 <%text_amount%> ***** <%decimal%>/100
 \hfill
-Ceny sÃº v \textbf{<%currency%>}.
+Ceny sú v \textbf{<%currency%>}.
 
 <%if taxincluded%>
-Ceny sÃº s DPH.
+Ceny sú s DPH.
 <%end tax included%>
 
 \vspace{1em}
@@ -205,7 +205,7 @@ Ceny sÃº s DPH.
 \begin{tabularx}{10cm}{@{}lXlr@{}}
   \multicolumn{4}{c}{\textbf{Platby}} \\
   \hline
-  \textbf{DÃ¡tum} & & \textbf{Doklad} & \textbf{Suma} \\
+  \textbf{Dátum} & & \textbf{Doklad} & \textbf{Suma} \\
 <%end paid_1%>
 <%foreach payment%>
   <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\

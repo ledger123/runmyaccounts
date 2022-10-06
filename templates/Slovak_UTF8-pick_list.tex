@@ -22,15 +22,15 @@
 \markboth{<%company%>\hfill <%ordnumber%>}{<%company%>\hfill <%ordnumber%>}
 
 \begin{tabularx}{\textwidth}{@{}rlXrcll@{}}
-  \textbf{PoloÅ¾ka} & \textbf{ÄÃ­slo} & \textbf{Popis} &
-  \textbf{MnoÅ¾} & \textbf{DodanÃ©} & & \textbf{RegÃ¡l} \\
+  \textbf{Položka} & \textbf{Číslo} & \textbf{Popis} &
+  \textbf{Množ} & \textbf{Dodané} & & \textbf{Regál} \\
 
 <%end pagebreak%>
 
 \vspace*{0.5cm}
 
 \parbox[t]{.5\textwidth}{
-  \textbf{OdberateÄ¾}
+  \textbf{Odberateľ}
 } \hfill
 
 \vspace{0.3cm}
@@ -68,14 +68,14 @@
 
 \vspace{1cm}
 
-\textbf{V Ã B E R O V Ã} \parbox{0.3cm}{\hfill} \textbf{L I S T}
+\textbf{V Ý B E R O V Ý} \parbox{0.3cm}{\hfill} \textbf{L I S T}
 \hfill
 
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{*{7}{|X}|} \hline
-  \textbf{FaktÃºra \#} & \textbf{ObjednÃ¡vka \#} & \textbf{DÃ¡tum} & \textbf{Kontakt}
-  & \textbf{Sklad} & \textbf{Miesto dodania} & \textbf{SpÃ´sob dodania} \\ [0.5em]
+  \textbf{Faktúra \#} & \textbf{Objednávka \#} & \textbf{Dátum} & \textbf{Kontakt}
+  & \textbf{Sklad} & \textbf{Miesto dodania} & \textbf{Spôsob dodania} \\ [0.5em]
   \hline
   <%invnumber%> & <%ordnumber%>
   <%if shippingdate%>
@@ -91,8 +91,8 @@
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{@{}rlXrcll@{}}
-  \textbf{PoloÅ¾ka} & \textbf{ÄÃ­slo} & \textbf{Popis} &
-  \textbf{MnoÅ¾} & \textbf{DodanÃ©} & & \textbf{RegÃ¡l} \\
+  \textbf{Položka} & \textbf{Číslo} & \textbf{Popis} &
+  \textbf{Množ} & \textbf{Dodané} & & \textbf{Regál} \\
 <%foreach number%>
   <%runningnumber%> & <%number%> & <%description%> &
   <%qty%> & [\hspace{1cm}] & <%unit%> & <%bin%> \\

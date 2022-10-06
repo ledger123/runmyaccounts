@@ -20,15 +20,15 @@
 
     <td align=right>
       <h4>
-      é»è©±ï¼ <%tel%>
-      <br>å³çï¼ <%fax%>
+      電話： <%tel%>
+      <br>傳真： <%fax%>
       </h4>
     </td>
   </tr>
 
   <tr>
     <th colspan=3>
-      <h4>è¦æ±å ±å¹å®</h4>
+      <h4>要求報價單</h4>
     </th>
   </tr>
 
@@ -41,8 +41,8 @@
     <td>
     <table width=100%>
     <tr bgcolor=000000>
-      <th align=left width=50%><font color=ffffff>è´ï¼</th>
-      <th align=left width=50%><font color=ffffff>ä»éå¾ï¼</th>
+      <th align=left width=50%><font color=ffffff>致：</th>
+      <th align=left width=50%><font color=ffffff>付運往：</th>
     </tr>
 
     <tr valign=top>
@@ -57,13 +57,13 @@
       <%end country%>
 <br>
 <%if contact%>
-<br>è´ï¼<%contact%>
+<br>致：<%contact%>
 <%end contact%>
 <%if vendorphone%>
-<br>é»è©±ï¼ <%vendorphone%>
+<br>電話： <%vendorphone%>
 <%end vendorphone%>
 <%if vendorfax%>
-<br>å³çï¼ <%vendorfax%>
+<br>傳真： <%vendorfax%>
 <%end vendorfax%>
       </td>
 
@@ -78,13 +78,13 @@
       <%end shiptocountry%>
 <br>
 <%if shiptocontact%>
-<br>è´ï¼ <%shiptocontact%>
+<br>致： <%shiptocontact%>
 <%end shiptocontact%>
 <%if shiptophone%>
-<br>é»è©±ï¼ <%shiptophone%>
+<br>電話： <%shiptophone%>
 <%end shiptophone%>
 <%if shiptofax%>
-<br>å³çï¼ <%shiptofax%>
+<br>傳真： <%shiptofax%>
 <%end shiptofax%>
     </tr>
     </table>
@@ -97,12 +97,12 @@
     <td colspan=2>
     <table width=100% border=1>
     <tr>
-      <th width=17% align=left>è¦æ±å ±å¹å®ç·¨è</th>
-      <th width=17% align=left>æ¥æ</th>
-      <th width=17% align=left>è¦æ±äº¤ä»æ¥æ</th>
-      <th width=17% align=left>è¯çµ¡äºº</th>
-      <th width=17% align=left>ä»éé»</th>
-      <th width=15% align=left>ä»éå¬å¸</th>
+      <th width=17% align=left>要求報價單編號</th>
+      <th width=17% align=left>日期</th>
+      <th width=17% align=left>要求交付日期</th>
+      <th width=17% align=left>聯絡人</th>
+      <th width=17% align=left>付運點</th>
+      <th width=15% align=left>付運公司</th>
     </tr>
 
     <tr>
@@ -120,7 +120,7 @@
   <tr height="10"></tr>
   
   <tr>
-    <td>è«æä¾ä»¥ä¸ç©åçå¹æ ¼åäº¤ä»æéï¼</td>
+    <td>請提供以下物品的價格和交付時間：</td>
   </tr>
 
   <tr height="10"></tr>
@@ -130,13 +130,13 @@
     <table width=100%>
     <tr>
 <!--      <th align=right>No.</th>  -->
-      <th align=left>èç¢¼</th>
-      <th align=left><font color=ffffff>æè¿°</th>
-      <th>æ¸é</th>
+      <th align=left>號碼</th>
+      <th align=left><font color=ffffff>描述</th>
+      <th>數量</th>
       <th>&nbsp;</th>
-      <th>äº¤ä»</th>
-      <th>å®å¹</th>
-      <th>ç¸½å¹</th>
+      <th>交付</th>
+      <th>單價</th>
+      <th>總價</th>
     </tr>
 
 <%foreach number%>
@@ -166,7 +166,7 @@ adjust the colspan if you include this to shift subtotal one to the right
   <table width=100%>
 <%if notes%>
     <tr valign=top>
-      <td>åè¨»</td>
+      <td>備註</td>
       <td><%notes%></td>
     </tr>
 <%end notes%>

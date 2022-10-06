@@ -30,7 +30,7 @@
   
   \hfill
   \begin{tabularx}{7cm}{Xr@{\hspace{1cm}}r@{}}
-  & \textbf{MedzisÃºÄet} & \textbf{<%sumcarriedforward%>} \\
+  & \textbf{Medzisúčet} & \textbf{<%sumcarriedforward%>} \\
   \end{tabularx}
 
 \newpage
@@ -38,8 +38,8 @@
 \markboth{<%company%>\hfill <%quonumber%>}{<%company%>\hfill <%quonumber%>}
 
 \begin{tabularx}{\textwidth}{@{}lXrlrrr@{}}
-  \textbf{ÄÃ­slo} & \textbf{Popis} & \textbf{MnoÅ¾.} &
-    \textbf{MJ} & \textbf{Cena} & \textbf{ZÄ¾ava \%} & \textbf{Suma} \\
+  \textbf{Číslo} & \textbf{Popis} & \textbf{Množ.} &
+    \textbf{MJ} & \textbf{Cena} & \textbf{Zľava \%} & \textbf{Suma} \\
   & carried forward from <%lastpage%> & & & & & <%sumcarriedforward%> \\
 <%end pagebreak%>
 
@@ -82,13 +82,13 @@ Fax: <%customerfax%>
 
 \vspace{1cm}
 
-\textbf{P O N U K O V Ã   L I S T}
+\textbf{P O N U K O V Ý   L I S T}
 \hfill
 
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{*{6}{|X}|} \hline
-  \textbf{Ponuka} & \textbf{DÃ¡tum} & \textbf{PlatÃ­ do} & \textbf{Kontakt} & \textbf{Miesto dodania} & \textbf{SpÃ´sob dodania} \\ [0.5ex]
+  \textbf{Ponuka} & \textbf{Dátum} & \textbf{Platí do} & \textbf{Kontakt} & \textbf{Miesto dodania} & \textbf{Spôsob dodania} \\ [0.5ex]
   \hline
   <%quonumber%> & <%quodate%> & <%reqdate%> & <%employee%> & <%shippingpoint%> & <%shipvia%> \\
   \hline
@@ -97,8 +97,8 @@ Fax: <%customerfax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{@{}lXrlrrr@{}}
-  \textbf{ÄÃ­slo} & \textbf{Popis} & \textbf{MnoÅ¾.} &
-    \textbf{MJ} & \textbf{Cena} & \textbf{ZÄ¾ava \%} & \textbf{Suma} \\
+  \textbf{Číslo} & \textbf{Popis} & \textbf{Množ.} &
+    \textbf{MJ} & \textbf{Cena} & \textbf{Zľava \%} & \textbf{Suma} \\
 <%foreach number%>
   <%number%> & <%description%> & <%qty%> &
     <%unit%> & <%sellprice%> & <%discountrate%> & <%linetotal%> \\
@@ -113,7 +113,7 @@ Fax: <%customerfax%>
 
 \hfill
 \begin{tabularx}{8cm}{Xr@{\hspace{0.01cm}}r@{}}
-  & MedzisÃºÄet & <%subtotal%> \\
+  & Medzisúčet & <%subtotal%> \\
 <%foreach tax%>
   & <%taxdescription%> on <%taxbase%> & <%tax%>\\
 <%end tax%>
@@ -124,10 +124,10 @@ Fax: <%customerfax%>
 \vspace{0.3cm}
 
 \hfill
-Ceny sÃº v \textbf{<%currency%>}.
+Ceny sú v \textbf{<%currency%>}.
 
 <%if terms%>
-TermÃ­n dodania: <%terms%> dnÃ­
+Termín dodania: <%terms%> dní
 <%end terms%>
 
 \vspace{12pt}

@@ -2,14 +2,14 @@
 Kunden-Nummer=customernumber
 Rechnungstitel=description
 Buchen auf=AR
-WÃ¤hrung=curr
+Währung=curr
 Lieferort=shippingpoint
 Versandort=shipvia
-VerkÃ¤ufer=employee
+Verkäufer=employee
 Rechnungsnummer=invnumber
 Bestellnummer=ordnumber
 Rechnungsdatum=transdate
-FÃ¤lligkeitsdatum=duedate
+Fälligkeitsdatum=duedate
 Artikelnummer=partnumber
 Menge=qty
 Preis=sellprice

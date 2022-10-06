@@ -19,15 +19,15 @@
 
 	  <td align=right>
 	  <h4>
-	  é»è©±ï¼ <%tel%>
-	  <br>å³çï¼ <%fax%>
+	  電話： <%tel%>
+	  <br>傳真： <%fax%>
 	  </h4>
 	  </td>
 	</tr>
 
 	<tr>
 	  <th colspan=3>
-	    <h4>æè²¨æ¸å®</h4>
+	    <h4>揀貨清單</h4>
 	  </th>
 	</tr>
       </table>
@@ -58,15 +58,15 @@
 
 	  <td>
 	  <%if shiptocontact%>
-	  <br>è´ï¼ <%shiptocontact%>
+	  <br>致： <%shiptocontact%>
 	  <%end shiptocontact%>
 
 	  <%if shiptophone%>
-	  <br>é»è©±ï¼ <%shiptophone%>
+	  <br>電話： <%shiptophone%>
 	  <%end shiptophone%>
 
 	  <%if shiptofax%>
-	  <br>å³çï¼ <%shiptofax%>
+	  <br>傳真： <%shiptofax%>
 	  <%end shiptofax%>
 
 	  <%shiptoemail%>
@@ -84,13 +84,13 @@
     <td>
       <table width=100% border=1>
         <tr>
-	  <th width=15% align=left>ç¼ç¥¨ç·¨è</th>
-	  <th width=15% align=left>è¨å®ç·¨è</th>
-	  <th width=10% align=left>æ¥æ</th>
-	  <th width=15% align=left nowrap>è¯çµ¡äºº</th>
-	  <th width=15% align=left>ååº«</th>
-	  <th width=10% align=left>ä»éé»</th>
-	  <th width=10% align=left>ä»éå¬å¸</th>
+	  <th width=15% align=left>發票編號</th>
+	  <th width=15% align=left>訂單編號</th>
+	  <th width=10% align=left>日期</th>
+	  <th width=15% align=left nowrap>聯絡人</th>
+	  <th width=15% align=left>倉庫</th>
+	  <th width=10% align=left>付運點</th>
+	  <th width=10% align=left>付運公司</th>
 	</tr>
 
         <tr>
@@ -119,13 +119,13 @@
     <td>
       <table width=100%>
 	<tr bgcolor=000000>
-	  <th align=left><font color=ffffff>ä½ç½®</th>
-	  <th align=left><font color=ffffff>èç¢¼</th>
-	  <th align=left><font color=ffffff>æè¿°</th>
-	  <th><font color=ffffff>æ¸é</th>
-	  <th><font color=ffffff>ä»é</th>
+	  <th align=left><font color=ffffff>位置</th>
+	  <th align=left><font color=ffffff>號碼</th>
+	  <th align=left><font color=ffffff>描述</th>
+	  <th><font color=ffffff>數量</th>
+	  <th><font color=ffffff>付運</th>
 	  <th>&nbsp;</th>
-	  <th><font color=ffffff>ç®±</th>
+	  <th><font color=ffffff>箱</th>
 	</tr>
 
         <%foreach number%>

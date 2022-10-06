@@ -19,15 +19,15 @@
 
 	  <th align=right>
 	    <h4>
-	    é»è©±ï¼ <%tel%>
-	    <br>å³çï¼ <%fax%>
+	    電話： <%tel%>
+	    <br>傳真： <%fax%>
 	    </h4>
 	  </td>
 	</tr>
 	
 	<tr>
 	  <th colspan=3>
-	    <h4>ç®±åè¡¨</h4>
+	    <h4>箱列表</h4>
 	  </th>
 	</tr>
       </table>
@@ -40,8 +40,8 @@
     <td>
       <table width=100% cellspacing=0 cellpadding=0>
 	<tr bgcolor=000000>
-	  <th align=left width=50%><font color=ffffff>å¾</th>
-	  <th align=left width=50%><font color=ffffff>ä»éå¾</th>
+	  <th align=left width=50%><font color=ffffff>從</th>
+	  <th align=left width=50%><font color=ffffff>付運往</th>
 	</tr>
 
 	<tr valign=top>
@@ -57,15 +57,15 @@
 	  <br>
 
 	  <%if contact%>
-	  <br>è´ï¼ <%contact%>
+	  <br>致： <%contact%>
 	  <%end contact%>
 
 	  <%if vendorphone%>
-	  <br>é»è©±ï¼ <%vendorphone%>
+	  <br>電話： <%vendorphone%>
 	  <%end vendorphone%>
 
 	  <%if vendorfax%>
-	  <br>å³çï¼ <%vendorfax%>
+	  <br>傳真： <%vendorfax%>
 	  <%end vendorfax%>
 
 	  <%if email%>
@@ -86,15 +86,15 @@
 
 	  <br>
 	  <%if shiptocontact%>
-	  <br>è´ï¼ <%shiptocontact%>
+	  <br>致： <%shiptocontact%>
 	  <%end shiptocontact%>
 	  
 	  <%if shiptophone%>
-	  <br>é»è©±ï¼ <%shiptophone%>
+	  <br>電話： <%shiptophone%>
 	  <%end shiptophone%>
 
 	  <%if shiptofax%>
-	  <br>å³çï¼ <%shiptofax%>
+	  <br>傳真： <%shiptofax%>
 	  <%end shiptofax%>
 	  </td>
 	</tr>
@@ -110,14 +110,14 @@
     <td>
       <table width=100% border=1>
 	<tr>
-	  <th width=17% align=left nowrap>è¨å®ç·¨è</th>
-	  <th width=17% align=left nowrap>æ¥æ</th>
-	  <th width=17% align=left nowrap>è¯çµ¡äºº</th>
+	  <th width=17% align=left nowrap>訂單編號</th>
+	  <th width=17% align=left nowrap>日期</th>
+	  <th width=17% align=left nowrap>聯絡人</th>
 	  <%if warehouse%>
-	  <th width=17% align=left nowrap>ååº«</th>
+	  <th width=17% align=left nowrap>倉庫</th>
 	  <%end warehouse%>
-	  <th width=17% align=left>ä»éé»</th>
-	  <th width=15% align=left>ä»éå¬å¸</th>
+	  <th width=17% align=left>付運點</th>
+	  <th width=15% align=left>付運公司</th>
 	</tr>
 
 	<tr>
@@ -150,15 +150,15 @@
     <td>
       <table width=100%>
 	<tr bgcolor=000000>
-	  <th align=left><font color=ffffff>ä½ç½®</th>
-	  <th align=left><font color=ffffff>èç¢¼</th>
-	  <th align=left><font color=ffffff>ææ®</th>
-	  <th><font color=ffffff>åºè</th>
+	  <th align=left><font color=ffffff>位置</th>
+	  <th align=left><font color=ffffff>號碼</th>
+	  <th align=left><font color=ffffff>描朮</th>
+	  <th><font color=ffffff>序號</th>
 	  <th>&nbsp;</th>
-	  <th><font color=ffffff>æ¸é</th>
-	  <th><font color=ffffff>æ¶å°</th>
+	  <th><font color=ffffff>數量</th>
+	  <th><font color=ffffff>收到</th>
 	  <th>&nbsp;</th>
-	  <th><font color=ffffff>ç®±</th>
+	  <th><font color=ffffff>箱</th>
 	</tr>
 
 	<%foreach number%>

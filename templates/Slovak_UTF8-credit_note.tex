@@ -64,19 +64,19 @@ Fax: <%customerfax%>
 <%email%>
 
 <%if customertaxnumber%>
-DIÄ: <%customertaxnumber%>
+DIČ: <%customertaxnumber%>
 <%end customertaxnumber%>
 }
 \hfill
 \begin{tabular}[t]{ll}
-  \textbf{FaktÃºra} & <%invnumber%> \\
-  \textbf{DÃ¡tum} & <%invdate%> \\
+  \textbf{Faktúra} & <%invnumber%> \\
+  \textbf{Dátum} & <%invdate%> \\
   \textbf{Splatnost} & <%duedate%> \\
   <%if ponumber%>
     \textbf{PO} & <%ponumber%> \\
   <%end ponumber%>
   <%if ordnumber%>
-    \textbf{ObjednÃ¡vka} & <%ordnumber%> \\
+    \textbf{Objednávka} & <%ordnumber%> \\
   <%end ordnumber%>
   \textbf{Osoba} & <%employee%> \\
 \end{tabular}
@@ -88,7 +88,7 @@ DIÄ: <%customertaxnumber%>
   <%accno%> & <%account%> & <%amount%> & <%description%> & <%projectnumber%> \\
 <%end amount%>
 
-  \multicolumn{2}{r}{\textbf{MedzisÃºÄet}} & <%subtotal%> & \\
+  \multicolumn{2}{r}{\textbf{Medzisúčet}} & <%subtotal%> & \\
 <%foreach tax%>
   \multicolumn{2}{r}{\textbf{<%taxdescription%> @ <%taxrate%> \%}} & <%tax%> & \\
 <%end tax%>
@@ -112,7 +112,7 @@ DIÄ: <%customertaxnumber%>
 \begin{tabular}{@{}lllr@{}}
   \multicolumn{4}{c}{\textbf{Platby}} \\
   \hline
-  \textbf{DÃ¡tum} & & \textbf{Doklad} & \textbf{Hodnota} \\
+  \textbf{Dátum} & & \textbf{Doklad} & \textbf{Hodnota} \\
 <%end paid_1%>
 <%foreach payment%>
   <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\
@@ -124,7 +124,7 @@ DIÄ: <%customertaxnumber%>
 \vspace{0.5cm}
 
 <%foreach tax%>
-\textbf{\scriptsize <%taxdescription%> DIÄ <%taxnumber%>} \\
+\textbf{\scriptsize <%taxdescription%> DIČ <%taxnumber%>} \\
 <%end tax%>
   
 \end{document}
