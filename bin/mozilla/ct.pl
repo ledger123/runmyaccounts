@@ -56,8 +56,6 @@ sub create_links {
   $form->{ARAP} = ($form->{db} eq 'customer') ? 'AR' : 'AP';
   
   CT->create_links(\%myconfig, \%$form);
-  $form->countries(\%myconfig,$form->{country}, 0);
-  $form->countries(\%myconfig,$form->{bankcountry}, 1);
 
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
@@ -1605,6 +1603,8 @@ sub list_history {
 
 
 sub form_header {
+  $form->countries(\%myconfig,$form->{country}, 0);
+  $form->countries(\%myconfig,$form->{bankcountry}, 1);
 
   for (qw(creditlimit threshold)) { $form->{$_} = $form->format_amount(\%myconfig, $form->{$_}, 0) }
   for (qw(discount cashdiscount)) { $form->{$_} = $form->format_amount(\%myconfig, $form->{$_}, undef) }
