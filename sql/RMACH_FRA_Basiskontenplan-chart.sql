@@ -86,7 +86,7 @@ INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,a
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2200', 'TVA due', 'A', 'L', 'AP_amount', '220', 'f', 't', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2206', 'Impôt anticipé à payer', 'A', 'L', 'AP_amount', '220', 'f', 't', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('221', 'AUTRES DETTES À COURT TERME ENVERS DES TIERS (SANS INTÉRÊTS)', 'H', 'L', '', '221', 'f', 'f', '');
-INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2215', 'Cartes de crédit', 'A', 'L', '', '221', 'f', 't', '');
+INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2215', 'Cartes de crédit', 'A', 'L', '', '221', 'f', 't', 'kreditkarten');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('225', 'AUTRES DETTES À COURT TERME ENVERS DES PARTICIPATIONS (SANS INTÉRÊTS)', 'H', 'L', '', '225', 'f', 'f', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('227', 'AUTRES DETTES À COURT TERME RELATIVES AUX CHARGES SALARIALES (SANS INTÉRÊTS)', 'H', 'L', '', '227', 'f', 'f', '');
 INSERT INTO chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) VALUES ('2270', 'Compte courant Institutions de prévoyance professionnelle', 'A', 'L', 'AP_amount', '227', 'f', 't', '');
