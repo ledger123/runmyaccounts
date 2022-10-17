@@ -2466,6 +2466,15 @@ sub defaults {
 	  <th align=right nowrap>|.$locale->text('Transition Account').qq|</th>
 	  <td><input name=transitionaccount size=15 value="$form->{transitionaccount}"></td>
 	</tr>
+    <tr valign=top>
+		<th align=right>| . $locale->text('Revolut Client ID') . qq|</th>
+		<td><textarea name=revolut_client_id rows=3 cols=50>$form->{revolut_client_id}</textarea></td>
+    </tr>
+    <tr valign=top>
+		<th align=right>| . $locale->text('Revolut Private Key') . qq|</th>
+		<td><textarea name=revolut_private_key rows=3 cols=50>$form->{revolut_private_key}</textarea></td>
+    </tr>
+
       </table>
     </td>
   </tr>

@@ -46,7 +46,7 @@ get '/access/:dbname' => sub ($c) {
     my $private_key = $dbs->query("SELECT fldvalue FROM defaults WHERE fldname='revolut_private_key'")->list;
 
     my $payload = {
-        iss => "a.mavsol.com",
+        iss => "ledger123.net",
         sub => $client_id,
         aud => "https://revolut.com",
         exp => time + 86400
