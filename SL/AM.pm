@@ -1443,7 +1443,8 @@ sub save_defaults {
     $dbh->do($query) || $form->dberror($query);
   }
 
-  for (qw(transitionaccount selectedaccount glnumber sinumber vinumber batchnumber vouchernumber sonumber ponumber sqnumber rfqnumber partnumber employeenumber customernumber vendornumber projectnumber precision)) {
+  for (qw(transitionaccount selectedaccount glnumber sinumber vinumber batchnumber vouchernumber sonumber ponumber sqnumber rfqnumber partnumber employeenumber customernumber vendornumber projectnumber precision revolut_client_id revolut_private_key)) {
+
     $delsth->execute($_) || $form->dberror;
 
     $sth->execute($_, $form->{$_}) || $form->dberror;
