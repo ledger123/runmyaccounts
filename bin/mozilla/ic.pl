@@ -619,7 +619,7 @@ sub form_header {
   }
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -772,6 +772,9 @@ sub form_footer {
 
 sub search {
 
+  $default_checked = "partnumber,description,onhand,unit,sellprice,lastcost,avgcost";
+  $form->get_lastused(\%myconfig, "items-$form->{searchitems}", $default_checked);
+
   $form->get_partsgroup(\%myconfig, { searchitems => $form->{searchitems} });
 
   IC->get_warehouses(\%myconfig, \%$form) unless $form->{searchitems} =~ /(service|labor)/;
@@ -802,19 +805,19 @@ sub search {
 	<td><select name=partsgroup>$partsgroup</select></td>
 |;
 
-    $l_partsgroup = qq|<input name=l_partsgroup class=checkbox type=checkbox value=Y> |.$locale->text('Group');
+    $l_partsgroup = qq|<input name=l_partsgroup class=checkbox type=checkbox value=Y $form->{l_partsgroup}> |.$locale->text('Group');
   }
 
   $method{accrual} = "checked" if $form->{method} eq 'accrual';
   $method{cash} = "checked" if $form->{method} eq 'cash';
 
-  $l_listprice = qq|<input name=l_listprice class=checkbox type=checkbox value=Y> |.$locale->text('List Price');
-  $l_sellprice = qq|<input name=l_sellprice class=checkbox type=checkbox value=Y checked> |.$locale->text('Sell Price');
-  $l_linetotal = qq|<input name=l_linetotal class=checkbox type=checkbox value=Y> |.$locale->text('Extended');
-  $l_lastcost = qq|<input name=l_lastcost class=checkbox type=checkbox value=Y checked> |.$locale->text('Last Cost');
-  $l_avgcost = qq|<input name=l_avgcost class=checkbox type=checkbox value=Y checked> |.$locale->text('Average Cost');
-  $l_markup = qq|<input name=l_markup class=checkbox type=checkbox value=Y> |.$locale->text('Markup');
-  $l_account = qq|<input name=l_account class=checkbox type=checkbox value=Y> |.$locale->text('Accounts');
+  $l_listprice = qq|<input name=l_listprice class=checkbox type=checkbox value=Y $form->{l_listprice}> |.$locale->text('List Price');
+  $l_sellprice = qq|<input name=l_sellprice class=checkbox type=checkbox value=Y $form->{l_sellprice}> |.$locale->text('Sell Price');
+  $l_linetotal = qq|<input name=l_linetotal class=checkbox type=checkbox value=Y $form->{l_linetotalavgcost}> |.$locale->text('Extended');
+  $l_lastcost = qq|<input name=l_lastcost class=checkbox type=checkbox value=Y $form->{l_lastcost}> |.$locale->text('Last Cost');
+  $l_avgcost = qq|<input name=l_avgcost class=checkbox type=checkbox value=Y $form->{l_avgcost}> |.$locale->text('Average Cost');
+  $l_markup = qq|<input name=l_markup class=checkbox type=checkbox value=Y $form->{l_avgcostmarkup}> |.$locale->text('Markup');
+  $l_account = qq|<input name=l_account class=checkbox type=checkbox value=Y $form->{l_account}> |.$locale->text('Accounts');
   
   $bought = qq|
           <td>
@@ -879,11 +882,11 @@ sub search {
 	  </td>
 |;
 
-  $l_name = qq|<input name=l_name class=checkbox type=checkbox value=Y> |.$locale->text('Name');
-  $l_vcnumber = qq|<input name=l_vcnumber class=checkbox type=checkbox value=Y> |.$locale->text('Customer Number');
-  $l_curr = qq|<input name=l_curr class=checkbox type=checkbox value=Y> |.$locale->text('Currency');
-  $l_employee = qq|<input name=l_employee class=checkbox type=checkbox value=Y> |.$locale->text('Employee');
-  $l_serialnumber = qq|<input name=l_serialnumber class=checkbox type=checkbox value=Y> |.$locale->text('Serial Number');
+  $l_name = qq|<input name=l_name class=checkbox type=checkbox value=Y $form->{l_name}> |.$locale->text('Name');
+  $l_vcnumber = qq|<input name=l_vcnumber class=checkbox type=checkbox value=Y $form->{l_vcnumber}> |.$locale->text('Customer Number');
+  $l_curr = qq|<input name=l_curr class=checkbox type=checkbox value=Y $form->{l_curr}> |.$locale->text('Currency');
+  $l_employee = qq|<input name=l_employee class=checkbox type=checkbox value=Y $form->{l_employee}> |.$locale->text('Employee');
+  $l_serialnumber = qq|<input name=l_serialnumber class=checkbox type=checkbox value=Y $form->{l_serialnumber}> |.$locale->text('Serial Number');
 
   $serialnumber = qq|
           <th align=right nowrap>|.$locale->text('Serial Number').qq|</th>
@@ -909,17 +912,17 @@ sub search {
         </tr>
 |;
 
-    $l_make = qq|<input name=l_make class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Make');
-    $l_model = qq|<input name=l_model class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Model');
+    $l_make = qq|<input name=l_make class=checkbox type=checkbox value=Y $form->{l_make}>&nbsp;|.$locale->text('Make');
+    $l_model = qq|<input name=l_model class=checkbox type=checkbox value=Y $form->{l_model}>&nbsp;|.$locale->text('Model');
 
-    $l_bin = qq|<input name=l_bin class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Bin');
+    $l_bin = qq|<input name=l_bin class=checkbox type=checkbox value=Y $form->{l_bin}>&nbsp;|.$locale->text('Bin');
 
-    $l_rop = qq|<input name=l_rop class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('ROP');
+    $l_rop = qq|<input name=l_rop class=checkbox type=checkbox value=Y $form->{l_rop}>&nbsp;|.$locale->text('ROP');
 
-    $l_weight = qq|<input name=l_weight class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Weight');
+    $l_weight = qq|<input name=l_weight class=checkbox type=checkbox value=Y $form->{l_weight}>&nbsp;|.$locale->text('Weight');
 
-    $l_countryorigin = qq|<input name=l_countryorigin class=checkbox type=checkbox value=Y> |.$locale->text('Country of Origin');
-    $l_tariff_hscode = qq|<input name=l_tariff_hscode class=checkbox type=checkbox value=Y> |.$locale->text('HS Code');
+    $l_countryorigin = qq|<input name=l_countryorigin class=checkbox type=checkbox value=Y $form->{l_countryorigin}> |.$locale->text('Country of Origin');
+    $l_tariff_hscode = qq|<input name=l_tariff_hscode class=checkbox type=checkbox value=Y $form->{l_tariff_hscode}> |.$locale->text('HS Code');
 
     if (@{ $form->{all_warehouse} }) {
       $selectwarehouse = "<option>\n";
@@ -932,7 +935,7 @@ sub search {
           <td><select name=warehouse>$selectwarehouse</select></td>
 |;
 
-      $l_warehouse = qq|<input name=l_warehouse class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Warehouse');
+      $l_warehouse = qq|<input name=l_warehouse class=checkbox type=checkbox value=Y $form->{l_warehouse}>&nbsp;|.$locale->text('Warehouse');
 
     }
 
@@ -951,14 +954,14 @@ sub search {
         </tr>
 |;
 
-    $l_toolnumber = qq|<input name=l_toolnumber class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Tool Number');
+    $l_toolnumber = qq|<input name=l_toolnumber class=checkbox type=checkbox value=Y $form->{l_toolnumber}>&nbsp;|.$locale->text('Tool Number');
     
-    $l_barcode = qq|<input name=l_barcode class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Barcode');
+    $l_barcode = qq|<input name=l_barcode class=checkbox type=checkbox value=Y $form->{l_barcode}>&nbsp;|.$locale->text('Barcode');
     
-    $l_image = qq|<input name=l_image class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Image');
+    $l_image = qq|<input name=l_image class=checkbox type=checkbox value=Y $form->{l_image}>&nbsp;|.$locale->text('Image');
     
-    $l_drawing = qq|<input name=l_drawing class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Drawing');
-    $l_microfiche = qq|<input name=l_microfiche class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Microfiche');
+    $l_drawing = qq|<input name=l_drawing class=checkbox type=checkbox value=Y $form->{l_drawing}>&nbsp;|.$locale->text('Drawing');
+    $l_microfiche = qq|<input name=l_microfiche class=checkbox type=checkbox value=Y $form->{l_microfiche}>&nbsp;|.$locale->text('Microfiche');
 
   }
 
@@ -1018,12 +1021,12 @@ sub search {
   
 
   @a = ();
-  push @a, qq|<input name=l_runningnumber class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('No.');
-  push @a, qq|<input name=l_partnumber class=checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text('Number');
-  push @a, qq|<input name=l_description class=checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text('Description');
-  push @a, qq|<input name=l_qty class=checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text('Qty');
-  push @a, qq|<input name=l_unit class=checkbox type=checkbox value=Y checked>&nbsp;|.$locale->text('Unit');
-  push @a, qq|<input name=l_priceupdate class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Updated');
+  push @a, qq|<input name=l_runningnumber class=checkbox type=checkbox value=Y $form->{l_runningnumber}>&nbsp;|.$locale->text('No.');
+  push @a, qq|<input name=l_partnumber class=checkbox type=checkbox value=Y $form->{l_partnumber}>&nbsp;|.$locale->text('Number');
+  push @a, qq|<input name=l_description class=checkbox type=checkbox value=Y $form->{l_description}>&nbsp;|.$locale->text('Description');
+  push @a, qq|<input name=l_qty class=checkbox type=checkbox value=Y $form->{l_qty}>&nbsp;|.$locale->text('Qty');
+  push @a, qq|<input name=l_unit class=checkbox type=checkbox value=Y $form->{l_unit}>&nbsp;|.$locale->text('Unit');
+  push @a, qq|<input name=l_priceupdate class=checkbox type=checkbox value=Y $form->{l_priceupdate}>&nbsp;|.$locale->text('Updated');
   push @a, $l_partsgroup if $l_partsgroup;
   push @a, $l_sellprice if $l_sellprice;
   push @a, $l_listprice if $l_listprice;
@@ -1034,7 +1037,7 @@ sub search {
   push @a, $l_bin if $l_bin;
   push @a, $l_rop if $l_rop;
   push @a, $l_weight if $l_weight;
-  push @a, qq|<input name=l_notes class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Notes');
+  push @a, qq|<input name=l_notes class=checkbox type=checkbox value=Y $form->{l_notes}>&nbsp;|.$locale->text('Notes');
   push @a, $l_image if $l_image;
   push @a, $l_drawing if $l_drawing;
   push @a, $l_toolnumber if $l_toolnumber;
@@ -1045,7 +1048,7 @@ sub search {
   push @a, $l_account if $l_account;
   push @a, $l_name if $l_name;
   push @a, $l_vcnumber if $l_vcnumber;
-  push @a, qq|<input name=l_business class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Type of Business');
+  push @a, qq|<input name=l_business class=checkbox type=checkbox value=Y $form->{l_business}>&nbsp;|.$locale->text('Type of Business');
   push @a, $l_curr if $l_curr;
   push @a, $l_employee if $l_employee;
   push @a, $l_serialnumber if $l_serialnumber;
@@ -1078,7 +1081,7 @@ sub search {
     $form->{title} = $locale->text($title{$form->{searchitems}});
   }
    
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <body>
@@ -1162,7 +1165,7 @@ sub search {
   print qq|
               </tr>
 	      <tr>
-                <td><input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Subtotal').qq|</td>
+                <td><input name=l_subtotal class=checkbox type=checkbox value=Y $form->{l_subtotal}>&nbsp;|.$locale->text('Subtotal').qq|</td>
                 <td><input name=l_csv class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
 	      </tr>
             </table>
@@ -1581,7 +1584,7 @@ sub generate_report {
       exit;
   }
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $i = 1;
   if (! $form->{changeup}) {
@@ -1608,6 +1611,8 @@ sub generate_report {
   }
   
   $title = "$form->{title} / $form->{company}";
+
+  $form->save_lastused(\%myconfig, "items-$form->{searchitems}", \@column_index, [qw(qty name vcnumber account subtotal)]);
 
   print qq|
 <body>
@@ -1920,7 +1925,7 @@ sub parts_subtotal {
 sub history {
   $form->{title} = $locale->text('History');
   $title = "$form->{title} / $form->{company}";
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $form->{id} *= 1;
   my $arap;
@@ -2027,7 +2032,7 @@ sub requirements {
 	<td><select name=partsgroup>$partsgroup</select></td>
 |;
 
-    $l_partsgroup = qq|<input name=l_partsgroup class=checkbox type=checkbox value=Y> |.$locale->text('Group');
+    $l_partsgroup = qq|<input name=l_partsgroup class=checkbox type=checkbox value=Y $form->{l_partsgroup}> |.$locale->text('Group');
   }
 
   if (@{ $form->{all_years} }) {
@@ -2080,7 +2085,7 @@ sub requirements {
 
   $form->{title} = $locale->text('Parts Requirements');
   
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <body>
@@ -2209,7 +2214,7 @@ sub requirements_report {
   
   $form->{title} = $locale->text('Parts Requirements');
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -2418,7 +2423,7 @@ sub so_requirements {
 
   $form->{title} = $locale->text('Sales Order Requirements');
   
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <body>
@@ -2577,7 +2582,7 @@ sub so_requirements_report {
   
   $title = "$form->{title} / $form->{company}";
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -3181,7 +3186,7 @@ sub select_name {
   $column_data{address} = qq|<th class=listheading colspan=5>|.$locale->text('Address').qq|</th>|;
   
   # list items with radio button on a form
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $title = $locale->text('Select from one of the names below');
 
@@ -3457,7 +3462,7 @@ sub stock_assembly {
 
   $form->{title} = $locale->text('Stock Assembly');
   
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <body>
@@ -3591,7 +3596,7 @@ sub list_assemblies {
 	      </tr>
 | if $form->{selectwarehouse};
  
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <body>

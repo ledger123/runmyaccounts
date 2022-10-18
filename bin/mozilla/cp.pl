@@ -503,7 +503,7 @@ sub payments_header {
   }
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <script language="JavaScript">
@@ -1388,7 +1388,7 @@ sub payment_header {
   }
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <script language="JavaScript">
@@ -2052,7 +2052,7 @@ sub print_form {
     $form->{OUT} = "| $printer{$form->{media}}";
   }
 
-  $form->parse_template(\%myconfig, $userspath, $debuglatex);
+  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
 }
 

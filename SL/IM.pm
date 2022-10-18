@@ -137,6 +137,7 @@ sub sales_invoice {
 	  $form->{"city_$i"} = $ref->{city};
 	  $form->{"employee_$i"} = $ref->{employee};
 	  $form->{"employee_id_$i"} = $ref->{employee_id};
+	  $form->{"curr_$i"} = $form->{currency} if !$form->{"curr_$i"};
 	  $customertax{$ref->{accno}} = 1;
 	}
 	$cth->finish;
@@ -268,6 +269,13 @@ sub import_sales_invoice {
   
   $form->{curr} ||= $form->{defaultcurrency};
   $form->{currency} = $form->{curr};
+
+  if ($form->{currency} ne $form->{defaultcurrency}){
+      $form->{exchangerate} *= 1;
+      if (!$form->{exchangerate}){
+          $form->{exchangerate} = $form->get_exchangerate($myconfig, $dbh, $form->{currency}, $form->{transdate}, 'buy');
+      }
+  }
 
   my $language_code;
   $query = qq|SELECT c.customernumber, c.language_code, a.city
@@ -1617,6 +1625,11 @@ sub gl {
   $query = qq|SELECT id FROM department WHERE description = ?|;
   my $dth = $dbh->prepare($query) || $form->dberror($query);
 
+  $query = qq|SELECT id
+              FROM project
+              WHERE projectnumber = ?|;
+  my $pth = $dbh->prepare($query) || $form->dberror($query);
+
   my @d = split /\n/, $form->{data};
   shift @d if ! $form->{mapfile};
 
@@ -1642,10 +1655,19 @@ sub gl {
         $a[$form->{$form->{type}}->{department}{ndx}] = '***';
 	$form->{"department_id_$i"} = 0;
       }
+      $pth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
+      if ($ref = $pth->fetchrow_hashref(NAME_lc)) {
+	$form->{"project_id_$i"} = $ref->{id};
+      } else {
+        $a[$form->{$form->{type}}->{projectnumber}{ndx}] = '***';
+	$form->{"project_id_$i"} = 0;
+      }
     }
     $form->{rowcount} = $i;
   }
   $cth->finish;
+  $dth->finish;
+  $pth->finish;
   $dbh->disconnect;
 }
 

@@ -1,6 +1,6 @@
 %Pakete
-\documentclass[9pt]{scrartcl}
-\usepackage[latin1]{inputenc}
+\documentclass[fontsize=9pt]{scrartcl}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{tabularx}
 \setlength{\parindent}{0pt}
@@ -12,4 +12,104 @@
 \usepackage{colortbl}
 \usepackage{color}
 \usepackage{substr}
-\usepackage{xstring} 
+\usepackage{fancyhdr}
+\usepackage{embedfile}
+\usepackage[a-3b]{pdfx}
+
+
+%%% Custom package for invoice sub total table  %%%
+
+% packages to have the \num macro for number layout
+\usepackage{siunitx}
+\sisetup{group-separator = {\text{'}},group-minimum-digits=3,detect-all}
+\usepackage{tikz}
+\usetikzlibrary{calc,decorations}
+\setlength{\TPHorizModule}{1mm}%
+\setlength{\TPVertModule}{1mm}%
+
+%%%%%%%%%%%%%  QRCODE AND QR-BILL-SETTINGS  %%%%%%%%%%%%%
+
+%%% Custom package for Swiss Invoice QR code  %%%
+\usepackage{xstring}
+\usepackage{fp}
+\usepackage{xparse}
+\usepackage[forget]{qrcode}
+
+\newlength{\QRdim}\setlength{\QRdim}{46mm}
+\newlength{\QRflag}\setlength{\QRflag}{7mm}
+% Swiss flag
+\newcommand{\QRSwissflag}{\tikz[x=\QRflag,y=\QRflag]{%
+\fill[white] (0,0) rectangle (1,1);%
+\fill[black] ({0.5/7},{0.5/7}) rectangle ({6.5/7},{6.5/7});%
+\fill[white] ({1.5/7},{2.9/7}) rectangle ({5.5/7},{4.1/7});%
+\fill[white] ({2.9/7},{1.5/7}) rectangle ({4.1/7},{5.5/7});%
+}}
+
+\pgfdeclaredecoration{store path length}{final}{
+  \state{final}{
+    \xdef\pathlength{\pgfdecoratedpathlength}
+    \pgfpathmoveto{\pgfpointdecoratedpathlast}
+  }
+}
+\tikzset{store path length/.style={
+   preaction={decorate,decoration={store path length}}}
+}
+%%%  Debtor marks  %%%
+\tikzset{debtormark/.style={opacity=0}}
+\newcommand{\debtormark}{\tikz[x=1mm,y=1mm] {
+        \draw[debtormark] (0,0)--++(5,0);\draw[debtormark] (0,0)--++(0,-2.5);
+        \draw[debtormark] (0,-25)--++(5,0);\draw[debtormark] (0,-25)--++(0,2.5);
+        \draw[debtormark] (65,0)--++(-5,0);\draw[debtormark] (65,0)--++(0,-2.5);
+        \draw[debtormark] (65,-25)--++(-5,0);\draw[debtormark] (65,-25)--++(0,2.5);
+        }
+}
+%%%  Amount marks  %%%
+\tikzset{amountmark/.style={opacity=0}}
+\newcommand{\amountmark}{
+\draw[amountmark] (AMAluc)--++(5,0);\draw[amountmark] (AMAluc)--++(0,-2.5);
+\draw[amountmark] (AMAlbc)--++(5,0);\draw[amountmark] (AMAlbc)--++(0,2.5);
+\draw[amountmark] (AMAruc)--++(-5,0);\draw[amountmark] (AMAruc)--++(0,-2.5);
+\draw[amountmark] (AMArbc)--++(-5,0);\draw[amountmark] (AMArbc)--++(0,2.5);
+}
+
+%%%  Font  %%%
+\newcommand{\QRtitfont}{\fontfamily{phv}\fontsize{8pt}{9.6pt}\fontseries{b}\selectfont\strut}
+\newcommand{\QRltitfont}{\fontfamily{phv}\fontsize{10pt}{12pt}\fontseries{b}\selectfont\strut}
+\newcommand{\QRsecfont}{\fontfamily{phv}\fontsize{10pt}{12pt}\fontseries{m}\selectfont\strut}
+
+%%%  UTF8 Stuff for QR-Code  %%%
+ \makeatletter
+ % for pdftex is it needed to suppress the writing of arbitrary bytes to the aux:
+ \def\qr@writebinarymatrixtoauxfile#1{}%
+\setkeys{qr}{version=10,height=\QRdim,nolink}
+ \makeatletter
+
+ \ExplSyntaxOn
+  \cs_generate_variant:Nn \str_set_convert:Nnnn {Nnno}
+  \tl_new:N\g__ufqr_convert_method_tl
+  \seq_new:N\l__ufqr_tmpa_seq
+  \seq_new:N\l__ufqr_tmpb_seq
+  \sys_if_engine_pdftex:TF
+   {
+    \tl_gset:Nn\g__ufqr_convert_method_tl {}
+   }
+   {
+    \tl_gset:Nn\g__ufqr_convert_method_tl {utf8/bytes}
+   }
+ \NewDocumentCommand \unicodeqrcode { m }
+    {
+      \tl_set:Nn \l_tmpa_tl { #1 }
+      \regex_replace_all:nnN {\c{\%}}{\cO\%} \l_tmpa_tl
+
+      \seq_clear:N \l__ufqr_tmpa_seq
+      \seq_clear:N \l__ufqr_tmpb_seq
+      \exp_args:NNno\seq_set_split:Nnn \l__ufqr_tmpa_seq { \\ } { \l_tmpa_tl}
+      \seq_map_inline:Nn \l__ufqr_tmpa_seq
+       {
+        \str_set_convert:Nnno \l_tmpa_str { ##1 } {}{\g__ufqr_convert_method_tl}
+        \seq_put_right:No\l__ufqr_tmpb_seq {\l_tmpa_str}
+       }
+     \exp_args:Nx\qrcode{ \seq_use:Nn \l__ufqr_tmpb_seq {\tl_to_str:N \? } }
+    }
+
+\ExplSyntaxOff

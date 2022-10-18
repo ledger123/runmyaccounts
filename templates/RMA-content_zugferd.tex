@@ -1,0 +1,158 @@
+\begin{filecontents*}{\jobname.xmpdata}
+\Subject{<%invdescription%>}
+\Title{INVOICE}
+\Author{<%company%>}
+\end{filecontents*}
+
+\begin{filecontents*}{\jobname.xml}
+<?xml version='1.0' encoding='UTF-8' ?>
+<!-- ZUGFeRD Implementation von Run my Accounts-->
+<rsm:CrossIndustryInvoice xmlns:a="urn:un:unece:uncefact:data:standard:QualifiedDataType:100" xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100" xmlns:qdt="urn:un:unece:uncefact:data:standard:QualifiedDataType:10" xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
+  <rsm:ExchangedDocumentContext>
+    <ram:GuidelineSpecifiedDocumentContextParameter>
+      <ram:ID>urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:basic</ram:ID>
+    </ram:GuidelineSpecifiedDocumentContextParameter>
+  </rsm:ExchangedDocumentContext>
+  <rsm:ExchangedDocument>
+    <ram:ID><%invnumber%></ram:ID>
+    <ram:TypeCode>380</ram:TypeCode>
+    <ram:IssueDateTime>
+      <udt:DateTimeString format="102"><%xml_invdate%></udt:DateTimeString>
+    </ram:IssueDateTime>
+    <ram:IncludedNote>
+      <ram:Content><%invdescription%></ram:Content>
+    </ram:IncludedNote>
+    <ram:IncludedNote>
+      <ram:Content><%company%>
+<%companyaddress1%>
+<%companyaddress2%>
+<%companyzip%> <%companycity%>
+<%companycountry%>
+E-Mail: <%companyemail%>
+Web: <%companywebsite%>
+MWST-Nr: <%businessnumber%>
+Tel: <%tel%>
+Fax: <%fax%>
+      </ram:Content>
+    </ram:IncludedNote>
+    <ram:IncludedNote>
+      <ram:Content>Offert-Nr.: <%quonumber%>
+Bestell-Nr.: <%ordnumber%>
+Ihre Bestell-Nr.: <%ponumber%>
+Kunden-Nr.: <%customernumber%>
+MWST Nr.: <%businessnumber%>
+Ihre MWST Nr.: <%customertaxnumber%>
+
+Wir bedanken uns für Ihre Überweisung innerhalb von <%terms%> Tagen bis zum <%duedate%>.
+      </ram:Content>
+    </ram:IncludedNote>
+  </rsm:ExchangedDocument>
+  <rsm:SupplyChainTradeTransaction>
+    <%foreach number%>
+    <ram:IncludedSupplyChainTradeLineItem>
+      <ram:AssociatedDocumentLineDocument>
+        <ram:LineID><%runningnumber%></ram:LineID>
+      </ram:AssociatedDocumentLineDocument>
+      <ram:SpecifiedTradeProduct>
+        <ram:GlobalID schemeID="0160"></ram:GlobalID>
+        <ram:Name><%description%>
+<%itemnotes%>
+Unsere Art. Nr.:<%number%>
+        </ram:Name>
+      </ram:SpecifiedTradeProduct>
+	        <ram:SpecifiedLineTradeAgreement>
+        <ram:NetPriceProductTradePrice>
+          <ram:ChargeAmount><%xml_sellprice%></ram:ChargeAmount>
+        </ram:NetPriceProductTradePrice>
+      </ram:SpecifiedLineTradeAgreement>
+      <ram:SpecifiedLineTradeDelivery>
+        <ram:BilledQuantity unitCode="C62"><%xml_qty%></ram:BilledQuantity>
+      </ram:SpecifiedLineTradeDelivery>
+      <ram:SpecifiedLineTradeSettlement>
+	   <ram:ApplicableTradeTax>
+       <ram:TypeCode>VAT</ram:TypeCode>
+       <ram:CategoryCode>S</ram:CategoryCode>
+          <ram:RateApplicablePercent><%taxrates%></ram:RateApplicablePercent>
+        </ram:ApplicableTradeTax>
+        <ram:SpecifiedTradeSettlementLineMonetarySummation>
+          <ram:LineTotalAmount><%xml_linetotal%></ram:LineTotalAmount>
+        </ram:SpecifiedTradeSettlementLineMonetarySummation>
+      </ram:SpecifiedLineTradeSettlement>
+    </ram:IncludedSupplyChainTradeLineItem>
+    <%end number%>
+    <ram:ApplicableHeaderTradeAgreement>
+      <ram:SellerTradeParty>
+        <ram:Name><%company%></ram:Name>
+        <ram:PostalTradeAddress>
+          <ram:PostcodeCode><%companyzip%></ram:PostcodeCode>
+          <ram:LineOne><%companyaddress1%></ram:LineOne>
+					<ram:LineTwo><%companyaddress2%></ram:LineTwo>
+          <ram:CityName><%companycity%></ram:CityName>
+          <ram:CountryID>CH</ram:CountryID>
+        </ram:PostalTradeAddress>
+        <ram:SpecifiedTaxRegistration>
+          <ram:ID schemeID="VA"><%businessnumber%></ram:ID>
+        </ram:SpecifiedTaxRegistration>
+      </ram:SellerTradeParty>
+      <ram:BuyerTradeParty>
+        <ram:Name><%name%></ram:Name>
+        <ram:PostalTradeAddress>
+          <ram:PostcodeCode><%zipcode%></ram:PostcodeCode>
+          <ram:LineOne><%firstname%> <%lastname%></ram:LineOne>
+          <ram:LineTwo><%address1%></ram:LineTwo>
+          <ram:LineThree><%address2%></ram:LineThree>
+          <ram:CityName><%city%></ram:CityName>
+          <ram:CountryID>CH</ram:CountryID>
+        </ram:PostalTradeAddress>
+      </ram:BuyerTradeParty>
+    </ram:ApplicableHeaderTradeAgreement>
+    <ram:ApplicableHeaderTradeDelivery>
+      <ram:ActualDeliverySupplyChainEvent>
+        <ram:OccurrenceDateTime>
+          <udt:DateTimeString format="102"><%xml_invdate%></udt:DateTimeString>
+        </ram:OccurrenceDateTime>
+      </ram:ActualDeliverySupplyChainEvent>
+    </ram:ApplicableHeaderTradeDelivery>
+    <ram:ApplicableHeaderTradeSettlement>
+      <ram:InvoiceCurrencyCode><%currency%></ram:InvoiceCurrencyCode>
+      <ram:PayeeTradeParty>
+            <ram:Name><%company%></ram:Name>
+      </ram:PayeeTradeParty>
+      <ram:SpecifiedTradeSettlementPaymentMeans>
+      <ram:TypeCode>30</ram:TypeCode>
+       <ram:PayeePartyCreditorFinancialAccount>
+        <ram:IBANID><%iban%></ram:IBANID>
+       </ram:PayeePartyCreditorFinancialAccount>
+      </ram:SpecifiedTradeSettlementPaymentMeans>
+      <%foreach tax%>
+      <ram:ApplicableTradeTax>
+        <ram:CalculatedAmount><%xml_tax%></ram:CalculatedAmount>
+        <ram:TypeCode>VAT</ram:TypeCode>
+        <ram:BasisAmount><%xml_taxbase%></ram:BasisAmount>
+		<ram:CategoryCode>S</ram:CategoryCode>
+        <ram:RateApplicablePercent><%xml_taxrate%></ram:RateApplicablePercent>
+      </ram:ApplicableTradeTax>
+      <%end tax%>
+	  <ram:SpecifiedTradePaymentTerms>
+        <ram:DueDateDateTime>
+          <udt:DateTimeString format="102"><%xml_duedate%></udt:DateTimeString>
+        </ram:DueDateDateTime>
+      </ram:SpecifiedTradePaymentTerms>
+      <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+        <ram:LineTotalAmount><%xml_subtotal%></ram:LineTotalAmount>
+        <ram:ChargeTotalAmount>0.00</ram:ChargeTotalAmount>
+        <ram:AllowanceTotalAmount>0.00</ram:AllowanceTotalAmount>
+        <ram:TaxBasisTotalAmount><%xml_subtotal%></ram:TaxBasisTotalAmount>
+		<ram:TaxTotalAmount currencyID="<%currency%>"><%xml_totaltax%></ram:TaxTotalAmount>
+        <ram:GrandTotalAmount><%xml_invtotal%></ram:GrandTotalAmount>
+		<ram:DuePayableAmount><%xml_invtotal%></ram:DuePayableAmount>
+      </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+    </ram:ApplicableHeaderTradeSettlement>
+  </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>
+\end{filecontents*}
+
+\embedfile[filespec={factur-x.xml},afrelationship={/Data},desc={Rechnungsdaten im ZUGFeRD XML Format},filesystem=URL,stringmethod=escape,mimetype=application/octet-stream,ucfilespec={factur-x.xml}]{\jobname.xml}
+
+
+<%resetcarriedforward%>

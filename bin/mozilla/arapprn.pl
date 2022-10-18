@@ -186,7 +186,7 @@ sub print_check {
   $form->{fileid} = $invnumber;
   $form->{fileid} =~ s/(\s|\W)+//g;
 
-  $form->parse_template(\%myconfig, $userspath, $debuglatex);
+  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
   if ($form->{previousform}) {
   
@@ -426,7 +426,7 @@ sub print_transaction {
   $form->{fileid} = $form->{invnumber};
   $form->{fileid} =~ s/(\s|\W)+//g;
 
-  $form->parse_template(\%myconfig, $userspath, $debuglatex);
+  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
   if (%$old_form) {
     $old_form->{invnumber} = $form->{invnumber};
@@ -463,7 +463,7 @@ sub select_payment {
   push @column_index, "$form->{ARAP}_paid";
 
   # list payments with radio button on a form
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $title = $locale->text('Select payment');
 

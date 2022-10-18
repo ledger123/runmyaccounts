@@ -54,7 +54,12 @@ sub import {
   $msg = "Import $title{$form->{type}}";
   $form->{title} = $locale->text($msg);
   
-  $form->header;
+  $form->{dbh} = $form->dbconnect(\%myconfig);
+  my %defaults = $form->get_defaults( $form->{dbh}, \@{ [qw(closedto)] } );
+  for ( keys %defaults ) { $form->{$_} = $defaults{$_} }
+  $form->closedto_user($myconfig, $form->{dbh});
+
+  $form->header(0, 0, $locale);
 
   $form->{nextsub} = "im_$form->{type}";
   $form->{action} = "continue";
@@ -356,7 +361,7 @@ print qq|
 </table>
 |;
 
-  $form->hide_form(qw(ARAP vc db defaultcurrency title type action nextsub login path));
+  $form->hide_form(qw(ARAP vc db defaultcurrency title type action nextsub login path closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Continue').qq|">
@@ -425,7 +430,7 @@ sub im_generic {
 
   $form->helpref("import_$form->{type}", $myconfig{countrycode});
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -519,7 +524,7 @@ sub export {
   $msg = "Export $title{$form->{type}}";
   $form->{title} = $locale->text($msg);
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $form->{nextsub} = "ex_$form->{type}";
   $form->{action} = "continue";
@@ -701,7 +706,7 @@ sub im_sales_invoice {
   $column_data{department} = $locale->text('Department');
   $column_data{warehouse} = $locale->text('Warehouse');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -820,7 +825,7 @@ sub im_sales_invoice {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback markpaid paymentaccount));
+  $form->hide_form(qw(vc rowcount ndx type login path callback markpaid paymentaccount closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Sales Invoices').qq|">
@@ -864,7 +869,7 @@ sub im_sales_order {
   $column_data{duedate} = $locale->text('Due Date');
   $column_data{employee} = $locale->text('Salesperson');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -968,7 +973,7 @@ sub im_sales_order {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback));
+  $form->hide_form(qw(vc rowcount ndx type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Sales Orders').qq|">
@@ -1012,7 +1017,7 @@ sub im_purchase_order {
   $column_data{duedate} = $locale->text('Due Date');
   $column_data{employee} = $locale->text('Employee');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -1116,7 +1121,7 @@ sub im_purchase_order {
 </table>
 |;
    
-  $form->hide_form(qw(vc rowcount ndx type login path callback));
+  $form->hide_form(qw(vc rowcount ndx type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Purchase Orders').qq|">
@@ -1237,9 +1242,6 @@ sub import_sales_invoices {
 	for (qw(description unit deliverydate serialnumber itemnotes projectnumber)) { $newform->{"${_}_$j"} = $form->{"${_}_$i"} }
 	$newform->{"sellprice_$j"} = $form->format_amount($myconfig, $form->{"sellprice_$i"});
 
-        $test = sprintf('%s', $newform->{"description_$j"});
-	$form->info($test);
-
 	$j++; 
       }
 
@@ -1252,6 +1254,11 @@ sub import_sales_invoices {
       }
 
       # post invoice
+
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post invoice in closed period. ') . $newform->{invnumber} . "\n");
+     } else {
       $form->info("${m}. ".$locale->text('Posting Invoice ...'));
       if (IM->import_sales_invoice(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{invnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{city}, |);
@@ -1262,6 +1269,7 @@ sub import_sales_invoices {
       } else {
 	$form->error($locale->text('Posting failed!'));
       }
+     }
     }
   }
 
@@ -1334,7 +1342,10 @@ sub import_sales_orders {
       
       # post order
       $form->info("${m}. ".$locale->text('Posting Order ...'));
-      if (IM->import_sales_order(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
+      } elsif (IM->import_sales_order(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{customernumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
@@ -1415,7 +1426,10 @@ sub import_purchase_orders {
       
       # post order
       $form->info("${m}. ".$locale->text('Posting Order ...'));
-      if (IM->import_purchase_order(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot save order in closed period. ') . $newform->{ordnumber} . "\n");
+      } elsif (IM->import_purchase_order(\%myconfig, \%$newform)) {
 	$form->info(qq| $newform->{ordnumber}, $newform->{description}, $newform->{vendornumber}, $newform->{name}, $newform->{city}, |);
 	$myconfig{numberformat} = $numberformat;
 	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
@@ -1463,7 +1477,7 @@ sub im_payment {
   $column_data{amount} = $locale->text('Paid');
   $column_data{exchangerate} = $locale->text('Exch');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -1540,7 +1554,7 @@ sub im_payment {
   
   $form->{paymentaccount} =~ s/--.*//;
 
-  $form->hide_form(qw(precision rowcount type paymentaccount currency defaultcurrency login path callback));
+  $form->hide_form(qw(precision rowcount type paymentaccount currency defaultcurrency login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Payments').qq|">
@@ -1593,7 +1607,10 @@ sub import_payments {
       
       $form->info("${m}. ".$locale->text('Posting Payment ...'));
 
-      if (CP->post_payment(\%myconfig, \%$newform)) {
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{datepaid}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post payment in closed period. ') . $newform->{source} . "\n");
+      }	elsif (CP->post_payment(\%myconfig, \%$newform)) {
 	$form->info(qq| $form->{"invnumber_$i"}, $form->{"description_$i"}, $form->{"companynumber_$i"}, $form->{"name_$i"}, $form->{"city_$i"}, |);
 	$form->info($form->{"amount_$i"});
 	$form->info(" ... ".$locale->text('ok')."\n");
@@ -1659,7 +1676,7 @@ sub ex_payment {
   $column_data{memo} = $locale->text('Memo');
   $column_data{curr} = $locale->text('Curr');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <script language="JavaScript">
@@ -1867,7 +1884,7 @@ sub im_parts {
   $column_data{drawing} = $locale->text('Drawing');
   $column_data{notes} = $locale->text('Notes');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2073,7 +2090,7 @@ sub im_partscustomer {
   $column_data{validto} = $locale->text('To');
   $column_data{curr} = $locale->text('Curr');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|<body><form method=post action=$form->{script}>|;
   print qq|<table width=100%>|;
@@ -2185,7 +2202,7 @@ sub im_partsvendor {
   $column_data{curr} = $locale->text('Curr');
   $column_data{leadtime} = $locale->text('Leadtime');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|<body><form method=post action=$form->{script}>|;
   print qq|<table width=100%>|;
@@ -2295,7 +2312,7 @@ sub im_vc {
   $column_data{zipcode} = $locale->text('Zip');
   $column_data{country} = $locale->text('Country');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2448,7 +2465,7 @@ sub im_account {
   $column_data{category} = $locale->text('Category');
   $column_data{"link"} = $locale->text('Link');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2471,7 +2488,7 @@ sub im_account {
   print qq|
         </tr>
 |;
-
+ 
   for $i (1 .. $form->{rowcount}) {
     
     $j++; $j %= 2;
@@ -2550,9 +2567,13 @@ sub import_accounts {
       $newform->{"description"} = $form->{"description_$i"};
       $newform->{"charttype"} = $form->{"charttype_$i"};
       $newform->{"category"} = $form->{"category_$i"};
-      $newform->{"link"} = $form->{"link_$i"};
-      
-      $form->info("${m}. ".$locale->text('Add part ...'));
+      $form->{"link_$i"} =~ s/\s+$//;
+      if ($form->{"link_$i"}){
+        my @links = split /:/, $form->{"link_$i"};
+        for (@links) { $newform->{$_} = $_ };
+      }
+     
+      $form->info("${m}. ".$locale->text('Add account ...'));
 
       if (AM->save_account(\%myconfig, \%$newform)) {
 	$form->info(qq| $form->{"account_$i"}, $form->{"description_$i"}|);
@@ -2568,7 +2589,7 @@ sub im_gl {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
-  @column_index = qw(reference department department_id description transdate notes currency exchangerate accno accdescription debit credit source memo);
+  @column_index = qw(reference department department_id description transdate notes currency exchangerate accno accdescription debit credit source memo projectnumber project_id);
   @flds = @column_index;
   unshift @column_index, qw(runningnumber ndx);
 
@@ -2593,8 +2614,10 @@ sub im_gl {
   $column_data{credit} = $locale->text('Credit');
   $column_data{source} = $locale->text('Source');
   $column_data{memo} = $locale->text('Memo');
+  $column_data{projectnumber} = $locale->text('Project');
+  $column_data{project_id} = $locale->text('Project ID');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2707,6 +2730,11 @@ sub import_gl {
 	# Post if it is a new transaction or last transaction.
 	if ($reference ne 'null'){
 	   $newform->{rowcount} = $linenum;
+
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post gl transaction in closed period. ') . $reference . "\n");
+     } else {
       	   $form->info("${m}. ".$locale->text('Posting gl transaction ...'));
       	   if (GL->post_transaction(\%myconfig, \%$newform)) {
 		$form->info(qq| $reference|);
@@ -2715,6 +2743,7 @@ sub import_gl {
       	   } else {
 		$form->error($locale->text('Posting failed!'));
       	   }
+    }
 	   # start new transaction
 	   $linenum = 1;
 	}
@@ -2737,12 +2766,18 @@ sub import_gl {
       $newform->{"credit_$linenum"} = $form->{"credit_$i"};
       $newform->{"source_$linenum"} = $form->{"source_$i"};
       $newform->{"memo_$linenum"} = $form->{"memo_$i"};
+      $newform->{"projectnumber_$linenum"} = qq|$form->{"projectnumber_$i"}--$form->{"project_id_$i"}|;
       $linenum++;
     }
   }
 
   # Now post last transaction. (Code duplicated from above loop)
+  $reference = $form->{"reference_$linenum"};
   $newform->{rowcount} = $linenum;
+  $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+  if ($form->{locked}){
+        $form->info($locale->text('Cannot post gl transaction in closed period. ') . $reference . "\n");
+  } else {
   $form->info("${m}. ".$locale->text('Posting last gl transaction ...'));
   if (GL->post_transaction(\%myconfig, \%$newform)) {
      $form->info(qq| $reference|);
@@ -2751,6 +2786,7 @@ sub import_gl {
   } else {
      $form->error($locale->text('Posting failed!'));
   }
+  }
 }
 
 sub im_transactions {
@@ -2758,9 +2794,9 @@ sub im_transactions {
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
   if ($form->{vc} eq 'customer'){
-    @column_index = qw(ndx invnumber customernumber name transdate account account_description amount description notes source memo);
+    @column_index = qw(ndx invnumber invoicedescription customernumber name transdate account account_description amount description notes source memo);
   } else {
-    @column_index = qw(ndx invnumber vendornumber name transdate account account_description amount description notes source memo);
+    @column_index = qw(ndx invnumber invoicedescription vendornumber name transdate account account_description amount description notes source memo);
   }
   @flds = @column_index;
   push @flds, qw(vendor_id customer_id employee employee_id);
@@ -2780,13 +2816,14 @@ sub im_transactions {
 
   $column_data{runningnumber} = "&nbsp;";
   $column_data{invnumber} = $locale->text('Invoice Number');
+  $column_data{invoicedescription} = $locale->text('Description');
   $column_data{"$form->{vc}number"} = $locale->text('Number');
   $column_data{name} = $locale->text('Name');
   $column_data{transdate} = $locale->text('Invoice Date');
   $column_data{account} = $locale->text('Account');
   $column_data{amount} = $locale->text('Amount');
 
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body>
@@ -2857,7 +2894,7 @@ sub im_transactions {
 </table>
 |;
   
-  $form->hide_form(qw(markpaid ARAP vc currency arapaccount incomeaccount paymentaccount expenseaccount precision rowcount type login path callback));
+  $form->hide_form(qw(markpaid ARAP vc currency arapaccount incomeaccount paymentaccount expenseaccount precision rowcount type login path callback closedto));
 
   print qq|
 <input name=action class=submit type=submit value="|.$locale->text('Import Transactions').qq|">
@@ -2881,6 +2918,11 @@ sub import_transactions {
       $m++;
       if ($newform->{invnumber} ne $form->{"invnumber_$i"}){
          if ($newform->{invnumber} ne 'null'){ 
+
+         $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+         if ($form->{locked}){
+            $form->info($locale->text('Cannot post transaction in closed period. ') . $newform->{invnumber} . "\n");
+         } else {
             $form->info("${m}. ".$locale->text('Add transaction ...'));
             if (AA->post_transaction(\%myconfig, \%$newform)) {
  	      $form->info(qq| $newform->{invnumber}, $form->{"$form->{vc}number_$i"}|);
@@ -2888,6 +2930,7 @@ sub import_transactions {
             } else {
 	      $form->error($locale->text('Posting failed!'));
             }
+         }
          }
          for (keys %$newform) { delete $newform->{$_} }
 	 $newform->{vc} = $form->{vc};
@@ -2898,6 +2941,7 @@ sub import_transactions {
          $newform->{"$form->{vc}_id"} = $form->{"$form->{vc}_id_$i"};
          $newform->{$form->{ARAP}}= $form->{arapaccount};
          $newform->{currency} = $form->{currency};
+         $newform->{description} = $form->{"invoicedescription_$i"};
          $newform->{defaultcurrency} = $form->{currency};
          $newform->{employee}= qq|$form->{"employee_$i"}--$form->{"employee_id_$i"}|;
 	 $linenum = 0;
@@ -2915,6 +2959,11 @@ sub import_transactions {
     }
   }
   # Post last transaction
+  #
+  $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+  if ($form->{locked}){
+    $form->info($locale->text('Cannot post transaction in closed period. ') . $newform->{invnumber} . "\n");
+  } else {
   $form->info("${m}. ".$locale->text('Add transaction ...'));
   if (AA->post_transaction(\%myconfig, \%$newform)) {
      $form->info(qq| $newform->{invnumber}, $form->{"$form->{vc}number_$i"}|);
@@ -2922,13 +2971,14 @@ sub import_transactions {
   } else {
      $form->error($locale->text('Posting failed!'));
   }
+  }
 }
 
 sub prepare_datev {
 
     if (!$form->{ok}){
         $form->{title} = $locale->text('Prepare DATEV export');
-        $form->header;
+        $form->header(0, 0, $locale);
         print qq|
 <body>
 <table width="100%">
@@ -2956,9 +3006,12 @@ sub prepare_datev {
     $form->{dbh} = $form->dbconnect(\%myconfig);
     $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
-    $form->{dbh}->do("create table debits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2))");
-    $form->{dbh}->do("create table credits (id serial, reference text, description text, transdate date, accno text, amount numeric(12,2))");
-    $form->{dbh}->do("create table debitscredits (id serial, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2))");
+    $form->{dbs}->query("drop table debits");
+    $form->{dbs}->query("drop table credits");
+    $form->{dbs}->query("drop table debitscredits");
+    $form->{dbs}->query("create table debits (id serial, department_id integer, reference text, description text, transdate date, accno text, amount numeric(12,2))");
+    $form->{dbs}->query("create table credits (id serial, department_id integer, reference text, description text, transdate date, accno text, amount numeric(12,2))");
+    $form->{dbs}->query("create table debitscredits (id serial, department_id integer, reference text, description text, transdate date, debit_accno text, credit_accno text, amount numeric(12,2))");
 
     $form->{dbs}->query('delete from debitscredits');
 
@@ -2969,6 +3022,9 @@ sub prepare_datev {
                 gl.reference,
                 ap.invnumber ap_reference,
                 ar.invnumber ar_reference,
+                gl.department_id,
+                ap.department_id ap_department_id,
+                ar.department_id ar_department_id,
                 gl.description,
                 ar.description ar_description,
                 ap.description ap_description,
@@ -3004,6 +3060,7 @@ sub prepare_datev {
             $i = 1;
         }
         $form->{"reference_$i"} = $row->{reference} . $row->{ar_reference} . $row->{ap_reference};
+        $form->{"department_id_$i"} = $row->{department_id}*1 + $row->{ar_department_id}*1 + $row->{ap_department_id}*1;
         $form->{"transdate_$i"} = $row->{transdate};
         $form->{"description_$i"} = $row->{description} . $row->{ar_description} . $row->{ap_description};
         $form->{"accno_$i"} = $row->{accno};
@@ -3044,14 +3101,14 @@ sub prepare_datev2 {
       #$form->{"debit_$i"} = $form->parse_amount(\%myconfig, $form->{"debit_$i"});
       #$form->{"credit_$i"} = $form->parse_amount(\%myconfig, $form->{"credit_$i"});
      $form->{dbs}->query(qq|
-         insert into debits (reference, description, transdate, accno, amount)
-         values (?, ?, ?, ?, ?)|,
-         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"debit_$i"}
+         insert into debits (reference, department_id, description, transdate, accno, amount)
+         values (?, ?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"department_id_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"debit_$i"}
      ) if $form->{"debit_$i"} > 0;
      $form->{dbs}->query(qq|
-         insert into credits (reference, description, transdate, accno, amount) 
-         values (?, ?, ?, ?, ?)|,
-         $form->{"reference_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"credit_$i"}
+         insert into credits (reference, department_id, description, transdate, accno, amount) 
+         values (?, ?, ?, ?, ?, ?)|,
+         $form->{"reference_$i"}, $form->{"department_id_$i"}, $form->{"description_$i"}, $form->{"transdate_$i"}, $form->{"accno_$i"}, $form->{"credit_$i"}
      ) if $form->{"credit_$i"} > 0;
      for (qw(reference description transdate accno debit credit)){ delete $form->{"${_}_$i"} }
   }
@@ -3059,8 +3116,8 @@ sub prepare_datev2 {
   # matching amounts and accounts should not be same
   for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
      for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} and accno <> '$row->{accno}' limit 1|)->hashes)){
-        $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
+        $form->{dbs}->query('insert into debitscredits (reference, department_id, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{department_id}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
         $form->{dbs}->query('delete from debits where id = ?', $row->{id});
         $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
      }
@@ -3069,8 +3126,8 @@ sub prepare_datev2 {
   # matching amount but accounts can be same
   for $row (@rows = ($form->{dbs}->query(qq|select * from debits order by amount|)->hashes)){
      for $row2 (@rows2 = ($form->{dbs}->query(qq|select * from credits where amount = $row->{amount} limit 1|)->hashes)){
-        $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-            $row->{reference}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
+        $form->{dbs}->query('insert into debitscredits (reference, department_id, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?, ?)',
+            $row->{reference}, $row->{department_id}, $row->{description}, $row->{transdate}, $row->{accno}, $row2->{accno}, $row->{amount});
         $form->{dbs}->query('delete from debits where id = ?', $row->{id});
         $form->{dbs}->query('delete from credits where id = ?', $row2->{id});
      }
@@ -3081,13 +3138,13 @@ sub prepare_datev2 {
       $creditrow = $form->{dbs}->query(qq|select * from credits order by amount DESC limit 1|)->hash;
       if ($debitrow->{amount} and $creditrow->{amount}){
           if ($debitrow->{amount} > $creditrow->{amount}){
-              $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-                    $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount});
+              $form->{dbs}->query('insert into debitscredits (reference, department_id, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?, ?)',
+                    $debitrow->{reference}, $debitrow->{department_id}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $creditrow->{amount});
               $form->{dbs}->query(qq|delete from credits where id = $creditrow->{id}|);
               $form->{dbs}->query(qq|update debits set amount = amount - $creditrow->{amount} where id = $debitrow->{id}|);
           } else {
-              $form->{dbs}->query('insert into debitscredits (reference, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?)',
-                    $debitrow->{reference}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount});
+              $form->{dbs}->query('insert into debitscredits (reference, department_id, description, transdate, debit_accno, credit_accno, amount) values (?, ?, ?, ?, ?, ?, ?)',
+                    $debitrow->{reference}, $debitrow->{department_id}, $debitrow->{description}, $debitrow->{transdate}, $debitrow->{accno}, $creditrow->{accno}, $debitrow->{amount});
               $form->{dbs}->query(qq|delete from debits where id = $debitrow->{id}|);
               $form->{dbs}->query(qq|update credits set amount = amount - $debitrow->{amount} where id = $creditrow->{id}|);
           }
@@ -3111,7 +3168,7 @@ sub export_datev {
     }
 
     if (!$form->{l_csv}){
-        $form->header;
+        $form->header(0, 0, $locale);
         print qq|
 <body>
 <table width="100%">
@@ -3145,7 +3202,10 @@ sub export_datev {
 </tr>
 <tr>
       <th align="right">|.$locale->text('Options').qq|</th>
-      <td><input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|</td>
+      <td>
+      <input name="l_csv" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('CSV').qq|
+      <input name="l_delete_error_rows" class=checkbox type=checkbox value=Y>&nbsp;|.$locale->text('Delete error rows').qq|
+      </td>
 </tr>
 </table>
 <hr/>
@@ -3177,22 +3237,30 @@ sub export_datev {
     }
 
     if ($form->{runit}){
+
+        use DBIx::Simple;
+        $form->{dbh} = $form->dbconnect(\%myconfig);
+        $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+
+        $form->{dbs}->query("DELETE FROM debitscredits WHERE debit_accno = credit_accno")->list if $form->{l_delete_error_rows};
+
         if ($form->{accounttype} eq 'standard'){
            $query = qq|
-            SELECT reference, description, transdate, debit_accno, credit_accno, amount,
+            SELECT reference, d.description department, dc.description, transdate, debit_accno, credit_accno, amount,
                 CASE
                     WHEN debit_accno = credit_accno THEN
                     'ERROR'
                     ELSE
                     ''
                 END error
-            FROM debitscredits 
+            FROM debitscredits dc
+            LEFT JOIN department d ON d.id = dc.department_id
             WHERE $where
             ORDER BY reference, amount DESC
             |;
         } else {
             $query = qq|
-            SELECT dc.reference, dc.description, dc.transdate, debit.gifi_accno debit_accno, credit.gifi_accno credit_accno, dc.amount,
+            SELECT dc.reference, d.description department, dc.description, dc.transdate, debit.gifi_accno debit_accno, credit.gifi_accno credit_accno, dc.amount,
                 CASE
                     WHEN dc.debit_accno = dc.credit_accno THEN
                     'ERROR'
@@ -3200,6 +3268,7 @@ sub export_datev {
                     ''
                 END error
             FROM debitscredits dc
+            LEFT JOIN department d ON d.id = dc.department_id
             JOIN chart debit ON (debit.accno = dc.debit_accno)
             JOIN chart credit ON (credit.accno = dc.credit_accno)
             WHERE $where
@@ -3212,10 +3281,6 @@ sub export_datev {
            &export_to_csv($dbh, $query, 'datev');
            exit;
         }
-
-        use DBIx::Simple;
-        $form->{dbh} = $form->dbconnect(\%myconfig);
-        $form->{dbs} = DBIx::Simple->connect($form->{dbh});
 
         $table1 = $form->{dbs}->query($query
         )->xto(

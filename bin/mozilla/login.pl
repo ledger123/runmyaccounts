@@ -53,7 +53,7 @@ sub login_screen {
   $form->{stylesheet} = "sql-ledger.css";
   $form->{favicon} = "sql-ledger.ico";
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   if ($form->{login}) {
    $sf = qq|function sf() { document.forms[0].password.focus(); }|;
@@ -277,7 +277,7 @@ sub login {
       $form->{dbupdate} = "db$user->{dbname}";
       $form->{$form->{dbupdate}} = 1;
 
-      $form->header;
+      $form->header(0, 0, $locale);
       print $locale->text('Upgrading to Version')." $form->{version} ... ";
 
       # required for Oracle

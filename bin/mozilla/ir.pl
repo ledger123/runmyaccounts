@@ -432,7 +432,7 @@ sub form_header {
   $form->{onhold} = ($form->{onhold}) ? "checked" : "";
 
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
@@ -927,30 +927,7 @@ sub form_footer {
   $form->hide_form(qw(rowcount callback path login oe_id));
 
     if ($form->{id} and $debits_credits_footer){
-        use DBIx::Simple;
-        my $dbh = $form->dbconnect(\%myconfig);
-        my $dbs = DBIx::Simple->connect($dbh);
-        $query = qq|
-                SELECT 
-                    ac.transdate, c.accno, c.description, 
-                    ac.amount, ac.source, 
-                    ac.fx_transaction
-                FROM acc_trans ac
-                JOIN chart c ON (c.id = ac.chart_id)
-                WHERE ac.trans_id = ?
-                ORDER BY ac.transdate
-        |;
-
-        my $table = $dbs->query($query, $form->{id})->xto(
-            tr => { class => [ 'listrow0', 'listrow1' ] },
-            th => { class => ['listheading'] },
-        );
-        $table->modify(td => {align => 'right'}, 'amount');
-        #$table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
-        $table->set_group( 'transdate', 1 );
-        $table->calc_subtotals( [qw(amount)] );
-        $table->calc_totals( [qw(amount)] );
-        print $table->output;
+        &debits_credits;
 
         #
         # LOG
@@ -1307,7 +1284,7 @@ sub print_and_post {
 
 sub delete {
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -1344,7 +1321,7 @@ sub yes {
 
 
 sub view {
-    $form->header;
+    $form->header(0, 0, $locale);
 
     $db = lc $form->{ARAP};
     $vc = $form->{vc};

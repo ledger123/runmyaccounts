@@ -13,6 +13,7 @@ $self{texts} = {
   'Version'                     => 'Version',
   'You did not enter a name!'   => 'Sie haben keinen Namen eingegeben!',
   'done'                        => 'fertig',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

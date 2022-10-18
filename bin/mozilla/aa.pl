@@ -651,7 +651,7 @@ sub form_header {
 
     $form->{onhold} = ( $form->{onhold} ) ? "checked" : "";
 
-    $form->header;
+    $form->header(0, 0, $locale);
 
     print qq|
 <body onload="document.forms[0].${focus}.focus()" />
@@ -1164,30 +1164,11 @@ sub form_footer {
     }
 
     if ($form->{id} and $debits_credits_footer){
+        &debits_credits;
+
         use DBIx::Simple;
         my $dbh = $form->dbconnect(\%myconfig);
         my $dbs = DBIx::Simple->connect($dbh);
-        $query = qq|
-                SELECT 
-                    ac.transdate, c.accno, c.description, 
-                    ac.amount, ac.source, ac.memo, 
-                    ac.fx_transaction, ac.cleared, ac.tax, 
-                    ac.taxamount, c.link, ac.chart_id, ac.tax_chart_id
-                FROM acc_trans ac
-                JOIN chart c ON (c.id = ac.chart_id)
-                WHERE ac.trans_id = ?
-                ORDER BY ac.transdate
-        |;
-
-        my $table = $dbs->query($query, $form->{id})->xto(
-            tr => { class => [ 'listrow0', 'listrow1' ] },
-            th => { class => ['listheading'] },
-        );
-        $table->modify(td => {align => 'right'}, 'amount');
-        $table->map_cell(sub {return $form->format_amount(\%myconfig, shift, 4) }, 'amount');
-        $table->set_group( 'transdate', 1 );
-        $table->calc_totals( [qw(amount)] );
-        print $table->output;
 
         $table = lc $form->{ARAP};
         $query = qq|
@@ -1580,7 +1561,7 @@ sub delete {
 
     $form->{title} = $locale->text('Confirm!');
 
-    $form->header;
+    $form->header(0, 0, $locale);
 
     print qq|
 <body>
@@ -1618,6 +1599,9 @@ sub yes {
 
 sub search {
 
+    $default_checked = "invnumber,description,transdate,name,customernumber,vendornumber,amount,paid";
+    $form->get_lastused(\%myconfig, "$form->{ARAP}-transactions-$form->{outstanding}", $default_checked);
+
     $form->error($locale->text('Access denied!')) if $myconfig{acs} =~ $form->{level};
 
     my $old_number = $form->{"$form->{vc}number"}; # customer/vendor number is changed in $form->create_links
@@ -1629,17 +1613,17 @@ sub search {
 
     $vclabel          = $locale->text('Customer');
     $vcnumber         = $locale->text('Customer Number');
-    $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> $vclabel|;
-    $l_customernumber = qq|<input name="l_customernumber" class=checkbox type=checkbox value=Y checked> $vcnumber|;
-    $l_till           = qq|<input name="l_till" class=checkbox type=checkbox value=Y> | . $locale->text('Till');
+    $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y $form->{l_name}> $vclabel|;
+    $l_customernumber = qq|<input name="l_customernumber" class=checkbox type=checkbox value=Y $form->{l_customernumber}> $vcnumber|;
+    $l_till           = qq|<input name="l_till" class=checkbox type=checkbox value=Y $form->{l_till}> | . $locale->text('Till');
 
     if ( $form->{vc} eq 'vendor' ) {
         $vclabel          = $locale->text('Vendor');
         $vcnumber         = $locale->text('Vendor Number');
         $l_till           = "";
         $l_customernumber = "";
-        $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y checked> $vclabel|;
-        $l_vendornumber   = qq|<input name="l_vendornumber" class=checkbox type=checkbox value=Y> $vcnumber|;
+        $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y $form->{l_name}> $vclabel|;
+        $l_vendornumber   = qq|<input name="l_vendornumber" class=checkbox type=checkbox value=Y $form->{vendornumber}> $vcnumber|;
     }
 
     if ( @{ $form->{"all_$form->{vc}"} } ) {
@@ -1685,7 +1669,7 @@ sub search {
             $form->{selectdepartment} = "<option>\n";
             for ( @{ $form->{all_department} } ) { $form->{selectdepartment} .= qq|<option value="| . $form->quote( $_->{description} ) . qq|--$_->{id}">$_->{description}\n| }
         }
-        $l_department = qq|<input name="l_department" class=checkbox type=checkbox value=Y> | . $locale->text('Department');
+        $l_department = qq|<input name="l_department" class=checkbox type=checkbox value=Y $form->{l_department}> | . $locale->text('Department');
 
         $department = qq| 
         <tr> 
@@ -1717,7 +1701,7 @@ sub search {
 	    </tr>
 |;
 
-        $l_warehouse = qq|<input name="l_warehouse" class=checkbox type=checkbox value=Y> | . $locale->text('Warehouse');
+        $l_warehouse = qq|<input name="l_warehouse" class=checkbox type=checkbox value=Y $form->{l_warehouse}> | . $locale->text('Warehouse');
 
     }
 
@@ -1734,9 +1718,9 @@ sub search {
 	</tr>
 |;
 
-        $l_employee = qq|<input name="l_employee" class=checkbox type=checkbox value=Y> $employeelabel|;
+        $l_employee = qq|<input name="l_employee" class=checkbox type=checkbox value=Y $form->{l_employee}> $employeelabel|;
 
-        $l_manager = qq|<input name="l_manager" class=checkbox type=checkbox value=Y> | . $locale->text('Manager');
+        $l_manager = qq|<input name="l_manager" class=checkbox type=checkbox value=Y $form->{l_employee}> | . $locale->text('Manager');
 
     }
 
@@ -1837,43 +1821,43 @@ sub search {
     }
 
     @a = ();
-    push @a, qq|<input name="l_runningnumber" class=checkbox type=checkbox value=Y> | . $locale->text('No.');
-    push @a, qq|<input name="l_id" class=checkbox type=checkbox value=Y> | . $locale->text('ID');
-    push @a, qq|<input name="l_invnumber" class=checkbox type=checkbox value=Y checked> | . $locale->text('Invoice Number');
-    push @a, qq|<input name="l_ordnumber" class=checkbox type=checkbox value=Y> | . $locale->text('Order Number');
-    push @a, qq|<input name="l_description" class=checkbox type=checkbox value=Y checked> | . $locale->text('Description');
-    push @a, qq|<input name="l_ponumber" class=checkbox type=checkbox value=Y> | . $locale->text('PO Number');
-    push @a, qq|<input name="l_transdate" class=checkbox type=checkbox value=Y checked> | . $locale->text('Invoice Date');
+    push @a, qq|<input name="l_runningnumber" class=checkbox type=checkbox value=Y $form->{l_runningnumber}> | . $locale->text('No.');
+    push @a, qq|<input name="l_id" class=checkbox type=checkbox value=Y $form->{l_id}> | . $locale->text('ID');
+    push @a, qq|<input name="l_invnumber" class=checkbox type=checkbox value=Y $form->{l_invnumber}> | . $locale->text('Invoice Number');
+    push @a, qq|<input name="l_ordnumber" class=checkbox type=checkbox value=Y $form->{l_ordnumber}> | . $locale->text('Order Number');
+    push @a, qq|<input name="l_description" class=checkbox type=checkbox value=Y $form->{l_description}> | . $locale->text('Description');
+    push @a, qq|<input name="l_ponumber" class=checkbox type=checkbox value=Y $form->{l_ponumber}> | . $locale->text('PO Number');
+    push @a, qq|<input name="l_transdate" class=checkbox type=checkbox value=Y $form->{l_transdate}> | . $locale->text('Invoice Date');
     push @a, $l_name;
     push @a, $l_customernumber if $l_customernumber;
     push @a, $l_vendornumber if $l_vendornumber;
-    push @a, qq|<input name="l_address" class=checkbox type=checkbox value=Y> | . $locale->text('Address');
+    push @a, qq|<input name="l_address" class=checkbox type=checkbox value=Y $form->{l_address}> | . $locale->text('Address');
     push @a, $l_employee if $l_employee;
     push @a, $l_manager if $l_employee;
     push @a, $l_department if $l_department;
-    push @a, qq|<input name="l_netamount" class=checkbox type=checkbox value=Y> | . $locale->text('Amount');
-    push @a, qq|<input name="l_tax" class=checkbox type=checkbox value=Y> | . $locale->text('Tax');
-    push @a, qq|<input name="l_amount" class=checkbox type=checkbox value=Y checked> | . $locale->text('Total');
-    push @a, qq|<input name="l_curr" class=checkbox type=checkbox value=Y> | . $locale->text('Currency');
-    push @a, qq|<input name="l_datepaid" class=checkbox type=checkbox value=Y> | . $locale->text('Date Paid');
-    push @a, qq|<input name="l_paymentdiff" class=checkbox type=checkbox value=Y> | . $locale->text('Payment Difference');
-    push @a, qq|<input name="l_paid" class=checkbox type=checkbox value=Y checked> | . $locale->text('Paid');
-    push @a, qq|<input name="l_paymentmethod" class=checkbox type=checkbox value=Y> | . $locale->text('Payment Method');
-    push @a, qq|<input name="l_duedate" class=checkbox type=checkbox value=Y> | . $locale->text('Due Date');
-    push @a, qq|<input name="l_due" class=checkbox type=checkbox value=Y $form->{due_checked}> | . $locale->text('Due');
-    push @a, qq|<input name="l_memo" class=checkbox type=checkbox value=Y> | . $locale->text('Line Item');
-    push @a, qq|<input name="l_notes" class=checkbox type=checkbox value=Y> | . $locale->text('Notes');
-    push @a, qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y> | . $locale->text('Internal Notes');
+    push @a, qq|<input name="l_netamount" class=checkbox type=checkbox value=Y $form->{l_netamount}> | . $locale->text('Amount');
+    push @a, qq|<input name="l_tax" class=checkbox type=checkbox value=Y $form->{l_tax}> | . $locale->text('Tax');
+    push @a, qq|<input name="l_amount" class=checkbox type=checkbox value=Y $form->{l_amount}> | . $locale->text('Total');
+    push @a, qq|<input name="l_curr" class=checkbox type=checkbox value=Y $form->{l_curr}> | . $locale->text('Currency');
+    push @a, qq|<input name="l_datepaid" class=checkbox type=checkbox value=Y $form->{l_datepaid}> | . $locale->text('Date Paid');
+    push @a, qq|<input name="l_paymentdiff" class=checkbox type=checkbox value=Y $form->{l_paymentdiff}> | . $locale->text('Payment Difference');
+    push @a, qq|<input name="l_paid" class=checkbox type=checkbox value=Y $form->{l_paid}> | . $locale->text('Paid');
+    push @a, qq|<input name="l_paymentmethod" class=checkbox type=checkbox value=Y $form->{l_paymentmethod}> | . $locale->text('Payment Method');
+    push @a, qq|<input name="l_duedate" class=checkbox type=checkbox value=Y $form->{l_duedate}> | . $locale->text('Due Date');
+    push @a, qq|<input name="l_due" class=checkbox type=checkbox value=Y $form->{l_due}> | . $locale->text('Due');
+    push @a, qq|<input name="l_memo" class=checkbox type=checkbox value=Y $form->{l_memo}> | . $locale->text('Line Item');
+    push @a, qq|<input name="l_notes" class=checkbox type=checkbox value=Y $form->{l_notes}> | . $locale->text('Notes');
+    push @a, qq|<input name="l_intnotes" class=checkbox type=checkbox value=Y $form->{l_intnotes}> | . $locale->text('Internal Notes');
     push @a, $l_till if $l_till;
     push @a, $l_warehouse if $l_warehouse;
-    push @a, qq|<input name="l_shippingpoint" class=checkbox type=checkbox value=Y> | . $locale->text('Shipping Point');
-    push @a, qq|<input name="l_shipvia" class=checkbox type=checkbox value=Y> | . $locale->text('Ship via');
-    push @a, qq|<input name="l_waybill" class=checkbox type=checkbox value=Y> | . $locale->text('Waybill');
-    push @a, qq|<input name="l_dcn" class=checkbox type=checkbox value=Y> | . $locale->text('DCN');
+    push @a, qq|<input name="l_shippingpoint" class=checkbox type=checkbox value=Y $form->{l_shippingpoint}> | . $locale->text('Shipping Point');
+    push @a, qq|<input name="l_shipvia" class=checkbox type=checkbox value=Y $form->{l_shipvia}> | . $locale->text('Ship via');
+    push @a, qq|<input name="l_waybill" class=checkbox type=checkbox value=Y $form->{l_waybill}> | . $locale->text('Waybill');
+    push @a, qq|<input name="l_dcn" class=checkbox type=checkbox value=Y $form->{l_dcn}> | . $locale->text('DCN');
+    push @a, qq|<input name="l_email" class=checkbox type=checkbox value=Y $form->{l_email}> | . $locale->text('Email');
 
 
-    $form->header;
-
+    $form->header(0, 0, $locale);
     print qq|
 <body>
 
@@ -2175,7 +2159,7 @@ sub transactions {
         $option   .= $locale->text('Paid Early');
     }
 
-    @columns = qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department);
+    @columns = qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department email);
 
     @columns = $form->sort_columns(@columns);
 
@@ -2202,6 +2186,8 @@ sub transactions {
             $href     .= "&l_$item=Y";
         }
     }
+
+    $form->save_lastused(\%myconfig, "$form->{ARAP}-transactions-$form->{outstanding}", \@columns);
 
     if ( !$form->{summary} ) {
         @a = grep !/memo/, @column_index;
@@ -2243,7 +2229,7 @@ sub transactions {
     $column_data{paid}          = "<th align=right><a class=listheading href=$href&sort=paid>" . $locale->text('Paid') . "</a></th>";
     $column_data{paymentmethod} = "<th><a class=listheading href=$href&sort=paymentmethod>" . $locale->text('Payment Method') . "</a></th>";
     $column_data{datepaid}      = "<th><a class=listheading href=$href&sort=datepaid>" . $locale->text('Date Paid') . "</a></th>";
-    $column_data{due}           = "<th class=listheading>" . $locale->text('Due') . "</th>";
+    $column_data{due}           = "<th align=right class=listheading>" . $locale->text('Due') . "</th>";
     $column_data{notes}         = "<th class=listheading>" . $locale->text('Notes') . "</th>";
     $column_data{intnotes}      = "<th class=listheading>" . $locale->text('Internal Notes') . "</th>";
     $column_data{employee}      = "<th><a class=listheading href=$href&sort=employee>$employee</a></th>";
@@ -2275,7 +2261,7 @@ sub transactions {
 
     $form->{title} .= " / $form->{company}";
 
-    $form->header;
+    $form->header(0, 0, $locale);
 
     my $today = $form->today(\%myconfig);
 
@@ -2378,20 +2364,20 @@ sub transactions {
         $module = ( $ref->{invoice} ) ? ( $form->{ARAP} eq 'AR' ) ? "is.pl" : "ir.pl" : $form->{script};
         $module = ( $ref->{till} ) ? "ps.pl" : $module;
 
-        $column_data{invnumber} = "<td align=left><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}&nbsp;</a></td>";
+        $column_data{invnumber} = "<td align=left><a href=$module?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{invnumber}</a></td>";
 
         for (qw(notes intnotes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
-        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}&nbsp;</td>" }
+        for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}</td>" }
         for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
-            $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>";
+            $column_data{$_} = "<td align=left>$ref->{$_}</td>";
         }
-        $column_data{$namefld} = "<td align=left>$ref->{$namefld}&nbsp;</td>";
+        $column_data{$namefld} = "<td align=left>$ref->{$namefld}</td>";
 
         if ( $ref->{paymentdiff} <= 0 ) {
-            $column_data{paymentdiff} = qq|<td class="plus1" align=right>$ref->{paymentdiff}&nbsp;</td>|;
+            $column_data{paymentdiff} = qq|<td class="plus1" align=right>$ref->{paymentdiff}</td>|;
         }
         else {
-            $column_data{paymentdiff} = qq|<td class="plus0" align=right>+$ref->{paymentdiff}&nbsp;</td>|;
+            $column_data{paymentdiff} = qq|<td class="plus0" align=right>+$ref->{paymentdiff}</td>|;
         }
 
         for (qw(id curr)) { $column_data{$_} = "<td align=left>$ref->{$_}</td>" }
@@ -2399,7 +2385,9 @@ sub transactions {
         $column_data{accno} =
 qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=list_transactions&accounttype=standard&accno=$ref->{accno}&fromdate=$form->{transdatefrom}&todate=$form->{transdateto}&sort=transdate&l_subtotal=$form->{l_subtotal}&prevreport=$callback>$ref->{accno}</a></td>|;
 
-        $column_data{name} = qq|<td align=left><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a></td>|;
+	$email = '';
+	$email = qq|<br/><a href=mailto:$ref->{email}>$ref->{email}</a>| if $form->{l_email};
+        $column_data{name} = qq|<td align=left><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{"$form->{vc}_id"}&db=$form->{vc}&callback=$callback>$ref->{name}</a>$email</td>|;
 
         if ( $ref->{id} != $sameid ) {
             $j++;
@@ -2412,6 +2400,15 @@ qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=l
 
         for (@column_index) { print "\n$column_data{$_}" }
 
+        print qq|
+        <td align=left nowrap class="noprint nkp">
+          <a href='javascript:void(0);' onclick="window.parent.postMessage(
+          {name: 'ledgerEvent', params:{event: 'uploadLinkAndSignFile', id:$ref->{id}, origin: window.location.pathname}}, '*')">
+           <img style="width: 1.5em; padding-left:0.3em; padding-right:0.3em; align:top; filter: invert(100%); background-color: #bb490f"
+           src="https://my.runmyaccounts.com/assets/img/file-icons/cloud-upload-solid.svg">
+          <a/>
+        </td>|;
+        
         print qq|
         </tr>
 |;
@@ -2684,19 +2681,19 @@ sub transactions_to_csv {
         $module = ( $ref->{invoice} ) ? ( $form->{ARAP} eq 'AR' ) ? "is.pl" : "ir.pl" : $form->{script};
         $module = ( $ref->{till} ) ? "ps.pl" : $module;
 
-        $column_data{invnumber} = &escape_csv( $ref->{invnumber} . " " );
+        $column_data{invnumber} = &escape_csv( $ref->{invnumber} );
 
-        for (qw(transdate datepaid duedate)) { $column_data{$_} = $ref->{$_} . " " }
+        for (qw(transdate datepaid duedate)) { $column_data{$_} = $ref->{$_} }
         for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
-            $column_data{$_} = &escape_csv( $ref->{$_} . " " );
+            $column_data{$_} = &escape_csv( $ref->{$_} );
         }
-        $column_data{$namefld} = &escape_csv( $ref->{$namefld} . " " );
+        $column_data{$namefld} = &escape_csv( $ref->{$namefld} );
 
         if ( $ref->{paymentdiff} <= 0 ) {
-            $column_data{paymentdiff} = $ref->{paymentdiff} . " ";
+            $column_data{paymentdiff} = $ref->{paymentdiff};
         }
         else {
-            $column_data{paymentdiff} = "+" . $ref->{paymentdiff} . " ";
+            $column_data{paymentdiff} = "+" . $ref->{paymentdiff};
         }
 
         for (qw(id curr)) { $column_data{$_} = $ref->{$_} }
@@ -2827,7 +2824,7 @@ sub subtotal {
 }
 
 sub view {
-    $form->header;
+    $form->header(0, 0, $locale);
 
     $db = lc $form->{ARAP};
     $vc = $form->{vc};

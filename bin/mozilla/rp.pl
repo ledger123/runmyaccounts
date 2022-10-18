@@ -224,6 +224,9 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 	if (   $form->{report} eq 'balance_sheet'
 		|| $form->{report} eq 'income_statement' )
 	{
+        $default_checked = "heading,subtotal,accno";
+        $form->get_lastused(\%myconfig, "$form->{report}", $default_checked);
+
 		$form->{currencies} = $form->get_currencies( undef, \%myconfig );
 
 		if ( $form->{currencies} ) {
@@ -255,7 +258,7 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 	</tr>
 |;
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>
@@ -374,11 +377,11 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 
 	<tr>
 	  <th align=right nowrap>| . $locale->text('Include in Report') . qq|</th>
-	  <td colspan=3><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|
+	  <td colspan=3><input name=l_heading class=checkbox type=checkbox value=Y $form->{l_heading}>&nbsp;|
 		  . $locale->text('Heading') . qq|
-	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|
+	  <input name=l_subtotal class=checkbox type=checkbox value=Y $form->{l_subtotal}>&nbsp;|
 		  . $locale->text('Subtotal') . qq|
-	  <input name=l_accno class=checkbox type=checkbox value=Y checked>&nbsp;|
+	  <input name=l_accno class=checkbox type=checkbox value=Y $form->{l_accno}>&nbsp;|
 		  . $locale->text('Account Number')
 		  . qq|</td>
 	</tr>
@@ -436,11 +439,11 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 
 	<tr>
 	  <th align=right nowrap>| . $locale->text('Include in Report') . qq|</th>
-	  <td><input name=l_heading class=checkbox type=checkbox value=Y>&nbsp;|
+	  <td><input name=l_heading class=checkbox type=checkbox value=Y $form->{l_heading}>&nbsp;|
 		  . $locale->text('Heading') . qq|
-	  <input name=l_subtotal class=checkbox type=checkbox value=Y>&nbsp;|
+	  <input name=l_subtotal class=checkbox type=checkbox value=Y $form->{l_subtotal}>&nbsp;|
 		  . $locale->text('Subtotal') . qq|
-	  <input name=l_accno class=checkbox type=checkbox value=Y checked>&nbsp;|
+	  <input name=l_accno class=checkbox type=checkbox value=Y $form->{l_accno}>&nbsp;|
 		  . $locale->text('Account Number')
 		  . qq|</td>
 	</tr>
@@ -844,8 +847,8 @@ qq|<option value="$myconfig{department}--$myconfig{department_id}">$myconfig{dep
 		  </td>
                 </tr>
 		<tr>
-		  <th align=right nowrap>$locale->text('Customer')</th>
-		  <td colspan=3><input name="$form->{vc}number" size=35>
+		  <th align=right nowrap>|.$locale->text('Customer Number').qq|</th>
+		  <td colspan=3><input name="$form->{vc}number" size=20>
 		  </td>
                 </tr>
 |;
@@ -1079,6 +1082,8 @@ sub continue { &{ $form->{nextsub} } }
 
 sub generate_income_statement {
 
+    $form->save_lastused(\%myconfig, "income_statement", [qw(heading subtotal accno)]);
+
 	$form->isvaldate( \%myconfig, $form->{fromdate},
 		$locale->text('Invalid from date ...') );
 	$form->isvaldate( \%myconfig, $form->{todate},
@@ -1193,11 +1198,13 @@ sub generate_income_statement {
 
 	$form->{IN} = "income_statement.html";
 
-	$form->parse_template( \%myconfig, $userspath, $debuglatex );
+  	$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
 }
 
 sub generate_balance_sheet {
+
+    $form->save_lastused(\%myconfig, "balance_sheet", [qw(heading subtotal accno)]);
 
 	$form->isvaldate( \%myconfig, $form->{fromdate},
 		$locale->text('Invalid from date ...') );
@@ -1283,7 +1290,7 @@ sub generate_balance_sheet {
 
 	$form->{templates} = $myconfig{templates};
 
-	$form->parse_template( \%myconfig, $userspath, $debuglatex );
+  	$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
 }
 
@@ -1382,17 +1389,17 @@ sub list_accounts {
 	$column_header{description} =
 	  qq|<th class=listheading>| . $locale->text('Description') . qq|</th>|;
 	$column_header{debit} =
-	  qq|<th class=listheading width=10%>| . $locale->text('Debit') . qq|</th>|;
+	  qq|<th align=right class=listheading width=10%>| . $locale->text('Debit') . qq|</th>|;
 	$column_header{credit} =
-	    qq|<th class=listheading width=10%>|
+	    qq|<th align=right class=listheading width=10%>|
 	  . $locale->text('Credit')
 	  . qq|</th>|;
 	$column_header{begbalance} =
-	    qq|<th class=listheading width=10%>|
+	    qq|<th align=right class=listheading width=10%>|
 	  . $locale->text('Beginning Balance')
 	  . qq|</th>|;
 	$column_header{endbalance} =
-	    qq|<th class=listheading width=10%>|
+	    qq|<th align=right class=listheading width=10%>|
 	  . $locale->text('Ending Balance')
 	  . qq|</th>|;
 
@@ -1444,10 +1451,31 @@ sub list_accounts {
        exit;
     }
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>
+
+<button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
+    event: 'urlToPdf',
+     url: window.location.href +
+     '&login=$form->{login}' +
+     '&path=$form->{path}' +
+     '&nextsub=$form->{nextsub}' +
+     '&title=$form->{title}' +
+     '&action=$form->{action}' +
+     '&accounttype=$form->{accounttype}' +
+     '&fx_transaction=$form->{fx_transaction}' +
+     '&interval=$form->{interval}' +
+     '&year=$form->{year}' +
+     '&month=$form->{month}' +
+     '&todate=$form->{todate}' +
+     '&fromdate=$form->{fromdate}' +
+     '&department=$form->{department}'
+      }}, '*')"
+    class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
+  <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
+</button>
 
 <table width=100%>
   <tr>
@@ -1771,7 +1799,7 @@ sub aging {
 	%vc_ids = ();
 	$form->{curr} = "";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	$vcnumber =
 	  ( $form->{vc} eq 'customer' )
@@ -1799,17 +1827,17 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 	$column_header{duedate} =
 	  qq|<th class=listheading nowrap>| . $locale->text('Due Date') . qq|</th>|;
 	$column_header{c0} =
-	    qq|<th class=listheading width=10% nowrap>|
+	    qq|<th align=right class=listheading width=10% nowrap>|
 	  . $locale->text('Current')
 	  . qq|</th>|;
-	$column_header{c15} = qq|<th class=listheading width=10% nowrap>15</th>|;
-	$column_header{c30} = qq|<th class=listheading width=10% nowrap>30</th>|;
-	$column_header{c45} = qq|<th class=listheading width=10% nowrap>45</th>|;
-	$column_header{c60} = qq|<th class=listheading width=10% nowrap>60</th>|;
-	$column_header{c75} = qq|<th class=listheading width=10% nowrap>75</th>|;
-	$column_header{c90} = qq|<th class=listheading width=10% nowrap>90</th>|;
+	$column_header{c15} = qq|<th align=right class=listheading width=10% nowrap>15</th>|;
+	$column_header{c30} = qq|<th align=right class=listheading width=10% nowrap>30</th>|;
+	$column_header{c45} = qq|<th align=right class=listheading width=10% nowrap>45</th>|;
+	$column_header{c60} = qq|<th align=right class=listheading width=10% nowrap>60</th>|;
+	$column_header{c75} = qq|<th align=right class=listheading width=10% nowrap>75</th>|;
+	$column_header{c90} = qq|<th align=right class=listheading width=10% nowrap>90</th>|;
 	$column_header{total} =
-	    qq|<th class=listheading width=10% nowrap>|
+	    qq|<th align=right class=listheading width=10% nowrap>|
 	  . $locale->text('Total')
 	  . qq|</th>|;
 
@@ -2473,7 +2501,7 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 
 	$title = "$form->{title} / $form->{company}";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <script language="JavaScript">
@@ -2899,7 +2927,7 @@ sub prepare_e_mail {
 
 	$form->{media} = "email";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>
@@ -3293,6 +3321,7 @@ sub do_print_reminder {
 				else {
 					$filename = time;
 					$filename .= int rand 10000;
+                    $filename = "$myconfig{dbname}_$filename";
 				}
 
 				$filename .=
@@ -3315,7 +3344,7 @@ sub do_print_reminder {
 qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|
 				);
 			}
-			$form->parse_template( \%myconfig, $userspath, $debuglatex );
+  			$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 		}
 	}
 	if ( $form->{create_single_pdf} ) {
@@ -3431,7 +3460,7 @@ sub do_print_statement {
 						$form->{precision} );
 				}
 
-				$form->parse_template( \%myconfig, $userspath, $debuglatex );
+  				$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
 			}
 		}
@@ -3698,7 +3727,7 @@ qq|<th><a class=listheading href=$href&sort=$form->{vc}number>$vcnumber</a></th>
 	$option .= '<br>' . $locale->text( uc $form->{db} );
 
 	my $header = $form->{header};
-	$form->header;
+	$form->header(0, 0, $locale);
 	$form->{title} = $locale->text('Taxes') if $form->{alltaxes};
 
 	print qq|
@@ -4199,7 +4228,7 @@ sub list_payments {
 
 	$title = "$form->{title} / $form->{company}";
 
-	$form->header;
+	$form->header(0, 0, $locale);
 
 	print qq|
 <body>
@@ -4257,13 +4286,13 @@ sub list_payments {
 			  ? "<a href=ct.pl?action=edit&id=$payment->{vcid}&db=$form->{vc}&login=$form->{login}&path=$form->{path}&callback=$callback>"
 			  : "";
 
-			$column_data{name} = "<td>$href$payment->{name}</a>&nbsp;</td>";
+			$column_data{name} = "<td>$href$payment->{name}</a></td>";
 			$column_data{"$form->{vc}number"} =
-			  qq|<td>$payment->{"$form->{vc}number"}&nbsp;</td>|;
+			  qq|<td>$payment->{"$form->{vc}number"}</td>|;
 			$column_data{description} =
-			  "<td>$payment->{description}&nbsp;</td>";
+			  "<td>$payment->{description}</td>";
 			$column_data{transdate} =
-			  "<td nowrap>$payment->{transdate}&nbsp;</td>";
+			  "<td nowrap>$payment->{transdate}</td>";
 			$column_data{paid} = "<td align=right>"
 			  . $form->format_amount( \%myconfig, $payment->{paid},
 				$form->{precision}, "&nbsp;" )
@@ -4285,14 +4314,14 @@ sub list_payments {
 			$href =
 "<a href=${module}.pl?action=edit&id=$payment->{trans_id}&login=$form->{login}&path=$form->{path}&callback=$callback>";
 
-			$column_data{source} = "<td>$payment->{source}&nbsp;</td>";
+			$column_data{source} = "<td>$payment->{source}</td>";
 			$column_data{reference} =
-			  "<td>$href$payment->{reference}&nbsp;</a></td>";
+			  "<td>$href$payment->{reference}</a></td>";
 
-			$column_data{memo}     = "<td>$payment->{memo}&nbsp;</td>";
-			$column_data{employee} = "<td>$payment->{employee}&nbsp;</td>";
-			$column_data{till}     = "<td>$payment->{till}&nbsp;</td>";
-			$column_data{variance}     = "<td>$payment->{variance}&nbsp;</td>";
+			$column_data{memo}     = "<td>$payment->{memo}</td>";
+			$column_data{employee} = "<td>$payment->{employee}</td>";
+			$column_data{till}     = "<td>$payment->{till}</td>";
+			$column_data{variance}     = "<td>$payment->{variance}</td>";
 
 			$subtotalpaid     += $payment->{paid};
 			$accounttotalpaid += $payment->{paid};

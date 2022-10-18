@@ -160,7 +160,7 @@ $self{texts} = {
   'ID'                          => 'ID',
   'In-line'                     => 'im Textkörper (Inline)',
   'Include Exchange Rate Difference' => 'Währungsdifferenzen einbeziehen',
-  'Include Payed'               => 'inklusive Bezahlte',
+  'Include Paid'               => 'inklusive Bezahlte',
   'Include Payment'             => 'Bezahlung reinnehmen',
   'Include in Report'           => 'In Bericht aufnehmen',
   'Income Statement'            => 'Gewinn- und Verlustrechnung',
@@ -364,6 +364,7 @@ $self{texts} = {
   'posted!'                     => 'gebucht!',
   'sent'                        => 'verschickt',
   'time(s)'                     => 'mal',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

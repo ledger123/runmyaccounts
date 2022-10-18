@@ -111,7 +111,7 @@ $self{texts} = {
   'Quotations'                  => 'Offerten',
   'RFQ'                         => 'Offertanfrage',
   'RV'                          => 'ZS',
-  'Remittance Voucher'          => 'Einzahlungschein',
+  'Remittance Voucher'          => 'Einzahlungsschein',
   'Report'                      => 'Rechnungen',
   'Request for Quotations'      => 'Offertenanfragen',
   'SIC'                         => 'Euro-SIC',
@@ -161,6 +161,7 @@ $self{texts} = {
   'Vendors'                     => 'Lieferanten',
   'Zip/Postal Code'             => 'PLZ',
   'days'                        => 'Tage',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

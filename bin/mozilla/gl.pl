@@ -219,6 +219,9 @@ sub search {
 
     $form->{title} = $locale->text('General Ledger') . " " . $locale->text('Reports');
 
+    $default_checked = "transdate,reference,description,debit,credit,accno";
+    $form->get_lastused(\%myconfig, "gl-transactions", $default_checked);
+
     $form->{reportcode} = 'gl';
     $form->{dateformat} = $myconfig{dateformat};
 
@@ -841,6 +844,8 @@ sub transactions {
         chop $form->{column_index};
     }
 
+    $form->save_lastused(\%myconfig, "gl-transactions", \@column_index);
+
     if ( $form->{accno} || $form->{gifi_accno} ) {
         @column_index = grep !/(accno|gifi_accno|contra|gifi_contra)/, @column_index;
         push @column_index, "balance";
@@ -1073,11 +1078,11 @@ sub transactions {
             $column_data{reference} = "<td align=left><a href=$ref->{module}.pl?action=view&id=$ref->{id}&ts=".$form->escape($ref->{ts})."&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{reference}</td>";
         }
 
-        for (qw(tax department projectnumber name vcnumber address)) { $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>" }
+        for (qw(tax department projectnumber name vcnumber address)) { $column_data{$_} = "<td align=left>$ref->{$_}</td>" }
 
         for (qw(lineitem description source memo notes intnotes)) {
             $ref->{$_} =~ s/\r?\n/<br>/g;
-            $column_data{$_} = "<td align=left>$ref->{$_}&nbsp;</td>";
+            $column_data{$_} = "<td align=left>$ref->{$_}</td>";
         }
 
         if ( $ref->{vc_id} ) {
@@ -1120,6 +1125,14 @@ sub transactions {
         print "
         <tr class=listrow$i>";
         for (@column_index) { print "$column_data{$_}\n" }
+        print qq|
+        <td align=left nowrap class="noprint nkp">
+          <a href='javascript:void(0);' onclick="window.parent.postMessage(
+          {name: 'ledgerEvent', params:{event: 'uploadLinkAndSignFile', id:$ref->{id}, origin: window.location.pathname}}, '*')">
+           <img style="width: 1.5em; padding-left:0.3em; padding-right:0.3em; align:top; filter: invert(100%); background-color: #bb490f"
+           src="https://my.runmyaccounts.com/assets/img/file-icons/cloud-upload-solid.svg">
+          <a/>
+        </td>|;
         print "</tr>";
 
         $sameid = $ref->{id};
@@ -2352,7 +2365,10 @@ sub post {
         $credit += $cr;
     }
 
-    if ( $form->round_amount( $debit, $form->{precision} ) != $form->round_amount( $credit, $form->{precision} ) ) {
+    my $precision = $form->{precision};
+    $precision = 8 if $precision < 8;
+
+    if ( $form->round_amount( $debit, $precision ) != $form->round_amount( $credit, $precision ) ) {
         $form->error( $locale->text('Out of balance transaction!') );
     }
 

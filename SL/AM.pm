@@ -124,12 +124,24 @@ sub save_account {
 
   $chart_id = $form->{id};
 
-  if (! $form->{id}) {
+  if ( !$form->{id} ) {
     # get id from chart
     $query = qq|SELECT id
 		FROM chart
 		WHERE accno = '$form->{accno}'|;
     ($chart_id) = $dbh->selectrow_array($query);
+  } else {
+    if ( $form->{IC_taxpart} || $form->{IC_taxservice} || $form->{AR_tax} || $form->{AP_tax} ) {
+        my ( $old_accno, $old_description ) = $dbh->selectrow_array("SELECT accno, description FROM chart WHERE id = $form->{id}");
+        if ( $form->{accno} ne '$old_accno' or $form->{description} ne $old_description ) {
+            my $query = qq~
+                UPDATE acc_trans
+                SET tax = (SELECT accno || '--' || description FROM chart WHERE id = $form->{id})
+                WHERE tax_chart_id = $form->{id}
+                ~;
+            $dbh->do($query);
+        }
+    }
   }
 
   if ($form->{IC_taxpart} || $form->{IC_taxservice} || $form->{AR_tax} || $form->{AP_tax}) {
@@ -1431,7 +1443,7 @@ sub save_defaults {
     $dbh->do($query) || $form->dberror($query);
   }
 
-  for (qw(transitionaccount selectedaccount glnumber sinumber vinumber batchnumber vouchernumber sonumber ponumber sqnumber rfqnumber partnumber employeenumber customernumber vendornumber projectnumber precision revolut_client_id revolut_private_key)) {
+  for (qw(transitionaccount selectedaccount glnumber sinumber vinumber batchnumber vouchernumber sonumber ponumber sqnumber rfqnumber partnumber employeenumber customernumber vendornumber projectnumber precision)) {
     $delsth->execute($_) || $form->dberror;
 
     $sth->execute($_, $form->{$_}) || $form->dberror;
@@ -1993,9 +2005,9 @@ sub save_bank {
   if ($ok) {
     if ($id) {
       $query = qq|UPDATE bank SET
-		  name = |.$dbh->quote(uc $form->{name}).qq|,
+		  name = |.$dbh->quote($form->{name}).qq|,
 		  iban = |.$dbh->quote($form->{iban}).qq|,
-		  bic = |.$dbh->quote(uc $form->{bic}).qq|,
+		  bic = |.$dbh->quote($form->{bic}).qq|,
 		  membernumber = |.$dbh->quote($form->{membernumber}).qq|,
 		  rvc = |.$dbh->quote($form->{rvc}).qq|,
 		  qriban = |.$dbh->quote($form->{qriban}).qq|,
@@ -2007,8 +2019,8 @@ sub save_bank {
     } else {
       $query = qq|INSERT INTO bank (id, name, iban, bic, membernumber, rvc, dcn, qriban, strdbkginf, invdescriptionqr)
 		  VALUES ($form->{id}, |
-		  .$dbh->quote(uc $form->{name}).qq|, |
-		  .$dbh->quote(uc $form->{iban}).qq|, |
+		  .$dbh->quote($form->{name}).qq|, |
+		  .$dbh->quote($form->{iban}).qq|, |
 		  .$dbh->quote($form->{bic}).qq|, |
 		  .$dbh->quote($form->{membernumber}).qq|, |
 		  .$dbh->quote($form->{rvc}).qq|, |
@@ -2030,12 +2042,12 @@ sub save_bank {
     }
 
     $query = qq|UPDATE address SET
-		address1 = |.$dbh->quote(uc $form->{address1}).qq|,
-		address2 = |.$dbh->quote(uc $form->{address2}).qq|,
-		city = |.$dbh->quote(uc $form->{city}).qq|,
-		state = |.$dbh->quote(uc $form->{state}).qq|,
-		zipcode = |.$dbh->quote(uc $form->{zipcode}).qq|,
-		country = |.$dbh->quote(uc $form->{country}).qq|
+		address1 = |.$dbh->quote($form->{address1}).qq|,
+		address2 = |.$dbh->quote($form->{address2}).qq|,
+		city = |.$dbh->quote($form->{city}).qq|,
+		state = |.$dbh->quote($form->{state}).qq|,
+		zipcode = |.$dbh->quote($form->{zipcode}).qq|,
+		country = |.$dbh->quote($form->{country}).qq|
 		WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
 

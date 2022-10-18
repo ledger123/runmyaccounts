@@ -447,16 +447,16 @@ sub balance_sheet {
 
 
   # totals for assets, liabilities
-  $form->{total_assets_this_period} = $form->round_amount($form->{total_assets_this_period}, $form->{decimalplaces});
-  $form->{total_liabilities_this_period} = $form->round_amount($form->{total_liabilities_this_period}, $form->{decimalplaces});
-  $form->{total_equity_this_period} = $form->round_amount($form->{total_equity_this_period}, $form->{decimalplaces});
+  $form->{total_assets_this_period} = $form->round_amount($form->{total_assets_this_period}, 8);
+  $form->{total_liabilities_this_period} = $form->round_amount($form->{total_liabilities_this_period}, 8);
+  $form->{total_equity_this_period} = $form->round_amount($form->{total_equity_this_period}, 8);
 
   # calculate earnings
   $form->{earnings_this_period} = $form->{total_assets_this_period} - $form->{total_liabilities_this_period} - $form->{total_equity_this_period};
 
   push(@{$form->{equity_this_period}}, $form->format_amount($myconfig, $form->{earnings_this_period}, $form->{decimalplaces}, "- "));
 
-  $form->{total_equity_this_period} = $form->round_amount($form->{total_equity_this_period} + $form->{earnings_this_period}, $form->{decimalplaces});
+  $form->{total_equity_this_period} = $form->round_amount($form->{total_equity_this_period} + $form->{earnings_this_period}, 8);
 
   # add liability + equity
   $form->{total_this_period} = $form->format_amount($myconfig, $form->{total_liabilities_this_period} + $form->{total_equity_this_period}, $form->{decimalplaces}, "- ");
@@ -464,16 +464,16 @@ sub balance_sheet {
 
   if ($last_period) {
     # totals for assets, liabilities
-    $form->{total_assets_last_period} = $form->round_amount($form->{total_assets_last_period}, $form->{decimalplaces});
-    $form->{total_liabilities_last_period} = $form->round_amount($form->{total_liabilities_last_period}, $form->{decimalplaces});
-    $form->{total_equity_last_period} = $form->round_amount($form->{total_equity_last_period}, $form->{decimalplaces});
+    $form->{total_assets_last_period} = $form->round_amount($form->{total_assets_last_period}, 8);
+    $form->{total_liabilities_last_period} = $form->round_amount($form->{total_liabilities_last_period}, 8);
+    $form->{total_equity_last_period} = $form->round_amount($form->{total_equity_last_period}, 8);
 
     # calculate retained earnings
     $form->{earnings_last_period} = $form->{total_assets_last_period} - $form->{total_liabilities_last_period} - $form->{total_equity_last_period};
 
     push(@{$form->{equity_last_period}}, $form->format_amount($myconfig,$form->{earnings_last_period}, $form->{decimalplaces}, "- "));
 
-    $form->{total_equity_last_period} = $form->round_amount($form->{total_equity_last_period} + $form->{earnings_last_period}, $form->{decimalplaces});
+    $form->{total_equity_last_period} = $form->round_amount($form->{total_equity_last_period} + $form->{earnings_last_period}, 8);
 
     # add liability + equity
     $form->{total_last_period} = $form->format_amount($myconfig, $form->{total_liabilities_last_period} + $form->{total_equity_last_period}, $form->{decimalplaces}, "- ");
@@ -1080,7 +1080,7 @@ sub get_accounts {
       $form->{$category}{$accno}{last} = $form->round_amount($form->{$category}{$accno}{last}, 8);
       $form->{$category}{$accno}{this} = $form->round_amount($form->{$category}{$accno}{this}, 8);
 
-      delete $form->{$category}{$accno} if ($form->round_amount($form->{$category}{$accno}{this},2) == 0 && $form->round_amount($form->{$category}{$accno}{last},2) == 0);
+      delete $form->{$category}{$accno} if ($form->round_amount($form->{$category}{$accno}{this},2) == 0 && $form->round_amount($form->{$category}{$accno}{last},2) == 0); 
     }
   }
 
@@ -1789,7 +1789,7 @@ sub reminder {
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
           LEFT JOIN bank ON (bank.id = a.bank_id)
-          LEFT JOIN address ad2 ON (ad2.trans_id = c.payment_accno_id)
+          LEFT JOIN address ad2 ON (ad2.trans_id = bank.id)
 	      WHERE a.duedate <= '$form->{duedateto}'
 	      AND $where
 	      $exclude_credits

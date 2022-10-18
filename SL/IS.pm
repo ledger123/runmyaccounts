@@ -226,7 +226,7 @@ sub invoice_details {
 	  }
     
 	  push(@{ $form->{description} }, $item->[2]);
-	  for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate linetotal itemnotes package netweight grossweight volume countryorigin hscode barcode xml_deliverydate xml_qty xml_sellprice xml_linetotal)) { push(@{ $form->{$_} }, "") }
+	  for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate discountrate_percent linetotal itemnotes package netweight grossweight volume countryorigin hscode barcode xml_deliverydate xml_qty xml_sellprice xml_linetotal)) { push(@{ $form->{$_} }, "") }
 	  push(@{ $form->{lineitems} }, { amount => 0, tax => 0 });
 	}
       }
@@ -289,6 +289,11 @@ sub invoice_details {
       
       push(@{ $form->{discount} }, $discount);
       push(@{ $form->{discountrate} }, $form->format_amount($myconfig, $form->{"discount_$i"}));
+      if ($form->{"discount_$i"}){
+         push(@{ $form->{discountrate_percent} }, $form->format_amount($myconfig, $form->{"discount_$i"}) . '\%');
+      } else {
+         push(@{ $form->{discountrate_percent} }, $form->format_amount($myconfig, $form->{"discount_$i"}));
+      }
 
       $form->{total} += $linetotal;
 
@@ -657,8 +662,6 @@ sub invoice_details {
   ($form->{iban}, $form->{bic}, $form->{membernumber}, $form->{dcn}, $form->{rvc},
     $form->{invdescriptionqr}, $form->{qriban}, $form->{strdbkginf}) = $dbh->selectrow_array($query);
 
-  $form->{invdescriptionqr2} = $form->{invdescriptionqr};
-
   if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
     $query = qq|SELECT dcn FROM ar
               WHERE id = $form->{id}|;
@@ -683,25 +686,55 @@ sub invoice_details {
 
   my @oldvars = qw(company companyaddress1 companyzip companycity name address1 zipcode city businessnumber invdate invdescriptionqr qriban strdbkginf);
 
-  # conversion to QR variables
+  # conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
+  $form->{invnumber} = substr($form->{invnumber}, 0, 24);
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "/", ""); # QR Standard requires "/" to be escaped. We just remove it ("/" is rarely used) (See #112446)
+  $form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
+  $form->{invnumberqr} = $form->{invnumber};
+
   $form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescriptionqr});
-  $form->{invdescriptionqr} = substr($form->{invdescriptionqr},0,140);
+  $form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
+  $form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
+  $form->{invdescriptionqr2} = $form->{invdescriptionqr};
+  
   $form->{qribanqr} = $form->{qriban};
   $form->{qribanqr} =~ s/\s//g;
+  $form->{qribanqr} = $form->string_replace($form->{qribanqr}, "%", "");
 
   $form->{companyqr} = substr($form->{company},0,70);
+  $form->{companyqr} = $form->string_replace($form->{companyqr}, "%", "");
+  
   $form->{companyaddress1qr} = substr($form->{companyaddress1},0,70);
+  $form->{companyaddress1qr} = $form->string_replace($form->{companyaddress1qr}, "%", "");
+
   $form->{companyzipqr} = substr($form->{companyzip},0,16);
+  $form->{companyzipqr} = $form->string_replace($form->{companyzipqr}, "%", "");
+
   $form->{companycityqr} = substr($form->{companycity},0,35);
+  $form->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
+
   $form->{nameqr} = substr($form->{name},0,70);
+  $form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
+
   $form->{address1qr} = substr($form->{address1},0,70);
+  $form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
+
   $form->{zipcodeqr}  = substr($form->{zipcode},0,16);
+  $form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
+
   $form->{cityqr} = substr($form->{city},0,35);
+  $form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
+
   my @nums = $form->{businessnumber} =~ /(\d+)/g;
   for (@nums) { $form->{businessnumberqr} .= $_ };
 
   $form->{swicotaxbaseqr}  = $form->{swicotaxbase};
+  $form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
+  
   $form->{swicotaxqr}  = $form->{swicotax};
+  $form->{swicotaxqr} = $form->string_replace($form->{swicotaxqr}, "%", "");
+
   @taxaccounts = split (/ /, $form->{taxaccounts});
   for (@taxaccounts){
      if ($form->{"${_}_rate"}){
@@ -719,10 +752,17 @@ sub invoice_details {
   chop $form->{swicotaxbaseqr};
 
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
+  $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
-  $form->{strdbkginfqr}  = substr($form->{strdbkginf},0,140);
-
+  $form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
+  $form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
+  $form->{strdbkginfqr} = $form->{strdbkginf};
+  
+  # split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
+  $form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
+  $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
+  
 }
 
 

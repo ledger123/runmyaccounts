@@ -1,58 +1,102 @@
 %%%%%%%%%%%%%  TITLE  %%%%%%%%%%%%%
 
-% Typ: Gutschriftsrechnung (Kreditorenseite)
-% Name: debit-transaction.tex
-% Sprache: Deutsch
-% Erstellungsdatum: 14. Oktober 2015
-% Mandant: 
-% Version: 
-% Ersteller: 
-% © by Run my Accounts AG
+\newcommand{\DocType}{Lastschriftrechnung}
+
+\newcommand{\AmountType}{Lastschriftbetrag}
 
 %%%%%%%%%%%%%  DEFINITIONS  %%%%%%%%%%%%%
 
 <%include definitions_packages.tex%>
 
+<%include content_language.tex%>
+
+<%include definitions_language.tex%>
+
+%%% PAGE LAYOUT %%%
+\usepackage[a4paper,top=5cm,bottom=3.1cm,left=1.8cm,right=1.8cm]{geometry} 
+\textblockorigin{0.00cm}{0.00cm} % - nach links / + nach unten
+\newcommand{\PrintOnPaper}{on}
+\newcommand{\Greetings}{off}
+\newcommand{\Deliveraddress}{off}
+\newcommand{\StandardBackground}{../<%templates%>/background_without_footer.pdf}
+\newcommand{\BackgroundESRorange}{../<%templates%>/background_ESR.pdf}
+\newcommand{\BackgroundESRwhite}{../<%templates%>/background_without_footer.pdf}
+
+%%% PLACE OF ADDRESS %%%
+\newcommand{\Addressblock}{right}
+%\newcommand{\Addressblock}{left}
+%\newcommand{\Addressblock}{pingenleft}
+
+%Tabellendefinitionen
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcolumntype{Z}{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}X}
+
 <%include definitions_settings.tex%>
 
-<%include content_footer.tex%>
-
-%Der Footer wird auf der neuen Seite gesetzt (muss entfernt werden, wenn ein Hintergrund mit Footer verwendet wird)
-\Footer
-
-\newcommand{\DocType}{Gutschrift}
-
-\newcommand{\AmountType}{Gutschriftsbetrag}
-
-%%%%%%%%%%%%%  CONTENT  %%%%%%%%%%%%%
+%%%%%%%%%%%%%  ELEMENTS  %%%%%%%%%%%%%
 
 <%include content_pagebreak_withamount_withfooter.tex%>
 
 <%include content_vendoraddress.tex%>
 
-<%include content_header.tex%>
+\null\vspace{3.2cm}
+
+\textbf{\Large{\DocType}}\\
+Date: <%invdate%><%orddate%><%quodate%>\\
+\ifthenelse{\equal{<%invnumber%>}{}}{}{Facture No: <%invnumber%>\\}
+\ifthenelse{\equal{<%quonumber%>}{}}{}{Offre No: <%quonumber%>\\}
+\ifthenelse{\equal{<%ordnumber%>}{}}{}{No de commande: <%ordnumber%>\\}
+\ifthenelse{\equal{<%ponumber%>}{}}{}{Votre No de commande: <%ponumber%>\\}
+\ifthenelse{\equal{<%customernumber%>}{}}{}{No de client: <%customernumber%>\\}
+\ifthenelse{\equal{<%businessnumber%>}{}}{}{No TVA: <%businessnumber%>\\}
+
+\vspace{1.0cm}
+
+%Rechnungstitel
+\textbf{\ifthenelse{\equal{\DocType }{Rechnung}}{<%invdescription%>}{}\ifthenelse{\equal{\DocType }{Angebot}}{<%quodescription%>}{}\ifthenelse{\equal{\DocType }{Bestellung}}{<%quodescription%>}{}}
+\vspace{0.1cm}
+%}
+
+%Text-Feld 1
+\ifthenelse{\equal{<%shippingpoint%>}{}}{}{<%shippingpoint%>
+\vspace{0.1cm}
+}
+
+%Text-Feld 2
+\ifthenelse{\equal{<%shipvia%>}{}}{}{<%shipvia%>
+\vspace{0.1cm}
+}
+
+%Text-Feld 3
+\ifthenelse{\equal{<%waybill%>}{}}{}{<%waybill%>
+\vspace{0.1cm}
+}
+
 
 <%include content_articles_withamount.tex%>
 
-<%include content_sum_bookings.tex%>
+<%include content_sum_articles_invoices.tex%>
+
+\parbox{\textwidth}{
+Fällig innerhalb von <%terms%> Tagen bis zum <%duedate%>. 
+}
 
 \vspace{0.5cm}
 
-\parbox{\textwidth}{
-Zahlbar innerhalb von <%terms%> Tagen bis zum <%duedate%>. 
-}
-
+% Hier haben die Bankenvariablen die Funktion der Lieferanten-Banken-Infos.
 \ifthenelse{\equal{<%iban%>}{}}{}{
 \vspace{0.5cm}
 Bankverbindung: \\
 IBAN: <%iban%>\\
 BIC: <%bic%>\\
 }
+
 \vspace{0.5cm}
 
 \ifthenelse{\equal{<%notes%>}{}}{}{
 <%notes%>
-\vspace{0.5cm}
 }
 
 %%%%%%%%%%%%%  END  %%%%%%%%%%%%%

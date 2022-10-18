@@ -247,7 +247,7 @@ sub form_header {
   }
 
   
-  $form->header;
+  $form->header(0, 0, $locale);
  
   print qq|
 <body onLoad="document.forms[0].${focus}.focus()" />
@@ -769,7 +769,7 @@ sub print_form {
   $form->{pre} = "<body bgcolor=#ffffff>\n<pre>";
   delete $form->{stylesheet};
   
-  $form->parse_template(\%myconfig, $userspath, $debuglatex);
+  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 
   if ($form->{printed} !~ /$form->{formname}/) {
     $form->{printed} .= " $form->{formname}";
@@ -911,7 +911,7 @@ sub receipts {
 |;
   }
 
-  $form->header;
+  $form->header(0, 0, $locale);
   
   print qq|
 <body>

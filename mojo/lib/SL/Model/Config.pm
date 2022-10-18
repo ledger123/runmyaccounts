@@ -110,7 +110,9 @@ sub new {
             $connstr .= "postgresql://";
             $connstr .= $_self->val('dbuser');
             $connstr .= ':';
-            $connstr .= $_self->val('dbpasswd');
+
+            $connstr .= unpack 'u', $_self->val('dbpasswd');
+
             $connstr .= '@';
             $connstr .= $_self->val('dbhost');
             $connstr .= (':' . $_self->val('dbport')) if $_self->val('dbport');

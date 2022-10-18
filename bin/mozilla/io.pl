@@ -431,7 +431,7 @@ sub select_item {
   $exchangerate = ($form->{exchangerate}) ? $form->{exchangerate} : 1;
 
   # list items with radio button on a form
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $title = $locale->text('Select items');
 
@@ -672,7 +672,7 @@ sub new_item {
   delete $button{'Add Part'} if $myconfig{acs} =~ /Goods \& Services--Add Part/;
   delete $button{'Add Service'} if $myconfig{acs} =~ /Goods \& Services--Add Service/;
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -1164,7 +1164,7 @@ sub e_mail {
 
   $form->{warehouse} = "$form->{warehouse}--$form->{warehouse_id}" if $form->{warehouse_id};
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -1791,7 +1791,7 @@ sub print_form {
 
   $form->format_string(qw(email cc bcc));
 
-  $form->parse_template(\%myconfig, $userspath, $debuglatex, $noreply, $apikey) if $form->{copies};
+  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey) if $form->{copies};
 
 
   # if we got back here restore the previous form
@@ -1858,7 +1858,7 @@ sub ship_to {
 	       fax => { i => 10, label => $locale->text('Fax') },
 	     email => { i => 11, label => $locale->text('E-mail') } );
   
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>

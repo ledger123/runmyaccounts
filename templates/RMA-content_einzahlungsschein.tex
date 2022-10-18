@@ -1,6 +1,11 @@
-% Einzahlungsschein
+%%%%%%%%%%%%%  EINZAHLUNGSSCHEIN  %%%%%%%%%%%%%
 
-\ClearShipoutPicture
+\ifthenelse{\equal{<%membernumber%>}{}}{\end{document}}{}
+\ifthenelse{\equal{<%invtotal%>}{0.00}}{\end{document}}{}
+\ifthenelse{\equal{<%currency%>}{CHF}}{}{\end{document}}{}
+
+\pagebreak
+
 \AddToShipoutPicture{\BackgroundPicEZ} % MUSS EINKOMMENTIERT WERDEN WENN HINTERGRUND
 
 \pagestyle{empty}
@@ -153,7 +158,7 @@
    \end{textblock*}
 
    %Kodierzeile
-   \begin{textblock*}{16cm}(6.85cm,27.4cm)
+   \begin{textblock*}{16cm}(6.85cm,27.35cm)
    \begin{flushleft}
    \ocr{<%rvc%>><%dcn%>+ <%bankstate%>>}
    \end{flushleft}

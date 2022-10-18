@@ -262,6 +262,7 @@ $self{texts} = {
   'Zip/Postal Code'             => 'PLZ',
   'days'                        => 'Tage',
   'sent'                        => 'verschickt',
+  'No Entries'                  => 'Keine Einträge zur Auswahl',
 };
 
 $self{subs} = {

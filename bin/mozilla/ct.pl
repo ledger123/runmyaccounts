@@ -363,12 +363,12 @@ sub include_in_report {
 
   @a = ();
   
-  push @a, qq|<input name="l_ndx" type=checkbox class=checkbox value=Y> |.$locale->text('No.');
-  push @a, qq|<input name="l_id" type=checkbox class=checkbox value=Y> |.$locale->text('ID');
-  push @a, qq|<input name="l_typeofcontact" type=checkbox class=checkbox value=Y> |.$locale->text('Type');
+  push @a, qq|<input name="l_ndx" type=checkbox class=checkbox value=Y $form->{l_ndx}> |.$locale->text('No.');
+  push @a, qq|<input name="l_id" type=checkbox class=checkbox value=Y $form->{l_id}> |.$locale->text('ID');
+  push @a, qq|<input name="l_typeofcontact" type=checkbox class=checkbox value=Y $form->{l_typeofcontact}> |.$locale->text('Type');
   push @a, qq|<input name="l_name" type=checkbox class=checkbox value=Y $form->{l_name}> $vcname|;
-  push @a, qq|<input name="l_$form->{db}number" type=checkbox class=checkbox value=Y> $vcnumber|;
-  push @a, qq|<input name="l_address" type=checkbox class=checkbox value=Y> |.$locale->text('Address');
+  push @a, qq|<input name="l_$form->{db}number" type=checkbox class=checkbox value=Y $form->{"l_$form->{db}number"}>$vcnumber|;
+  push @a, qq|<input name="l_address" type=checkbox class=checkbox value=Y $form->{l_address}> |.$locale->text('Address');
   push @a, qq|<input name="l_salutation" type=checkbox class=checkbox value=Y $form->{l_salutation}> |.$locale->text('Salutation');
   push @a, qq|<input name="l_contact" type=checkbox class=checkbox value=Y $form->{l_contact}> |.$locale->text('Contact');
   push @a, qq|<input name="l_contacttitle" type=checkbox class=checkbox value=Y $form->{l_contacttitle}> |.$locale->text('Titel');
@@ -377,47 +377,47 @@ sub include_in_report {
   push @a, qq|<input name="l_email" type=checkbox class=checkbox value=Y $form->{l_email}> |.$locale->text('E-mail');
   push @a, qq|<input name="l_phone" type=checkbox class=checkbox value=Y $form->{l_phone}> |.$locale->text('Phone');
   push @a, qq|<input name="l_mobile" type=checkbox class=checkbox value=Y $form->{l_mobile}> |.$locale->text('Mobile');
-  push @a, qq|<input name="l_fax" type=checkbox class=checkbox value=Y> |.$locale->text('Fax');
-  push @a, qq|<input name="l_cc" type=checkbox class=checkbox value=Y> |.$locale->text('Cc');
+  push @a, qq|<input name="l_fax" type=checkbox class=checkbox value=Y $form->{l_fax}> |.$locale->text('Fax');
+  push @a, qq|<input name="l_cc" type=checkbox class=checkbox value=Y $form->{l_cc}> |.$locale->text('Cc');
   
   if ($myconfig{role} =~ /(admin|manager)/) {
-    push @a, qq|<input name="l_bcc" type=checkbox class=checkbox value=Y> |.$locale->text('Bcc');
+    push @a, qq|<input name="l_bcc" type=checkbox class=checkbox value=Y $form->{l_bcc}> |.$locale->text('Bcc');
   }
 
-  push @a, qq|<input name="l_notes" type=checkbox class=checkbox value=Y> |.$locale->text('Notes');
-  push @a, qq|<input name="l_discount" type=checkbox class=checkbox value=Y> |.$locale->text('Discount');
-  push @a, qq|<input name="l_threshold" type=checkbox class=checkbox value=Y> |.$locale->text('Threshold');
-  push @a, qq|<input name="l_accounts" type=checkbox class=checkbox value=Y> |.$locale->text('Accounts');
-  push @a, qq|<input name="l_paymentmethod" type=checkbox class=checkbox value=Y> |.$locale->text('Payment Method');
-  push @a, qq|<input name="l_taxnumber" type=checkbox class=checkbox value=Y> |.$locale->text('Tax Number');
+  push @a, qq|<input name="l_notes" type=checkbox class=checkbox value=Y $form->{l_notes}> |.$locale->text('Notes');
+  push @a, qq|<input name="l_discount" type=checkbox class=checkbox value=Y $form->{l_discount}> |.$locale->text('Discount');
+  push @a, qq|<input name="l_threshold" type=checkbox class=checkbox value=Y $form->{l_threshold}> |.$locale->text('Threshold');
+  push @a, qq|<input name="l_accounts" type=checkbox class=checkbox value=Y $form->{l_accounts}> |.$locale->text('Accounts');
+  push @a, qq|<input name="l_paymentmethod" type=checkbox class=checkbox value=Y $form->{l_paymentmethod}> |.$locale->text('Payment Method');
+  push @a, qq|<input name="l_taxnumber" type=checkbox class=checkbox value=Y $form->{l_taxnumber}> |.$locale->text('Tax Number');
   
   if ($form->{db} eq 'customer') {
-    push @a, qq|<input name="l_employee" type=checkbox class=checkbox value=Y> |.$locale->text('Salesperson');
-    push @a, qq|<input name="l_manager" type=checkbox class=checkbox value=Y> |.$locale->text('Manager');
-    push @a, qq|<input name="l_pricegroup" type=checkbox class=checkbox value=Y> |.$locale->text('Pricegroup');
+    push @a, qq|<input name="l_employee" type=checkbox class=checkbox value=Y $form->{l_employee}> |.$locale->text('Salesperson');
+    push @a, qq|<input name="l_manager" type=checkbox class=checkbox value=Y $form->{l_manager}> |.$locale->text('Manager');
+    push @a, qq|<input name="l_pricegroup" type=checkbox class=checkbox value=Y $form->{l_pricegroup}> |.$locale->text('Pricegroup');
 
   } else {
-    push @a, qq|<input name="l_employee" type=checkbox class=checkbox value=Y> |.$locale->text('Employee');
-    push @a, qq|<input name="l_manager" type=checkbox class=checkbox value=Y> |.$locale->text('Manager');
-    push @a, qq|<input name="l_gifi_accno" type=checkbox class=checkbox value=Y> |.$locale->text('GIFI');
+    push @a, qq|<input name="l_employee" type=checkbox class=checkbox value=Y $form->{l_employee}> |.$locale->text('Employee');
+    push @a, qq|<input name="l_manager" type=checkbox class=checkbox value=Y $form->{l_manager}> |.$locale->text('Manager');
+    push @a, qq|<input name="l_gifi_accno" type=checkbox class=checkbox value=Y $form->{l_gifi_accno}> |.$locale->text('GIFI');
 
   }
 
-  push @a, qq|<input name="l_sic_code" type=checkbox class=checkbox value=Y> |.$locale->text('SIC');
-  push @a, qq|<input name="l_bankname" type=checkbox class=checkbox value=Y> |.$locale->text('Bank');
-  push @a, qq|<input name="l_bankaddress" type=checkbox class=checkbox value=Y> |.$locale->text('Address');
+  push @a, qq|<input name="l_sic_code" type=checkbox class=checkbox value=Y $form->{l_sic_code}> |.$locale->text('SIC');
+  push @a, qq|<input name="l_bankname" type=checkbox class=checkbox value=Y $form->{l_bankname}> |.$locale->text('Bank');
+  push @a, qq|<input name="l_bankaddress" type=checkbox class=checkbox value=Y $form->{l_bankaddress}> |.$locale->text('Address');
 
-  push @a, qq|<input name="l_iban" type=checkbox class=checkbox value=Y> |.$locale->text('IBAN');
-  push @a, qq|<input name="l_bic" type=checkbox class=checkbox value=Y> |.$locale->text('BIC');
-  push @a, qq|<input name="l_business" type=checkbox class=checkbox value=Y> |.$locale->text('Type of Business');
-  push @a, qq|<input name="l_dispatch" type=checkbox class=checkbox value=Y> |.$locale->text('Dispatch Method');
-  push @a, qq|<input name="l_creditlimit" type=checkbox class=checkbox value=Y> |.$locale->text('Credit Limit');
-  push @a, qq|<input name="l_terms" type=checkbox class=checkbox value=Y> |.$locale->text('Terms');
-  push @a, qq|<input name="l_language" type=checkbox class=checkbox value=Y> |.$locale->text('Language');
-  push @a, qq|<input name="l_curr" type=checkbox class=checkbox value=Y> |.$locale->text('Currency');
-  push @a, qq|<input name="l_remittancevoucher" type=checkbox class=checkbox value=Y> |.$locale->text('Remittance Voucher');
-  push @a, qq|<input name="l_startdate" type=checkbox class=checkbox value=Y> |.$locale->text('Startdate');
-  push @a, qq|<input name="l_enddate" type=checkbox class=checkbox value=Y> |.$locale->text('Enddate');
+  push @a, qq|<input name="l_iban" type=checkbox class=checkbox value=Y $form->{l_iban}> |.$locale->text('IBAN');
+  push @a, qq|<input name="l_bic" type=checkbox class=checkbox value=Y $form->{l_bic}> |.$locale->text('BIC');
+  push @a, qq|<input name="l_business" type=checkbox class=checkbox value=Y $form->{l_business}> |.$locale->text('Type of Business');
+  push @a, qq|<input name="l_dispatch" type=checkbox class=checkbox value=Y $form->{l_dispatch}> |.$locale->text('Dispatch Method');
+  push @a, qq|<input name="l_creditlimit" type=checkbox class=checkbox value=Y $form->{l_creditlimit}> |.$locale->text('Credit Limit');
+  push @a, qq|<input name="l_terms" type=checkbox class=checkbox value=Y $form->{l_terms}> |.$locale->text('Terms');
+  push @a, qq|<input name="l_language" type=checkbox class=checkbox value=Y $form->{l_language}> |.$locale->text('Language');
+  push @a, qq|<input name="l_curr" type=checkbox class=checkbox value=Y $form->{l_curr}> |.$locale->text('Currency');
+  push @a, qq|<input name="l_remittancevoucher" type=checkbox class=checkbox value=Y $form->{l_remittancevoucher}> |.$locale->text('Remittance Voucher');
+  push @a, qq|<input name="l_startdate" type=checkbox class=checkbox value=Y $form->{l_startdate}> |.$locale->text('Startdate');
+  push @a, qq|<input name="l_enddate" type=checkbox class=checkbox value=Y $form->{l_enddate}> |.$locale->text('Enddate');
 
    
   $include = qq|
@@ -452,6 +452,9 @@ sub search {
 
 # $locale->text('Customers')
 # $locale->text('Vendors')
+
+  $default_checked = "name,firstname,lastname,phone,email";
+  $form->get_lastused(\%myconfig, "$form->{db}", $default_checked);
 
   $form->{title} = $locale->text('Search') unless $form->{title};
   
@@ -533,7 +536,7 @@ sub search_name {
  
   $focus = "name";
 
-  $form->header;
+  $form->header(0, 0, $locale);
   
   $accept_charset = "";
   if ( $dbencoding ne "" ) {
@@ -755,13 +758,14 @@ sub list_names {
     }
   }
   
+  $form->save_lastused(\%myconfig, "$form->{db}", \@column_index, [qw(address bankaddress accounts customernumber vendornumber)]);
+
   foreach $item (qw(amount tax total transnumber)) {
     if ($form->{"l_$item"} eq "Y") { 
       $callback .= "&l_$item=Y"; 
       $href .= "&l_$item=Y"; 
     }
   }
-
 
   if ($form->{status} eq 'all') {
     $option = $locale->text('All');
@@ -901,7 +905,7 @@ sub list_names {
   
   $column_header{ndx} = qq|<th class=listheading width=1%>&nbsp;</th>|;
   $column_header{id} = qq|<th class=listheading>|.$locale->text('ID').qq|</th>|;
-  $column_header{typeofcontact} = qq|<th class=listheading>|.$locale->text('Type').qq|</th>|;
+  $column_header{typeofcontact} = qq|<th><a class=listheading href=$href&sort=typeofcontact>|.$locale->text('Type').qq|</a></th>|;
   $column_header{"$form->{db}number"} = qq|<th><a class=listheading href=$href&sort=$form->{db}number>$vcnumber</a></th>|;
   $column_header{name} = qq|<th><a class=listheading href=$href&sort=name>$vcname</a></th>|;
   $column_header{address1} = qq|<th class=listheading>|.$locale->text('Address').qq|</th>|;
@@ -1003,7 +1007,7 @@ sub list_names {
       exit;
   }
 
-  $form->header;
+  $form->header(0, 0, $locale);
   print qq|
 <body>
 
@@ -1388,7 +1392,7 @@ sub list_history {
 
   $colspan = $#column_index + 1;
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -1921,7 +1925,7 @@ sub form_header {
 
   $form->{remittancevoucher} = ($form->{remittancevoucher}) ? "checked" : "";
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -2294,7 +2298,7 @@ sub shipping_address {
 	  fax => { i => 10, label => $locale->text('Fax') },
 	  email => { i => 11, label => $locale->text('E-mail') } );
 
-  $form->header;
+  $form->header(0, 0, $locale);
 
   $vcname = $locale->text('Name');
 
@@ -2630,7 +2634,7 @@ sub pricelist_header {
   
   $form->{title} = ($form->{typeofcontact} ne 'company') ? "$form->{firstname} $form->{lastname}" : $form->{name};
  
-  $form->header;
+  $form->header(0, 0, $locale);
 
   print qq|
 <body>
@@ -2893,7 +2897,7 @@ sub select_item {
   $column_data{sellprice} = qq|<th class=listheading>|.$locale->text('Sell Price').qq|</th>|;
   $column_data{lastcost} = qq|<th class=listheading>|.$locale->text('Cost').qq|</th>|;
   
-  $form->header;
+  $form->header(0, 0, $locale);
   
   $title = $locale->text('Select items');
   
@@ -3183,6 +3187,32 @@ sub save {
   $form->{db} = 'vendor' if $form->{db} ne 'customer';
   $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
   $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
+
+  use Email::Valid;
+  if ($form->{email}){
+      my @emails = split ',', $form->{email};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
+      }
+  }
+  if ($form->{cc}){
+      my @emails = split ',', $form->{cc};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
+      }
+  }
+  if ($form->{bcc}){
+      my @emails = split ',', $form->{bcc};
+      for (@emails){
+      unless (Email::Valid->address($_)) {
+          $form->error($_. $locale->text(": Email is invalid and failed") . $Email::Valid::Details . $locale->text(" check.\n"));
+      }
+      }
+  }
 
   $msg = ucfirst $form->{db};
   $msg .= " saved!";
