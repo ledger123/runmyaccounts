@@ -3650,7 +3650,7 @@ sub parse_template {
 				# assume loop after 10 includes of the same file
 				next if $include{$var} > 10;
 
-				unless (open( INC, '<', "$self->{templates}/$self->{language_code}/$var"))
+				unless (open( INC, '<:utf8', "$self->{templates}/$self->{language_code}/$var"))
 				{
 					$err = $!;
 					$self->cleanup;
@@ -3812,7 +3812,7 @@ sub parse_template {
 			chdir("$self->{cwd}");
 
 			if ( $self->{OUT} ) {
-				unless ( open( OUT, '<', $self->{OUT} ) ) {
+				unless ( open( OUT, '<:utf8', $self->{OUT} ) ) {
 					$err = $!;
 					$self->cleanup;
 					$self->error("$self->{OUT} : $err");
