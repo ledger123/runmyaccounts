@@ -44,7 +44,7 @@
 \markboth{<%company%>\hfill <%invnumber%>}{<%company%>\hfill <%invnumber%>}
 
 \begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
-  \textbf{Pol} & \textbf{Èíslo} & \textbf{Popis} & & \textbf{Mno¾.} &
+  \textbf{Pol} & \textbf{ÃˆÃ­slo} & \textbf{Popis} & & \textbf{MnoÂ¾.} &
     \textbf{Jedn} & \textbf{Cena} & \textbf{Zlava \%} & \textbf{Suma} \\ [0.5em]
   & carried forward from page <%lastpage%> & & & & & & & <%sumcarriedforward%> \\ [0.5em]
 <%end pagebreak%>
@@ -97,15 +97,15 @@ Fax: <%customerfax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{*{8}{|X}|} \hline
-  \textbf{Faktúra} & \textbf{Dátum} & \textbf{Objecnávka} & \textbf{Pred.osoba}
+  \textbf{FaktÃºra} & \textbf{DÃ¡tum} & \textbf{ObjecnÃ¡vka} & \textbf{Pred.osoba}
   <%if shippingpoint%>
-  & \textbf{Miesto urèenia}
+  & \textbf{Miesto urÃ¨enia}
   <%end shippingpoint>
   <%if ponumber%>
-  & \textbf{PO èíslo}
+  & \textbf{PO Ã¨Ã­slo}
   <%end ponumber%>
   <%if shipvia%>
-  & \textbf{Spôsob dodania}
+  & \textbf{SpÃ´sob dodania}
   <%end shipvia%>
   \\ [0.5em]
   \hline
@@ -126,7 +126,7 @@ Fax: <%customerfax%>
 \vspace{1cm}
 
 \begin{tabularx}{\textwidth}{@{}rlXlrlrrr@{}}
-  \textbf{Pol.} & \textbf{Èíslo} & \textbf{Popis} & \textbf{Mno¾} &
+  \textbf{Pol.} & \textbf{ÃˆÃ­slo} & \textbf{Popis} & \textbf{MnoÂ¾} &
     \textbf{Jedn.} & \textbf{Cena} & \textbf{Suma} \\ [0.5em]
 <%foreach number%>
   <%runningnumber%> & <%number%> & <%description%> &
@@ -143,13 +143,13 @@ Fax: <%customerfax%>
 \hfill
 \begin{tabularx}{\textwidth}{@{}Xr@{\hspace{1cm}}r@{}}
 <%if not taxincluded%>
- & Medzisúèet & <%subtotal%> \\
+ & MedzisÃºÃ¨et & <%subtotal%> \\
 <%end taxincluded%>
 <%if taxincluded%>
  & Celkom & <%invtotal%> \\
 <%end taxincluded%>
 <%foreach tax%>
- DIÈ. <%taxnumber%> & <%taxdescription%> on <%taxbase%> @ <%taxrate%> \% & <%tax%> \\
+ DIÃˆ. <%taxnumber%> & <%taxdescription%> on <%taxbase%> @ <%taxrate%> \% & <%tax%> \\
 <%end tax%>
 <%if not taxincluded%>
  & Celkom & <%invtotal%> \\
@@ -161,10 +161,10 @@ Fax: <%customerfax%>
 
 <%text_amount%> ***** <%decimal%>/100
 \hfill
-Hodnoty sú v \textbf{<%currency%>}.
+Hodnoty sÃº v \textbf{<%currency%>}.
 
 <%if taxincluded%>
-Ceny sú s DPH.
+Ceny sÃº s DPH.
 <%end tax included%>
 
 \vspace{1em}
@@ -178,7 +178,7 @@ Ceny sú s DPH.
 \begin{tabularx}{10cm}{@{}lXlr@{}}
   \multicolumn{4}{c}{\textbf{Platby}} \\
   \hline
-  \textbf{Dátum} & & \textbf{Doklad} & \textbf{Suma} \\
+  \textbf{DÃ¡tum} & & \textbf{Doklad} & \textbf{Suma} \\
 <%end paid_1%>
 <%foreach payment%>
   <%paymentdate%> & <%paymentaccount%> & <%paymentsource%> & <%payment%> \\

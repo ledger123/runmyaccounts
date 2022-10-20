@@ -2052,7 +2052,7 @@ sub print_form {
     $form->{OUT} = "| $printer{$form->{media}}";
   }
 
-  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
+  $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey, $os);
 
 }
 

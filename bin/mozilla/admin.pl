@@ -17,12 +17,12 @@
 
 use SL::Form;
 use SL::User;
-
+use utf8;
 
 $form = new Form;
 
 $locale = new Locale $language, "admin";
-$form->{charset} = $locale->{charset};
+# $form->{charset} = $locale->{charset};
 
 eval { require DBI; };
 $form->error($locale->text('DBI not installed!')) if ($@);
@@ -54,7 +54,7 @@ if ($form->{action}) {
 
   # create memberfile
   if (! -f $memberfile) {
-    open(FH, ">$memberfile") or $form->error("$memberfile : $!");
+    open(FH, '>:utf8', $memberfile) or $form->error("$memberfile : $!");
     print FH qq|# Run my Accounts Accounting members
 
 [root login]
@@ -145,7 +145,7 @@ sub create_config {
     }
   }
 
-  open(CONF, ">$userspath/root login.conf") or $form->error("root login.conf : $!");
+  open(CONF, '>:utf8', "$userspath/root login.conf") or $form->error("root login.conf : $!");
   print CONF qq|# configuration file for root login
 
 \%rootconfig = (
@@ -233,7 +233,7 @@ $delete
 
 sub list_users {
 
-  open(FH, "$memberfile") or $form->error("$memberfile : $!");
+  open(FH, '<:utf8', $memberfile) or $form->error("$memberfile : $!");
 
   $nologin = qq|
 <input type=submit class=submit name=action value="|.$locale->text('Lock System').qq|">|;
@@ -370,6 +370,7 @@ $software
 
 
 sub form_header {
+  use utf8;
 
   # if there is a login, get user
   if ($form->{login}) {
@@ -830,7 +831,7 @@ sub save {
   
   $myconfig->{packpw} = 1;
   delete $myconfig->{"root login"};
-  
+
   $myconfig->save_member($memberfile, $userspath);
 
   # create user template directory and copy master files
@@ -875,10 +876,10 @@ sub delete {
   
   $form->error("$memberfile ".$locale->text('locked!')) if (-f ${memberfile}.LCK);
 
-  open(FH, ">${memberfile}.LCK") or $form->error("${memberfile}.LCK : $!");
+  open(FH, ">:utf8${memberfile}.LCK") or $form->error("${memberfile}.LCK : $!");
   close(FH);
-  
-  if (! open(CONF, "+<$memberfile")) {
+
+  if (! open(CONF, '+<:utf8', $memberfile)) {
     unlink "${memberfile}.LCK";
     $form->error("$memberfile : $!");
   }
@@ -1449,7 +1450,7 @@ sub create_dataset {
   <tr>
 
     <th align=right nowrap>LC_CTYPE/LC_COLLATE</th>
-    <td><select name=ctype><option value="de_CH.ISO-8859-1" selected="selected">de_CH.ISO-8859-1</option></select></td>
+    <td><select name=ctype><option value="de_CH.UTF-8" selected="selected">de_CH.UTF-8</option></select></td>
 
   </tr>
 |;

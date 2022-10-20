@@ -1,10 +1,10 @@
 <%company align=center width=40%>
 <%address align=center width=40%>
 
-Èíslo: <%till align=left width=3%>         Telf: <%tel%>
-Predávajúci: <%employee%>
-Por.è./Dátum: <%invnumber%> / <%invdate%>
-Tlaèené: <%dateprinted%>
+ÃˆÃ­slo: <%till align=left width=3%>         Telf: <%tel%>
+PredÃ¡vajÃºci: <%employee%>
+Por.Ã¨./DÃ¡tum: <%invnumber%> / <%invdate%>
+TlaÃ¨enÃ©: <%dateprinted%>
 
   Mnoz Popis                       Suma
 <%foreach number%>
@@ -12,36 +12,36 @@ Tlaèené: <%dateprinted%>
       <%number%> @ <%sellprice%>/<%unit%>
 <%end number%>
 
-Poèet polo¾iek: <%totalqty%>
+PoÃ¨et poloÂ¾iek: <%totalqty%>
 <%if taxincluded%>
                          ---------------
                         Celkom: <%invtotal align=right width=9%>
 <%end taxincluded%>
 <%if not taxincluded%>
                             ------------
-                   Medzisúèet: <%subtotal align=right width=9%>
+                   MedzisÃºÃ¨et: <%subtotal align=right width=9%>
 <%end taxincluded%>
 <%foreach tax%>
 <%taxdescription align=right width=23%> @ <%taxrate align=right width=2%>%: <%tax align=right width=9%>
 <%end tax%>
 <%foreach payment%>
-                      Platené: <%payment align=right width=9%> <%currency%>
+                      PlatenÃ©: <%payment align=right width=9%> <%currency%>
 <%end payment%>
 <%if change%>
                             Hal: <%change align=right width=9%>
 <%end change%>
 <%if total%>
-                     K úhrade: <%total align=right width=9%>
+                     K Ãºhrade: <%total align=right width=9%>
 <%end total%>
 <%if discount%>
 
 <%discount%> % Z?ava
 <%end discount%>
 
-   Ïakujeme za Vá¹ nákup !
+   Ãakujeme za VÃ¡Â¹ nÃ¡kup !
 
 <%if taxincluded%>
-Ceny sú s DPH.
+Ceny sÃº s DPH.
 <%end taxincluded%>
 
 

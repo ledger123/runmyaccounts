@@ -16,6 +16,7 @@
 #######################################################################
 
 package User;
+use utf8;
 
 sub new {
   my ($type, $memfile, $login) = @_;
@@ -24,8 +25,8 @@ sub new {
   if ($login ne "") {
     &error("", "$memfile locked!") if (-f "${memfile}.LCK");
     
-    open(MEMBER, "$memfile") or &error("", "$memfile : $!");
-    
+    open(MEMBER, '<:utf8', $memfile) or &error("", "$memfile : $!");
+
     while (<MEMBER>) {
       if (/^\[$login\]/) {
 	while (<MEMBER>) {
@@ -64,7 +65,7 @@ sub country_codes {
   opendir DIR, "locale";
 
   my @dir = grep !/(^\.\.?$|\..*)/, readdir DIR;
-  
+
   foreach my $dir (@dir) {
     next unless open(FH, "locale/$dir/LANGUAGE");
     @language = <FH>;
@@ -363,7 +364,6 @@ sub dbcreate {
                 'Sybase' => qq|CREATE DATABASE $form->{db}|,
                'Oracle' => qq|CREATE USER "$form->{db}" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP IDENTIFIED BY "$form->{db}"|);
 
-  # CREATE DATABASE "testoo" WITH ENCODING = 'ISO-8859-1' LC_CTYPE = 'de_CH.ISO-8859-1' LC_COLLATE = 'de_CH.ISO-8859-1' TEMPLATE = template0
   $dbcreate{Pg} .= " WITH ENCODING = '$form->{encoding}'" if $form->{encoding};
   $dbcreate{Pg} .= " LC_CTYPE = '$form->{ctype}' LC_COLLATE = '$form->{ctype}' TEMPLATE = template0" if $form->{ctype};
   $dbcreate{Sybase} .= " CHARACTER SET $form->{encoding}" if $form->{encoding};
@@ -437,7 +437,7 @@ sub process_query {
   
   return unless (-f $filename);
   
-  open(FH, "$filename") or $form->error("$filename : $!\n");
+  open(FH, '<:utf8', $filename) or $form->error("$filename : $!\n");
   my $query = "";
   my $loop = 0;
   my $sth;
@@ -518,7 +518,7 @@ sub dbsources_unused {
   $form->error("$memfile locked!") if (-f "${memfile}.LCK");
   
   # open members file
-  open(FH, "$memfile") or $form->error("$memfile : $!");
+  open(FH, '<:utf8', $memfile) or $form->error("$memfile : $!");
 
   while (<FH>) {
     if (/^dbname=/) {
@@ -860,10 +860,11 @@ sub create_config {
   }
 
   umask(002);
-  open(CONF, ">$filename") or $self->error("$filename : $!");
+  open(CONF, '>:utf8', $filename) or $self->error("$filename : $!");
   
   # create the config file
   print CONF qq|# configuration file for $self->{login}
+  use utf8;
 
 \%myconfig = (
 |;
@@ -896,10 +897,10 @@ sub save_member {
   &dbconnect_vars($self, $self->{dbname});
   
   $self->error("$memberfile locked!") if (-f "${memberfile}.LCK");
-  open(FH, ">${memberfile}.LCK") or $self->error("${memberfile}.LCK : $!");
+  open(FH, '>:utf8', "${memberfile}.LCK") or $self->error("${memberfile}.LCK : $!");
   close(FH);
-  
-  if (! open(CONF, "+<$memberfile")) {
+
+  if (! open(CONF, '+<:utf8', $memberfile)) {
     unlink "${memberfile}.LCK";
     $self->error("$memberfile : $!");
   }

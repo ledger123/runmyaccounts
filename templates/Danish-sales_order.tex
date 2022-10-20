@@ -64,8 +64,8 @@
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrrr@{}}
   \textbf{Nummer} & \textbf{Beskrivelse} & \textbf{Antal} &
-    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{Beløb} \\
-  & Overført fra side <%lastpage%> & & & & & <%sumcarriedforward%> \\
+    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{BelÃ¸b} \\
+  & OverfÃ¸rt fra side <%lastpage%> & & & & & <%sumcarriedforward%> \\
 <%end pagebreak%>
 
 
@@ -94,7 +94,7 @@
 \begin{tabular}[t]{l@{\hspace{0.3cm}}l}
   \textbf{Ordredato} & <%orddate%> \\
 <%if reqdate%>
-  \textbf{Ønsket leveringsdato} & <%reqdate%> \\
+  \textbf{Ã˜nsket leveringsdato} & <%reqdate%> \\
 <%end reqdate%>
   \textbf{Ordrenummer} & <%ordnumber%>
 \end{tabular}
@@ -103,7 +103,7 @@
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrrr@{}}
   \textbf{Varenummer} & \textbf{Beskrivelse} & \textbf{Antal} &
-    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{Beløb} \\
+    \textbf{Enhed} & \textbf{Pris} & \textbf{Rabat} & \textbf{BelÃ¸b} \\
 <%foreach number%>
   <%number%> & <%description%> & <%qty%> &
     <%unit%> & <%sellprice%> & <%discount%> & <%linetotal%> \\
@@ -120,7 +120,7 @@
 \begin{tabularx}{7cm}{Xr@{}}
   \textbf{Subtotal} & \textbf{<%subtotal%>} \\
 <%foreach tax%>
-  <%taxdescription%> på <%taxbase%> & <%tax%>\\
+  <%taxdescription%> pÃ¥ <%taxbase%> & <%tax%>\\
 <%end tax%>
   \hline
   \textbf{Total} & \textbf{<%ordtotal%>}\\
@@ -143,9 +143,9 @@
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
 \footnotetext[1]{\tiny
-Et gebyr for annullering af ordre på 10\% vil blive tillagt alle specialtilbud
-og produkter som er blevet tilpasset, forbedret eller opgraderet på kundens anmodning.
-Varer som ikke kan returneres er anført ovenfor.
+Et gebyr for annullering af ordre pÃ¥ 10\% vil blive tillagt alle specialtilbud
+og produkter som er blevet tilpasset, forbedret eller opgraderet pÃ¥ kundens anmodning.
+Varer som ikke kan returneres er anfÃ¸rt ovenfor.
 }
 
 \end{document}

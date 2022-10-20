@@ -47,7 +47,7 @@
   \parbox{\textwidth}{
    \begin{center}
 %     \includegraphics[scale=1.0]{/tmp/logo_04.eps} \\[.3cm]
-     {\large\bfseries SZ¡MLA} \\
+     {\large\bfseries SZ√ÅMLA} \\
    \end{center}
 
    \mbox{}\hfill <%copysum%>  \\
@@ -82,7 +82,7 @@
   
   \hfill
   \begin{tabularx}{7cm}{X@{ }r@{}}
-  \textbf{RÈszˆsszeg} & <%sumcarriedforward%> \cr
+  \textbf{R√©sz√∂sszeg} & <%sumcarriedforward%> \cr
   \end{tabularx}
 
 \newpage
@@ -109,12 +109,12 @@
             >{\hsize=2.0cm\raggedleft}X@{\ }
             >{\hsize=2.0cm\raggedleft}X@{}
            }
-  \textbf{no} & \textbf{M·rka} & \textbf{¡ru} & \centering\textbf{MegnevezÈs} &
+  \textbf{no} & \textbf{M√°rka} & \textbf{√Åru} & \centering\textbf{Megnevez√©s} &
   \textbf{VTSZ} & \textbf{Menny.} & \textbf{u} & 
-  \textbf{NettÛ egysÈg·r} & \textbf{NettÛ ˆsszeg} & \textbf{¡FA\%} & 
-  \textbf{¡FA ˆsszeg} & \textbf{BruttÛ ˆsszeg}
+  \textbf{Nett√≥ egys√©g√°r} & \textbf{Nett√≥ √∂sszeg} & \textbf{√ÅFA\%} & 
+  \textbf{√ÅFA √∂sszeg} & \textbf{Brutt√≥ √∂sszeg}
   \cr
-  & & \textbf{elızı oldalrÛl} &
+  & & \textbf{el√µz√µ oldalr√≥l} &
   & & &
   & & & 
   & & <%sumcarriedforward%>
@@ -129,16 +129,16 @@
 
 \hbox to\hsize{
 \begin{minipage}[t]{9.5cm}
-\textbf{EladÛ:} \\
+\textbf{Elad√≥:} \\
 <%company%>\\
 <%address%>\\
-AdÛsz·m: <%businessnumber%>\\
+Ad√≥sz√°m: <%businessnumber%>\\
 tel: <%tel%>\\
 fax: <%fax%>
 \end{minipage}
 \hfill \
 \begin{minipage}[t]{9.5cm}
-\textbf{Vevı:} \\
+\textbf{Vev√µ:} \\
 <%name%>\\
 <%address1%>\\
 <%if address2%>
@@ -166,8 +166,8 @@ fax: <%fax%>
                              >{\hsize=3.4cm\centering}X@{\ }
                              >{\hsize=2.5cm\centering}X@{\ }
                              >{\hsize=2.0cm\raggedleft}X@{}}
-  \textbf{FizetÈsi mÛd} & \textbf{Telj.~d·tuma} & \textbf{Sz·mla kelte} &
-  \textbf{EsedÈkessÈg} & \textbf{MegrendelÈs} & \textbf{Ki·llÌtotta} & \textbf{Sorsz·m} 
+  \textbf{Fizet√©si m√≥d} & \textbf{Telj.~d√°tuma} & \textbf{Sz√°mla kelte} &
+  \textbf{Esed√©kess√©g} & \textbf{Megrendel√©s} & \textbf{Ki√°ll√≠totta} & \textbf{Sorsz√°m} 
   \cr
   <%shippingpoint%> & <%invdate%> & <%crdate%> &
   <%duedate%> & <%ordnumber%> & <%employee%> & <%invnumber%>
@@ -195,10 +195,10 @@ fax: <%fax%>
                              >{\hsize=2.0cm\raggedleft}X@{\ }
                              >{\hsize=2.0cm\raggedleft}X@{}
                              }
-  \centering\textbf{sz.} & \raggedright\textbf{M·rka} & \raggedright\textbf{¡ru} & \raggedright\textbf{MegnevezÈs} &
+  \centering\textbf{sz.} & \raggedright\textbf{M√°rka} & \raggedright\textbf{√Åru} & \raggedright\textbf{Megnevez√©s} &
   \centering\textbf{VTSZ} & \raggedleft\textbf{Menny.} & \centering\textbf{egys.} & 
-  \raggedleft\textbf{NettÛ egysÈg·r} & \raggedleft\textbf{NettÛ ˆsszeg} & \raggedright\textbf{¡FA\%} & 
-  \raggedleft\textbf{¡FA ˆsszeg} & \raggedleft\textbf{BruttÛ ˆsszeg}
+  \raggedleft\textbf{Nett√≥ egys√©g√°r} & \raggedleft\textbf{Nett√≥ √∂sszeg} & \raggedright\textbf{√ÅFA\%} & 
+  \raggedleft\textbf{√ÅFA √∂sszeg} & \raggedleft\textbf{Brutt√≥ √∂sszeg}
   \cr
 <%foreach number%>
   <%runningnumber%> & <%partsgroup%> & <%number%> & <%description%> &
@@ -222,9 +222,9 @@ fax: <%fax%>
 
 \begin{tabularx}{10cm}{>{\hsize=7cm\raggedleft}X>{\hsize=3cm\raggedleft}X}
 %\textbf{Total} & <%invtotal%> \cr
-\textbf{NettÛ ˆsszesen} & <%subtotal%> \cr
+\textbf{Nett√≥ √∂sszesen} & <%subtotal%> \cr
 <%foreach tax%>
-\textbf{Alap:} <%taxbase%> \textbf{r·ta:} <%taxrate%> & <%tax%> \cr
+\textbf{Alap:} <%taxbase%> \textbf{r√°ta:} <%taxrate%> & <%tax%> \cr
 <%end tax%>
 <%if paid%>
 \textbf{Fizetve:} & -<%paid%>
@@ -233,7 +233,7 @@ fax: <%fax%>
 
 \rule{10.6cm}{1.5pt}
 \begin{tabularx}{10cm}{>{\hsize=7cm\raggedleft}X>{\hsize=3cm\raggedleft}X}
-\textbf{A sz·mla vÈgˆsszege} & <%total%> \textbf{Ft}
+\textbf{A sz√°mla v√©g√∂sszege} & <%total%> \textbf{Ft}
 \end{tabularx}
 
 \end{minipage}
@@ -243,13 +243,13 @@ fax: <%fax%>
 \vfill
 \vspace{1cm}
 <%if notes%>
-\textbf{MegjegyzÈs:} <%notes%>
+\textbf{Megjegyz√©s:} <%notes%>
 \vspace{1cm}
 <%end if%>
 
 
 <%if paid%>
-\textbf{FizetÈsek:}
+\textbf{Fizet√©sek:}
 
 \rule{12cm}{1.5pt}
 
@@ -259,7 +259,7 @@ fax: <%fax%>
                        >{\hsize=2.9cm\centering}X@{\ }
                        >{\hsize=2.9cm\centering}X@{\ }
                        >{\hsize=2.9cm\raggedleft}X@{}}
-  \textbf{D·tum} & \textbf{Sz·mla} & \textbf{Bizonylatsz·m} & \textbf{÷sszeg} 
+  \textbf{D√°tum} & \textbf{Sz√°mla} & \textbf{Bizonylatsz√°m} & \textbf{√ñsszeg} 
   \cr
 <%end paid%>
 <%foreach payment%>

@@ -94,14 +94,14 @@
 <%if reqdate%>
   \textbf{Requerido por} & <%reqdate%> \\
 <%end reqdate%>
-  \textbf{Número} & <%ordnumber%>
+  \textbf{NÃºmero} & <%ordnumber%>
 \end{tabular}
 
 \vspace{1cm}
 
 \begin{tabular*}{\textwidth}{@{}lp{\descrwidth}@{\extracolsep\fill}rlrrr@{}}
-  \textbf{Número} & \textbf{Descrição} & \textbf{Quant.} &
-    \textbf{Unid.} & \textbf{Preço} & \textbf{Disc.} & \textbf{Total} \\
+  \textbf{NÃºmero} & \textbf{DescriÃ§Ã£o} & \textbf{Quant.} &
+    \textbf{Unid.} & \textbf{PreÃ§o} & \textbf{Disc.} & \textbf{Total} \\
 <%foreach number%>
   <%number%> & <%description%> & <%qty%> &
     <%unit%> & <%sellprice%> & <%discount%> & <%linetotal%> \\
@@ -127,7 +127,7 @@
 \vspace{0.3cm}
 
 \hfill
-  Preços em \textbf{<%currency%>}.
+  PreÃ§os em \textbf{<%currency%>}.
 
 \vspace{12pt}
 

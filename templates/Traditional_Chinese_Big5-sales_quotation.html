@@ -19,8 +19,8 @@
 
     <td align=right>
       <h4>
-      �q�ܡG <%tel%>
-      <br>�ǯu�G <%fax%>
+      ¹q¸Ü¡G <%tel%>
+      <br>¶Ç¯u¡G <%fax%>
       </h4>
     </td>
   </tr>
@@ -29,7 +29,7 @@
 
   <tr>
     <th colspan=3>
-      <h4>������</h4>
+      <h4>³ø»ù³æ</h4>
     </th>
   </tr>
 
@@ -54,15 +54,15 @@
 
       <br>
       <%if contact%>
-      <br>�P�G <%contact%>
+      <br>­P¡G <%contact%>
       <%end contact%>
 
       <%if customerphone%>
-      <br>�q�ܡG <%customerphone%>
+      <br>¹q¸Ü¡G <%customerphone%>
       <%end customerphone%>
 
       <%if customerfax%>
-      <br>�ǯu�G <%customerfax%>
+      <br>¶Ç¯u¡G <%customerfax%>
       <%end customerfax%>
 
       <%if email%>
@@ -81,12 +81,12 @@
     <td colspan=2>
       <table width=100% border=1>
         <tr>
-	  <th width=17% align=left nowrap>���X</th>
-	  <th width=17% align=left>���</th>
-	  <th width=17% align=left>���Ĵ�</th>
-	  <th width=17% align=left nowrap>�p���H</th>
-	  <th width=17% align=left nowrap>�I�B�I</th>
-	  <th width=15% align=left nowrap>�I�B���q</th>
+	  <th width=17% align=left nowrap>¸¹½X</th>
+	  <th width=17% align=left>¤é´Á</th>
+	  <th width=17% align=left>¦³®Ä´Á</th>
+	  <th width=17% align=left nowrap>Ápµ¸¤H</th>
+	  <th width=17% align=left nowrap>¥I¹BÂI</th>
+	  <th width=15% align=left nowrap>¥I¹B¤½¥q</th>
 	</tr>
 
 	<tr>
@@ -109,14 +109,14 @@
     <td>
     <table width=100%>
     <tr bgcolor=000000>
-      <th align=right><font color=ffffff>���X</th>
-      <th align=left><font color=ffffff>���X</th>
-      <th align=left><font color=ffffff>�y�z</th>
-      <th><font color=ffffff>�ƶq</th>
+      <th align=right><font color=ffffff>¸¹½X</th>
+      <th align=left><font color=ffffff>¸¹½X</th>
+      <th align=left><font color=ffffff>´y­z</th>
+      <th><font color=ffffff>¼Æ¶q</th>
       <th>&nbsp;</th>
-      <th><font color=ffffff>����</th>
-      <th><font color=ffffff>�馩 %</th>
-      <th><font color=ffffff>���B</th>
+      <th><font color=ffffff>»ù®æ</th>
+      <th><font color=ffffff>§é¦© %</th>
+      <th><font color=ffffff>ª÷ÃB</th>
     </tr>
 
 <%foreach number%>
@@ -139,19 +139,19 @@
     
     <tr>
 <%if taxincluded%>
-      <th colspan=6 align=right>�X�p</th>
+      <th colspan=6 align=right>¦X­p</th>
       <td colspan=2 align=right><%invtotal%></td>
 <%end taxincluded%>
 
 <%if not taxincluded%>
-      <th colspan=6 align=right>�p�p</th>
+      <th colspan=6 align=right>¤p­p</th>
       <td colspan=2 align=right><%subtotal%></td>
 <%end taxincluded%>
     </tr>
 
 <%foreach tax%>
     <tr>
-      <th colspan=6 align=right><%taxdescription%> ��� <%taxbase%> @ <%taxrate%> %</th>
+      <th colspan=6 align=right><%taxdescription%> °ò©ó <%taxbase%> @ <%taxrate%> %</th>
       <td colspan=2 align=right><%tax%></td>
     </tr>
 <%end tax%>
@@ -164,10 +164,10 @@
     <tr>
       <td colspan=4>&nbsp;
 <%if terms%>
-      ���Ĵ����b<b><%terms%></b>��
+      ¦³®Ä´Á¬°²b<b><%terms%></b>¤é
 <%end terms%>
       </td>
-      <th colspan=2 align=right>�X�p</th>
+      <th colspan=2 align=right>¦X­p</th>
       <th colspan=2 align=right><%quototal%></th>
     </tr>
     
@@ -184,11 +184,11 @@
   <table width=100%>
     <tr valign=top>
 <%if notes%>
-      <td>�Ƶ�</td>
+      <td>³Æµù</td>
       <td><%notes%></td>
 <%end notes%>
       <td align=right>
-      �Ҧ����槡��<b><%currency%></b>
+      ©Ò¦³»ù®æ§¡¬°<b><%currency%></b>
       </td>
     </tr>
 
@@ -203,7 +203,7 @@
   <table width=100%>
   <tr valign=top>
     <td width=60%><font size=-3>
-�Y�n�����q�ʯS���~���q��A����I10%���q������O�ΡC
+­Y­n¨ú®ø­qÁÊ¯S»ù«~ªº­q³æ¡A¶·¤ä¥I10%ªº­q³æ¨ú®ø¶O¥Î¡C
     </font>
     </td>
     <td width=40%>

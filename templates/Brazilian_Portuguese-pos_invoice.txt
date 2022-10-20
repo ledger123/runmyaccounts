@@ -1,19 +1,19 @@
 <%company align=center width=40%>
 <%address align=center width=40%>
 
-Até: <%till align=left width=3%>        fone#: <%tel%>
+AtÃ©: <%till align=left width=3%>        fone#: <%tel%>
 Clerk: <%username%>
 Vendedor: <%employee%>
 
 <%invtime%><%invnumber align=right width=16%>
 
-  Qtd Descrição                 Total
+  Qtd DescriÃ§Ã£o                 Total
 <%foreach number%>
 <%qty align=right width=5%> <%description align=left width=24 offset=6%> <%linetotal align=right width=9%>
       <%number%> @ <%sellprice%>/<%unit%>
 <%end number%>
 
-Número de itens: <%rowcount%>
+NÃºmero de itens: <%rowcount%>
 <%if taxincluded%>
                          ---------------
                    Total devido: <%invtotal align=right width=9%>
@@ -43,7 +43,7 @@ Número de itens: <%rowcount%>
    Obrigado por ser nosso cliente!
 
 <%if taxincluded%>
-Os impostos estão inclusos no preço.
+Os impostos estÃ£o inclusos no preÃ§o.
 <%end taxincluded%>
 
 

@@ -21,7 +21,7 @@ $form = new Form;
 
 
 $locale = new Locale $language, "login";
-$form->{charset} = $locale->{charset};
+# $form->{charset} = $locale->{charset};
 
 # customization
 if (-f "$form->{path}/custom_$form->{script}") {
@@ -129,7 +129,7 @@ $sf
   </tr>
 </table>
   
-  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelöst!</div>
+  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelï¿½st!</div>
   
 </body>
 </html>

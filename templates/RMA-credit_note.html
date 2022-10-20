@@ -123,11 +123,11 @@
 	<tr valign=top>
 	  <td><%accno%></td>
 	  <td><%account%></td>
-	  <td width=10> </td>
+	  <td width=10>Â </td>
 	  <td align=right><%amount%></td>
-	  <td width=10> </td>
+	  <td width=10>Â </td>
 	  <td><%description%></td>
-	  <td width=10> </td>
+	  <td width=10>Â </td>
 	  <td><%projectnumber%></td>
 	</tr>
 	<%end account%>
@@ -135,13 +135,13 @@
 	<tr>
 	  <%if taxincluded%>
 	  <th colspan=2 align=right>Total</th>
-	  <td width=10> </td>
+	  <td width=10>Â </td>
 	  <td align=right><%invtotal%></td>
 	  <%end taxincluded%>
 
 	  <%if not taxincluded%>
 	  <th colspan=2 align=right>Zwischentotal</th>
-	  <td width=10> </td>
+	  <td width=10>Â </td>
 	  <td align=right><%subtotal%></td>
 	  <%end taxincluded%>
 	</tr>
@@ -149,7 +149,7 @@
 	<%foreach tax%>
 	<tr>
 	  <th colspan=2 align=right><%taxdescription%> @ <%taxrate%> %</th>
-	  <td width=10> </td>
+	  <td width=10>Â </td>
 	  <td align=right><%tax%></td>
 	</tr>
 	<%end tax%>
@@ -157,7 +157,7 @@
 	<%if not taxincluded%>
 	<tr>
 	  <th colspan=2 align=right>Total</th>
-	  <td width=10> </td>
+	  <td width=10>Â </td>
 	  <td align=right><%invtotal%></td>
 	</tr>
 	<%end taxincluded%>
