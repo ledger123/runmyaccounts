@@ -88,7 +88,7 @@ insert into chart (accno,description,charttype,category,link,gifi_accno,contra,a
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2200','VAT payable','A','L','AP_amount','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2206','Withholding Tax','A','L','AP_amount','220',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('221','SHORT-TERM FINANCIAL LIABILITIES THIRD PARTIES (INTEREST-FREE)','H','L','','221',false,true,'');
-insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2215','Credit Card','A','L','','221',false,true,'');
+insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2215','Credit Card','A','L','','221',false,true,'kreditkarten');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('225','SHORT-TERM FINANCIAL LIABILITIES INVESTMENTS (INTEREST-FREE)','H','L','','225',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('227','SHORT-TERM FINANCIAL LIABILITIES SOCIAL INSURANCE (INTEREST-FREE)','H','L','','227',false,true,'');
 insert into chart (accno,description,charttype,category,link,gifi_accno,contra,allow_gl,symbol_link) values ('2270','Current Account Pension Fund','A','L','AP_amount','227',false,true,'');
