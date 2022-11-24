@@ -27,7 +27,6 @@ helper dbs => sub {
     }
 };
 
-
 get '/access/:dbname' => sub ($c) {
 
     my $params = $c->req->params->to_hash;
@@ -42,25 +41,24 @@ get '/access/:dbname' => sub ($c) {
 }
 |;
 
-    my $client_id = $dbs->query("SELECT fldvalue FROM defaults WHERE fldname='revolut_client_id'")->list;
-    my $private_key = $dbs->query("SELECT fldvalue FROM defaults WHERE fldname='revolut_private_key'")->list;
+    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
 
     my $payload = {
-        iss => "ledger123.net",
-        sub => $client_id,
+        iss => $defaults{revolut_jwt_domain},
+        sub => $defaults{revolut_client_id},
         aud => "https://revolut.com",
         exp => time + 86400
     };
 
-    my $jws_token = encode_jwt( payload => $payload, alg => 'RS256', key => \$private_key );
+    my $jws_token = encode_jwt( payload => $payload, alg => 'RS256', key => \$defaults{revolut_private_key} );
 
     my $ua      = Mojo::UserAgent->new;
-    my $apicall = "https://sandbox-b2b.revolut.com/api/1.0/auth/token";
+    my $apicall = "$defaults{revolut_api_url}/auth/token";
     my $res     = $ua->post(
         $apicall => form => {
             grant_type            => 'authorization_code',
             code                  => $params->{code},
-            client_id             => $client_id,
+            client_id             => $defaults{revolut_client_id},
             client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
             client_assertion      => $jws_token
         }
@@ -70,18 +68,21 @@ get '/access/:dbname' => sub ($c) {
     my $body = $res->body;
     my $hash = decode_json($body);
     if ( $params->{code} ) {
-        $c->session(expiration => 86400);
+        $c->session( expiration => 86400 );
         $c->session->{access_token} = $hash->{access_token};
+        $c->session->{dbname}       = $dbname;
     }
-    $c->render( template => 'index', hash => $hash, dbname => $dbname );
+    $c->render( template => 'index', hash => $hash, dbname => $dbname, defaults => \%defaults );
 };
-
 
 get 'accounts' => sub ($c) {
 
+    my $dbs      = $c->dbs( $c->session->{dbname} );
+    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
+
     my $ua           = Mojo::UserAgent->new;
     my $access_token = $c->session->{access_token};
-    my $apicall      = "https://sandbox-b2b.revolut.com/api/1.0/accounts";
+    my $apicall      = "$defaults{revolut_api_url}/accounts";
     my $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
 
     my $code = $res->code;
@@ -93,49 +94,58 @@ get 'accounts' => sub ($c) {
         -head  => [qw/currency name balance state id public updated_at created_at/],
     );
     for my $item ( @{$hash} ) {
-        $table_data->addRow( $item->{currency}, $item->{name}, $item->{balance}, $item->{state}, 
-        "<a href=/rma/revolut/index.pl/transactions?account=$item->{id}>$item->{id}</a>", $item->{public}, $item->{updated_at}, $item->{created_at}, );
+        $table_data->addRow(
+            $item->{currency},
+            $item->{name},
+            $item->{balance},
+            $item->{state},
+            "<a href=$defaults{sql_ledger_path}/revolut/index.pl/transactions?account=$item->{id}>$item->{id}</a>",
+            $item->{public},
+            $item->{updated_at},
+            $item->{created_at},
+        );
     }
-    my $tablehtml = $table_data;
-
+    my $tablehtml   = $table_data;
     my $hash_pretty = format_pretty( $hash, { linum => 1 } );
 
-    $c->render( template => 'accounts', hash_pretty => $hash_pretty, tablehtml => $tablehtml );
+    $c->render( template => 'accounts', hash_pretty => $hash_pretty, tablehtml => $tablehtml, defaults => \%defaults );
 
 };
 
 any 'transactions' => sub ($c) {
 
+    my $dbs      = $c->dbs( $c->session->{dbname} );
+    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
+
     my $ua           = Mojo::UserAgent->new;
     my $access_token = $c->session->{access_token};
-    my $params = $c->req->params->to_hash;
+    my $params       = $c->req->params->to_hash;
     $params->{account} = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
-    $params->{from} = '2022-08-01' if !$params->{from};
-    $params->{to} = '2022-12-03' if !$params->{to};
-    $params->{import} = 'NO' if !$params->{import};
+    $params->{from}    = '2022-08-01'                           if !$params->{from};
+    $params->{to}      = '2022-12-03'                           if !$params->{to};
+    $params->{import}  = 'NO'                                   if !$params->{import};
 
-    my $dbs = $c->dbs('munshi10');
     my @chart1 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 1")->arrays;
     my @chart2 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 1")->arrays;
 
     my $form1 = CGI::FormBuilder->new(
-        method   => 'post',
-        action   => '/rma/revolut/index.pl/transactions',
-        method   => 'post',
-        table    => 1,
+        method    => 'post',
+        action    => "$defaults{sql_ledger_path}/revolut/index.pl/transactions",
+        method    => 'post',
+        table     => 1,
         selectnum => 1,
-        fields   => [qw(account from to bank_account clearing_account import)],
-        required => [qw()],
-        options => { import => [qw(NO YES)] , bank_account => \@chart1, clearing_account => \@chart2},
-        messages => { form_required_text => '', },
-        values   => $params,
-        submit   => [qw(Continue)],
+        fields    => [qw(account from to bank_account clearing_account import)],
+        required  => [qw()],
+        options   => { import             => [qw(NO YES)], bank_account => \@chart1, clearing_account => \@chart2 },
+        messages  => { form_required_text => '', },
+        values    => $params,
+        submit    => [qw(Continue)],
     );
-    $form1->field(name=>"account", size=>"50");
+    $form1->field( name => "account", size => "50" );
 
     my $form1html;
     my $msg;
-    if ($params->{import} eq 'YES'){
+    if ( $params->{import} eq 'YES' ) {
         $msg = "Transactions imported into SQL-Ledger.";
     }
 
@@ -143,18 +153,22 @@ any 'transactions' => sub ($c) {
     if ( $params->{"_submitted"} ) {
     }
 
-    my $apicall      = "https://sandbox-b2b.revolut.com/api/1.0/transactions?";
+    my $apicall = "$defaults{revolut_api_url}/transactions?";
     $apicall .= "account=$params->{account}&from=$params->{from}&to=$params->{to}";
 
     my $res = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
 
-    #$c->render(text => "<pre>". $res->{content}->{asset}->{content}); return;
-
     my $code = $res->code;
+
+    if ( $code eq '500' ) {
+        $c->render( text => "<pre>" . $c->dumper($res) );
+        return;
+    }
+
     my $body = $res->{content}->{asset}->{content};
     my $hash = decode_json($body);
 
-    if (!ref($hash)){
+    if ( !ref($hash) ) {
         $c->render("Unknow error");
         return;
     }
@@ -170,8 +184,8 @@ any 'transactions' => sub ($c) {
     );
 
     for my $item ( @{$hash} ) {
-        my $transdate = substr($item->{created_at}, 0, 10);
-        $table_data->addRow( 
+        my $transdate = substr( $item->{created_at}, 0, 10 );
+        $table_data->addRow(
             $transdate,
             $item->{type},
             $item->{legs}->[0]->{amount},
@@ -183,30 +197,34 @@ any 'transactions' => sub ($c) {
             $item->{merchant}->{name},
             $item->{id},
         );
-  
-        if ($params->{import} eq 'YES'){
+
+        if ( $params->{import} eq 'YES' ) {
             my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
-            $dbs->query("
+            $dbs->query( "
                 INSERT INTO gl(reference, transdate, department_id, description) VALUES (?, ?, ?, ?)",
-                $item->{id}, $transdate, $department_id, 'revoluttest'
-            );
+                $item->{id}, $transdate, $department_id, 'revoluttest' );
             my $id = $dbs->query("SELECT max(id) FROM gl")->list;
-            $dbs->query("
+            $dbs->query( "
                 INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount}
-            );
-            $dbs->query("
+                $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} );
+            $dbs->query( "
                 INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} * -1
-            );
+                $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} * -1 );
             $dbs->commit;
         }
     }
-    my $tablehtml = $table_data;
-
+    my $tablehtml   = $table_data;
     my $hash_pretty = format_pretty( $hash, { linum => 1 } );
 
-    $c->render( template => 'transactions', msg => $msg, form1html => $form1html, account => $params->{account}, tablehtml => $tablehtml, hash_pretty => $hash_pretty );
+    $c->render( 
+        template    => 'transactions',
+        msg         => $msg,
+        defaults    => \%defaults,
+        form1html   => $form1html,
+        account     => $params->{account},
+        tablehtml   => $tablehtml,
+        hash_pretty => $hash_pretty
+    );
 };
 
 app->start;
@@ -279,9 +297,9 @@ __DATA__
       </a>
 
       <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
-        <a class="me-3 py-2 text-dark text-decoration-none" href="/rma/revolut/index.pl">Home</a>
-        <a class="me-3 py-2 text-dark text-decoration-none" href="/rma/revolut/index.pl/accounts">Accounts</a>
-        <a class="me-3 py-2 text-dark text-decoration-none" href="/rma/revolut/index.pl/transactions">Transactions</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl">Home</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/accounts">Accounts</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/transactions">Transactions</a>
       </nav>
     </div>
 
