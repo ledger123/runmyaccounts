@@ -2467,13 +2467,26 @@ sub defaults {
 	  <td><input name=transitionaccount size=15 value="$form->{transitionaccount}"></td>
 	</tr>
     <tr valign=top>
-               <th align=right>| . $locale->text('Revolut Client ID') . qq|</th>
-               <td><textarea name=revolut_client_id rows=3 cols=50>$form->{revolut_client_id}</textarea></td>
+        <th align=right>| . $locale->text('Revolut Client ID') . qq|</th>
+        <td><textarea name=revolut_client_id rows=3 cols=50>$form->{revolut_client_id}</textarea></td>
     </tr>
     <tr valign=top>
-               <th align=right>| . $locale->text('Revolut Private Key') . qq|</th>
-               <td><textarea name=revolut_private_key rows=3 cols=50>$form->{revolut_private_key}</textarea></td>
+        <th align=right>| . $locale->text('Revolut Private Key') . qq|</th>
+        <td><textarea name=revolut_private_key rows=5 cols=50>$form->{revolut_private_key}</textarea></td>
     </tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Revolut API URL').qq|</th>
+	  <td><input name=revolut_api_url size=50 value="$form->{revolut_api_url}"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Revolut JWT Domain').qq|</th>
+	  <td><input name=revolut_jwt_domain size=30 value="$form->{revolut_jwt_domain}"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('SQL-Ledger Path').qq|</th>
+	  <td><input name=sql_ledger_path size=20 value="$form->{sql_ledger_path}"></td>
+	</tr>
+
 
       </table>
     </td>
