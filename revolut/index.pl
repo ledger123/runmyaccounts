@@ -94,7 +94,7 @@ get 'accounts' => sub ($c) {
     );
     for my $item ( @{$hash} ) {
         $table_data->addRow( $item->{currency}, $item->{name}, $item->{balance}, $item->{state}, 
-        "<a href=/rel3/revolut/index.pl/transactions?account=$item->{id}>$item->{id}</a>", $item->{public}, $item->{updated_at}, $item->{created_at}, );
+        "<a href=/rma/revolut/index.pl/transactions?account=$item->{id}>$item->{id}</a>", $item->{public}, $item->{updated_at}, $item->{created_at}, );
     }
     my $tablehtml = $table_data;
 
@@ -120,7 +120,7 @@ any 'transactions' => sub ($c) {
 
     my $form1 = CGI::FormBuilder->new(
         method   => 'post',
-        action   => '/rel3/revolut/index.pl/transactions',
+        action   => '/rma/revolut/index.pl/transactions',
         method   => 'post',
         table    => 1,
         selectnum => 1,
@@ -148,8 +148,10 @@ any 'transactions' => sub ($c) {
 
     my $res = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
 
+    #$c->render(text => "<pre>". $res->{content}->{asset}->{content}); return;
+
     my $code = $res->code;
-    my $body = $res->body;
+    my $body = $res->{content}->{asset}->{content};
     my $hash = decode_json($body);
 
     if (!ref($hash)){
@@ -157,10 +159,10 @@ any 'transactions' => sub ($c) {
         return;
     }
 
-    if ($hash->{message}){
-        $c->render(text => $hash->{message});
-        return;
-    }
+    #if ($hash->{message}){
+    #    $c->render(text => $hash->{message});
+    #    return;
+    #}
 
     my $table_data = HTML::Table->new(
         -class => 'table table-border',
@@ -277,9 +279,9 @@ __DATA__
       </a>
 
       <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
-        <a class="me-3 py-2 text-dark text-decoration-none" href="/rel3/revolut/index.pl">Home</a>
-        <a class="me-3 py-2 text-dark text-decoration-none" href="/rel3/revolut/index.pl/accounts">Accounts</a>
-        <a class="me-3 py-2 text-dark text-decoration-none" href="/rel3/revolut/index.pl/transactions">Transactions</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="/rma/revolut/index.pl">Home</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="/rma/revolut/index.pl/accounts">Accounts</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="/rma/revolut/index.pl/transactions">Transactions</a>
       </nav>
     </div>
 
