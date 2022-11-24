@@ -122,7 +122,7 @@ any 'transactions' => sub ($c) {
     my $params       = $c->req->params->to_hash;
     $params->{account} = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
     $params->{from}    = '2022-08-01'                           if !$params->{from};
-    $params->{to}      = '2022-12-03'                           if !$params->{to};
+    $params->{to}      = '2022-08-30'                           if !$params->{to};
     $params->{import}  = 'NO'                                   if !$params->{import};
 
     my @chart1 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 1")->arrays;
@@ -161,7 +161,7 @@ any 'transactions' => sub ($c) {
     my $code = $res->code;
 
     if ( $code eq '500' ) {
-        $c->render( text => "<pre>" . $c->dumper($res) );
+        $c->render( text => "<pre>API call: $apicall\n\n" . $c->dumper($res) );
         return;
     }
 
@@ -227,6 +227,39 @@ any 'transactions' => sub ($c) {
     );
 };
 
+any 'counterparties' => sub ($c) {
+
+    my $dbs      = $c->dbs( $c->session->{dbname} );
+    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
+
+    my $ua           = Mojo::UserAgent->new;
+    my $access_token = $c->session->{access_token};
+    my $params       = $c->req->params->to_hash;
+
+    my $apicall = "$defaults{revolut_api_url}/counterparties";
+
+    my $res = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
+
+    my $code = $res->code;
+
+    if ( $code eq '500' ) {
+        $c->render( text => "<pre>API call: $apicall\n\n" . $c->dumper($res) );
+        return;
+    }
+
+    my $body = $res->{content}->{asset}->{content};
+    my $hash = decode_json($body);
+
+    my $hash_pretty = format_pretty( $hash, { linum => 1 } );
+
+    $c->render( 
+        template    => 'counterparties',
+        defaults    => \%defaults,
+        hash_pretty => $hash_pretty
+    );
+};
+
+
 app->start;
 __DATA__
 
@@ -275,6 +308,19 @@ __DATA__
 
 
 
+@@ counterparties.html.ep
+% layout 'default';
+% title 'Counter Parties';
+<div class="pricing-header p-3 pb-md-4 mx-auto text-center">
+    <h1 class="display-4 fw-normal">Counter Parties</h1>
+    <p class="fs-5 text-muted">Counter Parties</p>
+</div>
+<pre>
+<%== $hash_pretty %>
+</pre>
+
+
+
 
 @@ layouts/default.html.ep
 <!doctype html>
@@ -299,6 +345,7 @@ __DATA__
       <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl">Home</a>
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/accounts">Accounts</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/counterparties">Counter Parties</a>
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/transactions">Transactions</a>
       </nav>
     </div>
