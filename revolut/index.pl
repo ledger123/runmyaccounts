@@ -19,7 +19,8 @@ my $dbs = "";
 helper dbs => sub {
     my ( $c, $dbname ) = @_;
     if ($dbname) {
-        my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=gh.mnapk.com", 'postgres', '' ) or die $DBI::errstr;
+        #my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost", 'postgres', '' ) or die $DBI::errstr;
+        my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname", 'postgres', '' ) or die $DBI::errstr;
         $dbs = DBIx::Simple->connect($dbh);
         return $dbs;
     } else {
@@ -43,34 +44,57 @@ get '/access/:dbname' => sub ($c) {
 
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
 
+    # jwt_token expiry is 90 days
     my $payload = {
         iss => $defaults{revolut_jwt_domain},
         sub => $defaults{revolut_client_id},
         aud => "https://revolut.com",
-        exp => time + 86400
+        exp => time + (90 * 24 * 60 * 60),
     };
 
-    my $jws_token = encode_jwt( payload => $payload, alg => 'RS256', key => \$defaults{revolut_private_key} );
+    my $jwt_token = encode_jwt( payload => $payload, alg => 'RS256', key => \$defaults{revolut_private_key} );
 
     my $ua      = Mojo::UserAgent->new;
     my $apicall = "$defaults{revolut_api_url}/auth/token";
-    my $res     = $ua->post(
+    my $res;
+    if ($params->{code}){
+        $res = $ua->post(
         $apicall => form => {
             grant_type            => 'authorization_code',
             code                  => $params->{code},
             client_id             => $defaults{revolut_client_id},
             client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-            client_assertion      => $jws_token
+            client_assertion      => $jwt_token
         }
-    )->result;
+        )->result;
+    } else {
+        $res = $ua->post(
+        $apicall => form => {
+            grant_type            => 'refresh_token',
+            client_id             => $defaults{revolut_client_id},
+            refresh_token         => $defaults{revolut_refresh_token},
+            client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+            client_assertion      => $defaults{revolut_jwt_token},
+        }
+        )->result;
+    }
 
     my $code = $res->code;
     my $body = $res->body;
     my $hash = decode_json($body);
     if ( $params->{code} ) {
         $c->session( expiration => 86400 );
-        $c->session->{access_token} = $hash->{access_token};
-        $c->session->{dbname}       = $dbname;
+        $c->session->{jwt_token}        = $jwt_token;
+        $c->session->{access_token}     = $hash->{access_token};
+        $c->session->{refresh_token}    = $hash->{refresh_token};
+        $c->session->{dbname}           = $dbname;
+        $dbs->query("DELETE FROM defaults WHERE fldname IN ('revolut_access_token', 'revolut_refresh_token', 'revolut_jwt_token')");
+        $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_jwt_token', $jwt_token);
+        $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_access_token', $hash->{access_token});
+        $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_refresh_token', $hash->{refresh_token});
+    } else {
+        $c->session->{access_token}     = $hash->{access_token};
+        $c->session->{dbname}           = $dbname;
     }
     $c->render( template => 'index', hash => $hash, dbname => $dbname, defaults => \%defaults );
 };
@@ -86,6 +110,9 @@ get 'accounts' => sub ($c) {
     my $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
 
     my $code = $res->code;
+    if ($code eq '401'){
+        $c->render(text => "Not available ..."); return;
+    }
     my $body = $res->body;
     my $hash = decode_json($body);
 
