@@ -43,6 +43,10 @@ $(document).ready(function() {
 	    return "";
 	}
 	
+	$(document).click( function(e) {
+		window.parent.parent.postMessage('mouseclicked' ,'*');
+	});
+	
 	$(document).mousemove( function(e) {
 		window.parent.parent.postMessage('mousemoved' ,'*');
 	});
