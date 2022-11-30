@@ -2468,7 +2468,7 @@ sub defaults {
 	</tr>
     <tr valign=top>
         <th align=right>| . $locale->text('Revolut Client ID') . qq|</th>
-        <td><textarea name=revolut_client_id rows=3 cols=50>$form->{revolut_client_id}</textarea></td>
+        <td><input name=revolut_client_id size=50 value="$form->{revolut_client_id}"></td>
     </tr>
     <tr valign=top>
         <th align=right>| . $locale->text('Revolut Private Key') . qq|</th>
