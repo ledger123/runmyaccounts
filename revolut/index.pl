@@ -37,7 +37,7 @@ helper nf => sub {
 
 sub _refresh_session {
 
-    my ($c, $dbname) = @_;
+    my ($c, $dbname, $defaults) = @_;
 
     my $dbs = $c->dbs($dbname);
 
@@ -49,10 +49,10 @@ sub _refresh_session {
     $res = $ua->post(
         $apicall => form => {
             grant_type            => 'refresh_token',
-            client_id             => $defaults{revolut_client_id},
-            refresh_token         => $defaults{revolut_refresh_token},
+            client_id             => $defaults->{revolut_client_id},
+            refresh_token         => $defaults->{revolut_refresh_token},
             client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-            client_assertion      => $defaults{revolut_jwt_token},
+            client_assertion      => $defaults->{revolut_jwt_token},
         }
     )->result;
 
@@ -61,8 +61,6 @@ sub _refresh_session {
     my $hash = decode_json($body);
     $c->session->{access_token}     = $hash->{access_token};
     $c->session->{dbname}           = $dbname;
-    $c->render( template => 'index', hash => $hash, dbname => $dbname, defaults => \%defaults );
-
 }
 
 
@@ -133,28 +131,33 @@ get 'accounts' => sub ($c) {
 
     my $params       = $c->req->params->to_hash;
 
-    if (!$c->session->{dbname}){
-        &_refresh_session($c, $params->{dbname});
-    }
+    my $dbname = $c->session->{dbname};
+    $dbname = $params->{dbname} if !$dbname;
 
-    my $dbs      = $c->dbs( $c->session->{dbname} );
+    my $dbs      = $c->dbs( $dbname );
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
+
+    #if (!$c->session->{access_token}){
+    #&_refresh_session($c, $dbname, \%defaults);
+    #}
 
     my $ua           = Mojo::UserAgent->new;
     my $access_token = $c->session->{access_token};
     my $apicall      = "$defaults{revolut_api_url}/accounts";
     my $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
+    my $code         = $res->code;
 
-    my $code = $res->code;
     if ($code eq '401'){
-        $c->render(text => "Not available ..."); return;
+        &_refresh_session($c, $dbname, \%defaults);
+        $res  = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
+        $code = $res->code;
     }
     my $body = $res->body;
     my $hash = decode_json($body);
 
     my $table_data = HTML::Table->new(
         -class => 'table table-border',
-        -head  => [qw/transactions currency name balance state public updated_at created_at/],
+        -head  => [qw/transactions currency name balance state public/],
     );
     for my $item ( @{$hash} ) {
         if ($item->{balance}){
@@ -165,8 +168,6 @@ get 'accounts' => sub ($c) {
             $c->nf->format_price($item->{balance}, 2),
             $item->{state},
             $item->{public},
-            $item->{updated_at},
-            $item->{created_at},
         );
         }
     }
@@ -250,7 +251,7 @@ any 'transactions' => sub ($c) {
 
     my $table_data = HTML::Table->new(
         -class => 'table table-border',
-        -head  => [qw/date type legs_amount legs_balance legs_currency legs_description state card_number merchant_name id/],
+        -head  => [qw/date type amount balance currency description state card_number merchant_name/],
     );
 
     for my $item ( @{$hash} ) {
@@ -265,7 +266,6 @@ any 'transactions' => sub ($c) {
             $item->{state},
             $item->{card}->{card_number},
             $item->{merchant}->{name},
-            $item->{id},
         );
 
         if ( $params->{import} eq 'YES' ) {
