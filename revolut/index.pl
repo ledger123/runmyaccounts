@@ -12,6 +12,7 @@ use CGI::FormBuilder;
 use DBI;
 use DBD::Pg;
 use DBIx::Simple;
+use Number::Format;
 
 $Data::Dumper::Indent = 1;
 
@@ -27,6 +28,43 @@ helper dbs => sub {
         return $dbs;
     }
 };
+
+
+helper nf => sub {
+    return my $nf = new Number::Format( -int_curr_symbol => '' );
+};
+
+
+sub _refresh_session {
+
+    my ($c, $dbname) = @_;
+
+    my $dbs = $c->dbs($dbname);
+
+    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
+
+    my $ua      = Mojo::UserAgent->new;
+    my $apicall = "$defaults{revolut_api_url}/auth/token";
+    my $res;
+    $res = $ua->post(
+        $apicall => form => {
+            grant_type            => 'refresh_token',
+            client_id             => $defaults{revolut_client_id},
+            refresh_token         => $defaults{revolut_refresh_token},
+            client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+            client_assertion      => $defaults{revolut_jwt_token},
+        }
+    )->result;
+
+    my $code = $res->code;
+    my $body = $res->body;
+    my $hash = decode_json($body);
+    $c->session->{access_token}     = $hash->{access_token};
+    $c->session->{dbname}           = $dbname;
+    $c->render( template => 'index', hash => $hash, dbname => $dbname, defaults => \%defaults );
+
+}
+
 
 get '/access/:dbname' => sub ($c) {
 
@@ -67,22 +105,13 @@ get '/access/:dbname' => sub ($c) {
             client_assertion      => $jwt_token
         }
         )->result;
-    } else {
-        $res = $ua->post(
-        $apicall => form => {
-            grant_type            => 'refresh_token',
-            client_id             => $defaults{revolut_client_id},
-            refresh_token         => $defaults{revolut_refresh_token},
-            client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-            client_assertion      => $defaults{revolut_jwt_token},
-        }
-        )->result;
     }
 
     my $code = $res->code;
     my $body = $res->body;
     my $hash = decode_json($body);
-    if ( $params->{code} ) {
+    my $msg;
+    if ( $code eq '200' ) {
         $c->session( expiration => 86400 );
         $c->session->{jwt_token}        = $jwt_token;
         $c->session->{access_token}     = $hash->{access_token};
@@ -92,14 +121,21 @@ get '/access/:dbname' => sub ($c) {
         $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_jwt_token', $jwt_token);
         $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_access_token', $hash->{access_token});
         $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_refresh_token', $hash->{refresh_token});
+        $msg = "$code: Access granted.";
     } else {
-        $c->session->{access_token}     = $hash->{access_token};
-        $c->session->{dbname}           = $dbname;
+        $msg = "$code: $hash->{error_description}.";
     }
-    $c->render( template => 'index', hash => $hash, dbname => $dbname, defaults => \%defaults );
+
+    $c->render( template => 'index', msg => $msg, dbname => $dbname, defaults => \%defaults );
 };
 
 get 'accounts' => sub ($c) {
+
+    my $params       = $c->req->params->to_hash;
+
+    if (!$c->session->{dbname}){
+        &_refresh_session($c, $params->{dbname});
+    }
 
     my $dbs      = $c->dbs( $c->session->{dbname} );
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
@@ -118,35 +154,42 @@ get 'accounts' => sub ($c) {
 
     my $table_data = HTML::Table->new(
         -class => 'table table-border',
-        -head  => [qw/currency name balance state id public updated_at created_at/],
+        -head  => [qw/transactions currency name balance state public updated_at created_at/],
     );
     for my $item ( @{$hash} ) {
+        if ($item->{balance}){
         $table_data->addRow(
+            "<a href=$defaults{sql_ledger_path}/revolut/index.pl/transactions?account=$item->{id}>Transactions</a>",
             $item->{currency},
             $item->{name},
-            $item->{balance},
+            $c->nf->format_price($item->{balance}, 2),
             $item->{state},
-            "<a href=$defaults{sql_ledger_path}/revolut/index.pl/transactions?account=$item->{id}>$item->{id}</a>",
             $item->{public},
             $item->{updated_at},
             $item->{created_at},
         );
+        }
     }
     my $tablehtml   = $table_data;
     my $hash_pretty = format_pretty( $hash, { linum => 1 } );
 
-    $c->render( template => 'accounts', hash_pretty => $hash_pretty, tablehtml => $tablehtml, defaults => \%defaults );
+    $c->render( template => 'accounts', hash_pretty => '', tablehtml => $tablehtml, defaults => \%defaults );
 
 };
 
 any 'transactions' => sub ($c) {
+
+    my $params       = $c->req->params->to_hash;
+
+    if (!$c->session->{dbname}){
+        $c->render(text => 'Session timed out'); return;
+    }
 
     my $dbs      = $c->dbs( $c->session->{dbname} );
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
 
     my $ua           = Mojo::UserAgent->new;
     my $access_token = $c->session->{access_token};
-    my $params       = $c->req->params->to_hash;
     $params->{account} = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
     $params->{from}    = '2022-08-01'                           if !$params->{from};
     $params->{to}      = '2022-08-30'                           if !$params->{to};
@@ -215,8 +258,8 @@ any 'transactions' => sub ($c) {
         $table_data->addRow(
             $transdate,
             $item->{type},
-            $item->{legs}->[0]->{amount},
-            $item->{legs}->[0]->{balance},
+            $c->nf->format_price($item->{legs}->[0]->{amount},2),
+            $c->nf->format_price($item->{legs}->[0]->{balance},2),
             $item->{legs}->[0]->{currency},
             $item->{legs}->[0]->{description},
             $item->{state},
@@ -250,11 +293,15 @@ any 'transactions' => sub ($c) {
         form1html   => $form1html,
         account     => $params->{account},
         tablehtml   => $tablehtml,
-        hash_pretty => $hash_pretty
+        hash_pretty => '',
     );
 };
 
 any 'counterparties' => sub ($c) {
+
+    if (!$c->session->{dbname}){
+        $c->render(text => 'Session timed out'); return;
+    }
 
     my $dbs      = $c->dbs( $c->session->{dbname} );
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
@@ -291,13 +338,14 @@ app->start;
 __DATA__
 
 @@ index.html.ep
-% layout 'default';
+% layout 'activate';
 % title 'Home';
 <h1>Revolut - SQL-Ledger Integration!</h1>
 <h2>Database: <%= $dbname %></h2>
-<pre>
-    <%= dumper($hash) %>
-</pre>
+<br/>
+<h3><%= $msg %></h3>
+<br/>
+To manage your revolut connection visit: <a href="https://sandbox-business.revolut.com/settings/api">https://sandbox-business.revolut.com/settings/api</a>
 
 @@ accounts.html.ep
 % layout 'default';
@@ -361,16 +409,14 @@ __DATA__
   </head>
   <body>
   
-  <div class="container">
+  <div class="container-fluid">
   <header>
     <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
       <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="32" class="me-2" viewBox="0 0 118 94" role="img"><title>Bootstrap</title><path fill-rule="evenodd" clip-rule="evenodd" d="M24.509 0c-6.733 0-11.715 5.893-11.492 12.284.214 6.14-.064 14.092-2.066 20.577C8.943 39.365 5.547 43.485 0 44.014v5.972c5.547.529 8.943 4.649 10.951 11.153 2.002 6.485 2.28 14.437 2.066 20.577C12.794 88.106 17.776 94 24.51 94H93.5c6.733 0 11.714-5.893 11.491-12.284-.214-6.14.064-14.092 2.066-20.577 2.009-6.504 5.396-10.624 10.943-11.153v-5.972c-5.547-.529-8.934-4.649-10.943-11.153-2.002-6.484-2.28-14.437-2.066-20.577C105.214 5.894 100.233 0 93.5 0H24.508zM80 57.863C80 66.663 73.436 72 62.543 72H44a2 2 0 01-2-2V24a2 2 0 012-2h18.437c9.083 0 15.044 4.92 15.044 12.474 0 5.302-4.01 10.049-9.119 10.88v.277C75.317 46.394 80 51.21 80 57.863zM60.521 28.34H49.948v14.934h8.905c6.884 0 10.68-2.772 10.68-7.727 0-4.643-3.264-7.207-9.012-7.207zM49.948 49.2v16.458H60.91c7.167 0 10.964-2.876 10.964-8.281 0-5.406-3.903-8.178-11.425-8.178H49.948z" fill="currentColor"></path></svg>
-        <span class="fs-4">Revolut - SQL-Ledger Integration</span>
+        <span class="fs-4">Revolut</span>
       </a>
 
       <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
-        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl">Home</a>
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/accounts">Accounts</a>
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/counterparties">Counter Parties</a>
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/transactions">Transactions</a>
@@ -380,9 +426,63 @@ __DATA__
   </header>
 
     <%= content %>
+
+To manage your revolut connection visit:
+<a href="https://sandbox-business.revolut.com/settings/api">https://sandbox-business.revolut.com/settings/api</a>
+<br/><br/>
+
   </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+% my $debug = 0;
+% if ($debug){
+<h2 class='listheading'>Session:</h2>
+<pre>
+    <%= dumper($self->session) %>
+</pre>
+        
+<h2 class='listheading'>Request Parameters</h2>
+<pre>
+   <%= dumper($self->req->params->to_hash) %>
+</pre>
+
+<h2 class='listheading'>Controller</h2>
+<pre>
+   <%= dumper($self->stash) %>
+</pre>
+% }
+
+
+  </body>
+</html>
+
+
+@@ layouts/activate.html.ep
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+     <title><%= title %></title>
+  </head>
+  <body>
+  
+  <div class="container-fluid">
+  <header>
+    <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+      <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
+        <span class="fs-4">Revolut - SQL-Ledger Integration</span>
+      </a>
+    </div>
+
+  </header>
+
+    <%= content %>
+
+  </div>
 
 % my $debug = 0;
 % if ($debug){
