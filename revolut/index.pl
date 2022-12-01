@@ -269,18 +269,24 @@ any 'transactions' => sub ($c) {
         );
 
         if ( $params->{import} eq 'YES' ) {
-            my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
-            $dbs->query( "
-                INSERT INTO gl(reference, transdate, department_id, description) VALUES (?, ?, ?, ?)",
-                $item->{id}, $transdate, $department_id, 'revoluttest' );
-            my $id = $dbs->query("SELECT max(id) FROM gl")->list;
-            $dbs->query( "
-                INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} );
-            $dbs->query( "
-                INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} * -1 );
-            $dbs->commit;
+            my $exists = $dbs->query("SELECT id FROM gl WHERE reference = ?", $item->{id})->list;
+            if (!$exists){
+                my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
+                $dbs->query( "
+                    INSERT INTO gl(reference, transdate, department_id, description) VALUES (?, ?, ?, ?)",
+                    $item->{id}, $transdate, $department_id, 'revoluttest' 
+                );
+                my $id = $dbs->query("SELECT max(id) FROM gl")->list;
+                $dbs->query( "
+                    INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
+                    $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount}
+                );
+                $dbs->query( "
+                    INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
+                    $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} * -1
+                );
+                $dbs->commit;
+            }
         }
     }
     my $tablehtml   = $table_data;
@@ -345,7 +351,7 @@ __DATA__
 <br/>
 <h3><%= $msg %></h3>
 <br/>
-To manage your revolut connection visit: <a href="https://sandbox-business.revolut.com/settings/api">https://sandbox-business.revolut.com/settings/api</a>
+To manage your revolut connection visit: <a href="https://business.revolut.com/settings/api">https://business.revolut.com/settings/api</a>
 
 @@ accounts.html.ep
 % layout 'default';
@@ -428,7 +434,7 @@ To manage your revolut connection visit: <a href="https://sandbox-business.revol
     <%= content %>
 
 To manage your revolut connection visit:
-<a href="https://sandbox-business.revolut.com/settings/api">https://sandbox-business.revolut.com/settings/api</a>
+<a href="https://business.revolut.com/settings/api">https://business.revolut.com/settings/api</a>
 <br/><br/>
 
   </div>
