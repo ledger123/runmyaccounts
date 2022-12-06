@@ -159,21 +159,26 @@ get 'accounts' => sub ($c) {
         -class => 'table table-border',
         -head  => [qw/transactions currency name balance state public/],
     );
+    $dbs->query("DELETE FROM revolut_accounts");
     for my $item ( @{$hash} ) {
         if ($item->{balance}){
-        $table_data->addRow(
-            "<a href=$defaults{sql_ledger_path}/revolut/index.pl/transactions?account=$item->{id}>Transactions</a>",
-            $item->{currency},
-            $item->{name},
-            $c->nf->format_price($item->{balance}, 2),
-            $item->{state},
-            $item->{public},
-        );
+            $table_data->addRow(
+                "<a href=$defaults{sql_ledger_path}/revolut/index.pl/transactions?account=$item->{id}>Transactions</a>",
+                $item->{currency},
+                $item->{name},
+                $c->nf->format_price($item->{balance}, 2),
+                $item->{state},
+                $item->{public},
+            );
+            $dbs->query("
+                INSERT INTO revolut_accounts (id, curr, name, balance) VALUES (?,?,?,?)",
+                $item->{id}, $item->{currency}, $item->{name}, $item->{balance}
+            );
+            $dbs->commit;
         }
     }
     my $tablehtml   = $table_data;
-    my $hash_pretty = format_pretty( $hash, { linum => 1 } );
-
+    my $hash_pretty = format_pretty( $hash, { linum => 1 } ); 
     $c->render( template => 'accounts', hash_pretty => '', tablehtml => $tablehtml, defaults => \%defaults );
 
 };
@@ -196,8 +201,9 @@ any 'transactions' => sub ($c) {
     $params->{to}      = '2022-08-30'                           if !$params->{to};
     $params->{import}  = 'NO'                                   if !$params->{import};
 
-    my @chart1 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 1")->arrays;
-    my @chart2 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 1")->arrays;
+    my @accounts = $dbs->query("SELECT id, curr FROM revolut_accounts ORDER BY 1")->arrays;
+    my @chart1 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
+    my @chart2 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
 
     my $form1 = CGI::FormBuilder->new(
         method    => 'post',
@@ -207,12 +213,11 @@ any 'transactions' => sub ($c) {
         selectnum => 1,
         fields    => [qw(account from to bank_account clearing_account import)],
         required  => [qw()],
-        options   => { import             => [qw(NO YES)], bank_account => \@chart1, clearing_account => \@chart2 },
+        options   => { import             => [qw(NO YES)], account => \@accounts, bank_account => \@chart1, clearing_account => \@chart2 },
         messages  => { form_required_text => '', },
         values    => $params,
         submit    => [qw(Continue)],
     );
-    $form1->field( name => "account", size => "50" );
 
     my $form1html;
     my $msg;
@@ -380,7 +385,6 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 <br/>
 <%== $form1html %>
 <br/>
-<div class="h3">Account: <%= $account %></div>
 <%== $tablehtml %>
 <pre>
 <%== $hash_pretty %>
@@ -424,7 +428,7 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 
       <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/accounts">Accounts</a>
-        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/counterparties">Counter Parties</a>
+        <!-- <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/counterparties">Counter Parties</a> -->
         <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/transactions">Transactions</a>
       </nav>
     </div>
