@@ -1,4 +1,5 @@
 <body class="bill"> <!-- Test 2 -->
+<%pdf_button%>
 
 <h2 align=center>
 <%company%>
@@ -21,7 +22,7 @@
 
 <%foreach asset_account%>
 <tr>
-  <td><%asset_account%></td>
+  <td align=left><%asset_account%></td>
   <td align=right><%asset_this_period%></td>
   <td align=right><%asset_last_period%></td>
 </tr>
@@ -38,7 +39,7 @@
 </tr>
 <%foreach liability_account%>
 <tr>
-  <td><%liability_account%></td>
+  <td align=left><%liability_account%></td>
   <td align=right><%liability_this_period%></td>
   <td align=right><%liability_last_period%></td>
 </tr>
@@ -55,7 +56,7 @@
 
 <%foreach equity_account%>
 <tr>
-  <td><%equity_account%></td>
+  <td align=left><%equity_account%></td>
   <td align=right><%equity_this_period%></td>
   <td align=right><%equity_last_period%></td>
 </tr>
