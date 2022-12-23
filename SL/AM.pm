@@ -1551,7 +1551,7 @@ sub taxes {
   my $dbh = $form->dbconnect($myconfig);
 
   my $query = qq|SELECT c.id, c.accno, c.description,
-              t.rate * 100 AS rate, t.taxnumber, t.validto,
+              t.rate * 100 AS rate, t.taxnumber, t.validto, t.reversecharge, t.taxtype, t.reversecharge, t.taxtype,
 	      l.description AS translation
               FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)
@@ -1586,11 +1586,13 @@ sub save_taxes {
 	print STDERR "$i " . $form->{"taxrate_$i"} . "\n";
     if ( $form->{"taxrate_$i"} ne "" ) {
       my $rate = $form->parse_amount($myconfig, $form->{"taxrate_$i"}) / 100;
-      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto)
+      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto, reversecharge, taxtype)
                   VALUES ($chart_id, $rate, |
 		  .$dbh->quote($form->{"taxnumber_$i"}).qq|, |
-		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE)
-		  .qq|)|;
+		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE).qq|, |
+		  .$dbh->quote($form->{"reversecharge_$i"}). qq|, |
+		  .$dbh->quote($form->{"taxtype_$i"}).qq|
+      )|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
