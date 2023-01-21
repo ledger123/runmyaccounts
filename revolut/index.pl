@@ -20,6 +20,7 @@ my $dbs = "";
 helper dbs => sub {
     my ( $c, $dbname ) = @_;
     if ($dbname) {
+
         #my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost", 'postgres', '' ) or die $DBI::errstr;
         my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname", 'postgres', '' ) or die $DBI::errstr;
         $dbs = DBIx::Simple->connect($dbh);
@@ -29,15 +30,13 @@ helper dbs => sub {
     }
 };
 
-
 helper nf => sub {
     return my $nf = new Number::Format( -int_curr_symbol => '' );
 };
 
-
 sub _refresh_session {
 
-    my ($c, $dbname, $defaults) = @_;
+    my ( $c, $dbname, $defaults ) = @_;
 
     my $dbs = $c->dbs($dbname);
 
@@ -59,10 +58,9 @@ sub _refresh_session {
     my $code = $res->code;
     my $body = $res->body;
     my $hash = decode_json($body);
-    $c->session->{access_token}     = $hash->{access_token};
-    $c->session->{dbname}           = $dbname;
+    $c->session->{access_token} = $hash->{access_token};
+    $c->session->{dbname}       = $dbname;
 }
-
 
 get '/access/:dbname' => sub ($c) {
 
@@ -85,7 +83,7 @@ get '/access/:dbname' => sub ($c) {
         iss => $defaults{revolut_jwt_domain},
         sub => $defaults{revolut_client_id},
         aud => "https://revolut.com",
-        exp => time + (90 * 24 * 60 * 60),
+        exp => time + ( 90 * 24 * 60 * 60 ),
     };
 
     my $jwt_token = encode_jwt( payload => $payload, alg => 'RS256', key => \$defaults{revolut_private_key} );
@@ -93,15 +91,15 @@ get '/access/:dbname' => sub ($c) {
     my $ua      = Mojo::UserAgent->new;
     my $apicall = "$defaults{revolut_api_url}/auth/token";
     my $res;
-    if ($params->{code}){
+    if ( $params->{code} ) {
         $res = $ua->post(
-        $apicall => form => {
-            grant_type            => 'authorization_code',
-            code                  => $params->{code},
-            client_id             => $defaults{revolut_client_id},
-            client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-            client_assertion      => $jwt_token
-        }
+            $apicall => form => {
+                grant_type            => 'authorization_code',
+                code                  => $params->{code},
+                client_id             => $defaults{revolut_client_id},
+                client_assertion_type => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+                client_assertion      => $jwt_token
+            }
         )->result;
     }
 
@@ -111,14 +109,14 @@ get '/access/:dbname' => sub ($c) {
     my $msg;
     if ( $code eq '200' ) {
         $c->session( expiration => 86400 );
-        $c->session->{jwt_token}        = $jwt_token;
-        $c->session->{access_token}     = $hash->{access_token};
-        $c->session->{refresh_token}    = $hash->{refresh_token};
-        $c->session->{dbname}           = $dbname;
+        $c->session->{jwt_token}     = $jwt_token;
+        $c->session->{access_token}  = $hash->{access_token};
+        $c->session->{refresh_token} = $hash->{refresh_token};
+        $c->session->{dbname}        = $dbname;
         $dbs->query("DELETE FROM defaults WHERE fldname IN ('revolut_access_token', 'revolut_refresh_token', 'revolut_jwt_token')");
-        $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_jwt_token', $jwt_token);
-        $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_access_token', $hash->{access_token});
-        $dbs->query("INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_refresh_token', $hash->{refresh_token});
+        $dbs->query( "INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_jwt_token',     $jwt_token );
+        $dbs->query( "INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_access_token',  $hash->{access_token} );
+        $dbs->query( "INSERT INTO defaults (fldname, fldvalue) VALUES (?, ?)", 'revolut_refresh_token', $hash->{refresh_token} );
         $msg = "$code: Access granted.";
     } else {
         $msg = "$code: $hash->{error_description}.";
@@ -129,12 +127,12 @@ get '/access/:dbname' => sub ($c) {
 
 get 'accounts' => sub ($c) {
 
-    my $params       = $c->req->params->to_hash;
+    my $params = $c->req->params->to_hash;
 
     my $dbname = $c->session->{dbname};
     $dbname = $params->{dbname} if !$dbname;
 
-    my $dbs      = $c->dbs( $dbname );
+    my $dbs      = $c->dbs($dbname);
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
 
     #if (!$c->session->{access_token}){
@@ -147,8 +145,8 @@ get 'accounts' => sub ($c) {
     my $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
     my $code         = $res->code;
 
-    if ($code eq '401'){
-        &_refresh_session($c, $dbname, \%defaults);
+    if ( $code ne '200' ) {
+        &_refresh_session( $c, $dbname, \%defaults );
         $res  = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
         $code = $res->code;
     }
@@ -161,34 +159,31 @@ get 'accounts' => sub ($c) {
     );
     $dbs->query("DELETE FROM revolut_accounts");
     for my $item ( @{$hash} ) {
-        if ($item->{balance}){
+        if ( $item->{balance} ) {
             $table_data->addRow(
                 "<a href=$defaults{sql_ledger_path}/revolut/index.pl/transactions?account=$item->{id}>Transactions</a>",
-                $item->{currency},
-                $item->{name},
-                $c->nf->format_price($item->{balance}, 2),
-                $item->{state},
-                $item->{public},
+                $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
+                $item->{state},    $item->{public},
             );
-            $dbs->query("
+            $dbs->query( "
                 INSERT INTO revolut_accounts (id, curr, name, balance) VALUES (?,?,?,?)",
-                $item->{id}, $item->{currency}, $item->{name}, $item->{balance}
-            );
+                $item->{id}, $item->{currency}, $item->{name}, $item->{balance} );
             $dbs->commit;
         }
     }
     my $tablehtml   = $table_data;
-    my $hash_pretty = format_pretty( $hash, { linum => 1 } ); 
+    my $hash_pretty = format_pretty( $hash, { linum => 1 } );
     $c->render( template => 'accounts', hash_pretty => '', tablehtml => $tablehtml, defaults => \%defaults );
 
 };
 
 any 'transactions' => sub ($c) {
 
-    my $params       = $c->req->params->to_hash;
+    my $params = $c->req->params->to_hash;
 
-    if (!$c->session->{dbname}){
-        $c->render(text => 'Session timed out'); return;
+    if ( !$c->session->{dbname} ) {
+        $c->render( text => 'Session timed out' );
+        return;
     }
 
     my $dbs      = $c->dbs( $c->session->{dbname} );
@@ -202,8 +197,8 @@ any 'transactions' => sub ($c) {
     $params->{import}  = 'NO'                                   if !$params->{import};
 
     my @accounts = $dbs->query("SELECT id, curr FROM revolut_accounts ORDER BY 1")->arrays;
-    my @chart1 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
-    my @chart2 = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
+    my @chart1   = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
+    my @chart2   = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
 
     my $form1 = CGI::FormBuilder->new(
         method    => 'post',
@@ -262,10 +257,9 @@ any 'transactions' => sub ($c) {
     for my $item ( @{$hash} ) {
         my $transdate = substr( $item->{created_at}, 0, 10 );
         $table_data->addRow(
-            $transdate,
-            $item->{type},
-            $c->nf->format_price($item->{legs}->[0]->{amount},2),
-            $c->nf->format_price($item->{legs}->[0]->{balance},2),
+            $transdate, $item->{type},
+            $c->nf->format_price( $item->{legs}->[0]->{amount},  2 ),
+            $c->nf->format_price( $item->{legs}->[0]->{balance}, 2 ),
             $item->{legs}->[0]->{currency},
             $item->{legs}->[0]->{description},
             $item->{state},
@@ -274,30 +268,42 @@ any 'transactions' => sub ($c) {
         );
 
         if ( $params->{import} eq 'YES' ) {
-            my $exists = $dbs->query("SELECT id FROM gl WHERE reference = ?", $item->{id})->list;
-            if (!$exists){
+            my $exists = $dbs->query( "SELECT id FROM gl WHERE reference = ?", $item->{id} )->list;
+            if ( !$exists ) {
                 my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
+                $department_id *= 1;
+                my $curr         = $item->{legs}->[0]->{currency};
+                my $exchangerate = $dbs->query( "
+                    SELECT buy
+                    FROM exchangerate
+                    WHERE curr = ?
+                    AND transdate = ?", $curr, $transdate )->list;
+                $exchangerate *= 1;
+                $exchangerate = 1 if !$exchangerate;
                 $dbs->query( "
-                    INSERT INTO gl(reference, transdate, department_id, description) VALUES (?, ?, ?, ?)",
-                    $item->{id}, $transdate, $department_id, 'revoluttest' 
-                );
+                    INSERT INTO gl(reference, transdate, department_id, description, curr, exchangerate)
+                    VALUES (?, ?, ?, ?, ?, ?)",
+                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate )
+                  or die $dbs->error;
                 my $id = $dbs->query("SELECT max(id) FROM gl")->list;
-                $dbs->query( "
+                if ($id) {
+                    $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                    $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount}
-                );
-                $dbs->query( "
+                        $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} )
+                      or die $dbs->error;
+                    $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                    $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} * -1
-                );
-                $dbs->commit;
+                        $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} * -1 )
+                      or die $dbs->error;
+                    $dbs->commit;
+                }
             }
         }
     }
     my $tablehtml   = $table_data;
     my $hash_pretty = format_pretty( $hash, { linum => 1 } );
 
-    $c->render( 
+    $c->render(
         template    => 'transactions',
         msg         => $msg,
         defaults    => \%defaults,
@@ -310,8 +316,9 @@ any 'transactions' => sub ($c) {
 
 any 'counterparties' => sub ($c) {
 
-    if (!$c->session->{dbname}){
-        $c->render(text => 'Session timed out'); return;
+    if ( !$c->session->{dbname} ) {
+        $c->render( text => 'Session timed out' );
+        return;
     }
 
     my $dbs      = $c->dbs( $c->session->{dbname} );
@@ -337,13 +344,12 @@ any 'counterparties' => sub ($c) {
 
     my $hash_pretty = format_pretty( $hash, { linum => 1 } );
 
-    $c->render( 
+    $c->render(
         template    => 'counterparties',
         defaults    => \%defaults,
         hash_pretty => $hash_pretty
     );
 };
-
 
 app->start;
 __DATA__
