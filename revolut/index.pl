@@ -22,7 +22,7 @@ helper dbs => sub {
     if ($dbname) {
 
         #my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost", 'postgres', '' ) or die $DBI::errstr;
-        my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname", 'postgres', '' ) or die $DBI::errstr;
+        my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname", 'sql-ledger', '' ) or die $DBI::errstr;
         $dbs = DBIx::Simple->connect($dbh);
         return $dbs;
     } else {
@@ -143,16 +143,13 @@ get 'accounts' => sub ($c) {
     my $access_token = $c->session->{access_token};
     my $apicall      = "$defaults{revolut_api_url}/accounts";
     my $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
-    my $code         = $res->code;
 
-    if ( $code ne '200' ) {
+    if ( $res->is_error ) {
         &_refresh_session( $c, $dbname, \%defaults );
-        $res  = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
-        $code = $res->code;
+        $access_token = $c->session->{access_token};
+        $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
     }
-    my $body = $res->body;
-    my $hash = decode_json($body);
-
+    my $hash       = $res->json;
     my $table_data = HTML::Table->new(
         -class => 'table table-border',
         -head  => [qw/transactions currency name balance state public/],
