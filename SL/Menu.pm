@@ -26,6 +26,7 @@ sub menuitem {
 
   my $level = $form->escape($item);
   my $str = qq|<a id="menu$i" href=$module?path=$form->{path}&action=$action&level=$level&login=$form->{login}&js=$form->{js}|;
+  $str .= "&dbname=$myconfig->{dbname}" if $str =~ /revolut/;
 
   my @vars = qw(module action target href);
   

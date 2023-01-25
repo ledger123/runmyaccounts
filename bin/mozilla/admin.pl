@@ -20,6 +20,9 @@ use SL::User;
 
 
 $form = new Form;
+my $form_method = 'post';
+#my $form_method = 'get'; # For testing purposes; to see generated URLs
+
 
 $locale = new Locale $language, "admin";
 $form->{charset} = $locale->{charset};
@@ -366,6 +369,19 @@ $software
 </html>
 |;
 
+}
+
+sub mojo_admin_button {
+    my ($label, $path) = @_;
+    
+    return "\n" .
+        qq|<input type="submit" class="submit" | .
+        qq|name="action" value="| . $locale->text($label) . qq|" | .
+        qq|formmethod="$form_method" | .
+        qq|formaction="mojo.pl$path" />\n| .
+        qq|<input type="hidden" name="login" value="root login" />\n|;
+
+    # Localization: see locale/*/admin
 }
 
 
@@ -1241,6 +1257,10 @@ sub dbselect_source {
 <input type=submit class=submit name=action value="|.$locale->text('Create Dataset').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Update Dataset').qq|">
 <input type=submit class=submit name=action value="|.$locale->text('Delete Dataset').qq|">
+
+|
+    . mojo_admin_button("Backup/Restore", "/admin/backup_restore/start")
+    . qq|
 </form>
 
     </td>
@@ -1446,12 +1466,12 @@ sub create_dataset {
 
   </tr>
   
-  <tr>
+  <!-- <tr>
 
     <th align=right nowrap>LC_CTYPE/LC_COLLATE</th>
     <td><select name=ctype><option value="de_CH.ISO-8859-1" selected="selected">de_CH.ISO-8859-1</option></select></td>
 
-  </tr>
+  </tr> -->
 |;
   }
 

@@ -1,0 +1,396 @@
+/* stylesheet for sql-ledger */
+@font-face {
+    font-family: "Frutiger Neue W01 Light";
+    src: url("../fonts/12d6929b-8b96-4898-b413-6bd6d0e2d0fb.eot?#iefix");
+    src: url("../fonts/12d6929b-8b96-4898-b413-6bd6d0e2d0fb.eot?#iefix") format("eot"), url("../fonts/a2afa464-03b1-4a6c-b5cb-3521a1cf94ba.woff") format("woff"), url("../fonts/9aa255d9-7d3d-420a-bb79-2f91c4aed10f.ttf") format("truetype"), url("../fonts/b755ea1d-fab9-4588-b7a8-31350efb38f9.svg#b755ea1d-fab9-4588-b7a8-31350efb38f9") format("svg");
+}
+/* general stuff */
+a:link { color: #624c96; text-decoration: none; }
+a:visited { color: #624c96; text-decoration: none; }
+a:active { color: #624c96; text-decoration: underline; border: 1px #8673ae;   }
+/*A:hover { color: white;
+  background-color: #bbbbbb;
+  text-decoration: none;
+}*/
+
+table{
+	border-collapse: collapse;
+}
+
+body {
+  font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+  font-size: 13px;
+  background-color: white;
+  color: black;
+}
+
+td,
+th {
+  font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+  font-size: 13px;
+}
+
+/* bill */
+html body.bill {
+    background: none repeat scroll 0 0 #FFFFFF;
+}
+.bill h2 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+.bill h2 p {
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+.bill table {
+    margin: 0 auto;
+}
+.bill table th {
+    border-bottom: 2px solid #000000;
+    border-right: 4px solid #FFFFFF;
+    font-weight: bold;
+    padding: 20px 2px 5px;
+}
+.bill table th:first-child {
+    border-bottom: 2px solid #000000;
+    border-right: 4px solid #FFFFFF;
+    font-weight: bold;
+    padding: 20px 2px 5px;
+    text-align: left;
+}
+.bill table td {
+    border-bottom: 1px solid #CCCCCC;
+    border-right: 4px solid #FFFFFF;
+    padding: 5px 2px;
+}
+.bill a {
+    color: black;
+}
+
+/* login and admin */
+.login {
+  font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+}
+h1.login {
+  font-size: 10px;
+}
+th.login {
+  text-align: right;
+}
+
+body.admin {
+  background-color: #FBFFE7;
+  color: black;
+}
+
+table.login td.login a img, center a img {
+    display: none;
+}
+
+.company_logo_envelop {
+    width: 100%;
+    height: 100%;
+    background: url("../images/rma/login_background.jpg") no-repeat scroll right bottom transparent;
+}
+
+.mainpage {
+	visibility: hidden;
+}
+
+a.roadmapref {
+	font-size: 10px;
+	font-style: italic;
+}
+
+a.mainpageref {
+    background: url("../images/rma/logo-run-my-accounts.gif") no-repeat scroll center top transparent;
+    display: block;
+    height: 127px;
+    width: 248px;
+}
+
+table.login {
+    overflow: hidden;
+}
+
+/* menu stuff */
+body.menu {
+  font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+  font-size: 13px;
+  color: black;
+  background: white;
+}
+
+.menuOpen {
+	background-color: rgb(240, 240, 240);
+	color: black;
+	font-weight: bold;
+	padding: 3px 0px 5px 13px;
+    text-decoration: none;
+    border-bottom: 1px solid rgb(204, 204, 204);
+	font-size: 12px;
+	font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+	line-height: 1.4;
+	border-top: 1px solid white;
+}
+
+.menuLink,
+.menuClose {
+	background-color: white;
+	color: black;
+	font-weight: bold;
+	padding: 3px 0px 5px 13px;
+    text-decoration: none;
+	font-size: 12px;
+	font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+	border-bottom: 1px solid rgb(204, 204, 204);
+	line-height: 1.4;
+}
+
+.menuClose{
+	border-bottom: 1px solid rgb(204, 204, 204);
+}
+
+.menuLink:HOVER,
+.menuClose:HOVER {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.menuOpen:HOVER{
+	cursor: pointer;
+}
+
+.submenu .menuOpen,
+.submenu .menuClose  {	
+	background-color: rgb(240, 240, 240);
+	padding: 2px 0px 2px 13px;
+    text-decoration: none;
+	font-size: 12px;
+	font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+	font-weight: bold;
+	line-height: 1.4;
+	border-top: 1px solid white;
+}
+
+.submenu .menuClose:HOVER{
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+.submenu .menuOpen:HOVER{
+	cursor: pointer;
+}
+
+.submenu, .submenu:HOVER {
+  margin: 1px 0;
+}
+
+.submenu .menuLink {
+	background-color: rgb(240, 240, 240);
+	padding: 2px 0px 2px 18px;
+    text-decoration: none;
+	font-size: 12px;
+	font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+	font-weight: normal !important;
+	border-top: 1px solid white;
+	border-bottom: none;
+}
+
+.submenu .menuLink:HOVER {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.activeTrail{
+	background-image: url("selected_main.gif");
+	background-repeat:no-repeat;
+	padding: 3px 0px 5px 21px;
+	text-decoration: underline;
+	background-color: rgb(240, 240, 240);
+}
+
+.menuLink .activeTrail,
+.submenu .activeTrail {
+  background-image: url("selected.gif");
+  padding: 2px 0px 2px 26px !important;
+  text-decoration: underline;
+}
+
+.submenu a, .menuLink a, .submenu a:VISITED, .menuLink a:VISITED {
+   color: black;
+}
+
+.submenu a:HOVER, .menuLink a:HOVER {
+   color: black;
+}
+
+.activeTrail a, .activeTrail a:HOVER, .activeTrail a:VISITED {
+   color: black;
+}
+
+.listheading th {
+  border: 1px solid #d4d4d4;
+  text-align: left;
+}
+
+.listheading { 
+	font-size: 13px; 
+	background:linear-gradient( #ffffff, #eeeeee);
+	color: #333333;
+	height: 20px;
+}
+
+.sectionheading {
+	font-size: 13px; 
+	background-color: #CCCCCC;
+	color: black; 
+	padding: 2px;
+	height: 20px;
+}
+
+.listtop { 
+    font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+	font-size: 20px; 
+	background-color: white; 
+	color: black; 
+	text-align: left;
+	font-weight: normal;
+	border-bottom: 1px solid #53626A;
+	padding: 10px 5px;
+}
+
+A.listheading:link, A.listheading:active, A.listheading:visited {
+  color: black;
+  text-decoration: none; 
+}
+
+.listrow1 td, .listrow0 td {
+	border-left: 1px solid #d4d4d4;
+	border-right: 1px solid #d4d4d4;
+}
+
+.listrow1 td{
+	background-color: #f3f3f3;
+}
+
+.listrow1 td a, .listrow0 td a {
+	color: #624c96;
+}
+
+.listsubtotal { 
+	font-size: 13px; 
+	color: black;
+	font-weight: bold;
+}
+
+.listtotal { 
+	font-size: 13px; 
+	color: black; 
+	font-weight: bold;
+	border-top: 1px solid #d4d4d4;
+}
+
+textarea {
+  font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+  font-size: 13px;
+}
+
+input {
+  font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+  font-size: 13px;
+}
+
+table input, table textarea {
+    border-radius: 3px 3px 3px 3px;
+}
+
+input, textarea {
+    border: 1px solid #888888;
+    padding: 2px;
+}
+
+select {
+    font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+    font-size: 13px;
+}
+
+.submit, .login input submit {
+    background: #624c96;
+	font-size: 13px;
+	color: white;
+    padding: 2px 8px 2px 8px;
+    text-decoration: none;
+    text-align: center;
+    font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+    height: 22px !important;
+    border: none;
+}
+
+.submit:HOVER {
+	background-color: #8673ae;
+	cursor: pointer;
+}
+
+.checkbox, .radio {
+  font-family: "Frutiger Neue W01 Light",Arial,Geneva,sans-serif;
+  font-size: 13px;
+}
+
+.plus0 {    /* font color for negative numbers */
+  background-color: #cc0000;
+  color: white;
+  padding: 2px 10px;
+}
+
+.plus1 {
+  color: black;
+  padding: 2px 10px;
+}
+
+h2.confirm {
+  color: black;
+  font-size: 13px;
+}
+
+h2.error {
+  background-color: #cc0000;
+  color: white;
+  padding: 2px 10px;
+}
+
+
+/* media stuff */
+
+@media screen {
+  .noscreen {   /* items with this class won't display */
+    display: none;
+  }
+}
+
+@media print {
+  .noprint {   /* items with this class won't print */
+    display: none;
+  }
+}
+
+.service_portal_warning {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.service_portal_warning a {
+	color: black;
+	text-decoration: underline;
+}
+
+.dberror {
+	display: none;
+}
+
+.redirectmsg { color: white; background: #009ED9; padding: 2px 0px; }
+
+---------------------------------------------------------------------------

@@ -1,0 +1,70 @@
+#!/bin/bash
+
+SCRIPT=$(realpath $0)
+cd $(dirname $SCRIPT)
+
+
+COMPOSE="docker-compose -f web.local.yml -f db.local.yml"
+
+case $1 in
+    up)
+	$COMPOSE up -d --build --force-recreate
+	;;
+    down)
+	$COMPOSE down
+	;;
+    update)
+	for i in $(find . -name Dockerfile |xargs sed -rn 's/^FROM (.*)/\1/gp')
+	do
+	    docker pull $i
+	done
+
+	$SCRIPT up
+	;;
+    logs)
+	shift
+	$COMPOSE logs "$@"
+	;;
+    setup)
+	shift
+	$COMPOSE exec web ledgersetup.pl --initweb --setup $1 "$@"
+	;;
+    query)
+	shift
+	$COMPOSE exec web ledgerquery.pl "$@"
+	;;
+    bash)
+	$COMPOSE exec $2 bash
+	;;
+    reset)
+	$SCRIPT down
+	rm -rfv ../../{users,spool}
+	. .env
+	docker volume rm ${COMPOSE_PROJECT_NAME}_pg_data
+	;;
+    *)
+	cat <<EOF 1>&2 
+Usage: $0 COMMAND
+
+Where COMMAND is one of:
+    up                       (Re)build and (re)create containers
+
+    down                     Bring everything down
+
+    update                   Pull base images and rebuild
+
+    logs                     Show logs
+
+    setup <CONFIG>           Perform setup
+
+    query <USERNAME> <YAML/KEY> [<BIND_PARAMS>...]
+                             SQL-query (see mojo/lib/SL/Model/SQL/resources)
+
+    bash web|db              Start a bash in web or db container
+
+    reset                    down + cleanup + rm volume
+EOF
+
+	exit 1
+	;;
+esac

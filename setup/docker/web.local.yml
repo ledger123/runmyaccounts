@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  web:
+    image: local/rmac/web
+    build:
+      context: build/web
+      args:
+        LEDGER_DOCUMENT_ROOT:      ${LEDGER_DOCUMENT_ROOT}
+        LEDGER_APACHE_RUN_USER:    ${LEDGER_APACHE_RUN_USER}
+        LEDGER_APACHE_RUN_USERID:  ${LEDGER_APACHE_RUN_USERID}
+        LEDGER_APACHE_RUN_GROUP:   ${LEDGER_APACHE_RUN_GROUP}
+        LEDGER_APACHE_RUN_GROUPID: ${LEDGER_APACHE_RUN_GROUPID}
+    ports:
+      - ${LEDGER_PORT}:80
+    networks:
+      - private
+    volumes:
+      - ../..:/srv/www/sql-ledger
+
+networks:
+  private:

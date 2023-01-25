@@ -2466,6 +2466,28 @@ sub defaults {
 	  <th align=right nowrap>|.$locale->text('Transition Account').qq|</th>
 	  <td><input name=transitionaccount size=15 value="$form->{transitionaccount}"></td>
 	</tr>
+    <tr valign=top>
+        <th align=right>| . $locale->text('Revolut Client ID') . qq|</th>
+        <td><input name=revolut_client_id size=50 value="$form->{revolut_client_id}"></td>
+    </tr>
+    <tr valign=top>
+        <th align=right>| . $locale->text('Revolut Private Key') . qq|</th>
+        <td><textarea name=revolut_private_key rows=5 cols=50>$form->{revolut_private_key}</textarea></td>
+    </tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Revolut API URL').qq|</th>
+	  <td><input name=revolut_api_url size=50 value="$form->{revolut_api_url}"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Revolut JWT Domain').qq|</th>
+	  <td><input name=revolut_jwt_domain size=30 value="$form->{revolut_jwt_domain}"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('SQL-Ledger Path').qq|</th>
+	  <td><input name=sql_ledger_path size=20 value="$form->{sql_ledger_path}"></td>
+	</tr>
+
+
       </table>
     </td>
   </tr>
@@ -3354,11 +3376,13 @@ sub company_logo {
 </pre>
 <div class="mainpage">
 <center>
-<a class="mainpageref" href="http://www.runmyaccounts.com" target="_blank"><img src=$images/sql-ledger.gif border=0></a>
+<a class="mainpageref" href="http://www.sql-ledger-network.com" target="_blank"><img src=$images/sql-ledger.gif border=0></a>
 <h1 class=login>|.$locale->text('Version').qq| $release</h1>
+<!--
 <p>
 <a class="roadmapref" href="$roadmap" target="_blank">roadmap</a>
 </p>
+-->
 <br/>
 <h1 class=login>
 $form->{company}

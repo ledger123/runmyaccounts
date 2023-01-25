@@ -1,0 +1,24 @@
+version: "3"
+
+services:
+  web:
+    environment:
+      LEDGER_POSTGRES_USER: ${LEDGER_POSTGRES_USER}
+    volumes:
+      - ${LEDGERSETUP_DUMP_PATH:-/tmp/ledgersetup/dumps}:/ledgersetup/dumps:ro
+      - ${LEDGERSETUP_CONFIG_PATH:-/tmp/ledgersetup/configs}:/ledgersetup/configs:ro
+  
+  db:
+    environment:
+      LEDGER_POSTGRES_USER: ${LEDGER_POSTGRES_USER}
+    image: local/rmac/db
+    build:
+      context: build/db
+    networks:
+      - private
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+
+volumes:
+  pg_data:
