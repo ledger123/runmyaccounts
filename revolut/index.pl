@@ -278,9 +278,9 @@ any 'transactions' => sub ($c) {
                 $exchangerate *= 1;
                 $exchangerate = 1 if !$exchangerate;
                 $dbs->query( "
-                    INSERT INTO gl(reference, transdate, department_id, description, curr, exchangerate)
-                    VALUES (?, ?, ?, ?, ?, ?)",
-                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate )
+                    INSERT INTO gl(reference, transdate, department_id, description, curr, exchangerate, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate, $c->dumper($item) )
                   or die $dbs->error;
                 my $id = $dbs->query("SELECT max(id) FROM gl")->list;
                 if ($id) {
