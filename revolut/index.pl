@@ -194,8 +194,9 @@ any 'transactions' => sub ($c) {
     $params->{import}  = 'NO'                                   if !$params->{import};
 
     my @accounts = $dbs->query("SELECT id, curr FROM revolut_accounts ORDER BY 1")->arrays;
+    my $selectedaccount = $dbs->query("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount'")->list;
     my @chart1   = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
-    my @chart2   = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
+    my @chart2   = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount)->arrays;
 
     my $form1 = CGI::FormBuilder->new(
         method    => 'post',
@@ -277,10 +278,14 @@ any 'transactions' => sub ($c) {
                     AND transdate = ?", $curr, $transdate )->list;
                 $exchangerate *= 1;
                 $exchangerate = 1 if !$exchangerate;
+                my $notes;
+                $notes .= $c->dumper($item->{merchant});
+                $notes .= "\n";
+                $notes .= $c->dumper($item->{card});
                 $dbs->query( "
                     INSERT INTO gl(reference, transdate, department_id, description, curr, exchangerate, notes)
                     VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate, $c->dumper($item) )
+                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate, $notes )
                   or die $dbs->error;
                 my $id = $dbs->query("SELECT max(id) FROM gl")->list;
                 if ($id) {
@@ -307,7 +312,7 @@ any 'transactions' => sub ($c) {
         form1html   => $form1html,
         account     => $params->{account},
         tablehtml   => $tablehtml,
-        hash_pretty => '',
+        hash_pretty => $hash_pretty,
     );
 };
 
