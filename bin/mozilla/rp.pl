@@ -3225,7 +3225,7 @@ sub do_print_reminder {
 	);
 
 	@a =
-	  qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber);
+	  qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";
 	push @a, 'email' if !$form->{media} eq 'email';
