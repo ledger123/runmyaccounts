@@ -278,14 +278,11 @@ any 'transactions' => sub ($c) {
                     AND transdate = ?", $curr, $transdate )->list;
                 $exchangerate *= 1;
                 $exchangerate = 1 if !$exchangerate;
-                my $notes;
-                $notes .= $c->dumper($item->{merchant});
-                $notes .= "\n";
-                $notes .= $c->dumper($item->{card});
+                my $transjson = encode_json($item);
                 $dbs->query( "
-                    INSERT INTO gl(reference, transdate, department_id, description, curr, exchangerate, notes)
+                    INSERT INTO gl(reference, transdate, department_id, description, curr, exchangerate, transjson)
                     VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate, $notes )
+                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate, $transjson )
                   or die $dbs->error;
                 my $id = $dbs->query("SELECT max(id) FROM gl")->list;
                 if ($id) {
