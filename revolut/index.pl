@@ -284,7 +284,7 @@ any 'transactions' => sub ($c) {
                     VALUES (?, ?, ?, ?, ?, ?, ?)",
                     $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate, $transjson )
                   or die $dbs->error;
-                my $id = $dbs->query("SELECT max(id) FROM gl")->list;
+                my $id = $dbs->query("SELECT id FROM gl WHERE reference = ?", $item->{id})->list;
                 if ($id) {
                     $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",

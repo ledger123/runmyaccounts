@@ -2292,6 +2292,20 @@ sub form_footer {
         &menubar;
     }
 
+    if ($form->{id}){
+        use JSON::XS;
+        use Data::Format::Pretty::JSON qw(format_pretty);
+
+        use DBIx::Simple;
+        my $dbh = $form->dbconnect(\%myconfig);
+        my $dbs = DBIx::Simple->connect($dbh);
+        my $transjson = $dbs->query("SELECT transjson FROM gl WHERE id = ?", $form->{id})->list;
+
+        my $hash = decode_json($transjson);
+        my $hash_pretty = format_pretty( $hash, { linum => 1 } );
+        print "<pre>$hash_pretty</pre>";
+    }
+
     print qq|
   </form>
 
