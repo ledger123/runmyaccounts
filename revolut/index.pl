@@ -214,9 +214,6 @@ any 'transactions' => sub ($c) {
 
     my $form1html;
     my $msg;
-    if ( $params->{import} eq 'YES' ) {
-        $msg = "Transactions imported into SQL-Ledger.";
-    }
 
     $form1html = $form1->render;
     if ( $params->{"_submitted"} ) {
@@ -266,8 +263,9 @@ any 'transactions' => sub ($c) {
         );
 
         if ( $params->{import} eq 'YES' ) {
-            my $exists = $dbs->query( "SELECT id FROM gl WHERE reference = ?", $item->{id} )->list;
+            my ($exists, $reference) = $dbs->query( "SELECT id, reference FROM gl WHERE reference = ?", $item->{id} )->list;
             if ( !$exists ) {
+                $msg .= "Adding $reference ...<br/>";
                 my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
                 $department_id *= 1;
                 my $curr         = $item->{legs}->[0]->{currency};
@@ -280,9 +278,9 @@ any 'transactions' => sub ($c) {
                 $exchangerate = 1 if !$exchangerate;
                 my $transjson = encode_json($item);
                 $dbs->query( "
-                    INSERT INTO gl(reference, transdate, department_id, description, curr, exchangerate, transjson)
+                    INSERT INTO gl(reference, transdate, department_id, curr, exchangerate, transjson)
                     VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    $item->{id}, $transdate, $department_id, 'revoluttest', $curr, $exchangerate, $transjson )
+                    $item->{id}, $transdate, $department_id, $curr, $exchangerate, $transjson )
                   or die $dbs->error;
                 my $id = $dbs->query("SELECT id FROM gl WHERE reference = ?", $item->{id})->list;
                 if ($id) {
@@ -296,6 +294,8 @@ any 'transactions' => sub ($c) {
                       or die $dbs->error;
                     $dbs->commit;
                 }
+            } else {
+                $msg .= "Already added $reference ...<br/>";
             }
         }
     }
@@ -386,7 +386,7 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
     <h1 class="display-4 fw-normal">Transactions List</h1>
     <p class="fs-5 text-muted">Transactions List</p>
 </div>
-<div><%= $msg %></div>
+<div><%== $msg %></div>
 <br/>
 <%== $form1html %>
 <br/>
