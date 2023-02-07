@@ -39,6 +39,7 @@ insert into defau (fldname, fldvalue) values ('sonumber', (select sonumber from 
 insert into defau (fldname, fldvalue) values ('yearend', (select yearend from defaults));
 insert into defau (fldname, fldvalue) values ('weightunit', (select weightunit from defaults));
 insert into defau (fldname, fldvalue) values ('businessnumber', (select businessnumber from defaults));
+insert into defau (fldname, fldvalue) values ('taxnumber', (select taxnumber from defaults));
 insert into defau (fldname, fldvalue) values ('version', (select version from defaults));
 insert into defau (fldname, fldvalue) values ('currencies', (select curr from defaults));
 insert into defau (fldname, fldvalue) values ('closedto', (select closedto from defaults));

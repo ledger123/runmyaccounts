@@ -247,6 +247,7 @@ $self{texts} = {
   'Tax'                         => 'Steuer',
   'Taxable'                     => 'Steuerpflichtig',
   'Taxes'                       => 'Steuern',
+  'Tax Number'                  => 'Steuernummer',
   'Taxes saved!'                => 'Steuern gespeichert!',
   'Template saved!'             => 'Vorlage gespeichert!',
   'Times'                       => 'mal',
