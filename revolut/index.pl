@@ -264,6 +264,10 @@ any 'transactions' => sub ($c) {
 
         if ( $params->{import} eq 'YES' ) {
             my ($exists, $reference) = $dbs->query( "SELECT id, reference FROM gl WHERE reference = ?", $item->{id} )->list;
+            if ($exists){
+                $dbs->query("DELETE FROM acc_trans WHERE trans_id = ?", $exists);
+                $dbs->query("DELETE FROM gl WHERE id = ?", $exists);
+            }
             if ( !$exists ) {
                 $msg .= "Adding $reference ...<br/>";
                 my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
@@ -279,7 +283,7 @@ any 'transactions' => sub ($c) {
                 my $transjson = encode_json($item);
                 $dbs->query( "
                     INSERT INTO gl(reference, transdate, department_id, curr, exchangerate, transjson)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    VALUES (?, ?, ?, ?, ?, ?)",
                     $item->{id}, $transdate, $department_id, $curr, $exchangerate, $transjson )
                   or die $dbs->error;
                 my $id = $dbs->query("SELECT id FROM gl WHERE reference = ?", $item->{id})->list;
