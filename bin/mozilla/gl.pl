@@ -2295,15 +2295,21 @@ sub form_footer {
     if ($form->{id}){
         use JSON::XS;
         use Data::Format::Pretty::JSON qw(format_pretty);
-
         use DBIx::Simple;
         my $dbh = $form->dbconnect(\%myconfig);
         my $dbs = DBIx::Simple->connect($dbh);
         my $transjson = $dbs->query("SELECT transjson FROM gl WHERE id = ?", $form->{id})->list;
 
-        my $hash = decode_json($transjson);
-        my $hash_pretty = format_pretty( $hash, { linum => 1 } );
-        print "<pre>$hash_pretty</pre>";
+        if ($transjson){
+            my $hash = decode_json($transjson);
+            $hash_pretty .= format_pretty( $hash->{type}, { linum => 0 } );
+            $hash_pretty .= format_pretty( $hash->{card}, { linum => 0 } );
+            $hash_pretty .= format_pretty( $hash->{merchant}, { linum => 0 } );
+            $hash_pretty =~ s/"//g;
+            $hash_pretty =~ s/{//g;
+            $hash_pretty =~ s/}//g;
+            print "<pre>$hash_pretty</pre>";
+        }
     }
 
     print qq|
