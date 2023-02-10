@@ -1684,9 +1684,16 @@ sub reminder {
   my $item;
   my $curr;
 
-  my @a = qw(company companyemail companywebsite address businessnumber tel fax precision);
+  my @a = qw(company companyemail companywebsite address address1 address2 city state zip country businessnumber tel fax precision);
   my %defaults = $form->get_defaults($dbh, \@a);
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
+
+  $form->{companyaddress1} = $defaults{address1};
+  $form->{companyaddress2} = $defaults{address2};
+  $form->{companycity} = $defaults{city};
+  $form->{companystate} = $defaults{state};
+  $form->{companyzip} = $defaults{zip};
+  $form->{companycountry} = $defaults{country};
 
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
 
