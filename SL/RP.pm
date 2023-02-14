@@ -1818,6 +1818,10 @@ sub reminder {
 	$ref->{exchangerate} ||= 1;
 	$ref->{language_code} = $item->{language_code};
 
+      $ref->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
+      $ref->{strdbkginf}  = substr($ref->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
+      $ref->{strdbkginf} = $form->string_replace($ref->{strdbkginf}, "%", "");
+
     ($whole, $decimal) = split /\./, $ref->{due};
     $ref->{out_decimal} = substr("${decimal}00", 0, 2);
     $ref->{integer_out_amount} = $whole;
@@ -1834,6 +1838,7 @@ sub reminder {
 
         if (! $found) {
 	  $ref->{level}++;
+
 	  push @{ $form->{AG} }, $ref;
 	}
       }
