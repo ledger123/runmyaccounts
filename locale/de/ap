@@ -278,6 +278,7 @@ $self{subs} = {
   'zeitplan_speichern'          => 'save_schedule',
   'buchungstermine'             => 'schedule',
   'erneuern'                    => 'update',
+  'aktualisieren'               => 'update',
   'eingangsrechnung_'           => 'vendor_invoice_',
   'ja'                          => 'yes',
 };
