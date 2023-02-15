@@ -290,11 +290,11 @@ any 'transactions' => sub ($c) {
                 if ($id) {
                     $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                        $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} )
+                        $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount}*-1 )
                       or die $dbs->error;
                     $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                        $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} * -1 )
+                        $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} )
                       or die $dbs->error;
                     $dbs->commit;
                 }
