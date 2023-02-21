@@ -3225,7 +3225,7 @@ sub do_print_reminder {
 	);
 
 	@a =
-	  qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr);
+	  qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";
 	push @a, 'email' if !$form->{media} eq 'email';
@@ -3304,6 +3304,7 @@ sub do_print_reminder {
 			  $form->format_amount( \%myconfig,
 				$ref->{due} / $ref->{exchangerate},
 				$form->{precision} );
+            $form->{total} = $form->{due};
 			$form->{integer_out_amount} = $ref->{integer_out_amount};
 			$form->{out_decimal}        = $ref->{out_decimal};
 
