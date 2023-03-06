@@ -1817,6 +1817,7 @@ sub reminder {
 	$ref->{module} = 'ps' if $ref->{till};
 	$ref->{exchangerate} ||= 1;
 	$ref->{language_code} = $item->{language_code};
+    $form->{invnumber} = $ref->{invnumber};
 
       $ref->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
       $ref->{strdbkginf}  = substr($ref->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
