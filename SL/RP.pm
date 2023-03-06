@@ -1818,6 +1818,9 @@ sub reminder {
 	$ref->{exchangerate} ||= 1;
 	$ref->{language_code} = $item->{language_code};
     $form->{invnumber} = $ref->{invnumber};
+    $form->{terms} = $ref->{terms};
+    $form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
+    $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 
       $ref->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
       $ref->{strdbkginf}  = substr($ref->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
@@ -1848,7 +1851,7 @@ sub reminder {
     }
   }
 
-  #$form->info("<pre>"); for my $row (@{$form->{AG}}){ for (qw(invnumber bankname qriban strdbkginf invoicedescriptionqr)) { print "$_: $row->{$_}\n" } print "\n\n" }
+  $form->info("<pre>"); for my $row (@{$form->{AG}}){ for (qw(invnumber bankname qriban strdbkginf invoicedescriptionqr)) { print "$_: $row->{$_}\n" } print "\n\n" }
 
   # get language
   $form->all_languages($myconfig, $dbh);
