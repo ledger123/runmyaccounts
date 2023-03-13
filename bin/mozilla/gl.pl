@@ -2382,6 +2382,7 @@ sub post {
     # Process per line tax information
     $count = $form->{rowcount};
     for my $i ( 1 .. $form->{rowcount} ) {
+        for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
         if ( $form->{"taxamount_$i"} ) {
             $j                  = $count++;
             $form->{"accno_$j"} = $form->{"tax_$i"};
@@ -2390,8 +2391,6 @@ sub post {
             $form->{"source_$j"}        = $form->{"source_$i"};
             $form->{"memo_$j"}          = $form->{"memo_$i"};
             $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
-
-            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
             if ( $form->{"debit_$i"} ) {
                 $form->{"debit_$i"} -= $form->{"taxamount_$i"};
