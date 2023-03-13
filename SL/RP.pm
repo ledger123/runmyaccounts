@@ -1817,6 +1817,10 @@ sub reminder {
 	$ref->{module} = 'ps' if $ref->{till};
 	$ref->{exchangerate} ||= 1;
 	$ref->{language_code} = $item->{language_code};
+    $form->{invnumber} = $ref->{invnumber};
+    $form->{terms} = $ref->{terms};
+    $form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
+    $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 
       $ref->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
       $ref->{strdbkginf}  = substr($ref->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
