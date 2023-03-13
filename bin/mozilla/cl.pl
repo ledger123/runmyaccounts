@@ -70,14 +70,14 @@ sub list_trans {
       ORDER BY accno
     ")->hashes;
     my $selectaccno = "<option>\n";
-    for (@chart){ $selectaccno .= "<option value=$_->{id}>$_->{descrip}\n" }
+    for (@chart){ $selectaccno .= "<option>$_->{descrip}\n" }
 
     print qq|<form action="$form->{script}" method="post">
     <table><tr><td>|;
     print $table->output;
     print qq|</td><td>
 <table><tr>
-<th align="right">|.$locale->text('GL Account').qq|</th><td><select name=gl_account_id>$selectaccno</select></td>
+<th align="right">|.$locale->text('GL Account').qq|</th><td><select name=gl_account>$selectaccno</select></td>
 </tr></table>
 </td></tr></table>
 |;
@@ -289,6 +289,11 @@ sub book_selected_transactions {
     use DBIx::Simple;
     my $dbh = $form->dbconnect(\%myconfig);
     my $dbs = DBIx::Simple->connect($dbh);
+    if ($form->{gl_account}){ 
+        my ($accno, $description) = split /--/, $form->{gl_account};
+        $form->{gl_account_id} = $dbs->query("SELECT id FROM chart WHERE accno = ?", $accno)->list;
+        die "$form->{gl_account_id}--$accno";
+    }
 
     $form->header(0, 0, $locale);
     print qq|<h1>Final step: Clearing Account Adjustment</h1>|;
