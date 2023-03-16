@@ -20,8 +20,6 @@ my $dbs = "";
 helper dbs => sub {
     my ( $c, $dbname ) = @_;
     if ($dbname) {
-
-        #my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost", 'postgres', '' ) or die $DBI::errstr;
         my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname", 'sql-ledger', '' ) or die $DBI::errstr;
         $dbs = DBIx::Simple->connect($dbh);
         return $dbs;
@@ -127,25 +125,23 @@ get '/access/:dbname' => sub ($c) {
 
 get 'accounts' => sub ($c) {
 
+    our %myconfig;
     my $params = $c->req->params->to_hash;
+    my $login  = $params->{login};
 
-    my $dbname = $c->session->{dbname};
-    $dbname = $params->{dbname} if !$dbname;
+    eval { require "./users/$login.conf" };
+    if ($@) { die "cannot load user config for $login: $@" }
+    $c->session->{myconfig} = \%myconfig;
 
-    my $dbs      = $c->dbs($dbname);
-    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
-
-    #if (!$c->session->{access_token}){
-    #&_refresh_session($c, $dbname, \%defaults);
-    #}
-
+    my $dbs          = $c->dbs( $c->session->{myconfig}->{dbname} );
+    my %defaults     = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
     my $ua           = Mojo::UserAgent->new;
     my $access_token = $c->session->{access_token};
     my $apicall      = "$defaults{revolut_api_url}/accounts";
     my $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
 
     if ( $res->is_error ) {
-        &_refresh_session( $c, $dbname, \%defaults );
+        &_refresh_session( $c, $c->session->{myconfig}->{dbname}, \%defaults );
         $access_token = $c->session->{access_token};
         $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
     }
@@ -193,10 +189,10 @@ any 'transactions' => sub ($c) {
     $params->{to}      = '2022-08-30'                           if !$params->{to};
     $params->{import}  = 'NO'                                   if !$params->{import};
 
-    my @accounts = $dbs->query("SELECT id, curr FROM revolut_accounts ORDER BY 1")->arrays;
+    my @accounts        = $dbs->query("SELECT id, curr FROM revolut_accounts ORDER BY 1")->arrays;
     my $selectedaccount = $dbs->query("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount'")->list;
-    my @chart1   = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
-    my @chart2   = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount)->arrays;
+    my @chart1          = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
+    my @chart2          = $dbs->query( "SELECT id, accno || '--' || description FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->arrays;
 
     my $form1 = CGI::FormBuilder->new(
         method    => 'post',
@@ -263,10 +259,10 @@ any 'transactions' => sub ($c) {
         );
 
         if ( $params->{import} eq 'YES' ) {
-            my ($exists, $reference) = $dbs->query( "SELECT id, reference FROM gl WHERE reference = ?", $item->{id} )->list;
-            if ($exists){
-                $dbs->query("DELETE FROM acc_trans WHERE trans_id = ?", $exists);
-                $dbs->query("DELETE FROM gl WHERE id = ?", $exists);
+            my ( $exists, $reference ) = $dbs->query( "SELECT id, reference FROM gl WHERE reference = ?", $item->{id} )->list;
+            if ($exists) {
+                $dbs->query( "DELETE FROM acc_trans WHERE trans_id = ?", $exists );
+                $dbs->query( "DELETE FROM gl WHERE id = ?",              $exists );
             }
             if ( !$exists ) {
                 $msg .= "Adding $reference ...<br/>";
@@ -286,11 +282,11 @@ any 'transactions' => sub ($c) {
                     VALUES (?, ?, ?, ?, ?, ?)",
                     $item->{id}, $transdate, $department_id, $curr, $exchangerate, $transjson )
                   or die $dbs->error;
-                my $id = $dbs->query("SELECT id FROM gl WHERE reference = ?", $item->{id})->list;
+                my $id = $dbs->query( "SELECT id FROM gl WHERE reference = ?", $item->{id} )->list;
                 if ($id) {
                     $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                        $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount}*-1 )
+                        $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} * -1 )
                       or die $dbs->error;
                     $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
@@ -454,7 +450,7 @@ To manage your revolut connection visit:
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
-% my $debug = 0;
+% my $debug = 1;
 % if ($debug){
 <h2 class='listheading'>Session:</h2>
 <pre>
