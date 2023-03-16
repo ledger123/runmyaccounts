@@ -132,6 +132,7 @@ get 'accounts' => sub ($c) {
     eval { require "./users/$login.conf" };
     if ($@) { die "cannot load user config for $login: $@" }
     $c->session->{myconfig} = \%myconfig;
+    $c->session->{myconfig}->{login} = $login;
 
     my $dbs          = $c->dbs( $c->session->{myconfig}->{dbname} );
     my %defaults     = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
@@ -154,7 +155,7 @@ get 'accounts' => sub ($c) {
     for my $item ( @{$hash} ) {
         if ( $item->{balance} ) {
             $table_data->addRow(
-                "<a href=$defaults{sql_ledger_path}/revolut/index.pl/transactions?account=$item->{id}>Transactions</a>",
+                "<a href=".$c->url_for('/transactions')->query(account => $item->{id}).">Transactions</a>",
                 $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
                 $item->{state},    $item->{public},
             );
@@ -196,7 +197,7 @@ any 'transactions' => sub ($c) {
 
     my $form1 = CGI::FormBuilder->new(
         method    => 'post',
-        action    => "$defaults{sql_ledger_path}/revolut/index.pl/transactions",
+        action    => 'transactions',
         method    => 'post',
         table     => 1,
         selectnum => 1,
@@ -430,14 +431,11 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
       <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
         <span class="fs-4">Revolut</span>
       </a>
-
       <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
-        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/accounts">Accounts</a>
-        <!-- <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/counterparties">Counter Parties</a> -->
-        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= $defaults->{sql_ledger_path} %>/revolut/index.pl/transactions">Transactions</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= url_for('/accounts')->query(login => $c->session->{myconfig}->{login}) %>">Accounts</a>
+        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= url_for('/transactions')->query(login => $c->session->{myconfig}->{login}) %>">Transactions</a>
       </nav>
     </div>
-
   </header>
 
     <%= content %>
@@ -448,7 +446,7 @@ To manage your revolut connection visit:
 
   </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
 % my $debug = 1;
 % if ($debug){
