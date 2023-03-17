@@ -1813,38 +1813,114 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-	$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
-	$ref->{module} = 'ps' if $ref->{till};
-	$ref->{exchangerate} ||= 1;
-	$ref->{language_code} = $item->{language_code};
-    $form->{invnumber} = $ref->{invnumber};
-    $form->{terms} = $ref->{terms};
-    $form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
-    $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
+		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
+		$ref->{module} = 'ps' if $ref->{till};
+		$ref->{exchangerate} ||= 1;
+		$ref->{language_code} = $item->{language_code};
+	    $form->{invnumber} = $ref->{invnumber};
+	    $form->{terms} = $ref->{terms};
 
-      $ref->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
-      $ref->{strdbkginf}  = substr($ref->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
-      $ref->{strdbkginf} = $form->string_replace($ref->{strdbkginf}, "%", "");
 
-    ($whole, $decimal) = split /\./, $ref->{due};
-    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
-    $ref->{integer_out_amount} = $whole;
+		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
+		# taken from IS.pm / line 689 / method invoice_details() (to good someone made small and comprehensive sub methods and its not just one huge fucking piece of code!)
+		$form->{invnumber} = substr($ref->{invnumber}, 0, 24);
+		$form->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
+		$form->{invnumber} = $form->string_replace($form->{invnumber}, "/", ""); # QR Standard requires "/" to be escaped. We just remove it ("/" is rarely used) (See #112446)
+		$form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
+		$form->{invnumberqr} = $form->{invnumber};
+		
+		$form->{invdescriptionqr} = $form->format_line($myconfig, $ref->{invdescription});
+		$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
+		$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
+		$form->{invdescriptionqr2} = $form->{invdescriptionqr};
+		
+		$form->{qribanqr} = $ref->{qriban};
+		$form->{qribanqr} =~ s/\s//g;
+		$form->{qribanqr} = $form->string_replace($form->{qribanqr}, "%", "");
 
-	$rth->execute($ref->{id}, $curr);
-	$found = 0;
-	while (($reminder) = $rth->fetchrow_array) {
-	  $ref->{level} = substr($reminder, -1);
-	  $ref->{level}++;
-	  push @{ $form->{AG} }, $ref;
-	  $found = 1;
-	}
-	$rth->finish;
+		$form->{companyqr} = substr($form->{company},0,70);
+		$form->{companyqr} = $form->string_replace($form->{companyqr}, "%", "");
+		
+		$form->{companyaddress1qr} = substr($form->{address1},0,70);
+		$form->{companyaddress1qr} = $form->string_replace($form->{companyaddress1qr}, "%", "");
+		
+		$form->{companyzipqr} = substr($form->{zip},0,16);
+		$form->{companyzipqr} = $form->string_replace($form->{companyzipqr}, "%", "");
+		
+		$form->{companycityqr} = substr($form->{city},0,35);
+		$form->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
+		
+		$form->{nameqr} = substr($form->{name},0,70);
+		$form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
+		
+		$form->{address1qr} = substr($form->{address1},0,70);
+		$form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
+		
+		$form->{zipcodeqr}  = substr($form->{zipcode},0,16);
+		$form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
+		
+		$form->{cityqr} = substr($form->{city},0,35);
+		$form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
+		
+		my @nums = $form->{businessnumber} =~ /(\d+)/g;
+		for (@nums) { $form->{businessnumberqr} .= $_ };
+		
+		$form->{swicotaxbaseqr}  = $form->{swicotaxbase};
+		$form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
+		
+		$form->{swicotaxqr}  = $form->{swicotax};
+		$form->{swicotaxqr} = $form->string_replace($form->{swicotaxqr}, "%", "");
+		
+		@taxaccounts = split (/ /, $form->{taxaccounts}); 
+		
+		for (@taxaccounts) {
+			if ($form->{"${_}_rate"}) {
+			    #$rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
+			    $rate = $form->{"${_}_rate"};
+			    $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
+			    $taxbase *= 1;
+			    $tax = $form->round_amount(($rate * $taxbase)/100,2);
+			    $rate *= 100;
+			    if ($taxbase){
+			      $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
+			    }
+			}
+		}
+	
+		chop $form->{swicotaxbaseqr};
 
-        if (! $found) {
-	  $ref->{level}++;
-
-	  push @{ $form->{AG} }, $ref;
-	}
+		$form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
+		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
+		
+		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
+		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
+		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
+		$form->{strdbkginfqr} = $form->{strdbkginf};
+		
+		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
+		$form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
+		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
+	
+	
+	    ($whole, $decimal) = split /\./, $ref->{due};
+	    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
+	    $ref->{integer_out_amount} = $whole;
+	
+		$rth->execute($ref->{id}, $curr);
+		$found = 0;
+		while (($reminder) = $rth->fetchrow_array) {
+		  $ref->{level} = substr($reminder, -1);
+		  $ref->{level}++;
+		  push @{ $form->{AG} }, $ref;
+		  $found = 1;
+		}
+		$rth->finish;
+	
+	        if (! $found) {
+		  $ref->{level}++;
+	
+		  push @{ $form->{AG} }, $ref;
+		}
       }
       $sth->finish;
 
