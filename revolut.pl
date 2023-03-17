@@ -13,6 +13,7 @@ use DBI;
 use DBD::Pg;
 use DBIx::Simple;
 use Number::Format;
+use Time::Piece;
 
 $Data::Dumper::Indent = 1;
 
@@ -160,9 +161,9 @@ any 'transactions' => sub ($c) {
 
     my $params = $c->req->params->to_hash;
 
+    $params->{from_date} = '01/08/2022'                           if !$params->{from_date};
+    $params->{to_date}   = '30/08/2022'                           if !$params->{to_date};
     $params->{account}   = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
-    $params->{from_date} = '2022-08-01'                           if !$params->{from};
-    $params->{to_date}   = '2022-08-30'                           if !$params->{to};
     $params->{import}    = 'NO'                                   if !$params->{import};
 
     if ( !$c->session->{dbname} ) {
@@ -178,8 +179,14 @@ any 'transactions' => sub ($c) {
     my @accounts        = $dbs->query("SELECT curr, id FROM revolut_accounts ORDER BY curr")->arrays;
     my @chart1          = $dbs->query("SELECT accno || '--' || description, id AS accno FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
     my @chart2          = $dbs->query( "SELECT accno || '--' || description, id AS accno FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->arrays;
-    my $apicall         = "$defaults{revolut_api_url}/transactions?";
-    $apicall .= "account=$params->{account}&from=$params->{from_date}&to=$params->{to_date}";
+
+    my $date1     = Time::Piece->strptime( $params->{from_date}, '%d/%m/%Y' );
+    my $date2     = Time::Piece->strptime( $params->{to_date},   '%d/%m/%Y' );
+    my $from_date = $date1->strftime('%Y-%m-%d');
+    my $to_date   = $date2->strftime('%Y-%m-%d');
+
+    my $apicall = "$defaults{revolut_api_url}/transactions?";
+    $apicall .= "account=$params->{account}&from=$from_date&to=$to_date";
     my $res  = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
     my $code = $res->code;
 
@@ -264,6 +271,7 @@ any 'transactions' => sub ($c) {
         msg         => $msg,
         defaults    => \%defaults,
         account     => $params->{account},
+        params      => $params,
         accounts    => \@accounts,
         chart1      => \@chart1,
         chart2      => \@chart2,
@@ -373,13 +381,13 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
             <tr>
                 <th align="right">From Date</th>
                 <td>
-                   %= text_field 'from_date', class => 'datepicker'
+                   %= text_field 'from_date', class => 'datepicker', value => $params->{from_date}
                 </td>
             </tr>
             <tr>
                 <th align="right">To Date</th>
                 <td>
-                    %= text_field 'to_date', class => 'datepicker'
+                    %= text_field 'to_date', class => 'datepicker', value => $params->{to_date}
                 </td>
             </tr>
             <tr>
