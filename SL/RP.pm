@@ -1813,12 +1813,26 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+      	
+      	
+      	# mock variables
+		$ref->{invnumber} = "INVNUMBER";
+		$ref->{transdate} = "DATE"
+		$form->{ponumber} = "ponumber"
+		$form->{swicotaxbase} = "swicotaxbase"
+		$ref->{terms} = "terms"
+      	
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
 		$ref->{language_code} = $item->{language_code};
 	    $form->{invnumber} = $ref->{invnumber};
 	    $form->{terms} = $ref->{terms};
+
+
+		
+		
+
 
 
 		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
