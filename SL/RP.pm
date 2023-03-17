@@ -1813,35 +1813,30 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-      	
-      	
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
 		$ref->{language_code} = $item->{language_code};
-	    $form->{invnumber} = $ref->{invnumber};
 	    $form->{terms} = $ref->{terms};
-
-
-		
-		
-
 
 
 		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
 		# taken from IS.pm / line 689 / method invoice_details() (to good someone made small and comprehensive sub methods and its not just one huge fucking piece of code!)
-		$form->{invnumber} = substr($ref->{invnumber}, 0, 24);
+	    $form->{invnumber} = $ref->{invnumber};
+		$form->{invnumber} = substr($form->{invnumber}, 0, 24);
 		$form->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
 		$form->{invnumber} = $form->string_replace($form->{invnumber}, "/", ""); # QR Standard requires "/" to be escaped. We just remove it ("/" is rarely used) (See #112446)
 		$form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
 		$form->{invnumberqr} = $form->{invnumber};
 		
-		$form->{invdescriptionqr} = $form->format_line($myconfig, $ref->{invdescription});
+		$form->{invdescription} = $ref->{invdescription};
+		$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
 		$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
 		$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
 		$form->{invdescriptionqr2} = $form->{invdescriptionqr};
 		
-		$form->{qribanqr} = $ref->{qriban};
+		$form->{qriban} = $ref->{qriban};
+		$form->{qribanqr} = $form->{qriban};
 		$form->{qribanqr} =~ s/\s//g;
 		$form->{qribanqr} = $form->string_replace($form->{qribanqr}, "%", "");
 
@@ -1896,7 +1891,8 @@ sub reminder {
 	
 		chop $form->{swicotaxbaseqr};
 
-		$form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
+		$form->{invdate} = $ref->{transdate};
+		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
 		$form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
