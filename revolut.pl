@@ -155,7 +155,7 @@ get 'accounts' => sub ($c) {
     for my $item ( @{$hash} ) {
         if ( $item->{balance} ) {
             $table_data->addRow(
-                "<a href=".$c->url_for('/transactions')->query(account => $item->{id}).">Transactions</a>",
+                "<a href=" . $c->url_for('/transactions')->query( account => $item->{id} ) . ">Transactions</a>",
                 $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
                 $item->{state},    $item->{public},
             );
@@ -192,29 +192,8 @@ any 'transactions' => sub ($c) {
 
     my @accounts        = $dbs->query("SELECT id, curr FROM revolut_accounts ORDER BY 1")->arrays;
     my $selectedaccount = $dbs->query("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount'")->list;
-    my @chart1          = $dbs->query("SELECT id, accno || '--' || description FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
-    my @chart2          = $dbs->query( "SELECT id, accno || '--' || description FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->arrays;
-
-    my $form1 = CGI::FormBuilder->new(
-        method    => 'post',
-        action    => 'transactions',
-        method    => 'post',
-        table     => 1,
-        selectnum => 1,
-        fields    => [qw(account from to bank_account clearing_account import)],
-        required  => [qw()],
-        options   => { import             => [qw(NO YES)], account => \@accounts, bank_account => \@chart1, clearing_account => \@chart2 },
-        messages  => { form_required_text => '', },
-        values    => $params,
-        submit    => [qw(Continue)],
-    );
-
-    my $form1html;
-    my $msg;
-
-    $form1html = $form1->render;
-    if ( $params->{"_submitted"} ) {
-    }
+    my @chart1          = $dbs->query("SELECT id, accno || '--' || description AS accno FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->hashes;
+    my @chart2          = $dbs->query( "SELECT id, accno || '--' || description AS accno FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->hashes;
 
     my $apicall = "$defaults{revolut_api_url}/transactions?";
     $apicall .= "account=$params->{account}&from=$params->{from}&to=$params->{to}";
@@ -246,6 +225,7 @@ any 'transactions' => sub ($c) {
         -head  => [qw/date type amount balance currency description state card_number merchant_name/],
     );
 
+    my $msg;
     for my $item ( @{$hash} ) {
         my $transdate = substr( $item->{created_at}, 0, 10 );
         $table_data->addRow(
@@ -307,8 +287,9 @@ any 'transactions' => sub ($c) {
         template    => 'transactions',
         msg         => $msg,
         defaults    => \%defaults,
-        form1html   => $form1html,
         account     => $params->{account},
+        chart1      => \@chart1,
+        chart2      => \@chart2,
         tablehtml   => $tablehtml,
         hash_pretty => $hash_pretty,
     );
@@ -389,7 +370,63 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 </div>
 <div><%== $msg %></div>
 <br/>
-<%== $form1html %>
+    <%= form_for 'transactions' => method => 'POST' => begin %>
+        <table>
+            <tr>
+                <th align="right">Period</th>
+                <td>
+                    <%= select_field 'month', ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], {} %>
+                    <%= select_field 'year', [ 2007 .. 2023 ], {} %>
+                    <br>
+                    <%= radio_button 'interval', 0, checked => 'checked' %> <%= label_for 'interval', 'Current' %>
+                    <%= radio_button 'interval', 1 %> <%= label_for 'interval', 'Month' %>
+                    <%= radio_button 'interval', 3 %> <%= label_for 'interval', 'Quarter' %>
+                    <%= radio_button 'interval', 12 %> <%= label_for 'interval', 'Year' %>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <th align="right">Account</th>
+                <td>
+                    <%= text_field 'account' => '', required => 'required' %>
+                </td>
+            </tr>
+            <tr>
+                <th align="right">From Date</th>
+                <td>
+                   %= text_field 'from_date', class => 'datepicker'
+                </td>
+            </tr>
+            <tr>
+                <th align="right">To Date</th>
+                <td>
+                    %= text_field 'to_date', class => 'datepicker'
+                </td>
+            </tr>
+            <tr>
+                <th align="right">Bank Account</th>
+                <td><%= select_field 'bank_account', [ map { $_->{accno} } @$chart1 ], { id => [ map { $_->{id} } @$chart1 ], value => [ map { $_->{id} } @$chart1 ] } %></td>
+            </tr>
+            <tr>
+                <th align="right">Clearing Account</th>
+                <td><%= select_field 'clearing_account', [ map { $_->{accno} } @$chart2 ], { id => [ map { $_->{id} } @$chart2 ], value => [ map { $_->{id} } @$chart2 ] } %></td>
+            </tr>
+            <tr>
+                <th align="right">Import?</th>
+                <td>
+                    <%= check_box 'import' => 1 %>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <%= submit_button 'Submit' %>
+                </td>
+            </tr>
+        </table>
+    <% end %>
+
 <br/>
 <%== $tablehtml %>
 <pre>
@@ -419,7 +456,20 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="//code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+%= javascript begin
+  $(document).ready(function() {
+    $('.datepicker').datepicker({
+      dateFormat: 'dd/mm/yy'
+    });
+  });
+% end
 
      <title><%= title %></title>
   </head>
