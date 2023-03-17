@@ -1817,10 +1817,10 @@ sub reminder {
       	
       	# mock variables
 		$ref->{invnumber} = "INVNUMBER";
-		$ref->{transdate} = "DATE"
-		$form->{ponumber} = "ponumber"
-		$form->{swicotaxbase} = "swicotaxbase"
-		$ref->{terms} = "terms"
+		$ref->{transdate} = "DATE";
+		$form->{ponumber} = "ponumber";
+		$form->{swicotaxbase} = "swicotaxbase";
+		$ref->{terms} = "terms";
       	
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
