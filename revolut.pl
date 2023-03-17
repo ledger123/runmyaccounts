@@ -36,12 +36,10 @@ sub _refresh_session {
 
     my ( $c, $dbname, $defaults ) = @_;
 
-    my $dbs = $c->dbs($dbname);
-
+    my $dbs      = $c->dbs($dbname);
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
-
-    my $ua      = Mojo::UserAgent->new;
-    my $apicall = "$defaults{revolut_api_url}/auth/token";
+    my $ua       = Mojo::UserAgent->new;
+    my $apicall  = "$defaults{revolut_api_url}/auth/token";
     my $res;
     $res = $ua->post(
         $apicall => form => {
@@ -62,33 +60,23 @@ sub _refresh_session {
 
 get '/access/:dbname' => sub ($c) {
 
-    my $params = $c->req->params->to_hash;
-    my $dbname = $c->param('dbname');
-
-    my $dbs = $c->dbs($dbname);
-
-    my $jwt_header = q|
-{
-  "alg": "RS256",
-  "typ": "JWT"
-}
-|;
-
-    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
-
-    # jwt_token expiry is 90 days
-    my $payload = {
+    my $params     = $c->req->params->to_hash;
+    my $dbname     = $c->param('dbname');
+    my $dbs        = $c->dbs($dbname);
+    my %defaults   = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
+    my $jwt_header = q|{"alg": "RS256", "typ": "JWT"}|;
+    my $payload    = {
         iss => $defaults{revolut_jwt_domain},
         sub => $defaults{revolut_client_id},
         aud => "https://revolut.com",
         exp => time + ( 90 * 24 * 60 * 60 ),
     };
-
     my $jwt_token = encode_jwt( payload => $payload, alg => 'RS256', key => \$defaults{revolut_private_key} );
-
-    my $ua      = Mojo::UserAgent->new;
-    my $apicall = "$defaults{revolut_api_url}/auth/token";
+    my $ua        = Mojo::UserAgent->new;
+    my $apicall   = "$defaults{revolut_api_url}/auth/token";
+    my $msg;
     my $res;
+
     if ( $params->{code} ) {
         $res = $ua->post(
             $apicall => form => {
@@ -100,11 +88,9 @@ get '/access/:dbname' => sub ($c) {
             }
         )->result;
     }
-
     my $code = $res->code;
     my $body = $res->body;
     my $hash = decode_json($body);
-    my $msg;
     if ( $code eq '200' ) {
         $c->session( expiration => 86400 );
         $c->session->{jwt_token}     = $jwt_token;
@@ -119,7 +105,6 @@ get '/access/:dbname' => sub ($c) {
     } else {
         $msg = "$code: $hash->{error_description}.";
     }
-
     $c->render( template => 'index', msg => $msg, dbname => $dbname, defaults => \%defaults );
 };
 
@@ -175,31 +160,27 @@ any 'transactions' => sub ($c) {
 
     my $params = $c->req->params->to_hash;
 
+    $params->{account}   = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
+    $params->{from_date} = '2022-08-01'                           if !$params->{from};
+    $params->{to_date}   = '2022-08-30'                           if !$params->{to};
+    $params->{import}    = 'NO'                                   if !$params->{import};
+
     if ( !$c->session->{dbname} ) {
         $c->render( text => 'Session timed out' );
         return;
     }
 
-    my $dbs      = $c->dbs( $c->session->{dbname} );
-    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
-
-    my $ua           = Mojo::UserAgent->new;
-    my $access_token = $c->session->{access_token};
-    $params->{account} = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
-    $params->{from}    = '2022-08-01'                           if !$params->{from};
-    $params->{to}      = '2022-08-30'                           if !$params->{to};
-    $params->{import}  = 'NO'                                   if !$params->{import};
-
-    my @accounts        = $dbs->query("SELECT id, curr FROM revolut_accounts ORDER BY 1")->arrays;
+    my $dbs             = $c->dbs( $c->session->{dbname} );
+    my %defaults        = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
+    my $ua              = Mojo::UserAgent->new;
+    my $access_token    = $c->session->{access_token};
     my $selectedaccount = $dbs->query("SELECT fldvalue FROM defaults WHERE fldname='selectedaccount'")->list;
-    my @chart1          = $dbs->query("SELECT id, accno || '--' || description AS accno FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->hashes;
-    my @chart2          = $dbs->query( "SELECT id, accno || '--' || description AS accno FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->hashes;
-
-    my $apicall = "$defaults{revolut_api_url}/transactions?";
-    $apicall .= "account=$params->{account}&from=$params->{from}&to=$params->{to}";
-
-    my $res = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
-
+    my @accounts        = $dbs->query("SELECT curr, id FROM revolut_accounts ORDER BY curr")->arrays;
+    my @chart1          = $dbs->query("SELECT accno || '--' || description, id AS accno FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
+    my @chart2          = $dbs->query( "SELECT accno || '--' || description, id AS accno FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->arrays;
+    my $apicall         = "$defaults{revolut_api_url}/transactions?";
+    $apicall .= "account=$params->{account}&from=$params->{from_date}&to=$params->{to_date}";
+    my $res  = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
     my $code = $res->code;
 
     if ( $code eq '500' ) {
@@ -214,11 +195,6 @@ any 'transactions' => sub ($c) {
         $c->render("Unknow error");
         return;
     }
-
-    #if ($hash->{message}){
-    #    $c->render(text => $hash->{message});
-    #    return;
-    #}
 
     my $table_data = HTML::Table->new(
         -class => 'table table-border',
@@ -288,6 +264,7 @@ any 'transactions' => sub ($c) {
         msg         => $msg,
         defaults    => \%defaults,
         account     => $params->{account},
+        accounts    => \@accounts,
         chart1      => \@chart1,
         chart2      => \@chart2,
         tablehtml   => $tablehtml,
@@ -390,7 +367,7 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
             <tr>
                 <th align="right">Account</th>
                 <td>
-                    <%= text_field 'account' => '', required => 'required' %>
+                <%= select_field 'account', $accounts %>
                 </td>
             </tr>
             <tr>
@@ -407,11 +384,11 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
             </tr>
             <tr>
                 <th align="right">Bank Account</th>
-                <td><%= select_field 'bank_account', [ map { $_->{accno} } @$chart1 ], { id => [ map { $_->{id} } @$chart1 ], value => [ map { $_->{id} } @$chart1 ] } %></td>
+                <td><%= select_field 'bank_account', $chart1 %></td>
             </tr>
             <tr>
                 <th align="right">Clearing Account</th>
-                <td><%= select_field 'clearing_account', [ map { $_->{accno} } @$chart2 ], { id => [ map { $_->{id} } @$chart2 ], value => [ map { $_->{id} } @$chart2 ] } %></td>
+                <td><%= select_field 'clearing_account', $chart2 %></td>
             </tr>
             <tr>
                 <th align="right">Import?</th>
@@ -421,6 +398,7 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
             </tr>
             <tr>
                 <td colspan="2">
+                    <hr/>
                     <%= submit_button 'Submit' %>
                 </td>
             </tr>
@@ -498,7 +476,7 @@ To manage your revolut connection visit:
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
-% my $debug = 1;
+% my $debug = 0;
 % if ($debug){
 <h2 class='listheading'>Session:</h2>
 <pre>
