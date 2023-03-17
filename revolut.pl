@@ -37,7 +37,7 @@ sub _refresh_session {
 
     my ( $c, $dbname, $defaults ) = @_;
 
-    my $dbs      = $c->dbs($dbname);
+    my $dbs      = $c->dbs( $c->session->{myconfig}->{dbname} );
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
     my $ua       = Mojo::UserAgent->new;
     my $apicall  = "$defaults{revolut_api_url}/auth/token";
@@ -164,14 +164,13 @@ any 'transactions' => sub ($c) {
     $params->{from_date} = '01/08/2022'                           if !$params->{from_date};
     $params->{to_date}   = '30/08/2022'                           if !$params->{to_date};
     $params->{account}   = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
-    $params->{import}    = 'NO'                                   if !$params->{import};
 
     if ( !$c->session->{dbname} ) {
         $c->render( text => 'Session timed out' );
         return;
     }
 
-    my $dbs             = $c->dbs( $c->session->{dbname} );
+    my $dbs             = $c->dbs( $c->session->{myconfig}->{dbname} );
     my %defaults        = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
     my $ua              = Mojo::UserAgent->new;
     my $access_token    = $c->session->{access_token};
@@ -222,44 +221,40 @@ any 'transactions' => sub ($c) {
             $item->{merchant}->{name},
         );
 
-        if ( $params->{import} eq 'YES' ) {
+        if ( $params->{import} ) {
             my ( $exists, $reference ) = $dbs->query( "SELECT id, reference FROM gl WHERE reference = ?", $item->{id} )->list;
             if ($exists) {
                 $dbs->query( "DELETE FROM acc_trans WHERE trans_id = ?", $exists );
                 $dbs->query( "DELETE FROM gl WHERE id = ?",              $exists );
             }
-            if ( !$exists ) {
-                $msg .= "Adding $reference ...<br/>";
-                my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
-                $department_id *= 1;
-                my $curr         = $item->{legs}->[0]->{currency};
-                my $exchangerate = $dbs->query( "
+            $msg .= "Adding $reference ...<br/>";
+            my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
+            $department_id *= 1;
+            my $curr         = $item->{legs}->[0]->{currency};
+            my $exchangerate = $dbs->query( "
                     SELECT buy
                     FROM exchangerate
                     WHERE curr = ?
                     AND transdate = ?", $curr, $transdate )->list;
-                $exchangerate *= 1;
-                $exchangerate = 1 if !$exchangerate;
-                my $transjson = encode_json($item);
-                $dbs->query( "
+            $exchangerate *= 1;
+            $exchangerate = 1 if !$exchangerate;
+            my $transjson = encode_json($item);
+            $dbs->query( "
                     INSERT INTO gl(reference, transdate, department_id, curr, exchangerate, transjson)
                     VALUES (?, ?, ?, ?, ?, ?)",
-                    $item->{id}, $transdate, $department_id, $curr, $exchangerate, $transjson )
+                $item->{id}, $transdate, $department_id, $curr, $exchangerate, $transjson )
+              or die $dbs->error;
+            my $id = $dbs->query( "SELECT id FROM gl WHERE reference = ?", $item->{id} )->list;
+            if ($id) {
+                $dbs->query( "
+                    INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
+                    $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} * -1 )
                   or die $dbs->error;
-                my $id = $dbs->query( "SELECT id FROM gl WHERE reference = ?", $item->{id} )->list;
-                if ($id) {
-                    $dbs->query( "
+                $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                        $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} * -1 )
-                      or die $dbs->error;
-                    $dbs->query( "
-                    INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                        $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} )
-                      or die $dbs->error;
-                    $dbs->commit;
-                }
-            } else {
-                $msg .= "Already added $reference ...<br/>";
+                    $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} )
+                  or die $dbs->error;
+                $dbs->commit;
             }
         }
     }
@@ -287,7 +282,7 @@ any 'counterparties' => sub ($c) {
         return;
     }
 
-    my $dbs      = $c->dbs( $c->session->{dbname} );
+    my $dbs      = $c->dbs( $c->session->{myconfig}->{dbname} );
     my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
 
     my $ua           = Mojo::UserAgent->new;
