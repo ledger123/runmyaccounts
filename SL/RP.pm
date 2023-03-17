@@ -1813,11 +1813,34 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+      	
+      	
+      	print STDERR " //// ";
+	  print STDERR "START"; 
+	  print STDERR "invnumber: " . $form->{invnumber}; 
+  	  print STDERR "invdateqr: " . $form->{invdateqr}; 
+	  print STDERR "ponumber: " . $form->{ponumber}; 
+	  print STDERR "swicotaxbaseqr: " . $form->{swicotaxbaseqr}; 
+	  print STDERR "terms: " . $form->{terms}; 
+	  print STDERR " //// ";
+      
+      
+
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
 		$ref->{language_code} = $item->{language_code};
 	    $form->{terms} = $ref->{terms};
+
+
+	print STDERR " //// ";
+	  print STDERR "START 2"; 
+	  print STDERR "invnumber: " . $form->{invnumber}; 
+  	  print STDERR "invdateqr: " . $form->{invdateqr}; 
+	  print STDERR "ponumber: " . $form->{ponumber}; 
+	  print STDERR "swicotaxbaseqr: " . $form->{swicotaxbaseqr}; 
+	  print STDERR "terms: " . $form->{terms}; 
+	  print STDERR " //// ";
 
 
 		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
@@ -1905,6 +1928,15 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
+	print STDERR " //// ";
+	  print STDERR "MIDDLE"; 
+	  print STDERR "invnumber: " . $form->{invnumber}; 
+  	  print STDERR "invdateqr: " . $form->{invdateqr}; 
+	  print STDERR "ponumber: " . $form->{ponumber}; 
+	  print STDERR "swicotaxbaseqr: " . $form->{swicotaxbaseqr}; 
+	  print STDERR "terms: " . $form->{terms}; 
+	  print STDERR " //// ";
+	
 	    ($whole, $decimal) = split /\./, $ref->{due};
 	    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
 	    $ref->{integer_out_amount} = $whole;
@@ -1926,6 +1958,15 @@ sub reminder {
 		}
       }
       $sth->finish;
+      
+      print STDERR " //// ";
+	  print STDERR "END"; 
+	  print STDERR "invnumber: " . $form->{invnumber}; 
+  	  print STDERR "invdateqr: " . $form->{invdateqr}; 
+	  print STDERR "ponumber: " . $form->{ponumber}; 
+	  print STDERR "swicotaxbaseqr: " . $form->{swicotaxbaseqr}; 
+	  print STDERR "terms: " . $form->{terms}; 
+	  print STDERR " //// ";
 
     }
   }
