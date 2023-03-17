@@ -1815,13 +1815,6 @@ sub reminder {
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
       	
       	
-      	# mock variables
-		$ref->{invnumber} = "INVNUMBER";
-		$ref->{transdate} = "DATE";
-		$form->{ponumber} = "ponumber";
-		$form->{swicotaxbase} = "swicotaxbase";
-		$ref->{terms} = "terms";
-      	
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
@@ -1906,7 +1899,7 @@ sub reminder {
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
-		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
+		$form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
 		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
 		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
 		$form->{strdbkginfqr} = $form->{strdbkginf};
