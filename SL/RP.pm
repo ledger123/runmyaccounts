@@ -1852,14 +1852,12 @@ sub reminder {
 		$form->{companycityqr} = substr($form->{city},0,35);
 		$form->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
 		
-		# change here
 		$form->{nameqr} = substr($ref->{name},0,70);
 		$form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
 		
 		$form->{address1qr} = substr($ref->{address1},0,70);
 		$form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
 		
-		# change here
 		$form->{zipcodeqr}  = substr($ref->{zipcode},0,16);
 		$form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
 		
@@ -1897,9 +1895,12 @@ sub reminder {
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
-		# change here
 		
-		$ref->{strdbkginf} = "//S1/10/R-1000/11/230206/20//30//32//40/0:0";
+		print STDERR " //// ";
+		print STDERR "strdbkginf form: " . $form->{strdbkginf} . "\n";
+		print STDERR "strdbkginf ref: " . $ref->{strdbkginf} . "\n"; 
+		print STDERR " //// ";
+		
 		
 		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
 		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
@@ -1940,14 +1941,15 @@ sub reminder {
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
 		
-		$ref->{invdescriptionqr} = "";
-		$ref->{invdescriptionqr1} = "";
-		$ref->{invdescriptionqr2} = "";
-		$form->{invdescriptionqr} = "";
-		$form->{invdescriptionqr1} = "";
-		$form->{invdescriptionqr2} = "";
 		
+		#$ref->{invdescriptionqr} = "";
+		#$ref->{invdescriptionqr1} = "";
+		#$ref->{invdescriptionqr2} = "";
+		#$form->{invdescriptionqr} = "";
+		#$form->{invdescriptionqr1} = "";
+		#$form->{invdescriptionqr2} = "";
 		
+=pod
 		
 		print STDERR " //// ";
 		print STDERR "REF / FORM: \n"; 
@@ -1981,6 +1983,8 @@ sub reminder {
 		while (($key, $value) = each (%{$ref})) {
   			print STDERR "$key -> $value\n";
 		}
+	
+=cut
 
 
 
