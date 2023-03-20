@@ -1905,10 +1905,13 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
-	#print STDERR "FORM";	
-	#while ( ($k,$v) = each %{$form} ) {
-    #	print "$k => $v\n";
-	#}
+	print STDERR "FORM";	
+	
+	%hash = %{$form};
+	
+	while ( ($k,$v) = each %hash) {
+    	print "$k => $v\n";
+	}
 	
 	
 	
