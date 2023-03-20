@@ -1905,15 +1905,13 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
+	
+	
 	print STDERR "REF";	
-	while ( ($k,$v) = each $form ) {
-    	print "$k => $v\n";
-	}
+	print STDERR map { "$_ => $hash{$_}\n" } keys %hash;
 
 	print STDERR "FORM";	
-	while ( ($k,$v) = each $ref ) {
-    	print STDERR "$k => $v\n";
-	}
+	print STDERR map { "$_ => $hash{$_}\n" } keys %hash;
 	
 
 	
