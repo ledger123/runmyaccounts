@@ -1900,16 +1900,30 @@ sub reminder {
 		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
 		$form->{strdbkginfqr} = $form->{strdbkginf};
 		
-		$ref->{strdbkginf} = $form->{strdbkginf};
-		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
-		
 		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
 		$form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
+		@formVars = [ $form ];
+		
+		foreach $var (@formVars) {
+			print STDERR " //// ";
+			print STDERR "FORM VAR: " . $var; 
+			print STDERR " //// ";
+		}
+		
+		
+		@refVars = [ $ref ];
+		
+		foreach $var (@formVars) {
+			print STDERR " //// ";
+			print STDERR "REF VAR: " . $var; 
+			print STDERR " //// ";
+		}
+		
 	
-		$form->{language_code} = $ref->{language_code};
+	
 
 =pod
 
