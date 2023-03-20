@@ -1912,6 +1912,7 @@ sub reminder {
 		$ref->{invnumberqr} = $form->{invnumberqr};
 		$ref->{invdescription} = $form->{invdescription};
 		$ref->{invdescriptionqr} = $form->{invdescriptionqr};
+		$ref->{invdescriptionqr2} = $form->{invdescriptionqr2};
 		$ref->{qriban} = $form->{qriban};
 		$ref->{qribanqr} = $form->{qribanqr};
 		$ref->{companyqr} = $form->{companyqr};
@@ -1927,10 +1928,36 @@ sub reminder {
 		$ref->{swicotaxbaseqr} = $form->{swicotaxbaseqr};
 		$ref->{swicotaxqr} = $form->{swicotaxqr};
 		$ref->{invdate} = $form->{invdate};
+		$ref->{invdateqr} = $form->{invdateqr};
 		$ref->{strdbkginf} = $form->{strdbkginf};
 		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+		
+		
+		
+		print STDERR " //// ";
+		print STDERR "REF / FORM: \n"; 
+		print STDERR $ref->{invdescriptionqr2} . " / " . $form->{invdescriptionqr2} . "\n"; 
+		print STDERR $ref->{nameqr} . " / " . $form->{nameqr} . "\n"; 
+		print STDERR $ref->{zipcodeqr} . " / " . $form->{zipcodeqr} . "\n"; 
+		print STDERR $ref->{invdateqr} . " / " . $form->{invdateqr} . "\n"; 
+		print STDERR $ref->{strdbkginf} . " / " . $form->{strdbkginf} . "\n"; 
+		print STDERR $ref->{strdbkginfqr} . " / " . $form->{strdbkginfqr} . "\n"; 
+		print STDERR $ref->{strdbkginfline1qr} . " / " . $form->{strdbkginfline1qr} . "\n"; 
+		print STDERR $ref->{strdbkginfline2qr} . " / " . $form->{strdbkginfline2qr} . "\n"; 
+		print STDERR " //// ";
+		
+		
+		# Faulty list:
+		# invdescriptionqr2
+		# nameqr
+		# zipcodeqr
+		# invdateqr
+		# strdbkginf
+		# strdbkginfqr
+		# strdbkginfline1qr
+		# strdbkginfline2qr
 
 
 
