@@ -1856,14 +1856,14 @@ sub reminder {
 		$form->{nameqr} = substr($ref->{name},0,70);
 		$form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
 		
-		$form->{address1qr} = substr($form->{address1},0,70);
+		$form->{address1qr} = substr($ref->{address1},0,70);
 		$form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
 		
 		# change here
 		$form->{zipcodeqr}  = substr($ref->{zipcode},0,16);
 		$form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
 		
-		$form->{cityqr} = substr($form->{city},0,35);
+		$form->{cityqr} = substr($ref->{city},0,35);
 		$form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
 		
 		my @nums = $form->{businessnumber} =~ /(\d+)/g;
