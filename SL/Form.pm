@@ -14,17 +14,6 @@ use Time::Piece;
 use DBIx::Simple;
 
 
-sub print_my_hash {
-  my $self = shift;
-  my ($hashref) = @_;
-  
-  # print the reference address:
-  print STDERR $hashref;
-  
-  # dereference the hashref and print the content:
-  print STDERR %{$hashref};
-}
-
 sub new {
 	my $type = shift;
 
