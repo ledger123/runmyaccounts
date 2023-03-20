@@ -1818,7 +1818,7 @@ sub reminder {
 		$ref->{exchangerate} ||= 1;
 		$ref->{language_code} = $item->{language_code};
 	    $form->{terms} = $ref->{terms};
-
+	
 
 		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
 		# taken from IS.pm / line 689 / method invoice_details() (to good someone made small and comprehensive sub methods and its not just one huge fucking piece of code!)
@@ -1867,36 +1867,13 @@ sub reminder {
 		my @nums = $form->{businessnumber} =~ /(\d+)/g;
 		for (@nums) { $form->{businessnumberqr} .= $_ };
 		
-		
-		print STDERR " //// ";
-  print STDERR "swicotaxbase: " . $form->{swicotaxbase}; 
-  print STDERR " //// ";
-		
 		$form->{swicotaxbaseqr}  = $form->{swicotaxbase};
 		$form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
-		
-		print STDERR " //// ";
-  print STDERR "swicotaxbaseqr: " . $form->{swicotaxbaseqr}; 
-  print STDERR " //// ";
-  
-   print STDERR " //// ";
-  print STDERR "swicotax: " . $form->{swicotax}; 
-  print STDERR " //// ";
 		
 		$form->{swicotaxqr}  = $form->{swicotax};
 		$form->{swicotaxqr} = $form->string_replace($form->{swicotaxqr}, "%", "");
 		
-		print STDERR " //// ";
-  print STDERR "swicotaxqr: " . $form->{swicotaxqr}; 
-  print STDERR " //// ";
-  
-  
-
-
-     
-		
 		@taxaccounts = split (/ /, $form->{taxaccounts}); 
-		
 		
 		for (@taxaccounts) {
 			if ($form->{"${_}_rate"}) {
@@ -1912,33 +1889,7 @@ sub reminder {
 			}
 		}
 	
-		
-	
-	
-	
-	
-	  print STDERR " //// ";
-  print STDERR "taxaccounts: " . $form->{taxaccounts}; 
-  print STDERR " //// ";
-	
-	 print STDERR " //// ";
-  print STDERR "swicotaxbaseqr 1: " . $form->{swicotaxbaseqr}; 
-  print STDERR " //// ";
- 
- 
-	
 		chop $form->{swicotaxbaseqr};
-		
-		$form->{taxaccounts} = "2201 22050 22051 22052 22055";
-		$form->{swicotaxbaseqr} = "7.6:10000";
-		
-		print STDERR " //// ";
-  print STDERR "taxaccounts 2: " . $form->{taxaccounts}; 
-  print STDERR " //// ";
-		
-		print STDERR " //// ";
-  print STDERR "swicotaxbaseqr 2: " . $form->{swicotaxbaseqr}; 
-  print STDERR " //// ";
 		
 		$form->{invdate} = $ref->{transdate};
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
@@ -1952,6 +1903,37 @@ sub reminder {
 		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
 		$form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
+	
+	
+	
+		$form->{language_code} = $ref->{language_code};
+
+$ref->{terms} = $form->{terms};
+$ref->{invnumber} = $form->{invnumber};
+$ref->{invnumberqr} = $form->{invnumberqr};
+$ref->{invdescription} = $form->{invdescription};
+$ref->{invdescriptionqr} = $form->{invdescriptionqr};
+$ref->{qriban} = $form->{qriban};
+$ref->{qribanqr} = $form->{qribanqr};
+$ref->{companyqr} = $form->{companyqr};
+$ref->{companyaddress1qr} = $form->{companyaddress1qr};
+$ref->{companyzipqr} = $form->{companyzipqr};
+$ref->{companycityqr} = $form->{companycityqr};
+$ref->{nameqr} = $form->{nameqr};
+$ref->{address1qr} = $form->{address1qr};
+$ref->{zipcodeqr} = $form->{zipcodeqr};
+$ref->{cityqr} = $form->{cityqr};
+$ref->{businessnumber} = $form->{businessnumber};
+$ref->{businessnumberqr} = $form->{businessnumberqr};
+$ref->{swicotaxbaseqr} = $form->{swicotaxbaseqr};
+$ref->{swicotaxqr} = $form->{swicotaxqr};
+$ref->{invdate} = $form->{invdate};
+$ref->{strdbkginf} = $form->{strdbkginf};
+$ref->{strdbkginfqr} = $form->{strdbkginfqr};
+$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
+$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+	
+	
 	
 	
 	    ($whole, $decimal) = split /\./, $ref->{due};
