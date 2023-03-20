@@ -1905,10 +1905,10 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
-	print STDERR "FORM";	
+	print STDERR "REF";	
 	# print STDERR %{$form};
 	
-	while (($key, $value) = each (%{$form})) {
+	while (($key, $value) = each (%{$ref})) {
   		print STDERR "$key -> $value\n";
 	}
 	

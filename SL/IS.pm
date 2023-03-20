@@ -763,6 +763,14 @@ sub invoice_details {
   $form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
   $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
   
+  
+  	print STDERR "FORM";	
+	# print STDERR %{$form};
+	
+	while (($key, $value) = each (%{$form})) {
+  		print STDERR "$key -> $value\n";
+	}
+  
 }
 
 
