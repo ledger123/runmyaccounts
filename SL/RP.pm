@@ -1909,7 +1909,7 @@ sub reminder {
 	# print STDERR %{$form};
 	
 	while (($key, $value) = each (%{$form})) {
-  		print "$key => $value\n";
+  		print STDERR "$key -> $value\n";
 	}
 	
 	
