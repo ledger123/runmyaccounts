@@ -1940,6 +1940,10 @@ sub reminder {
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
 		
+		$ref->{invdescriptionqr} = "";
+		$ref->{invdescriptionqr1} = "";
+		$ref->{invdescriptionqr2} = "";
+		
 		
 		
 		print STDERR " //// ";
