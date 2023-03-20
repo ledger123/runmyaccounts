@@ -1904,14 +1904,12 @@ sub reminder {
 		$form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
-	
-	
-	
-	print STDERR "REF";	
-	print STDERR map { "$_ => $hash{$_}\n" } keys %hash;
-
 	print STDERR "FORM";	
-	print STDERR map { "$_ => $hash{$_}\n" } keys %hash;
+	
+		my %real_hash = ( 'response' => {'result' => $form} );
+	$form->print_my_hash( \%real_hash );
+	
+	
 	
 
 	
