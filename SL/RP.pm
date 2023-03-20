@@ -1943,6 +1943,9 @@ sub reminder {
 		$ref->{invdescriptionqr} = "";
 		$ref->{invdescriptionqr1} = "";
 		$ref->{invdescriptionqr2} = "";
+		$form->{invdescriptionqr} = "";
+		$form->{invdescriptionqr1} = "";
+		$form->{invdescriptionqr2} = "";
 		
 		
 		
