@@ -1813,9 +1813,6 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-		
-		
-=pod
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
@@ -1908,96 +1905,41 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
-	print STDERR "REF";	
-	# print STDERR %{$form};
-	
-	while (($key, $value) = each (%{$ref})) {
-  		print STDERR "$key -> $value\n";
-	}
-
-=cut
-	
-	
-	
-	
-	
 
 	
-=pod
-		@formVars = ( $form );
-		
-		foreach $var (@formVars) {
-			print STDERR " //// ";
-			print STDERR "FORM VAR: " . $var; 
-			print STDERR " //// ";
-			
-			while ( ($k,$v) = each $var ) {
-    			print "$k => $v\n";
-			}
+		$ref->{terms} = $form->{terms};
+		$ref->{invnumber} = $form->{invnumber};
+		$ref->{invnumberqr} = $form->{invnumberqr};
+		$ref->{invdescription} = $form->{invdescription};
+		$ref->{invdescriptionqr} = $form->{invdescriptionqr};
+		$ref->{qriban} = $form->{qriban};
+		$ref->{qribanqr} = $form->{qribanqr};
+		$ref->{companyqr} = $form->{companyqr};
+		$ref->{companyaddress1qr} = $form->{companyaddress1qr};
+		$ref->{companyzipqr} = $form->{companyzipqr};
+		$ref->{companycityqr} = $form->{companycityqr};
+		$ref->{nameqr} = $form->{nameqr};
+		$ref->{address1qr} = $form->{address1qr};
+		$ref->{zipcodeqr} = $form->{zipcodeqr};
+		$ref->{cityqr} = $form->{cityqr};
+		$ref->{businessnumber} = $form->{businessnumber};
+		$ref->{businessnumberqr} = $form->{businessnumberqr};
+		$ref->{swicotaxbaseqr} = $form->{swicotaxbaseqr};
+		$ref->{swicotaxqr} = $form->{swicotaxqr};
+		$ref->{invdate} = $form->{invdate};
+		$ref->{strdbkginf} = $form->{strdbkginf};
+		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
+		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
+		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+
+
+
+		print STDERR "REF";	
+		# print STDERR %{$form};
+	
+		while (($key, $value) = each (%{$ref})) {
+  			print STDERR "$key -> $value\n";
 		}
-		
-		
-		@refVars = ( $ref );
-		
-		foreach $var (@refVars) {
-			print STDERR " //// ";
-			print STDERR "REF VAR: " . $var; 
-			print STDERR " //// ";
-			
-			while ( ($k,$v) = each $var ) {
-    			print "$k => $v\n";
-			}
-		}
-	
-=cut
-		
-	
-	
-
-=pod
-
-$ref->{terms} = $form->{terms};
-$ref->{invnumber} = $form->{invnumber};
-$ref->{invnumberqr} = $form->{invnumberqr};
-$ref->{invdescription} = $form->{invdescription};
-$ref->{invdescriptionqr} = $form->{invdescriptionqr};
-$ref->{qriban} = $form->{qriban};
-$ref->{qribanqr} = $form->{qribanqr};
-$ref->{companyqr} = $form->{companyqr};
-$ref->{companyaddress1qr} = $form->{companyaddress1qr};
-$ref->{companyzipqr} = $form->{companyzipqr};
-$ref->{companycityqr} = $form->{companycityqr};
-$ref->{nameqr} = $form->{nameqr};
-$ref->{address1qr} = $form->{address1qr};
-$ref->{zipcodeqr} = $form->{zipcodeqr};
-$ref->{cityqr} = $form->{cityqr};
-$ref->{businessnumber} = $form->{businessnumber};
-$ref->{businessnumberqr} = $form->{businessnumberqr};
-$ref->{swicotaxbaseqr} = $form->{swicotaxbaseqr};
-$ref->{swicotaxqr} = $form->{swicotaxqr};
-$ref->{invdate} = $form->{invdate};
-$ref->{strdbkginf} = $form->{strdbkginf};
-$ref->{strdbkginfqr} = $form->{strdbkginfqr};
-$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
-$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
-	
-=cut
-
-
-# old code
-
-$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
-	$ref->{module} = 'ps' if $ref->{till};
-	$ref->{exchangerate} ||= 1;
-	$ref->{language_code} = $item->{language_code};
-    $form->{invnumber} = $ref->{invnumber};
-    $form->{terms} = $ref->{terms};
-    $form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
-    $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
-
-      $ref->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
-      $ref->{strdbkginf}  = substr($ref->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
-      $ref->{strdbkginf} = $form->string_replace($ref->{strdbkginf}, "%", "");
 
 
 
