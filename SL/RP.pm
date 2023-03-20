@@ -1867,6 +1867,8 @@ sub reminder {
 		my @nums = $form->{businessnumber} =~ /(\d+)/g;
 		for (@nums) { $form->{businessnumberqr} .= $_ };
 		
+=pod
+		
 		$form->{swicotaxbaseqr}  = $form->{swicotaxbase};
 		$form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
 		
@@ -1890,6 +1892,8 @@ sub reminder {
 		}
 	
 		chop $form->{swicotaxbaseqr};
+		
+=cut
 
 		$form->{invdate} = $ref->{transdate};
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
