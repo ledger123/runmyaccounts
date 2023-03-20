@@ -1895,9 +1895,9 @@ sub reminder {
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
-		$form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
-		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
-		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
+		$ref->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
+		$ref->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
+		$ref->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
 		$form->{strdbkginfqr} = $form->{strdbkginf};
 		
 		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
@@ -1907,6 +1907,8 @@ sub reminder {
 	
 	
 		$form->{language_code} = $ref->{language_code};
+
+=pod
 
 $ref->{terms} = $form->{terms};
 $ref->{invnumber} = $form->{invnumber};
@@ -1933,7 +1935,7 @@ $ref->{strdbkginfqr} = $form->{strdbkginfqr};
 $ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 $ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
 	
-	
+=cut
 	
 	
 	    ($whole, $decimal) = split /\./, $ref->{due};
