@@ -1906,12 +1906,12 @@ sub reminder {
 	
 	
 	print STDERR "FORM";	
+	# print STDERR %{$form};
 	
-	%hash = %{$form};
-	
-	while ( ($k,$v) = each %hash) {
-    	print "$k => $v\n";
+	while (($key, $value) = each (%{$form})) {
+  		print "$key => $value\n";
 	}
+	
 	
 	
 	
