@@ -2021,12 +2021,14 @@ sub reminder {
 	while (($key, $value) = each (%{$ref})) {
   		print STDERR "$key -> $value\n";
 	}
+
+=cut
 	
 	
       }
       $sth->finish;
     }
-=cut
+
   }
 
   #$form->info("<pre>"); for my $row (@{$form->{AG}}){ for (qw(invnumber bankname qriban strdbkginf invoicedescriptionqr)) { print "$_: $row->{$_}\n" } print "\n\n" }
