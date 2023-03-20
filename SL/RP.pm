@@ -1895,14 +1895,6 @@ sub reminder {
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
-		
-		
-		print STDERR " //// ";
-		print STDERR "strdbkginf form: " . $form->{strdbkginf} . "\n"; # empty
-		print STDERR "strdbkginf ref: " . $ref->{strdbkginf} . "\n"; # contain varibales
-		print STDERR " //// ";
-		
-		
 		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
 		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
 		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
@@ -1914,7 +1906,7 @@ sub reminder {
 	
 	
 
-	
+		# TODO: Mapping (shall be made obselete) (Will be some work though)
 		$ref->{terms} = $form->{terms};
 		$ref->{invnumber} = $form->{invnumber};
 		$ref->{invnumberqr} = $form->{invnumberqr};
@@ -1941,6 +1933,12 @@ sub reminder {
 		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+		
+		
+		
+		
+		
+		# TODO: remove all of this shit
 		
 		
 		#$ref->{invdescriptionqr} = "";
