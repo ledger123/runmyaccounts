@@ -1852,13 +1852,15 @@ sub reminder {
 		$form->{companycityqr} = substr($form->{city},0,35);
 		$form->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
 		
-		$form->{nameqr} = substr($form->{name},0,70);
+		# change here
+		$form->{nameqr} = substr($ref->{name},0,70);
 		$form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
 		
 		$form->{address1qr} = substr($form->{address1},0,70);
 		$form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
 		
-		$form->{zipcodeqr}  = substr($form->{zipcode},0,16);
+		# change here
+		$form->{zipcodeqr}  = substr($ref->{zipcode},0,16);
 		$form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
 		
 		$form->{cityqr} = substr($form->{city},0,35);
@@ -1895,7 +1897,8 @@ sub reminder {
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
-		$form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
+		# change here
+		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
 		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
 		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
 		$form->{strdbkginfqr} = $form->{strdbkginf};
@@ -1950,15 +1953,16 @@ sub reminder {
 		
 		
 		# Faulty list:
-		# invdescriptionqr2
 		# nameqr
 		# zipcodeqr
-		# invdateqr
 		# strdbkginf
 		# strdbkginfqr
 		# strdbkginfline1qr
 		# strdbkginfline2qr
 
+		# check
+		# invdescriptionqr2
+		# invdateqr
 
 
 		print STDERR "REF";	
