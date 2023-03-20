@@ -1813,6 +1813,9 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+		
+		
+=pod
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
@@ -1911,6 +1914,8 @@ sub reminder {
 	while (($key, $value) = each (%{$ref})) {
   		print STDERR "$key -> $value\n";
 	}
+
+=cut
 	
 	
 	
@@ -1977,7 +1982,31 @@ $ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 $ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
 	
 =cut
-	
+
+
+# old code
+
+$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
+	$ref->{module} = 'ps' if $ref->{till};
+	$ref->{exchangerate} ||= 1;
+	$ref->{language_code} = $item->{language_code};
+    $form->{invnumber} = $ref->{invnumber};
+    $form->{terms} = $ref->{terms};
+    $form->{invdateqr}  = substr($form->datetonum($myconfig, $ref->{transdate}),2);
+    $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
+
+      $ref->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
+      $ref->{strdbkginf}  = substr($ref->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
+      $ref->{strdbkginf} = $form->string_replace($ref->{strdbkginf}, "%", "");
+
+
+
+
+
+
+
+
+
 	
 	    ($whole, $decimal) = split /\./, $ref->{due};
 	    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
@@ -2000,15 +2029,12 @@ $ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
 		}
 	
 	
-	 	print STDERR " //// ";
-		print STDERR "invnumber: " . $form->{invnumber}; 
-		print STDERR "invdateqr: " . $form->{invdateqr}; 
-		print STDERR "ponumber: " . $form->{ponumber}; 
-		print STDERR "businessnumberqr: " . $form->{businessnumberqr}; 
-		print STDERR "swicotaxbaseqr: " . $form->{swicotaxbaseqr}; 
-		print STDERR "terms: " . $form->{terms}; 
-		print STDERR " //// ";
-      
+	 	print STDERR "REF";	
+	# print STDERR %{$form};
+	
+	while (($key, $value) = each (%{$ref})) {
+  		print STDERR "$key -> $value\n";
+	}
 	
 	
       }
