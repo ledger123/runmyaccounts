@@ -1906,7 +1906,9 @@ sub reminder {
 	
 	
 	print STDERR "FORM";	
-	print STDERR %{$form};
+	while ( ($k,$v) = each %{$form} ) {
+    	print "$k => $v\n";
+	}
 	
 	
 	
