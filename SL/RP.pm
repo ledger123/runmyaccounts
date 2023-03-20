@@ -1898,6 +1898,9 @@ sub reminder {
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
 		# change here
+		
+		$ref->{strdbkginf} = "//S1/10/R-1000/11/230206/20//30//32//40/0:0";
+		
 		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
 		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
 		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
