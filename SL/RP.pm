@@ -1911,6 +1911,10 @@ sub reminder {
 			print STDERR " //// ";
 			print STDERR "FORM VAR: " . $var; 
 			print STDERR " //// ";
+			
+			while ( ($k,$v) = each $var ) {
+    			print "$k => $v\n";
+			}
 		}
 		
 		
@@ -1920,6 +1924,10 @@ sub reminder {
 			print STDERR " //// ";
 			print STDERR "REF VAR: " . $var; 
 			print STDERR " //// ";
+			
+			while ( ($k,$v) = each $var ) {
+    			print "$k => $v\n";
+			}
 		}
 		
 	
