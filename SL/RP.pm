@@ -1905,7 +1905,7 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
-		@formVars = [ $form ];
+		@formVars = ( $form );
 		
 		foreach $var (@formVars) {
 			print STDERR " //// ";
@@ -1914,9 +1914,9 @@ sub reminder {
 		}
 		
 		
-		@refVars = [ $ref ];
+		@refVars = ( $ref );
 		
-		foreach $var (@formVars) {
+		foreach $var (@refVars) {
 			print STDERR " //// ";
 			print STDERR "REF VAR: " . $var; 
 			print STDERR " //// ";
