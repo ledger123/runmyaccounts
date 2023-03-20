@@ -1895,6 +1895,8 @@ sub reminder {
 		
 =cut
 
+		$form->{swicotaxbaseqr} = "7.6:10000";
+		
 		$form->{invdate} = $ref->{transdate};
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
@@ -1928,6 +1930,19 @@ sub reminder {
 	
 		  push @{ $form->{AG} }, $ref;
 		}
+	
+	
+	 	print STDERR " //// ";
+		print STDERR "invnumber: " . $form->{invnumber}; 
+		print STDERR "invdateqr: " . $form->{invdateqr}; 
+		print STDERR "ponumber: " . $form->{ponumber}; 
+		print STDERR "businessnumberqr: " . $form->{businessnumberqr}; 
+		print STDERR "swicotaxbaseqr: " . $form->{swicotaxbaseqr}; 
+		print STDERR "terms: " . $form->{terms}; 
+		print STDERR " //// ";
+      
+	
+	
       }
       $sth->finish;
     }
