@@ -1905,10 +1905,9 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
-		for ( my $i = 0; $i < lenght($form); $i++ ) {
-			print STDERR "hello world: " . $form[$i];
-		}
-	
+print STDERR "form: " . $form;	
+print STDERR "ref: " . $ref;	
+
 	
 =pod
 		@formVars = ( $form );
