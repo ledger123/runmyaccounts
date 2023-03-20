@@ -1896,9 +1896,10 @@ sub reminder {
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
 		
+		
 		print STDERR " //// ";
-		print STDERR "strdbkginf form: " . $form->{strdbkginf} . "\n";
-		print STDERR "strdbkginf ref: " . $ref->{strdbkginf} . "\n"; 
+		print STDERR "strdbkginf form: " . $form->{strdbkginf} . "\n"; # empty
+		print STDERR "strdbkginf ref: " . $ref->{strdbkginf} . "\n"; # contain varibales
 		print STDERR " //// ";
 		
 		
@@ -2015,7 +2016,7 @@ sub reminder {
 		  push @{ $form->{AG} }, $ref;
 		}
 	
-	
+=pod
 	 	print STDERR "REF";	
 	# print STDERR %{$form};
 	
@@ -2027,6 +2028,7 @@ sub reminder {
       }
       $sth->finish;
     }
+=cut
   }
 
   #$form->info("<pre>"); for my $row (@{$form->{AG}}){ for (qw(invnumber bankname qriban strdbkginf invoicedescriptionqr)) { print "$_: $row->{$_}\n" } print "\n\n" }

@@ -754,6 +754,13 @@ sub invoice_details {
   $form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
   $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 
+
+	print STDERR " //// ";
+		print STDERR "strdbkginf form: " . $form->{strdbkginf} . "\n"; # empty
+		print STDERR "strdbkginf ref: " . $ref->{strdbkginf} . "\n"; # contain varibales
+		print STDERR " //// ";
+
+
   $form->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
   $form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
   $form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
@@ -764,12 +771,15 @@ sub invoice_details {
   $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
   
   
+=pod
   	print STDERR "FORM";	
 	# print STDERR %{$form};
 	
 	while (($key, $value) = each (%{$form})) {
   		print STDERR "$key -> $value\n";
 	}
+
+=cut
   
 }
 
