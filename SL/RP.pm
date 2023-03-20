@@ -1819,6 +1819,7 @@ sub reminder {
 		$ref->{language_code} = $item->{language_code};
 	    $form->{terms} = $ref->{terms};
 
+=pod
 
 		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
 		# taken from IS.pm / line 689 / method invoice_details() (to good someone made small and comprehensive sub methods and its not just one huge fucking piece of code!)
@@ -1867,7 +1868,7 @@ sub reminder {
 		my @nums = $form->{businessnumber} =~ /(\d+)/g;
 		for (@nums) { $form->{businessnumberqr} .= $_ };
 		
-=pod
+#=pod
 		
 		$form->{swicotaxbaseqr}  = $form->{swicotaxbase};
 		$form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
@@ -1893,7 +1894,7 @@ sub reminder {
 	
 		chop $form->{swicotaxbaseqr};
 		
-=cut
+#=cut
 
 		$form->{swicotaxbaseqr} = "7.6:10000";
 		
@@ -1909,6 +1910,94 @@ sub reminder {
 		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
 		$form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
+		
+=cut
+
+		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
+		# taken from IS.pm / line 689 / method invoice_details() (to good someone made small and comprehensive sub methods and its not just one huge fucking piece of code!)
+	    $ref->{invnumber} = $ref->{invnumber};
+		$ref->{invnumber} = substr($form->{invnumber}, 0, 24);
+		$ref->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
+		$ref->{invnumber} = $form->string_replace($form->{invnumber}, "/", ""); # QR Standard requires "/" to be escaped. We just remove it ("/" is rarely used) (See #112446)
+		$ref->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
+		$ref->{invnumberqr} = $form->{invnumber};
+		
+		$ref->{invdescription} = $ref->{invdescription};
+		$ref->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
+		$ref->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
+		$ref->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
+		$ref->{invdescriptionqr2} = $form->{invdescriptionqr};
+		
+		$ref->{qriban} = $ref->{qriban};
+		$ref->{qribanqr} = $form->{qriban};
+		$ref->{qribanqr} =~ s/\s//g;
+		$ref->{qribanqr} = $form->string_replace($form->{qribanqr}, "%", "");
+
+		$ref->{companyqr} = substr($form->{company},0,70);
+		$ref->{companyqr} = $form->string_replace($form->{companyqr}, "%", "");
+		
+		$ref->{companyaddress1qr} = substr($form->{address1},0,70);
+		$ref->{companyaddress1qr} = $form->string_replace($form->{companyaddress1qr}, "%", "");
+		
+		$ref->{companyzipqr} = substr($form->{zip},0,16);
+		$ref->{companyzipqr} = $form->string_replace($form->{companyzipqr}, "%", "");
+		
+		$ref->{companycityqr} = substr($form->{city},0,35);
+		$ref->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
+		
+		$ref->{nameqr} = substr($form->{name},0,70);
+		$ref->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
+		
+		$ref->{address1qr} = substr($form->{address1},0,70);
+		$ref->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
+		
+		$ref->{zipcodeqr}  = substr($form->{zipcode},0,16);
+		$ref->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
+		
+		$ref->{cityqr} = substr($form->{city},0,35);
+		$ref->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
+		
+		my @nums = $form->{businessnumber} =~ /(\d+)/g;
+		for (@nums) { $ref->{businessnumberqr} .= $_ };
+		
+		$ref->{swicotaxbaseqr}  = $form->{swicotaxbase};
+		$ref->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
+		
+		$ref->{swicotaxqr}  = $form->{swicotax};
+		$ref->{swicotaxqr} = $form->string_replace($form->{swicotaxqr}, "%", "");
+		
+		@taxaccounts = split (/ /, $form->{taxaccounts}); 
+		
+		for (@taxaccounts) {
+			if ($form->{"${_}_rate"}) {
+			    #$rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
+			    $rate = $form->{"${_}_rate"};
+			    $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
+			    $taxbase *= 1;
+			    $tax = $form->round_amount(($rate * $taxbase)/100,2);
+			    $rate *= 100;
+			    if ($taxbase){
+			      $ref->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
+			    }
+			}
+		}
+	
+		chop $ref->{swicotaxbaseqr};
+
+		$ref->{swicotaxbaseqr} = "7.6:10000";
+		
+		$ref->{invdate} = $ref->{transdate};
+		$ref->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
+		$ref->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
+		
+		$ref->{strdbkginf} = $form->format_line($myconfig, $form->{strdbkginf});
+		$ref->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
+		$ref->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
+		$ref->{strdbkginfqr} = $form->{strdbkginf};
+		
+		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
+		$ref->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
+		$ref->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 	
 	
 	    ($whole, $decimal) = split /\./, $ref->{due};
