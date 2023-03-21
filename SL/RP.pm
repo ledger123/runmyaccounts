@@ -1934,6 +1934,9 @@ sub reminder {
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
 		
+		print STDERR "form invdescriptionqr2" . $form->{invdescriptionqr2} . "\n";
+		print STDERR "ref invdescriptionqr2" . $ref->{invdescriptionqr2} . "\n";
+		
 		
 		
 		

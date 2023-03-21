@@ -763,6 +763,8 @@ sub invoice_details {
   $form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
   $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
   
+  print STDERR "form invdescriptionqr2" . $form->{invdescriptionqr2} . "\n";
+  
   
   # TODO: remove
   
