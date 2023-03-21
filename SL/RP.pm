@@ -1829,11 +1829,11 @@ sub reminder {
 		$form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
 		$form->{invnumberqr} = $form->{invnumber};
 		
-		$form->{invdescription} = $ref->{invdescription};
-		$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
-		$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
-		$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
 		# QR-Codes needs to be the same as in Debitoren-Modul. This variable is not filled in Debitoren-Modul.
+		#$form->{invdescription} = $ref->{invdescription};
+		#$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
+		#$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
+		#$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
 		#$form->{invdescriptionqr2} = $form->{invdescriptionqr};
 		
 		$form->{qriban} = $ref->{qriban};
@@ -1906,7 +1906,7 @@ sub reminder {
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 
 
-		# Here in the Mahnmodul I'm not sure which variables are taken from $from and which from $ref so I just make all variables available in both. Seems to work...
+		# Here in the Mahnmodul, I'm not sure which variables are taken from $from and which from $ref so I just make all variables available in both. Seems to work...
 		$ref->{terms} = $form->{terms};
 		$ref->{invnumber} = $form->{invnumber};
 		$ref->{invnumberqr} = $form->{invnumberqr};
