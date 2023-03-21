@@ -1833,7 +1833,8 @@ sub reminder {
 		$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
 		$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
 		$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
-		$form->{invdescriptionqr2} = $form->{invdescriptionqr};
+		# QR-Codes needs to be the same as in Debitoren-Modul. This variable is not filled in Debitoren-Modul.
+		#$form->{invdescriptionqr2} = $form->{invdescriptionqr};
 		
 		$form->{qriban} = $ref->{qriban};
 		$form->{qribanqr} = $form->{qriban};
@@ -1903,10 +1904,9 @@ sub reminder {
 		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
 		$form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
 		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
-	
-	
 
-		# TODO: Mapping (shall be made obselete) (Will be some work though)
+
+		# Here in the Mahnmodul I'm not sure which variables are taken from $from and which from $ref so I just make all variables available in both. Seems to work...
 		$ref->{terms} = $form->{terms};
 		$ref->{invnumber} = $form->{invnumber};
 		$ref->{invnumberqr} = $form->{invnumberqr};
@@ -1934,8 +1934,6 @@ sub reminder {
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
 		
-		print STDERR "form invdescriptionqr2" . $form->{invdescriptionqr2} . "\n";
-		print STDERR "ref invdescriptionqr2" . $ref->{invdescriptionqr2} . "\n";
 		
 		
 		
