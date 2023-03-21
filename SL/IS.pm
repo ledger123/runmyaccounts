@@ -762,22 +762,6 @@ sub invoice_details {
   # split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
   $form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
   $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
-  
-  print STDERR "form invdescriptionqr2" . $form->{invdescriptionqr2} . "\n";
-  
-  
-  # TODO: remove
-  
-=pod
-  	print STDERR "FORM";	
-	# print STDERR %{$form};
-	
-	while (($key, $value) = each (%{$form})) {
-  		print STDERR "$key -> $value\n";
-	}
-
-=cut
-  
 }
 
 

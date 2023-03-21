@@ -1829,7 +1829,7 @@ sub reminder {
 		$form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
 		$form->{invnumberqr} = $form->{invnumber};
 		
-		# QR-Codes needs to be the same as in Debitoren-Modul. This variable is not filled in Debitoren-Modul.
+		# QR-Codes needs to be the same as in Debitoren-Modul (as it works in Debitoren-Modul). This variable is not filled in Debitoren-Modul, thats why commented out here.
 		#$form->{invdescription} = $ref->{invdescription};
 		#$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
 		#$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
@@ -1933,66 +1933,6 @@ sub reminder {
 		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
-		
-		
-		
-		
-		
-		
-		# TODO: remove all of this shit
-		
-		
-		#$ref->{invdescriptionqr} = "";
-		#$ref->{invdescriptionqr1} = "";
-		#$ref->{invdescriptionqr2} = "";
-		#$form->{invdescriptionqr} = "";
-		#$form->{invdescriptionqr1} = "";
-		#$form->{invdescriptionqr2} = "";
-		
-=pod
-		
-		print STDERR " //// ";
-		print STDERR "REF / FORM: \n"; 
-		print STDERR $ref->{invdescriptionqr2} . " / " . $form->{invdescriptionqr2} . "\n"; 
-		print STDERR $ref->{nameqr} . " / " . $form->{nameqr} . "\n"; 
-		print STDERR $ref->{zipcodeqr} . " / " . $form->{zipcodeqr} . "\n"; 
-		print STDERR $ref->{invdateqr} . " / " . $form->{invdateqr} . "\n"; 
-		print STDERR $ref->{strdbkginf} . " / " . $form->{strdbkginf} . "\n"; 
-		print STDERR $ref->{strdbkginfqr} . " / " . $form->{strdbkginfqr} . "\n"; 
-		print STDERR $ref->{strdbkginfline1qr} . " / " . $form->{strdbkginfline1qr} . "\n"; 
-		print STDERR $ref->{strdbkginfline2qr} . " / " . $form->{strdbkginfline2qr} . "\n"; 
-		print STDERR " //// ";
-		
-		
-		# Faulty list:
-		# nameqr
-		# zipcodeqr
-		# strdbkginf
-		# strdbkginfqr
-		# strdbkginfline1qr
-		# strdbkginfline2qr
-
-		# check
-		# invdescriptionqr2
-		# invdateqr
-
-
-		print STDERR "REF";	
-		# print STDERR %{$form};
-	
-		while (($key, $value) = each (%{$ref})) {
-  			print STDERR "$key -> $value\n";
-		}
-	
-=cut
-
-
-
-
-
-
-
-
 
 	
 	    ($whole, $decimal) = split /\./, $ref->{due};
@@ -2014,18 +1954,6 @@ sub reminder {
 	
 		  push @{ $form->{AG} }, $ref;
 		}
-	
-=pod
-	 	print STDERR "REF";	
-	# print STDERR %{$form};
-	
-	while (($key, $value) = each (%{$ref})) {
-  		print STDERR "$key -> $value\n";
-	}
-
-=cut
-	
-	
       }
       $sth->finish;
     }
