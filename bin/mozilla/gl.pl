@@ -2381,7 +2381,7 @@ sub post {
 
     # Process per line tax information
     $count = $form->{rowcount};
-    for my $i ( 1 .. $form->{rowcount} ) {
+    for my $i ( 1 .. $form->{rowcount} - 1 ) {
         for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
         if ( $form->{"taxamount_$i"} ) {
             $j                  = $count++;
