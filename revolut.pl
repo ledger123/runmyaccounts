@@ -240,9 +240,9 @@ any 'transactions' => sub ($c) {
             $exchangerate = 1 if !$exchangerate;
             my $transjson = encode_json($item);
             $dbs->query( "
-                    INSERT INTO gl(reference, transdate, department_id, curr, exchangerate, transjson)
-                    VALUES (?, ?, ?, ?, ?, ?)",
-                $item->{id}, $transdate, $department_id, $curr, $exchangerate, $transjson )
+                    INSERT INTO gl(reference, description, notes, transdate, department_id, curr, exchangerate, transjson)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                $item->{id}, $item->{legs}->[0]->{description}, "$item->{type} -- $item->{merchant}->{category_code}", $transdate, $department_id, $curr, $exchangerate, $transjson )
               or die $dbs->error;
             my $id = $dbs->query( "SELECT id FROM gl WHERE reference = ?", $item->{id} )->list;
             if ($id) {
