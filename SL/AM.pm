@@ -1551,10 +1551,11 @@ sub taxes {
   my $dbh = $form->dbconnect($myconfig);
 
   my $query = qq|SELECT c.id, c.accno, c.description,
-              t.rate * 100 AS rate, t.taxnumber, t.validto,
-	      l.description AS translation
+              t.rate * 100 AS rate, t.taxnumber, t.validto, t.taxtype, t.taxtype,
+	      l.description AS translation, t.reversecharge_id, c2.accno reversecharge
               FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)
+          LEFT JOIN chart c2 ON c2.id = t.reversecharge_id
 	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 	      ORDER BY 3, 6|;
 
@@ -1586,11 +1587,14 @@ sub save_taxes {
 	print STDERR "$i " . $form->{"taxrate_$i"} . "\n";
     if ( $form->{"taxrate_$i"} ne "" ) {
       my $rate = $form->parse_amount($myconfig, $form->{"taxrate_$i"}) / 100;
-      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto)
-                  VALUES ($chart_id, $rate, |
-		  .$dbh->quote($form->{"taxnumber_$i"}).qq|, |
-		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE)
-		  .qq|)|;
+
+      $form->{"reversecharge_$i"} *= 1;
+      my $reversecharge_id = $dbh->selectrow_array(qq|SELECT id FROM chart WHERE accno = '$form->{"reversecharge_$i"}'|);
+      $reversecharge_id *= 1;
+
+      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto, reversecharge_id)
+                  VALUES ($chart_id, $rate,|.$dbh->quote($form->{"taxnumber_$i"}).qq|, |
+		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE). qq|, $reversecharge_id )|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
