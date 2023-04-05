@@ -2111,7 +2111,6 @@ sub display_taxes {
 	  <th>|.$locale->text('Number').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
 	  <th>|.$locale->text('Reverse Charge').qq|</th>
-	  <th>|.$locale->text('Tax Type').qq|</th>
 	</tr>
 |;
 
@@ -2140,7 +2139,6 @@ sub display_taxes {
 	  <td><input name="taxnumber_$i" value="$form->{"taxnumber_$i"}"></td>
 	  <td><input name="validto_$i" size=11 class=date value="$form->{"validto_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
 	  <td><input name="reversecharge_$i" size=10 value="$form->{"reversecharge_$i"}"></td>
-	  <td><input name="taxtype_$i" size=10 value="$form->{"taxtype_$i"}"></td>
 	</tr>
 |;
     my $sametax = $form->{"taxdescription_$i"};
