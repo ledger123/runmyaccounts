@@ -1194,13 +1194,13 @@ sub transaction {
 	        LEFT JOIN project p ON (p.id = ac.project_id)
 		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 	        WHERE ac.trans_id = $form->{id}
-            AND (tax <> 'auto' OR tax IS NULL)
+            AND (tax <> 'auto' AND tax <> 'reverse' OR tax IS NULL)
 	        ORDER BY accno|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
     
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-      $ref->{amount} += $ref->{taxamount};
+      $ref->{amount} += $ref->{taxamount} if $ref->{tax} !~ /2205/;
       $ref->{taxamount} = abs($ref->{taxamount});
       $ref->{description} = $ref->{translation} if $ref->{translation};
       push @a, $ref;
