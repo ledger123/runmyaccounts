@@ -1,0 +1,15 @@
+$self{charset} = 'ISO-8859-1';
+
+$self{texts} = {
+};
+
+$self{subs} = {
+  'escape_csv'                  => 'escape_csv',
+  'escape_double_quotes_with_two_double_quotes' => 'escape_double_quotes_with_two_double_quotes',
+  'export_to_csv'               => 'export_to_csv',
+  'export_to_xls'               => 'export_to_xls',
+  'ref_to_csv'                  => 'ref_to_csv',
+};
+
+1;
+
