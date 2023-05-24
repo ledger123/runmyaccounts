@@ -1684,9 +1684,16 @@ sub reminder {
   my $item;
   my $curr;
 
-  my @a = qw(company companyemail companywebsite address businessnumber tel fax precision);
+  my @a = qw(company companyemail companywebsite address address1 address2 city state zip country businessnumber tel fax precision);
   my %defaults = $form->get_defaults($dbh, \@a);
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
+
+  $form->{companyaddress1} = $defaults{address1};
+  $form->{companyaddress2} = $defaults{address2};
+  $form->{companycity} = $defaults{city};
+  $form->{companystate} = $defaults{state};
+  $form->{companyzip} = $defaults{zip};
+  $form->{companycountry} = $defaults{country};
 
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
 
@@ -1781,6 +1788,7 @@ sub reminder {
 	      s.*,
           bank.name bankname, bank.iban, bank.bic bankbic,
           bank.dcn, bank.rvc, bank.membernumber,
+          bank.qriban, bank.strdbkginf, bank.invdescriptionqr,
           ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
           ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
 	      FROM ar a
@@ -1805,34 +1813,154 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-	$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
-	$ref->{module} = 'ps' if $ref->{till};
-	$ref->{exchangerate} ||= 1;
-	$ref->{language_code} = $item->{language_code};
+		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
+		$ref->{module} = 'ps' if $ref->{till};
+		$ref->{exchangerate} ||= 1;
+		$ref->{language_code} = $item->{language_code};
+	    $form->{terms} = $ref->{terms};
+	
 
-    ($whole, $decimal) = split /\./, $ref->{due};
-    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
-    $ref->{integer_out_amount} = $whole;
+		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
+		# taken from IS.pm / line 689 / method invoice_details() (to good someone made small and comprehensive sub methods and its not just one huge fucking piece of code!)
+	    $form->{invnumber} = $ref->{invnumber};
+		$form->{invnumber} = substr($form->{invnumber}, 0, 24);
+		$form->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
+		$form->{invnumber} = $form->string_replace($form->{invnumber}, "/", ""); # QR Standard requires "/" to be escaped. We just remove it ("/" is rarely used) (See #112446)
+		$form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
+		$form->{invnumberqr} = $form->{invnumber};
+		
+		# QR-Codes needs to be the same as in Debitoren-Modul (as it works in Debitoren-Modul). This variable is not filled in Debitoren-Modul, thats why commented out here.
+		#$form->{invdescription} = $ref->{invdescription};
+		#$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
+		#$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
+		#$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
+		#$form->{invdescriptionqr2} = $form->{invdescriptionqr};
+		
+		$form->{qriban} = $ref->{qriban};
+		$form->{qribanqr} = $form->{qriban};
+		$form->{qribanqr} =~ s/\s//g;
+		$form->{qribanqr} = $form->string_replace($form->{qribanqr}, "%", "");
 
-	$rth->execute($ref->{id}, $curr);
-	$found = 0;
-	while (($reminder) = $rth->fetchrow_array) {
-	  $ref->{level} = substr($reminder, -1);
-	  $ref->{level}++;
-	  push @{ $form->{AG} }, $ref;
-	  $found = 1;
-	}
-	$rth->finish;
+		$form->{companyqr} = substr($form->{company},0,70);
+		$form->{companyqr} = $form->string_replace($form->{companyqr}, "%", "");
+		
+		$form->{companyaddress1qr} = substr($form->{address1},0,70);
+		$form->{companyaddress1qr} = $form->string_replace($form->{companyaddress1qr}, "%", "");
+		
+		$form->{companyzipqr} = substr($form->{zip},0,16);
+		$form->{companyzipqr} = $form->string_replace($form->{companyzipqr}, "%", "");
+		
+		$form->{companycityqr} = substr($form->{city},0,35);
+		$form->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
+		
+		$form->{nameqr} = substr($ref->{name},0,70);
+		$form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
+		
+		$form->{address1qr} = substr($ref->{address1},0,70);
+		$form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
+		
+		$form->{zipcodeqr}  = substr($ref->{zipcode},0,16);
+		$form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
+		
+		$form->{cityqr} = substr($ref->{city},0,35);
+		$form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
+		
+		my @nums = $form->{businessnumber} =~ /(\d+)/g;
+		for (@nums) { $form->{businessnumberqr} .= $_ };
+		
+		$form->{swicotaxbaseqr}  = $form->{swicotaxbase};
+		$form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
+		
+		$form->{swicotaxqr}  = $form->{swicotax};
+		$form->{swicotaxqr} = $form->string_replace($form->{swicotaxqr}, "%", "");
+		
+		@taxaccounts = split (/ /, $form->{taxaccounts}); 
+		
+		for (@taxaccounts) {
+			if ($form->{"${_}_rate"}) {
+			    #$rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
+			    $rate = $form->{"${_}_rate"};
+			    $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
+			    $taxbase *= 1;
+			    $tax = $form->round_amount(($rate * $taxbase)/100,2);
+			    $rate *= 100;
+			    if ($taxbase){
+			      $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
+			    }
+			}
+		}
+	
+		chop $form->{swicotaxbaseqr};
+		
+		$form->{invdate} = $ref->{transdate};
+		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
+		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
+		
+		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
+		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
+		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
+		$form->{strdbkginfqr} = $form->{strdbkginf};
+		
+		# split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
+		$form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
+		$form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 
-        if (! $found) {
-	  $ref->{level}++;
-	  push @{ $form->{AG} }, $ref;
-	}
+
+		# Here in the Mahnmodul, I'm not sure which variables are taken from $from and which from $ref so I just make all variables available in both. Seems to work...
+		$ref->{terms} = $form->{terms};
+		$ref->{invnumber} = $form->{invnumber};
+		$ref->{invnumberqr} = $form->{invnumberqr};
+		$ref->{invdescription} = $form->{invdescription};
+		$ref->{invdescriptionqr} = $form->{invdescriptionqr};
+		$ref->{invdescriptionqr2} = $form->{invdescriptionqr2};
+		$ref->{qriban} = $form->{qriban};
+		$ref->{qribanqr} = $form->{qribanqr};
+		$ref->{companyqr} = $form->{companyqr};
+		$ref->{companyaddress1qr} = $form->{companyaddress1qr};
+		$ref->{companyzipqr} = $form->{companyzipqr};
+		$ref->{companycityqr} = $form->{companycityqr};
+		$ref->{nameqr} = $form->{nameqr};
+		$ref->{address1qr} = $form->{address1qr};
+		$ref->{zipcodeqr} = $form->{zipcodeqr};
+		$ref->{cityqr} = $form->{cityqr};
+		$ref->{businessnumber} = $form->{businessnumber};
+		$ref->{businessnumberqr} = $form->{businessnumberqr};
+		$ref->{swicotaxbaseqr} = $form->{swicotaxbaseqr};
+		$ref->{swicotaxqr} = $form->{swicotaxqr};
+		$ref->{invdate} = $form->{invdate};
+		$ref->{invdateqr} = $form->{invdateqr};
+		$ref->{strdbkginf} = $form->{strdbkginf};
+		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
+		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
+		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+
+	
+	    ($whole, $decimal) = split /\./, $ref->{due};
+	    $ref->{out_decimal} = substr("${decimal}00", 0, 2);
+	    $ref->{integer_out_amount} = $whole;
+	
+		$rth->execute($ref->{id}, $curr);
+		$found = 0;
+		while (($reminder) = $rth->fetchrow_array) {
+		  $ref->{level} = substr($reminder, -1);
+		  $ref->{level}++;
+		  push @{ $form->{AG} }, $ref;
+		  $found = 1;
+		}
+		$rth->finish;
+	
+	        if (! $found) {
+		  $ref->{level}++;
+	
+		  push @{ $form->{AG} }, $ref;
+		}
       }
       $sth->finish;
-
     }
+
   }
+
+  #$form->info("<pre>"); for my $row (@{$form->{AG}}){ for (qw(invnumber bankname qriban strdbkginf invoicedescriptionqr)) { print "$_: $row->{$_}\n" } print "\n\n" }
 
   # get language
   $form->all_languages($myconfig, $dbh);

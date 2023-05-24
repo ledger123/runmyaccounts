@@ -3049,12 +3049,16 @@ function matchStartStringOnly(params, data) {
   if (typeof data.id === 'undefined') {
     return null;
   }
-
-  if (data.id.toUpperCase().indexOf(params.term.toUpperCase()) == 0
-    |;print"||";print q|
-	data.text.toUpperCase().indexOf(params.term.toUpperCase()) == 0) {
-    return data;
-  }
+  	// most accountans pref to search for chart number, and display results by that, while others prefer the description of the chart, therefor we distinguish between number or text search an return different results
+	if(isNaN(params.term)){
+		if (data.id.toUpperCase().includes(params.term.toUpperCase())) {
+    		return data;
+  		}
+  	} else {
+  		if (data.id.toUpperCase().indexOf(params.term.toUpperCase()) == 0) {
+    		return data;
+  		}
+  	}
 
   // Return `null` if the term should not be displayed
   return null;

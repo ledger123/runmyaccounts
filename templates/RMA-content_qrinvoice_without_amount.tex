@@ -61,6 +61,10 @@
 
 % REFORMATING OF VARIABLES
 
+\StrMid{<%strdbkginf%>}{1}{50}[\strdbkginfi]
+\StrMid{<%strdbkginf%>}{51}{100}[\strdbkginfii]
+\StrMid{<%strdbkginf%>}{100}{140}[\strdbkginfiii]
+
 \noindent
 % Block where the QR code is
 \begin{textblock}{210}(\QRposX,\QRposY)\setlength{\parindent}{0pt}%
@@ -160,12 +164,12 @@
                     \vskip1ex
                     {\par\medskip
 \QRpsubtitle \LANGuse{qr_additionalinformation}}\par
-                   \ifthenelse{\equal{<%invdescriptionqr2%>}{}}{}{\strut <%invdescriptionqr2%> \par}
-                   \ifthenelse{\equal{<%strdbkginfline1qr%>}{}}{}{\strut <%strdbkginfline1qr%> \par}
-                   \ifthenelse{\equal{<%strdbkginfline2qr%>}{}}{}{\strut <%strdbkginfline2qr%>}
+                    \strut <%invdescriptionqr2%>
+                    \strut \strdbkginfi
+                    \strut \strdbkginfii \par
+                    \strut \strdbkginfiii
                     \vskip1ex
-                    {\par\medskip
-\QRpsubtitle \LANGuse{qr_payableby}}\par
+                    {\QRpsubtitle \LANGuse{qr_payableby}}\par
                     \strut \ifthenelse{\equal{<%typeofcontact%>}{company}}{<%name%>}{<%firstname%> <%lastname%>}\par
                     \strut <%address1%>\par
                     \strut <%zipcode%> <%city%> \par

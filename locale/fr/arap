@@ -1,3 +1,5 @@
+$self{charset} = 'ISO-8859-1';
+
 $self{texts} = {
   'Address'                     => 'Adresse',
   'Bcc'                         => 'Copie cachée',
@@ -61,7 +63,9 @@ $self{subs} = {
   'gl_transaction'              => 'gl_transaction',
   'islocked'                    => 'islocked',
   'name_selected'               => 'name_selected',
+  'new_number'                  => 'new_number',
   'post_as_new'                 => 'post_as_new',
+  'preview'                     => 'preview',
   'print_and_post_as_new'       => 'print_and_post_as_new',
   'project_selected'            => 'project_selected',
   'rebuild_formnames'           => 'rebuild_formnames',
@@ -69,6 +73,7 @@ $self{subs} = {
   'repost'                      => 'repost',
   'reprint'                     => 'reprint',
   'sales_invoice_'              => 'sales_invoice_',
+  'save_report'                 => 'save_report',
   'save_schedule'               => 'save_schedule',
   'schedule'                    => 'schedule',
   'select_name'                 => 'select_name',
