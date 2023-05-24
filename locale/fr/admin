@@ -1,3 +1,5 @@
+$self{charset} = 'ISO-8859-1';
+
 $self{texts} = {
   'Access Control'              => 'Contrôle d\'accès',
   'Accounting'                  => 'Comptabilité',
@@ -121,9 +123,12 @@ $self{subs} = {
   'pg_database_administration'  => 'pg_database_administration',
   'pgpp_database_administration' => 'pgpp_database_administration',
   'save'                        => 'save',
+  'software_administration'     => 'software_administration',
+  'switch_branch'               => 'switch_branch',
   'sybase_database_administration' => 'sybase_database_administration',
   'unlock_system'               => 'unlock_system',
   'update_dataset'              => 'update_dataset',
+  'update_software'             => 'update_software',
   'ajouter_utilisateur'         => 'add_user',
   'modifier_mot_de_passe_administrateur' => 'change_admin_password',
   'modifier_mot_de_passe'       => 'change_password',
