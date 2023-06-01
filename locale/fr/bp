@@ -1,3 +1,5 @@
+$self{charset} = 'ISO-8859-1';
+
 $self{texts} = {
   'Accounting Menu'             => 'Menu de comptabilité',
   'Amount'                      => 'Montant',
@@ -69,6 +71,7 @@ $self{subs} = {
   'continue'                    => 'continue',
   'deselect_all'                => 'deselect_all',
   'display'                     => 'display',
+  'download_zip_file'           => 'download_zip_file',
   'e_mail'                      => 'e_mail',
   'js_menu'                     => 'js_menu',
   'list_spool'                  => 'list_spool',
