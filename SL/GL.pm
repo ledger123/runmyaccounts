@@ -1185,7 +1185,16 @@ sub transaction {
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
     $form->{currency} = $form->{curr};
     $sth->finish;
-  
+
+    # is this reversecharge tax transaction?
+    ($reversecharge_id) = $dbh->selectrow_array("
+        SELECT reversecharge_id
+        FROM tax
+        WHERE chart_id IN (SELECT chart_id FROM acc_trans WHERE trans_id = $form->{id})
+        AND reversecharge_id <> 0
+        LIMIT 1
+    ");
+
     # retrieve individual rows
     $query = qq|SELECT ac.*, c.accno, c.description, p.projectnumber,
                 l.description AS translation
@@ -1200,7 +1209,9 @@ sub transaction {
     $sth->execute || $form->dberror($query);
     
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-      $ref->{amount} += $ref->{taxamount} if $ref->{tax} !~ /2205/;
+      if (!$reversecharge_id){
+        $ref->{amount} += $ref->{taxamount} if $ref->{tax};
+      }
       $ref->{taxamount} = abs($ref->{taxamount});
       $ref->{description} = $ref->{translation} if $ref->{translation};
       push @a, $ref;

@@ -2371,6 +2371,8 @@ sub post {
 
                 for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
+                $form->{taxamount} = $form->{"taxamount_$i"};
+
                 if ( $form->{"debit_$i"} ) {
                     $form->{"debit_$j"} = $form->{"taxamount_$i"}; }
                 else {
@@ -2393,6 +2395,13 @@ sub post {
                     $form->{"credit_$j"} = 0;
                 }
 
+                for my $i ( 1 .. $form->{rowcount} ) {
+                    if (!$form->{"tax_$i"}){
+                        $form->{"tax_$i"} = "$reversecharge_accno--$reversecharge_description";
+                        $form->{"taxamount_$i"} = $form->{taxamount};
+                    }
+                }
+                last;
            }
         }
     }
