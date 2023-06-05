@@ -2074,7 +2074,6 @@ sub taxes {
     $form->{"taxdescription_$i"} = $ref->{description};
     $form->{"taxdescription_$i"} = $ref->{description};
     $form->{"reversecharge_$i"} = $ref->{reversecharge};
-    $form->{"taxtype_$i"} = $ref->{taxtype};
 
     for (qw(taxnumber validto)) { $form->{"${_}_$i"} = $ref->{$_} }
     $form->{taxaccounts} .= "$ref->{id}_$i ";
