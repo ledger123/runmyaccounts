@@ -1552,7 +1552,7 @@ sub taxes {
   my $dbh = $form->dbconnect($myconfig);
 
   my $query = qq|SELECT c.id, c.accno, c.description,
-              t.rate * 100 AS rate, t.taxnumber, t.validto, t.taxtype, t.taxtype,
+              t.rate * 100 AS rate, t.taxnumber, t.validto,
 	      l.description AS translation, t.reversecharge_id, c2.accno reversecharge
               FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)

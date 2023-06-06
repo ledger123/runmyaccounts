@@ -1759,7 +1759,7 @@ sub update {
     # per line tax
     for $i ( 1 .. $form->{rowcount} ) {
         unless ( ( $form->{"debit_$i"} eq "" ) && ( $form->{"credit_$i"} eq "" ) ) {
-            for (qw(debit credit)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
             push @a, {};
             $j = $#a;
@@ -2431,9 +2431,9 @@ sub post {
                 $form->{taxamount} = $form->{"taxamount_$i"};
 
                 if ( $form->{"debit_$i"} ) {
-                    $form->{"debit_$j"} = $form->{"taxamount_$i"}; }
-                else {
-                    $form->{"credit_$j"} = $form->{"taxamount_$i"};
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}); 
+                } else {
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
                 }
 
                 $j                  = $count++;
@@ -2446,9 +2446,9 @@ sub post {
 
                 if ( $form->{"debit_$i"} ) {
                     $form->{"debit_$j"} = 0;
-                    $form->{"credit_$j"} = $form->{"taxamount_$i"};
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
                 } else {
-                    $form->{"debit_$j"} = $form->{"taxamount_$i"};
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
                     $form->{"credit_$j"} = 0;
                 }
 
