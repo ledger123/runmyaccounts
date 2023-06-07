@@ -1907,7 +1907,7 @@ sub display_rows {
             $form->{totalcredit}    += $form->{"credit_$i"};
             $form->{totaltaxamount} += $form->{"taxamount_$i"};
 
-            for (qw(debit credit)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
 
             if ( $i < $form->{rowcount} ) {
 
