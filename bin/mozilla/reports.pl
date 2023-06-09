@@ -434,7 +434,7 @@ $selectfrom
         aa.id, aa.reference, aa.transdate,
         aa.description, '', '', 'gl.pl' script, 0 as vc_id,
         '' f,
-        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        SUM(ac.amount)*-1, SUM(ac.taxamount)*-1 AS tax
         FROM acc_trans ac
         JOIN chart c ON (c.id = ac.tax_chart_id)
         JOIN gl aa ON (aa.id = ac.trans_id)
