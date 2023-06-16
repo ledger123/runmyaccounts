@@ -1782,14 +1782,17 @@ sub update {
     for $i ( 1 .. $count ) {
         if ( $form->{"tax_$i"} and !$form->{"taxamount_$i"} ) {
             my ( $tax_accno, $null ) = split( /--/, $form->{"tax_$i"} );
-            ($tax_rate) = $dbh->selectrow_array(
-                qq|
-                SELECT rate 
+            ($tax_rate, $reversecharge_id) = $dbh->selectrow_array(qq|
+                SELECT rate, reversecharge_id
                 FROM tax 
                 WHERE chart_id = (SELECT id FROM chart WHERE accno = '$tax_accno')
                 AND (validto IS NULL OR validto >= '$form->{transdate}')|
             );
-            $taxamount = $form->round_amount( ( $form->{"debit_$i"} + $form->{"credit_$i"} ) - ( $form->{"debit_$i"} + $form->{"credit_$i"} ) / ( 1 + $tax_rate ), $form->{precision} );
+            if ($reversecharge_id){
+                $taxamount = $form->round_amount( ( $form->{"debit_$i"} + $form->{"credit_$i"} ) * $tax_rate , $form->{precision} );
+            } else {
+                $taxamount = $form->round_amount( ( $form->{"debit_$i"} + $form->{"credit_$i"} ) - ( $form->{"debit_$i"} + $form->{"credit_$i"} ) / ( 1 + $tax_rate ), $form->{precision} );
+            }
             $form->{"taxamount_$i"} = $taxamount;
         }
     }
@@ -1923,7 +1926,7 @@ sub display_rows {
                 if ( $form->{selecttax} ) {
                     $tax = $form->{"tax_$i"};
                     $tax = qq|$tax|;
-                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|">|;
+                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="$form->{"taxamount_$i"}">|;
                 }
 
                 if ( $form->{fxadj} ) {
@@ -2382,7 +2385,7 @@ sub post {
     my $dbh = $form->dbconnect(\%myconfig);
 
     $count = $form->{rowcount};
-    my $reversecharge; 
+    my $reversecharge_id; 
     for my $i ( 1 .. $form->{rowcount} ) {
         if ( $form->{"taxamount_$i"} ) {
            my ($accno, $null) = split /--/, $form->{"tax_$i"};
@@ -2459,13 +2462,14 @@ sub post {
                 for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
                 if ( $form->{"debit_$i"} ) {
-                    $form->{"debit_$i"} -= $form->{"taxamount_$i"};
-                    $form->{"debit_$j"} = $form->{"taxamount_$i"};
+                    $form->{"debit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
                 }
                 else {
-                    $form->{"credit_$i"} -= $form->{"taxamount_$i"};
-                    $form->{"credit_$j"} = $form->{"taxamount_$i"};
+                    $form->{"credit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
                 }
+                for (qw(debit credit)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
             }
         }
         $form->{rowcount} = $count;
