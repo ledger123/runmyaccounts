@@ -356,8 +356,8 @@ sub get_spoolfiles {
 	  $where .= " AND a.invoice = '1'";
 	  if ($form->{open} || $form->{closed}) {
 	    unless ($form->{open} && $form->{closed}) {
-	      $where .= " AND a.amount != a.paid" if ($form->{open});
-	      $where .= " AND a.amount = a.paid" if ($form->{closed});
+             $where .= " AND ROUND(a.amount::numeric,6) != ROUND(a.paid::numeric,6)" if ($form->{open});
+             $where .= " AND ROUND(a.amount::numeric,6) = ROUND(a.paid::numeric,6)" if ($form->{closed});
 	    }
 	  }
 	}
