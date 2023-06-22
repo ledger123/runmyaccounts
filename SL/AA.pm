@@ -1468,7 +1468,7 @@ sub company_details {
   
   # get rest for the customer/vendor
   $form->{"$form->{vc}_id"} *= 1;
-  my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2,
+  my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2, ad.post_office,
                  ad.city, ad.state, ad.zipcode, ad.country,
 	         ct.contact, ct.phone as $form->{vc}phone,
 		 ct.fax as $form->{vc}fax,
