@@ -2401,8 +2401,8 @@ sub post {
                 for my $i ( 1 .. $form->{rowcount} ) {
                     if (!$form->{"tax_$i"}){
                         $form->{"tax_$i"} = "$reversecharge_accno--$reversecharge_description";
-                        $form->{"taxamount_$i"} = $form->{taxamount};
                     }
+                    $form->{"taxamount_$i"} = $form->format_amount(\%myconfig, $form->{taxamount});
                 }
                 last;
            }
