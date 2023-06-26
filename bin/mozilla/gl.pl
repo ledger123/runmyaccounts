@@ -1759,7 +1759,7 @@ sub update {
     # per line tax
     for $i ( 1 .. $form->{rowcount} ) {
         unless ( ( $form->{"debit_$i"} eq "" ) && ( $form->{"credit_$i"} eq "" ) ) {
-            for (qw(debit credit)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
             push @a, {};
             $j = $#a;
@@ -1908,7 +1908,7 @@ sub display_rows {
             $form->{totalcredit}    += $form->{"credit_$i"};
             $form->{totaltaxamount} += $form->{"taxamount_$i"};
 
-            for (qw(debit credit)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
 
             if ( $i < $form->{rowcount} ) {
 
@@ -2379,31 +2379,97 @@ sub post {
         }
     }
 
-    # Process per line tax information
+    my $dbh = $form->dbconnect(\%myconfig);
+
     $count = $form->{rowcount};
+    my $reversecharge; 
     for my $i ( 1 .. $form->{rowcount} ) {
         if ( $form->{"taxamount_$i"} ) {
-            $j                  = $count++;
-            $form->{"accno_$j"} = $form->{"tax_$i"};
-            $form->{"tax_$j"}   = 'auto';
+           my ($accno, $null) = split /--/, $form->{"tax_$i"};
+           ($reversecharge_id) = $dbh->selectrow_array("
+               SELECT reversecharge_id
+               FROM tax
+               WHERE chart_id IN (SELECT id FROM chart WHERE accno = '$accno')
+            ");
 
-            $form->{"source_$j"}        = $form->{"source_$i"};
-            $form->{"memo_$j"}          = $form->{"memo_$i"};
-            $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+           if ($reversecharge_id){
+                ($reversecharge_accno, $reversecharge_description) = $dbh->selectrow_array("
+                    SELECT accno, description
+                    FROM chart
+                    WHERE id = $reversecharge_id"
+                );
+                $j                  = $count++;
+                $form->{"accno_$j"} = $form->{"tax_$i"};
+                $form->{"tax_$j"}   = 'reverse';
 
-            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+                $form->{"source_$j"}        = $form->{"source_$i"};
+                $form->{"memo_$j"}          = $form->{"memo_$i"};
+                $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
 
-            if ( $form->{"debit_$i"} ) {
-                $form->{"debit_$i"} -= $form->{"taxamount_$i"};
-                $form->{"debit_$j"} = $form->{"taxamount_$i"};
-            }
-            else {
-                $form->{"credit_$i"} -= $form->{"taxamount_$i"};
-                $form->{"credit_$j"} = $form->{"taxamount_$i"};
-            }
+                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+
+                $form->{taxamount} = $form->{"taxamount_$i"};
+
+                if ( $form->{"debit_$i"} ) {
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}); 
+                } else {
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
+                }
+
+                $j                  = $count++;
+                $form->{"accno_$j"} = "$reversecharge_accno--$reversecharge_description";
+                $form->{"tax_$j"}   = 'reverse';
+
+                $form->{"source_$j"}        = $form->{"source_$i"};
+                $form->{"memo_$j"}          = $form->{"memo_$i"};
+                $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+
+                if ( $form->{"debit_$i"} ) {
+                    $form->{"debit_$j"} = 0;
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
+                } else {
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
+                    $form->{"credit_$j"} = 0;
+                }
+
+                for my $i ( 1 .. $form->{rowcount} ) {
+                    if (!$form->{"tax_$i"}){
+                        $form->{"tax_$i"} = "$reversecharge_accno--$reversecharge_description";
+                        $form->{"taxamount_$i"} = $form->{taxamount};
+                    }
+                }
+                last;
+           }
         }
     }
     $form->{rowcount} = $count;
+
+    if (!$reversecharge_id){
+        # Process per line tax information
+        for my $i ( 1 .. $form->{rowcount} ) {
+            if ( $form->{"taxamount_$i"} ) {
+                $j                  = $count++;
+                $form->{"accno_$j"} = $form->{"tax_$i"};
+                $form->{"tax_$j"}   = 'auto';
+
+                $form->{"source_$j"}        = $form->{"source_$i"};
+                $form->{"memo_$j"}          = $form->{"memo_$i"};
+                $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+
+                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+
+                if ( $form->{"debit_$i"} ) {
+                    $form->{"debit_$i"} -= $form->{"taxamount_$i"};
+                    $form->{"debit_$j"} = $form->{"taxamount_$i"};
+                }
+                else {
+                    $form->{"credit_$i"} -= $form->{"taxamount_$i"};
+                    $form->{"credit_$j"} = $form->{"taxamount_$i"};
+                }
+            }
+        }
+        $form->{rowcount} = $count;
+    }
 
     if ( $form->{batch} ) {
         $rc = VR->post_transaction( \%myconfig, \%$form );
