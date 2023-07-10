@@ -425,8 +425,8 @@ table tr td[align=center] * {
   font-family: "museo-sans-1","museo-sans-2",sans-serif;
   font-size: 13px;
   color: white;
-  background-color: #00AEEF;
-  border-color: #00AEEF;
+  background-color: #1283fe;
+  border-color: #1283fe;
   display: inline-block;
   font-weight: normal;
   line-height: 1.25;
@@ -445,13 +445,13 @@ table tr td[align=center] * {
   transition: all 0.2s ease-in-out;
   margin-left: 2px;
   -webkit-appearance: button;
-  border-radius: 0px !important;
+  border-radius: 6px;
 }
 
 .submit:HOVER {
   color: #fff;
-  background-color: #0089bc;
-  border-color: #0081b2;
+  background-color: #0171e9;
+  border-color: #0171e9;
 }
 
 .checkbox, .radio {
