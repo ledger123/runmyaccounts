@@ -2407,6 +2407,7 @@ sub post {
     $count = $form->{rowcount};
     my $reversecharge_id; 
     for my $i ( 1 .. $form->{rowcount} ) {
+        for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
         if ( $form->{"taxamount_$i"} ) {
            my ($accno, $null) = split /--/, $form->{"tax_$i"};
            ($reversecharge_id) = $dbh->selectrow_array("
@@ -2443,6 +2444,7 @@ sub post {
                 $form->{"accno_$j"} = "$reversecharge_accno--$reversecharge_description";
                 $form->{"tax_$j"}   = 'reverse';
 
+<<<<<<< HEAD
                 $form->{"source_$j"}        = $form->{"source_$i"};
                 $form->{"memo_$j"}          = $form->{"memo_$i"};
                 $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
@@ -2463,6 +2465,16 @@ sub post {
                 }
                 last;
            }
+=======
+            if ( $form->{"debit_$i"} ) {
+                $form->{"debit_$i"} -= $form->{"taxamount_$i"};
+                $form->{"debit_$j"} = $form->{"taxamount_$i"};
+            }
+            else {
+                $form->{"credit_$i"} -= $form->{"taxamount_$i"};
+                $form->{"credit_$j"} = $form->{"taxamount_$i"};
+            }
+>>>>>>> 367_line_tax_number_format
         }
     }
     $form->{rowcount} = $count;
