@@ -2311,7 +2311,7 @@ sub form_footer {
             $hash_pretty =~ s/"//g;
             $hash_pretty =~ s/{//g;
             $hash_pretty =~ s/}//g;
-            print "<pre>$hash_pretty</pre>";
+            print "<pre>".format_pretty($hash)."</pre>";
         }
     }
 

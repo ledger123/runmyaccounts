@@ -353,10 +353,10 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
     <%= form_for 'transactions' => method => 'POST' => begin %>
         <table>
             <tr>
-                <th align="right">Period</th>
+                <th class="text-end">Period</th>
                 <td>
-                    <%= select_field 'month', ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], {} %>
-                    <%= select_field 'year', [ 2007 .. 2023 ], {} %>
+                    <%= select_field 'month', ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], class => "form-select" %>
+                    <%= select_field 'year', [ 2007 .. 2023 ], class => "form-select" %>
                     <br>
                     <%= radio_button 'interval', 0, checked => 'checked' %> <%= label_for 'interval', 'Current' %>
                     <%= radio_button 'interval', 1 %> <%= label_for 'interval', 'Month' %>
@@ -368,41 +368,41 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
                 <td colspan="2">&nbsp;</td>
             </tr>
             <tr>
-                <th align="right">Account</th>
+                <th class="text-end">Account</th>
                 <td>
-                <%= select_field 'account', $accounts %>
+                <%= select_field 'account', $accounts, class=>"form-select" %>
                 </td>
             </tr>
             <tr>
-                <th align="right">From Date</th>
+                <th class="text-end">From Date</th>
                 <td>
-                   %= text_field 'from_date', class => 'datepicker', value => $params->{from_date}
+                   %= text_field 'from_date', class => 'datepicker', value => $params->{from_date}, class=>"form-control"
                 </td>
             </tr>
             <tr>
-                <th align="right">To Date</th>
+                <th class="text-end">To Date</th>
                 <td>
-                    %= text_field 'to_date', class => 'datepicker', value => $params->{to_date}
+                    %= text_field 'to_date', class => 'datepicker', value => $params->{to_date}, class=>"form-control"
                 </td>
             </tr>
             <tr>
-                <th align="right">Bank Account</th>
-                <td><%= select_field 'bank_account', $chart1 %></td>
+                <th class="text-end">Bank Account</th>
+                <td><%= select_field 'bank_account', $chart1, class=>"form-select" %></td>
             </tr>
             <tr>
-                <th align="right">Clearing Account</th>
-                <td><%= select_field 'clearing_account', $chart2 %></td>
+                <th class="text-end">Clearing Account</th>
+                <td><%= select_field 'clearing_account', $chart2, class=>"form-select" %></td>
             </tr>
             <tr>
                 <th align="right">Import?</th>
                 <td>
-                    <%= check_box 'import' => 1 %>
+                    <%= check_box 'import' => 1, class=>"form-check" %>
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
                     <hr/>
-                    <%= submit_button 'Submit' %>
+                    <%= submit_button 'Submit', class=>"btn btn-primary" %>
                 </td>
             </tr>
         </table>
@@ -432,74 +432,74 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 
 
 @@ layouts/default.html.ep
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %></title>
 
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
-    <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="//code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
-%= javascript begin
-  $(document).ready(function() {
-    $('.datepicker').datepicker({
-      dateFormat: 'dd/mm/yy'
-    });
-  });
-% end
-
-     <title><%= title %></title>
-  </head>
-  <body>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
   
-  <div class="container-fluid">
-  <header>
-    <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
-      <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
-        <span class="fs-4">Revolut</span>
-      </a>
-      <nav class="d-inline-flex mt-2 mt-md-0 ms-md-auto">
-        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= url_for('/accounts')->query(login => $c->session->{myconfig}->{login}) %>">Accounts</a>
-        <a class="me-3 py-2 text-dark text-decoration-none" href="<%= url_for('/transactions')->query(login => $c->session->{myconfig}->{login}) %>">Transactions</a>
-      </nav>
+  <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="//code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('.datepicker').datepicker({
+        dateFormat: 'dd/mm/yy'
+      });
+    });
+  </script>
+</head>
+<body>
+
+<header class="border-bottom">
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">Revolut</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <ul class="navbar-nav ms-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link" href="<%= url_for('/accounts')->query(login => $c->session->{myconfig}->{login}) %>">Accounts</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="<%= url_for('/transactions')->query(login => $c->session->{myconfig}->{login}) %>">Transactions</a>
+        </li>
+      </ul>
     </div>
-  </header>
+  </nav>
+</header>
 
-    <%= content %>
+<main class="container-fluid">
+  <%= content %>
 
-To manage your revolut connection visit:
-<a href="https://business.revolut.com/settings/api">https://business.revolut.com/settings/api</a>
-<br/><br/>
+  <p>To manage your Revolut connection, visit: <a href="https://business.revolut.com/settings/api">https://business.revolut.com/settings/api</a></p>
+</main>
 
+<footer class="mt-4 py-3 bg-light">
+  <div class="container text-center">
+    <hr>
+    <p>To manage your Revolut connection, visit: <a href="https://business.revolut.com/settings/api">https://business.revolut.com/settings/api</a></p>
+    % my $debug = 0;
+    <% if ($debug) { %>
+      <h2 class="listheading">Session:</h2>
+      <pre><%= dumper($self->session) %></pre>
+      
+      <h2 class="listheading">Request Parameters</h2>
+      <pre><%= dumper($self->req->params->to_hash) %></pre>
+      
+      <h2 class="listheading">Controller</h2>
+      <pre><%= dumper($self->stash) %></pre>
+    <% } %>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-
-% my $debug = 0;
-% if ($debug){
-<h2 class='listheading'>Session:</h2>
-<pre>
-    <%= dumper($self->session) %>
-</pre>
-        
-<h2 class='listheading'>Request Parameters</h2>
-<pre>
-   <%= dumper($self->req->params->to_hash) %>
-</pre>
-
-<h2 class='listheading'>Controller</h2>
-<pre>
-   <%= dumper($self->stash) %>
-</pre>
-% }
-
-
-  </body>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
+
 
 
 @@ layouts/activate.html.ep
