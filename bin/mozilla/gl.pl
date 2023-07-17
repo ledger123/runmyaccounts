@@ -2444,7 +2444,6 @@ sub post {
                 $form->{"accno_$j"} = "$reversecharge_accno--$reversecharge_description";
                 $form->{"tax_$j"}   = 'reverse';
 
-<<<<<<< HEAD
                 $form->{"source_$j"}        = $form->{"source_$i"};
                 $form->{"memo_$j"}          = $form->{"memo_$i"};
                 $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
@@ -2465,7 +2464,6 @@ sub post {
                 }
                 last;
            }
-=======
             if ( $form->{"debit_$i"} ) {
                 $form->{"debit_$i"} -= $form->{"taxamount_$i"};
                 $form->{"debit_$j"} = $form->{"taxamount_$i"};
@@ -2474,7 +2472,6 @@ sub post {
                 $form->{"credit_$i"} -= $form->{"taxamount_$i"};
                 $form->{"credit_$j"} = $form->{"taxamount_$i"};
             }
->>>>>>> 367_line_tax_number_format
         }
     }
     $form->{rowcount} = $count;
