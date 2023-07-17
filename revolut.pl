@@ -17,16 +17,39 @@ use Time::Piece;
 
 $Data::Dumper::Indent = 1;
 
-my $dbs = "";
 helper dbs => sub {
     my ( $c, $dbname ) = @_;
-    if ($dbname) {
-        my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname", 'sql-ledger', '' ) or die $DBI::errstr;
-        $dbs = DBIx::Simple->connect($dbh);
-        return $dbs;
-    } else {
+    state $dbs;
+    if ($dbs) {
         return $dbs;
     }
+    my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname", 'sql-ledger', '' ) or die $DBI::errstr;
+    $dbs = DBIx::Simple->connect($dbh);
+
+    unless ( $dbs->query('SELECT 1 FROM revolut_accounts LIMIT 1')->list ) {
+        $dbs->query(q{
+              CREATE TABLE revolut_accounts (
+                id text,
+                curr character varying(3),
+                name text,
+                balance numeric(12,2)
+              )
+            }
+        );
+    }
+
+    unless ( $dbs->query('SELECT transjson FROM gl LIMIT 1')->list ) {
+        $dbs->query(q{ALTER TABLE gl ADD COLUMN transjson JSON});
+    }
+
+    unless ( $dbs->query('SELECT transjson FROM gl_log LIMIT 1')->list ) {
+        $dbs->query(q{ALTER TABLE gl_log ADD COLUMN transjson JSON});
+    }
+
+    unless ( $dbs->query('SELECT transjson FROM gl_log_deleted LIMIT 1')->list ) {
+        $dbs->query(q{ALTER TABLE gl_log_deleted ADD COLUMN transjson JSON});
+    }
+    return $dbs;
 };
 
 helper nf => sub {
@@ -143,7 +166,7 @@ get 'accounts' => sub ($c) {
             $table_data->addRow(
                 "<a href=" . $c->url_for('/transactions')->query( account => $item->{id} ) . ">Transactions</a>",
                 $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
-                $item->{state},    $item->{public},
+                $item->{state}, $item->{public},
             );
             $dbs->query( "
                 INSERT INTO revolut_accounts (id, curr, name, balance) VALUES (?,?,?,?)",
@@ -179,8 +202,8 @@ any 'transactions' => sub ($c) {
     my @chart1          = $dbs->query("SELECT accno || '--' || description, id AS accno FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
     my @chart2          = $dbs->query( "SELECT accno || '--' || description, id AS accno FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->arrays;
 
-    my $date1     = Time::Piece->strptime( $params->{from_date}, '%d/%m/%Y' );
-    my $date2     = Time::Piece->strptime( $params->{to_date},   '%d/%m/%Y' );
+    my $date1 = Time::Piece->strptime( $params->{from_date}, '%d/%m/%Y' );
+    my $date2 = Time::Piece->strptime( $params->{to_date},   '%d/%m/%Y' );
     my $from_date = $date1->strftime('%Y-%m-%d');
     my $to_date   = $date2->strftime('%Y-%m-%d');
 
