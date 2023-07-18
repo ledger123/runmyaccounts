@@ -290,9 +290,9 @@ sub post_transaction {
 
     $amount = 0;
     
-    $debit = $form->{"debit_$i"};
-    $credit = $form->{"credit_$i"};
-    $taxamount = $form->{"taxamount_$i"};
+    $debit = $form->parse_amount($myconfig, $form->{"debit_$i"});
+    $credit = $form->parse_amount($myconfig, $form->{"credit_$i"});
+    $taxamount = $form->parse_amount($myconfig, $form->{"taxamount_$i"});
     $taxamount *= 1;
 
     # extract accno
