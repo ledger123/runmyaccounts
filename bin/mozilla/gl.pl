@@ -2295,16 +2295,18 @@ sub form_footer {
         &menubar;
     }
 
+    use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+    my $hash;
+
     if ($form->{id}){
         use JSON::XS;
         use Data::Format::Pretty::JSON qw(format_pretty);
-        use DBIx::Simple;
-        my $dbh = $form->dbconnect(\%myconfig);
-        my $dbs = DBIx::Simple->connect($dbh);
         my $transjson = $dbs->query("SELECT transjson FROM gl WHERE id = ?", $form->{id})->list;
 
         if ($transjson){
-            my $hash = decode_json($transjson);
+            $hash = decode_json($transjson);
             $hash_pretty .= format_pretty( $hash->{type}, { linum => 0 } );
             $hash_pretty .= format_pretty( $hash->{card}, { linum => 0 } );
             $hash_pretty .= format_pretty( $hash->{merchant}, { linum => 0 } );
@@ -2317,11 +2319,104 @@ sub form_footer {
 
     print qq|
   </form>
+|;
 
+  my @chart = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE charttype<>'H' ORDER BY 2")->hashes;
+
+  my $select_options = '';
+  foreach my $account (@chart) {
+    my $id = $account->{'id'};
+    my $account_text = $account->{'account'};
+    $select_options .= qq(<option value="$id">$account_text</option>);
+  }
+
+    if ($form->{id}){
+        print qq|
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap\@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+  <div class="container-fluid">
+  <div class="row col-6">
+    <h2>Create Rule for Revolut Import</h2>
+    <form method=post action=$form->{script}>
+      <div class="row mb-3">
+        <label for="rule_name" class="col-sm-2 col-form-label">Rule Name</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="rule_name" name="rule_name" required>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <label for="type" class="col-sm-2 col-form-label">Type</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="type" name="type" value="$hash->{type}" required>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <label for="card_number" class="col-sm-2 col-form-label">Card Number</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="card_number" name="card_number" value="$hash->{card}->{card_number}" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="state" class="col-sm-2 col-form-label">State</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="state" name="state" value="$hash->{state}" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="merchant_name" class="col-sm-2 col-form-label">Merchant Name</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="merchant_name" name="merchant_name" value="$hash->{merchant}->{name}" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="merchant_city" class="col-sm-2 col-form-label">Merchant City</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="merchant_city" name="merchant_city" value="$hash->{merchant}->{city}"required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="merchant_country" class="col-sm-2 col-form-label">Merchant Country</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="merchant_country" name="merchant_country" value="$hash->{merchant}->{country}" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="category_code" class="col-sm-2 col-form-label">Category Code</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="category_code" name="category_code" value="$hash->{merchant}->{category_code}" required>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <label for="account" class="col-sm-2 col-form-label">Account</label>
+        <div class="col-sm-10">
+          <select class="form-control" id="account" name="account" required>
+            $select_options
+          </select>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-sm-10 offset-sm-2">
+          <input name="action" type="submit" class="btn btn-primary" value="Create Rule">
+        </div>
+      </div>
+      <input type=hidden name=login value="$form->{login}">
+      <input type=hidden name=path value="$form->{path}">
+      <input type=hidden name=js value="$form->{js}">
+    </form>
+  </div>
+  </div>
+|;
+  }
+  print qq|
 </body>
 </html>
 |;
 
+}
+
+sub create_rule {
+    $form->info("To be implemented");
 }
 
 sub delete {
