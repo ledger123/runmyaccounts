@@ -27,7 +27,8 @@ helper dbs => sub {
     $dbs = DBIx::Simple->connect($dbh);
 
     unless ( $dbs->query('SELECT 1 FROM revolut_accounts LIMIT 1')->list ) {
-        $dbs->query(q{
+        $dbs->query(
+            q{
               CREATE TABLE revolut_accounts (
                 id text,
                 curr character varying(3),
@@ -227,7 +228,7 @@ any 'transactions' => sub ($c) {
 
     my $table_data = HTML::Table->new(
         -class => 'table table-border',
-        -head  => [qw/date type amount balance currency description state card_number merchant_name/],
+        -head  => [qw/date type amount fee balance currency description state card_number merchant_name/],
     );
 
     my $msg;
@@ -235,13 +236,10 @@ any 'transactions' => sub ($c) {
         my $transdate = substr( $item->{created_at}, 0, 10 );
         $table_data->addRow(
             $transdate, $item->{type},
-            $c->nf->format_price( $item->{legs}->[0]->{amount},  2 ),
-            $c->nf->format_price( $item->{legs}->[0]->{balance}, 2 ),
-            $item->{legs}->[0]->{currency},
-            $item->{legs}->[0]->{description},
-            $item->{state},
-            $item->{card}->{card_number},
-            $item->{merchant}->{name},
+            $c->nf->format_price( $item->{legs}->[0]->{amount},  2 ), $c->nf->format_price( $item->{legs}->[0]->{fee}, 2 ),
+            $c->nf->format_price( $item->{legs}->[0]->{balance}, 2 ), $item->{legs}->[0]->{currency},
+            $item->{legs}->[0]->{description}, $item->{state},
+            $item->{card}->{card_number},      $item->{merchant}->{name},
         );
 
         if ( $params->{import} ) {
@@ -269,13 +267,14 @@ any 'transactions' => sub ($c) {
               or die $dbs->error;
             my $id = $dbs->query( "SELECT id FROM gl WHERE reference = ?", $item->{id} )->list;
             if ($id) {
+                $item->{legs}->[0]->{fee} *= 1;
                 $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                    $id, $transdate, $params->{bank_account}, $item->{legs}->[0]->{amount} * -1 )
+                    $id, $transdate, $params->{bank_account}, ( $item->{legs}->[0]->{amount} + $item->{legs}->[0]->{fee} ) * -1 )
                   or die $dbs->error;
                 $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                    $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} )
+                    $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} + $item->{legs}->[0]->{fee} )
                   or die $dbs->error;
                 $dbs->commit;
             }
