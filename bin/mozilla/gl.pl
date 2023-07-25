@@ -2293,12 +2293,32 @@ sub form_footer {
 |;
 
     my @chart = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE charttype<>'H' ORDER BY 2")->hashes;
+    my @taxchart = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE link LIKE '%tax%' ORDER BY 2")->hashes;
 
     my $select_options = '';
     foreach my $account (@chart) {
         my $id           = $account->{'id'};
         my $account_text = $account->{'account'};
         $select_options .= qq(<option value="$id">$account_text</option>);
+    }
+
+    my $selected_tax_chart_id;
+    for my $i (1 .. $form->{rowcount}){
+        if ($form->{"tax_$i"}){
+            ($accno, $null) = split /--/, $form->{"tax_$i"};
+            $selected_tax_chart_id = $dbs->query("SELECT id FROM chart WHERE accno = ?", $accno)->list;
+        }
+    }
+
+    my $taxselect_options = '';
+    foreach my $taxaccount (@taxchart) {
+        my $id           = $taxaccount->{'id'};
+        my $account_text = $taxaccount->{'account'};
+        my $selected;
+        if ($id == $selected_tax_chart_id){
+            $selected = ' selected';
+        }
+        $taxselect_options .= qq(<option value="$id" $selected>$account_text</option>);
     }
 
     if ( $form->{id} ) {
@@ -2363,6 +2383,14 @@ sub form_footer {
         </td>
       </tr>
       <tr>
+        <th align="right">Tax</th>
+        <td>
+          <select name="tax_chart_id" required>
+            $taxselect_options
+          </select>
+        </td>
+      </tr>
+      <tr>
         <td colspan="2" align="right">
           <input name="action" type="submit" class="submit" value="Create Rule">
         </td>
@@ -2374,6 +2402,7 @@ sub form_footer {
   </form>|;
     }
     print qq|
+<br/><br/><br/>
 </body>
 </html>
 |;
