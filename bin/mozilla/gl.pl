@@ -2417,7 +2417,6 @@ SQL
 
     # Insert the form data into the 'revolut_rules' table using DBIx::Simple
     $dbs->insert( 'revolut_rules', $data );
-
     $dbh->disconnect;
     $form->info("Rule created");
 }
@@ -2437,20 +2436,34 @@ sub list_revolut_rules {
     LEFT JOIN chart c2 ON rf.tax_chart_id = c2.id
 " )->hashes;
 
-    my $table = HTML::Table->new( -border => 1, -spacing => 1, -padding => 1 );
-    $table->addRow( 'ID', 'Rule Name', 'Type', 'Card Number', 'State', 'Merchant Name', 'Merchant City', 'Merchant Country', 'Category Code', 'Chart Description', 'Tax Chart Description' );
+    my $table = HTML::Table->new( -border => 0, -spacing => 2, -padding => 2, -width=>"100%", -class=>"listtop");
+    $table->addRow( 'ID', 'Rule', 'Type', 'Card Number', 'State', 'Merchant', 'City', 'Country', 'Category', 'Account', 'Tax', 'Delete' );
 
     foreach my $row (@data) {
+    my $delete_link = "<a href=gl.pl?action=delete_revolut_rule&path=$form->{path}&login=$form->{login}&id=$row->{id}>Delete</a>";
         $table->addRow(
             $row->{id},            $row->{rule_name},        $row->{type},          $row->{card_number},       $row->{state}, $row->{merchant_name},
-            $row->{merchant_city}, $row->{merchant_country}, $row->{category_code}, $row->{chart_description}, $row->{tax_chart_description}
+            $row->{merchant_city}, $row->{merchant_country}, $row->{category_code}, $row->{chart_description}, $row->{tax_chart_description}, $delete_link
         );
     }
 
     $form->header;
+    print qq|<h2>Revolut Rules</h2>|;
     print $table->getTable;
 
 }
+
+
+sub delete_revolut_rule {
+    $form->header;
+    my $dbh = $form->dbconnect( \%myconfig );
+    my $dbs = DBIx::Simple->connect($dbh);
+
+    $dbs->delete('revolut_rules', {id => $form->{id}});
+
+    $form->info("Rule deleted ...");
+}
+
 
 sub delete {
 
