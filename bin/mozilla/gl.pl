@@ -2279,30 +2279,32 @@ sub form_footer {
     my @chart    = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE charttype<>'H' ORDER BY 2")->hashes;
     my @taxchart = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE link LIKE '%tax%' ORDER BY 2")->hashes;
 
+    my $selected_taxaccount;
+    my $selected_account;
+    for my $i ( 1 .. $form->{rowcount} ) {
+        $selected_taxaccount = $form->{"tax_$i"} if $form->{"tax_$i"};
+        $selected_account = $form->{"accno_$i"} if $form->{"debit_$i"};
+    }
     my $select_options = '';
     foreach my $account (@chart) {
         my $id           = $account->{'id'};
-        my $account_text = $account->{'account'};
-        $select_options .= qq(<option value="$id">$account_text</option>);
-    }
-
-    my $selected_tax_chart_id;
-    for my $i ( 1 .. $form->{rowcount} ) {
-        if ( $form->{"tax_$i"} ) {
-            ( $accno, $null ) = split /--/, $form->{"tax_$i"};
-            $selected_tax_chart_id = $dbs->query( "SELECT id FROM chart WHERE accno = ?", $accno )->list;
+        my $account = $account->{'account'};
+        if ($account eq $selected_account){
+            $select_options .= qq(<option value="$id" selected>$account</option>);
+        } else {
+            $select_options .= qq(<option value="$id">$account</option>);
         }
     }
 
     my $taxselect_options = '';
     foreach my $taxaccount (@taxchart) {
         my $id           = $taxaccount->{'id'};
-        my $account_text = $taxaccount->{'account'};
-        my $selected;
-        if ( $id == $selected_tax_chart_id ) {
-            $selected = ' selected';
+        my $account = $taxaccount->{'account'};
+        if ($account eq $selected_taxaccount){
+            $taxselect_options .= qq(<option value="$id" selected>$account</option>);
+        } else {
+            $taxselect_options .= qq(<option value="$id" $selected>$account</option>);
         }
-        $taxselect_options .= qq(<option value="$id" $selected>$account_text</option>);
     }
 
     if ( $form->{id} ) {
@@ -2327,14 +2329,21 @@ sub form_footer {
 
         if ($transjson) {
 
+            $form->{rule_name} = $form->{reference};
+
             print qq|
-  <h2>Create Rule for Revolut Import</h2>
   <form method="post" action="$form->{script}">
     <table>
       <tr>
+      <td colspan=2 class="listtop">|.$locale->text('Create Rule for Revolut Import').qq|</td>
+      </tr>
+      <tr><td height=3>&nbsp;</td></tr>
+
+      <!--
+      <tr>
         <th align="right">Rule Name</th>
         <td>
-          <input type="text" name="rule_name" size="30" required>
+          <input type="text" name="rule_name" size="30" value="$form->{reference}" required>
         </td>
       </tr>
       <tr>
@@ -2355,6 +2364,8 @@ sub form_footer {
           <input type="text" name="state" value="$hash->{state}" size="30" required>
         </td>
       </tr>
+      -->
+
       <tr>
         <th align="right">Merchant Name</th>
         <td>
@@ -2396,8 +2407,9 @@ sub form_footer {
           </select>
         </td>
       </tr>
+      <tr><td colspan=2><hr/></td></tr>
       <tr>
-        <td colspan="2" align="right">
+        <td colspan="2">
           <input name="action" type="submit" class="submit" value="Create Rule">
         </td>
       </tr>
@@ -2480,18 +2492,18 @@ sub list_revolut_rules {
 " )->hashes;
 
     my $table = HTML::Table->new( -border => 0, -spacing => 2, -padding => 2, -width => "100%", -class => "listtop" );
-    $table->addRow( 'ID', 'Rule', 'Type', 'Card Number', 'State', 'Merchant', 'City', 'Country', 'Category', 'Account', 'Tax', 'Delete' );
+    $table->addRow( 'ID', 'Rule', 'Merchant', 'City', 'Country', 'Category', 'Account', 'Tax', 'Delete' );
 
     foreach my $row (@data) {
         my $delete_link = "<a href=gl.pl?action=delete_revolut_rule&path=$form->{path}&login=$form->{login}&id=$row->{id}>Delete</a>";
         $table->addRow(
-            $row->{id},            $row->{rule_name},        $row->{type},          $row->{card_number},       $row->{state},                 $row->{merchant_name},
+            $row->{id},            $row->{rule_name},        $row->{merchant_name},
             $row->{merchant_city}, $row->{merchant_country}, $row->{category_code}, $row->{chart_description}, $row->{tax_chart_description}, $delete_link
         );
     }
 
     $form->header;
-    print qq|<h2>Revolut Rules</h2>|;
+    print qq|<div class="listtop">Revolut Rules</div>|;
     print $table->getTable;
 
 }
