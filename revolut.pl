@@ -158,17 +158,18 @@ get 'accounts' => sub ($c) {
     }
     my $hash       = $res->json;
     my $table_data = HTML::Table->new(
-        -class => 'table table-border',
         -head  => [qw/transactions currency name balance state public/],
     );
+    $table_data->setRowClass(1, 'listheading');
     $dbs->query("DELETE FROM revolut_accounts");
     for my $item ( @{$hash} ) {
         if ( $item->{balance} ) {
-            $table_data->addRow(
+            my $rownum = $table_data->addRow(
                 "<a href=" . $c->url_for('/transactions')->query( account => $item->{id} ) . ">Transactions</a>",
                 $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
                 $item->{state}, $item->{public},
             );
+            $table_data->setRowClass($rownum, 'listrow0');
             $dbs->query( "
                 INSERT INTO revolut_accounts (id, curr, name, balance) VALUES (?,?,?,?)",
                 $item->{id}, $item->{currency}, $item->{name}, $item->{balance} );
@@ -227,20 +228,21 @@ any 'transactions' => sub ($c) {
     }
 
     my $table_data = HTML::Table->new(
-        -class => 'table table-border',
         -head  => [qw/date type amount fee balance currency description state card_number merchant_name/],
     );
+    $table_data->setRowClass(1, 'listheading');
 
     my $msg;
     for my $item ( @{$hash} ) {
         my $transdate = substr( $item->{created_at}, 0, 10 );
-        $table_data->addRow(
+        my $rownum = $table_data->addRow(
             $transdate, $item->{type},
             $c->nf->format_price( $item->{legs}->[0]->{amount},  2 ), $c->nf->format_price( $item->{legs}->[0]->{fee}, 2 ),
             $c->nf->format_price( $item->{legs}->[0]->{balance}, 2 ), $item->{legs}->[0]->{currency},
             $item->{legs}->[0]->{description}, $item->{state},
             $item->{card}->{card_number},      $item->{merchant}->{name},
         );
+        $table_data->setRowClass($rownum, 'listrow0');
 
         if ( $params->{import} ) {
             my ( $exists, $reference ) = $dbs->query( "SELECT id, reference FROM gl WHERE reference = ?", $item->{id} )->list;
@@ -351,8 +353,7 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 % layout 'default';
 % title 'Accounts List';
 <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
-    <h1 class="display-4 fw-normal">Accounts List</h1>
-    <p class="fs-5 text-muted">Accounts List</p>
+    <div class="listtop">Accounts List</div>
 </div>
 <%== $tablehtml %>
 <pre>
@@ -366,16 +367,13 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 @@ transactions.html.ep
 % layout 'default';
 % title 'Transactions List';
-<div class="pricing-header p-3 pb-md-4 mx-auto text-center">
-    <h1 class="display-4 fw-normal">Transactions List</h1>
-    <p class="fs-5 text-muted">Transactions List</p>
-</div>
+<div class="listtop">Transactions List</div>
 <div><%== $msg %></div>
 <br/>
     <%= form_for 'transactions' => method => 'POST' => begin %>
-        <table>
+        <table width="100%">
             <tr>
-                <th class="text-end">Period</th>
+                <th align="right">Period</th>
                 <td>
                     <%= select_field 'month', ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], class => "form-select" %>
                     <%= select_field 'year', [ 2007 .. 2023 ], class => "form-select" %>
@@ -390,29 +388,29 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
                 <td colspan="2">&nbsp;</td>
             </tr>
             <tr>
-                <th class="text-end">Account</th>
+                <th align="right">Account</th>
                 <td>
                 <%= select_field 'account', $accounts, class=>"form-select" %>
                 </td>
             </tr>
             <tr>
-                <th class="text-end">From Date</th>
+                <th align="right">From Date</th>
                 <td>
                    %= text_field 'from_date', class => 'datepicker', value => $params->{from_date}, class=>"form-control"
                 </td>
             </tr>
             <tr>
-                <th class="text-end">To Date</th>
+                <th align="right">To Date</th>
                 <td>
                     %= text_field 'to_date', class => 'datepicker', value => $params->{to_date}, class=>"form-control"
                 </td>
             </tr>
             <tr>
-                <th class="text-end">Bank Account</th>
+                <th align="right">Bank Account</th>
                 <td><%= select_field 'bank_account', $chart1, class=>"form-select" %></td>
             </tr>
             <tr>
-                <th class="text-end">Clearing Account</th>
+                <th align="right">Clearing Account</th>
                 <td><%= select_field 'clearing_account', $chart2, class=>"form-select" %></td>
             </tr>
             <tr>
@@ -424,7 +422,7 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
             <tr>
                 <td colspan="2">
                     <hr/>
-                    <%= submit_button 'Submit', class=>"btn btn-primary" %>
+                    <%= submit_button 'Submit', class=>"submit" %>
                 </td>
             </tr>
         </table>
@@ -462,7 +460,8 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
   <title><%= title %></title>
 
   <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+  <link href="/rma/css/sql-ledger.css" rel="stylesheet">
   
   <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="//code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
@@ -476,29 +475,11 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 </head>
 <body>
 
-<header class="border-bottom">
-  <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-    <a class="navbar-brand" href="/">Revolut</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarCollapse">
-      <ul class="navbar-nav ms-auto mb-2 mb-md-0">
-        <li class="nav-item">
-          <a class="nav-link" href="<%= url_for('/accounts')->query(login => $c->session->{myconfig}->{login}) %>">Accounts</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="<%= url_for('/transactions')->query(login => $c->session->{myconfig}->{login}) %>">Transactions</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-</header>
+<a class="nav-link" href="<%= url_for('/accounts')->query(login => $c->session->{myconfig}->{login}) %>">Accounts</a>
+<a class="nav-link" href="<%= url_for('/transactions')->query(login => $c->session->{myconfig}->{login}) %>">Transactions</a>
 
 <main class="container-fluid">
   <%= content %>
-
-  <p>To manage your Revolut connection, visit: <a href="https://business.revolut.com/settings/api">https://business.revolut.com/settings/api</a></p>
 </main>
 
 <footer class="mt-4 py-3 bg-light">

@@ -2493,6 +2493,7 @@ sub list_revolut_rules {
 
     my $table = HTML::Table->new( -border => 0, -spacing => 2, -padding => 2, -width => "100%", -class => "listtop" );
     $table->addRow( 'ID', 'Rule', 'Merchant', 'City', 'Country', 'Category', 'Account', 'Tax', 'Delete' );
+    $table->setRowClass (1, 'listheading');
 
     foreach my $row (@data) {
         my $delete_link = "<a href=gl.pl?action=delete_revolut_rule&path=$form->{path}&login=$form->{login}&id=$row->{id}>Delete</a>";
