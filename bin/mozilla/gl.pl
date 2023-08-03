@@ -17,6 +17,10 @@ use SL::VR;
 
 use IO::File;
 use File::Temp qw(tempfile);
+use DBIx::Simple;
+use JSON::XS;
+use Data::Format::Pretty::JSON qw(format_pretty);
+use HTML::Table;
 
 require "$form->{path}/arap.pl";
 require "$form->{path}/mylib.pl";
@@ -549,7 +553,6 @@ sub search {
 
 sub transactions {
 
-    use DBIx::Simple;
     $form->{dbh} = $form->dbconnect( \%myconfig );
     $form->{dbs} = DBIx::Simple->connect( $form->{dbh} );
 
@@ -1795,7 +1798,6 @@ sub display_form {
     if ( $form->{id} ) {
         if ($debits_credits_footer) {
 
-            use DBIx::Simple;
             $form->{dbh} = $form->dbconnect( \%myconfig );
             $form->{dbs} = DBIx::Simple->connect( $form->{dbh} );
 
@@ -2266,7 +2268,6 @@ sub form_footer {
         &menubar;
     }
 
-    use DBIx::Simple;
     my $dbh = $form->dbconnect( \%myconfig );
     my $dbs = DBIx::Simple->connect($dbh);
     my $hash;
@@ -2275,7 +2276,7 @@ sub form_footer {
   </form>
 |;
 
-    my @chart = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE charttype<>'H' ORDER BY 2")->hashes;
+    my @chart    = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE charttype<>'H' ORDER BY 2")->hashes;
     my @taxchart = $dbs->query("SELECT id, accno || '--' || description as account FROM chart WHERE link LIKE '%tax%' ORDER BY 2")->hashes;
 
     my $select_options = '';
@@ -2286,10 +2287,10 @@ sub form_footer {
     }
 
     my $selected_tax_chart_id;
-    for my $i (1 .. $form->{rowcount}){
-        if ($form->{"tax_$i"}){
-            ($accno, $null) = split /--/, $form->{"tax_$i"};
-            $selected_tax_chart_id = $dbs->query("SELECT id FROM chart WHERE accno = ?", $accno)->list;
+    for my $i ( 1 .. $form->{rowcount} ) {
+        if ( $form->{"tax_$i"} ) {
+            ( $accno, $null ) = split /--/, $form->{"tax_$i"};
+            $selected_tax_chart_id = $dbs->query( "SELECT id FROM chart WHERE accno = ?", $accno )->list;
         }
     }
 
@@ -2298,19 +2299,35 @@ sub form_footer {
         my $id           = $taxaccount->{'id'};
         my $account_text = $taxaccount->{'account'};
         my $selected;
-        if ($id == $selected_tax_chart_id){
+        if ( $id == $selected_tax_chart_id ) {
             $selected = ' selected';
         }
         $taxselect_options .= qq(<option value="$id" $selected>$account_text</option>);
     }
 
     if ( $form->{id} ) {
-        use JSON::XS;
-        use Data::Format::Pretty::JSON qw(format_pretty);
         my $transjson = $dbs->query( "SELECT transjson FROM gl WHERE id = ?", $form->{id} )->list;
         $hash = decode_json($transjson);
 
-        print qq|
+        my $json_file = 'doc/mcc_codes.json';
+        open( my $fh, '<', $json_file ) or die "Error opening $json_file: $!";
+        my $json_data = do { local $/; <$fh> };
+        close($fh);
+        my $mcc_codes = decode_json($json_data);
+
+        my $search_mcc      = $hash->{merchant}->{category_code};
+        my @matching_hashes = grep { $_->{'mcc'} eq $search_mcc } @$mcc_codes;
+
+        my $category_description;
+        if (@matching_hashes) {
+            foreach my $hash (@matching_hashes) {
+                $category_description = $hash->{irs_description};
+            }
+        }
+
+        if ($transjson) {
+
+            print qq|
   <h2>Create Rule for Revolut Import</h2>
   <form method="post" action="$form->{script}">
     <table>
@@ -2360,6 +2377,7 @@ sub form_footer {
         <th align="right">Category Code</th>
         <td>
           <input type="text" name="category_code" value="$hash->{merchant}->{category_code}" size="30" required>
+          <br><b>$category_description</b>
         </td>
       </tr>
       <tr>
@@ -2389,7 +2407,6 @@ sub form_footer {
     <input type="hidden" name="js" value="$form->{js}">
   </form>|;
 
-        if ($transjson) {
             $hash_pretty .= format_pretty( $hash->{type},     { linum => 0 } );
             $hash_pretty .= format_pretty( $hash->{card},     { linum => 0 } );
             $hash_pretty .= format_pretty( $hash->{merchant}, { linum => 0 } );
@@ -2410,7 +2427,6 @@ sub form_footer {
 
 sub create_rule {
 
-    use DBIx::Simple;
     my $dbh = $form->dbconnect( \%myconfig );
     my $dbs = DBIx::Simple->connect($dbh);
 
@@ -2451,7 +2467,6 @@ SQL
 
 sub list_revolut_rules {
 
-    use HTML::Table;
     my $dbh = $form->dbconnect( \%myconfig );
     my $dbs = DBIx::Simple->connect($dbh);
 
@@ -2464,13 +2479,13 @@ sub list_revolut_rules {
     LEFT JOIN chart c2 ON rf.tax_chart_id = c2.id
 " )->hashes;
 
-    my $table = HTML::Table->new( -border => 0, -spacing => 2, -padding => 2, -width=>"100%", -class=>"listtop");
+    my $table = HTML::Table->new( -border => 0, -spacing => 2, -padding => 2, -width => "100%", -class => "listtop" );
     $table->addRow( 'ID', 'Rule', 'Type', 'Card Number', 'State', 'Merchant', 'City', 'Country', 'Category', 'Account', 'Tax', 'Delete' );
 
     foreach my $row (@data) {
-    my $delete_link = "<a href=gl.pl?action=delete_revolut_rule&path=$form->{path}&login=$form->{login}&id=$row->{id}>Delete</a>";
+        my $delete_link = "<a href=gl.pl?action=delete_revolut_rule&path=$form->{path}&login=$form->{login}&id=$row->{id}>Delete</a>";
         $table->addRow(
-            $row->{id},            $row->{rule_name},        $row->{type},          $row->{card_number},       $row->{state}, $row->{merchant_name},
+            $row->{id},            $row->{rule_name},        $row->{type},          $row->{card_number},       $row->{state},                 $row->{merchant_name},
             $row->{merchant_city}, $row->{merchant_country}, $row->{category_code}, $row->{chart_description}, $row->{tax_chart_description}, $delete_link
         );
     }
@@ -2481,17 +2496,15 @@ sub list_revolut_rules {
 
 }
 
-
 sub delete_revolut_rule {
     $form->header;
     my $dbh = $form->dbconnect( \%myconfig );
     my $dbs = DBIx::Simple->connect($dbh);
 
-    $dbs->delete('revolut_rules', {id => $form->{id}});
+    $dbs->delete( 'revolut_rules', { id => $form->{id} } );
 
     $form->info("Rule deleted ...");
 }
-
 
 sub delete {
 
@@ -2685,7 +2698,6 @@ sub post {
 sub view {
     $form->header;
 
-    use DBIx::Simple;
     my $dbh = $form->dbconnect( \%myconfig );
     my $dbs = DBIx::Simple->connect($dbh);
 
