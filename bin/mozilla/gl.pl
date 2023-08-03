@@ -2271,23 +2271,6 @@ sub form_footer {
     my $dbs = DBIx::Simple->connect($dbh);
     my $hash;
 
-    if ( $form->{id} ) {
-        use JSON::XS;
-        use Data::Format::Pretty::JSON qw(format_pretty);
-        my $transjson = $dbs->query( "SELECT transjson FROM gl WHERE id = ?", $form->{id} )->list;
-
-        if ($transjson) {
-            $hash = decode_json($transjson);
-            $hash_pretty .= format_pretty( $hash->{type},     { linum => 0 } );
-            $hash_pretty .= format_pretty( $hash->{card},     { linum => 0 } );
-            $hash_pretty .= format_pretty( $hash->{merchant}, { linum => 0 } );
-            $hash_pretty =~ s/"//g;
-            $hash_pretty =~ s/{//g;
-            $hash_pretty =~ s/}//g;
-            print "<pre>" . format_pretty($hash) . "</pre>";
-        }
-    }
-
     print qq|
   </form>
 |;
@@ -2322,6 +2305,11 @@ sub form_footer {
     }
 
     if ( $form->{id} ) {
+        use JSON::XS;
+        use Data::Format::Pretty::JSON qw(format_pretty);
+        my $transjson = $dbs->query( "SELECT transjson FROM gl WHERE id = ?", $form->{id} )->list;
+        $hash = decode_json($transjson);
+
         print qq|
   <h2>Create Rule for Revolut Import</h2>
   <form method="post" action="$form->{script}">
@@ -2400,7 +2388,18 @@ sub form_footer {
     <input type="hidden" name="path" value="$form->{path}">
     <input type="hidden" name="js" value="$form->{js}">
   </form>|;
+
+        if ($transjson) {
+            $hash_pretty .= format_pretty( $hash->{type},     { linum => 0 } );
+            $hash_pretty .= format_pretty( $hash->{card},     { linum => 0 } );
+            $hash_pretty .= format_pretty( $hash->{merchant}, { linum => 0 } );
+            $hash_pretty =~ s/"//g;
+            $hash_pretty =~ s/{//g;
+            $hash_pretty =~ s/}//g;
+            print "<pre>" . format_pretty($hash) . "</pre>";
+        }
     }
+
     print qq|
 <br/><br/><br/>
 </body>
