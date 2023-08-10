@@ -563,8 +563,8 @@ sub transactions {
     for (qw(amountfrom amountto)) { $form->{$_} = $form->parse_amount( \%myconfig, $form->{$_} ) }
 
     # currencies
-    $form->{currencies} = $form->get_currencies( 0, \%myconfig );
-    @curr = split /:/, $form->{currencies};
+    $form->{currencies}      = $form->get_currencies( 0, \%myconfig );
+    @curr                    = split /:/, $form->{currencies};
     $form->{defaultcurrency} = $curr[0];
     chomp $form->{defaultcurrency};
 
@@ -1821,8 +1821,8 @@ sub display_form {
             for $row ( @rows = ( $form->{dbs}->query(qq|select * from debits order by amount|)->hashes ) ) {
                 for $row2 ( @rows2 = ( $form->{dbs}->query(qq|select * from credits where amount = $row->{amount} limit 1|)->hashes ) ) {
                     $form->{dbs}->query( 'insert into debitscredits (debit_accno, credit_accno, amount) values (?, ?, ?)', $row->{accno}, $row2->{accno}, $row->{amount} );
-                    $form->{dbs}->query( 'delete from debits where id = ?',                                                $row->{id} );
-                    $form->{dbs}->query( 'delete from credits where id = ?',                                               $row2->{id} );
+                    $form->{dbs}->query( 'delete from debits where id = ?',  $row->{id} );
+                    $form->{dbs}->query( 'delete from credits where id = ?', $row2->{id} );
                 }
             }
 
@@ -1910,8 +1910,8 @@ sub display_rows {
                 }
 
                 if ( $form->{fxadj} ) {
-                    $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
-                    $x = ($checked) ? "x" : "";
+                    $checked         = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
+                    $x               = ($checked)                       ? "x" : "";
                     $fx_transaction  = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>|;
                     $fx_transaction2 = qq|<td>&nbsp;</td>|;
                 }
@@ -1938,7 +1938,7 @@ sub display_rows {
             }
         }
 
-        $form->{"lineitemdetail_$i"} = ( $form->{allbox} ) ? 1 : $form->{"lineitemdetail_$i"};
+        $form->{"lineitemdetail_$i"} = ( $form->{allbox} )              ? 1         : $form->{"lineitemdetail_$i"};
         $form->{"lineitemdetail_$i"} = ( $form->{"lineitemdetail_$i"} ) ? "checked" : "";
         if ( !$form->{"lineitemdetail_$i"} ) {
             $form->{"lineitemdetail_$i"} = ( $form->{"memo_$i"} || $form->{"source_$i"} || $form->{"projectnumber_$i"} ) ? "checked" : "";
@@ -2282,14 +2282,14 @@ sub form_footer {
     my $selected_taxaccount;
     my $selected_account;
     for my $i ( 1 .. $form->{rowcount} ) {
-        $selected_taxaccount = $form->{"tax_$i"} if $form->{"tax_$i"};
-        $selected_account = $form->{"accno_$i"} if $form->{"debit_$i"};
+        $selected_taxaccount = $form->{"tax_$i"}   if $form->{"tax_$i"};
+        $selected_account    = $form->{"accno_$i"} if $form->{"debit_$i"};
     }
     my $select_options = '';
     foreach my $account (@chart) {
-        my $id           = $account->{'id'};
+        my $id      = $account->{'id'};
         my $account = $account->{'account'};
-        if ($account eq $selected_account){
+        if ( $account eq $selected_account ) {
             $select_options .= qq(<option value="$id" selected>$account</option>);
         } else {
             $select_options .= qq(<option value="$id">$account</option>);
@@ -2298,9 +2298,9 @@ sub form_footer {
 
     my $taxselect_options = '';
     foreach my $taxaccount (@taxchart) {
-        my $id           = $taxaccount->{'id'};
+        my $id      = $taxaccount->{'id'};
         my $account = $taxaccount->{'account'};
-        if ($account eq $selected_taxaccount){
+        if ( $account eq $selected_taxaccount ) {
             $taxselect_options .= qq(<option value="$id" selected>$account</option>);
         } else {
             $taxselect_options .= qq(<option value="$id" $selected>$account</option>);
@@ -2309,25 +2309,25 @@ sub form_footer {
 
     if ( $form->{id} ) {
         my $transjson = $dbs->query( "SELECT transjson FROM gl WHERE id = ?", $form->{id} )->list;
-        $hash = decode_json($transjson);
-
-        my $json_file = 'doc/mcc_codes.json';
-        open( my $fh, '<', $json_file ) or die "Error opening $json_file: $!";
-        my $json_data = do { local $/; <$fh> };
-        close($fh);
-        my $mcc_codes = decode_json($json_data);
-
-        my $search_mcc      = $hash->{merchant}->{category_code};
-        my @matching_hashes = grep { $_->{'mcc'} eq $search_mcc } @$mcc_codes;
-
-        my $category_description;
-        if (@matching_hashes) {
-            foreach my $hash (@matching_hashes) {
-                $category_description = $hash->{irs_description};
-            }
-        }
-
         if ($transjson) {
+
+            $hash = decode_json($transjson);
+
+            my $json_file = 'doc/mcc_codes.json';
+            open( my $fh, '<', $json_file ) or die "Error opening $json_file: $!";
+            my $json_data = do { local $/; <$fh> };
+            close($fh);
+            my $mcc_codes = decode_json($json_data);
+
+            my $search_mcc      = $hash->{merchant}->{category_code};
+            my @matching_hashes = grep { $_->{'mcc'} eq $search_mcc } @$mcc_codes;
+
+            my $category_description;
+            if (@matching_hashes) {
+                foreach my $hash (@matching_hashes) {
+                    $category_description = $hash->{irs_description};
+                }
+            }
 
             $form->{rule_name} = $form->{reference};
 
@@ -2335,7 +2335,7 @@ sub form_footer {
   <form method="post" action="$form->{script}">
     <table>
       <tr>
-      <td colspan=2 class="listtop">|.$locale->text('Create Rule for Revolut Import').qq|</td>
+      <td colspan=2 class="listtop">| . $locale->text('Create Rule for Revolut Import') . qq|</td>
       </tr>
       <tr><td height=3>&nbsp;</td></tr>
 
@@ -2493,13 +2493,13 @@ sub list_revolut_rules {
 
     my $table = HTML::Table->new( -border => 0, -spacing => 2, -padding => 2, -width => "100%", -class => "listtop" );
     $table->addRow( 'ID', 'Rule', 'Merchant', 'City', 'Country', 'Category', 'Account', 'Tax', 'Delete' );
-    $table->setRowClass (1, 'listheading');
+    $table->setRowClass( 1, 'listheading' );
 
     foreach my $row (@data) {
         my $delete_link = "<a href=gl.pl?action=delete_revolut_rule&path=$form->{path}&login=$form->{login}&id=$row->{id}>Delete</a>";
         $table->addRow(
-            $row->{id},            $row->{rule_name},        $row->{merchant_name},
-            $row->{merchant_city}, $row->{merchant_country}, $row->{category_code}, $row->{chart_description}, $row->{tax_chart_description}, $delete_link
+            $row->{id},            $row->{rule_name},         $row->{merchant_name},         $row->{merchant_city}, $row->{merchant_country},
+            $row->{category_code}, $row->{chart_description}, $row->{tax_chart_description}, $delete_link
         );
     }
 
