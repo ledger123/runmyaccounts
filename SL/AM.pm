@@ -2226,6 +2226,7 @@ sub get_currency {
 
   $query = qq|SELECT DISTINCT curr FROM ar WHERE curr = '$form->{curr}'
         UNION SELECT DISTINCT curr FROM ap WHERE curr = '$form->{curr}'
+        UNION SELECT DISTINCT curr FROM gl WHERE curr = '$form->{curr}'
 	UNION SELECT DISTINCT curr FROM oe WHERE curr = '$form->{curr}'|;
   ($form->{orphaned}) = $dbh->selectrow_array($query);
   $form->{orphaned} = !$form->{orphaned};
