@@ -2296,7 +2296,7 @@ sub form_footer {
         }
     }
 
-    my $taxselect_options = '';
+    my $taxselect_options = '<option value="">--select--</option>\n';
     foreach my $taxaccount (@taxchart) {
         my $id      = $taxaccount->{'id'};
         my $account = $taxaccount->{'account'};
@@ -2402,7 +2402,7 @@ sub form_footer {
       <tr>
         <th align="right">Tax</th>
         <td>
-          <select name="tax_chart_id" required>
+          <select name="tax_chart_id">
             $taxselect_options
           </select>
         </td>
@@ -2468,13 +2468,12 @@ SQL
         merchant_country => $form->{merchant_country},
         category_code    => $form->{category_code},
         chart_id         => $form->{chart_id},
-        tax_chart_id     => $form->{tax_chart_id},
+        tax_chart_id     => $form->{tax_chart_id}*1,
     };
 
     # Insert the form data into the 'revolut_rules' table using DBIx::Simple
-    $dbs->insert( 'revolut_rules', $data );
-    $dbh->disconnect;
-    $form->info("Rule created");
+    $dbs->insert( 'revolut_rules', $data ) or die;
+    $dbh->disconnect; $form->info("Rule created");
 }
 
 sub list_revolut_rules {
