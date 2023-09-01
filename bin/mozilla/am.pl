@@ -2113,7 +2113,7 @@ sub display_taxes {
 	</tr>
 |;
 
-  my @array = sort(split(/ /, $form->{taxaccounts}));
+  my @array = split(/ /, $form->{taxaccounts});
 
   foreach $ref (@array) {
 
