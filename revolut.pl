@@ -157,10 +157,8 @@ get 'accounts' => sub ($c) {
         $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
     }
     my $hash       = $res->json;
-    my $table_data = HTML::Table->new(
-        -head  => [qw/transactions currency name balance state public/],
-    );
-    $table_data->setRowClass(1, 'listheading');
+    my $table_data = HTML::Table->new( -head => [qw/transactions currency name balance state public/], );
+    $table_data->setRowClass( 1, 'listheading' );
     $dbs->query("DELETE FROM revolut_accounts");
     for my $item ( @{$hash} ) {
         if ( $item->{balance} ) {
@@ -169,7 +167,7 @@ get 'accounts' => sub ($c) {
                 $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
                 $item->{state}, $item->{public},
             );
-            $table_data->setRowClass($rownum, 'listrow0');
+            $table_data->setRowClass( $rownum, 'listrow0' );
             $dbs->query( "
                 INSERT INTO revolut_accounts (id, curr, name, balance) VALUES (?,?,?,?)",
                 $item->{id}, $item->{currency}, $item->{name}, $item->{balance} );
@@ -227,22 +225,20 @@ any 'transactions' => sub ($c) {
         return;
     }
 
-    my $table_data = HTML::Table->new(
-        -head  => [qw/date type amount fee balance currency description state card_number merchant_name/],
-    );
-    $table_data->setRowClass(1, 'listheading');
+    my $table_data = HTML::Table->new( -head => [qw/date type amount fee balance currency description state card_number merchant_name/], );
+    $table_data->setRowClass( 1, 'listheading' );
 
     my $msg;
     for my $item ( @{$hash} ) {
         my $transdate = substr( $item->{created_at}, 0, 10 );
-        my $rownum = $table_data->addRow(
+        my $rownum    = $table_data->addRow(
             $transdate, $item->{type},
             $c->nf->format_price( $item->{legs}->[0]->{amount},  2 ), $c->nf->format_price( $item->{legs}->[0]->{fee}, 2 ),
             $c->nf->format_price( $item->{legs}->[0]->{balance}, 2 ), $item->{legs}->[0]->{currency},
             $item->{legs}->[0]->{description}, $item->{state},
             $item->{card}->{card_number},      $item->{merchant}->{name},
         );
-        $table_data->setRowClass($rownum, 'listrow0');
+        $table_data->setRowClass( $rownum, 'listrow0' );
 
         if ( $params->{import} ) {
             my ( $exists, $reference ) = $dbs->query( "SELECT id, reference FROM gl WHERE reference = ?", $item->{id} )->list;
@@ -261,7 +257,24 @@ any 'transactions' => sub ($c) {
                     AND transdate = ?", $curr, $transdate )->list;
             $exchangerate *= 1;
             $exchangerate = 1 if !$exchangerate;
-            my $transjson = encode_json($item);
+            my $transjson     = encode_json($item);
+            my ($other_account, $tax_chart_id) = $dbs->query( "
+                SELECT chart_id, tax_chart_id
+                FROM revolut_rules
+                WHERE merchant_name = ?
+                AND merchant_city = ?
+                AND merchant_country = ?
+                AND category_code = ?",
+                $item->{merchant}->{name},
+                $item->{merchant}->{city},
+                $item->{merchant}->{country},
+                $item->{merchant}->{category_code} )->list;
+            $other_account = $params->{clearing_account} if !$other_account;
+            my $tax;
+            if ($tax_chart_id){
+                $tax = $dbs->query("SELECT accno || '--' || description FROM chart WHERE id = ?", $tax_chart_id)->list;
+            }
+
             $dbs->query( "
                     INSERT INTO gl(reference, description, notes, transdate, department_id, curr, exchangerate, transjson)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -275,8 +288,8 @@ any 'transactions' => sub ($c) {
                     $id, $transdate, $params->{bank_account}, ( $item->{legs}->[0]->{amount} + $item->{legs}->[0]->{fee} ) * -1 )
                   or die $dbs->error;
                 $dbs->query( "
-                    INSERT INTO acc_trans(trans_id, transdate, chart_id, amount) VALUES (?, ?, ?, ?)",
-                    $id, $transdate, $params->{clearing_account}, $item->{legs}->[0]->{amount} + $item->{legs}->[0]->{fee} )
+                    INSERT INTO acc_trans(trans_id, transdate, chart_id, amount, tax_chart_id, tax) VALUES (?, ?, ?, ?, ?, ?)",
+                    $id, $transdate, $other_account, $item->{legs}->[0]->{amount} + $item->{legs}->[0]->{fee} , $tax_chart_id, $tax)
                   or die $dbs->error;
                 $dbs->commit;
             }
