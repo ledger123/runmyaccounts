@@ -214,10 +214,11 @@ sub all_transactions {
 			FROM acc_trans ac
 			JOIN $_ a ON (a.id = ac.trans_id)
 			JOIN chart c ON (ac.chart_id = c.id)
+            $dpt_join
 			WHERE c.gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|
 			AND ac.approved = '1'
 			AND ac.transdate < '$form->{fromdate}'
-			AND a.department_id = |.$form->dbclean($department_id).qq|
+            $dpt_where
 			$project
             $fx_transaction
 			$subquery
@@ -231,10 +232,11 @@ sub all_transactions {
 			FROM acc_trans ac
 			JOIN $_ a ON (a.id = ac.trans_id)
 			JOIN chart c ON (ac.chart_id = c.id)
+            $dpt_join
 			WHERE c.accno = |.$dbh->quote($form->{accno}).qq|
 			AND ac.approved = '1'
 			AND ac.transdate < '$form->{fromdate}'
-			AND a.department_id = |.$form->dbclean($department_id).qq|
+            $dpt_where
 			$project
             $fx_transaction
 			$subquery
@@ -249,9 +251,11 @@ sub all_transactions {
 	  $query = qq|SELECT SUM(ac.amount)
 		    FROM acc_trans ac
 		    JOIN chart c ON (ac.chart_id = c.id)
+            $dpt_join
 		    WHERE c.gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|
 		    AND ac.approved = '1'
 		    AND ac.transdate < '$form->{fromdate}'
+            $dpt_where
 		    $project
             $fx_transaction
 		    $subquery
@@ -260,9 +264,11 @@ sub all_transactions {
 	  $query = qq|SELECT SUM(ac.amount)
 		      FROM acc_trans ac
 		      JOIN chart c ON (ac.chart_id = c.id)
+              $dpt_join
 		      WHERE c.accno = |.$dbh->quote($form->{accno}).qq|
 		      AND ac.approved = '1'
 		      AND ac.transdate < '$form->{fromdate}'
+              $dpt_where
 		      $project
               $fx_transaction
 		      $subquery
