@@ -2072,6 +2072,8 @@ sub taxes {
     $form->{"taxaccno_$i"} = $ref->{accno};
     $form->{"taxrate_$i"} = $ref->{rate};
     $form->{"taxdescription_$i"} = $ref->{description};
+    $form->{"taxdescription_$i"} = $ref->{description};
+    $form->{"reversecharge_$i"} = $ref->{reversecharge};
 
     for (qw(taxnumber validto)) { $form->{"${_}_$i"} = $ref->{$_} }
     $form->{taxaccounts} .= "$ref->{id}_$i ";
@@ -2107,6 +2109,7 @@ sub display_taxes {
 	  <th>|.$locale->text('Rate').qq|</th>
 	  <th>|.$locale->text('Number').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
+	  <th>|.$locale->text('Reverse Charge').qq|</th>
 	</tr>
 |;
 
@@ -2134,6 +2137,7 @@ sub display_taxes {
 	  <td><input name="taxrate_$i" size=6 value=$form->{"taxrate_$i"}></td>
 	  <td><input name="taxnumber_$i" value="$form->{"taxnumber_$i"}"></td>
 	  <td><input name="validto_$i" size=11 class=date value="$form->{"validto_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
+	  <td><input name="reversecharge_$i" size=10 value="$form->{"reversecharge_$i"}"></td>
 	</tr>
 |;
     my $sametax = $form->{"taxdescription_$i"};

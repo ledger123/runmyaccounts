@@ -1759,7 +1759,7 @@ sub update {
     # per line tax
     for $i ( 1 .. $form->{rowcount} ) {
         unless ( ( $form->{"debit_$i"} eq "" ) && ( $form->{"credit_$i"} eq "" ) ) {
-            for (qw(debit credit)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
             push @a, {};
             $j = $#a;
@@ -1782,14 +1782,17 @@ sub update {
     for $i ( 1 .. $count ) {
         if ( $form->{"tax_$i"} and !$form->{"taxamount_$i"} ) {
             my ( $tax_accno, $null ) = split( /--/, $form->{"tax_$i"} );
-            ($tax_rate) = $dbh->selectrow_array(
-                qq|
-                SELECT rate 
+            ($tax_rate, $reversecharge_id) = $dbh->selectrow_array(qq|
+                SELECT rate, reversecharge_id
                 FROM tax 
                 WHERE chart_id = (SELECT id FROM chart WHERE accno = '$tax_accno')
                 AND (validto IS NULL OR validto >= '$form->{transdate}')|
             );
-            $taxamount = $form->round_amount( ( $form->{"debit_$i"} + $form->{"credit_$i"} ) - ( $form->{"debit_$i"} + $form->{"credit_$i"} ) / ( 1 + $tax_rate ), $form->{precision} );
+            if ($reversecharge_id){
+                $taxamount = $form->round_amount( ( $form->{"debit_$i"} + $form->{"credit_$i"} ) * $tax_rate , $form->{precision} );
+            } else {
+                $taxamount = $form->round_amount( ( $form->{"debit_$i"} + $form->{"credit_$i"} ) - ( $form->{"debit_$i"} + $form->{"credit_$i"} ) / ( 1 + $tax_rate ), $form->{precision} );
+            }
             $form->{"taxamount_$i"} = $taxamount;
         }
     }
@@ -1901,13 +1904,14 @@ sub display_rows {
                 $fx_transaction2 = qq|<td>&nbsp;</td>|;
             }
 
+
         } else {
 
             $form->{totaldebit}     += $form->{"debit_$i"};
             $form->{totalcredit}    += $form->{"credit_$i"};
             $form->{totaltaxamount} += $form->{"taxamount_$i"};
 
-            for (qw(debit credit)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
 
             if ( $i < $form->{rowcount} ) {
 
@@ -1922,7 +1926,7 @@ sub display_rows {
                 if ( $form->{selecttax} ) {
                     $tax = $form->{"tax_$i"};
                     $tax = qq|$tax|;
-                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|">|;
+                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="$form->{"taxamount_$i"}">|;
                 }
 
                 if ( $form->{fxadj} ) {
@@ -1955,24 +1959,36 @@ sub display_rows {
             }
         }
 
+        $form->{"lineitemdetail_$i"} = ($form->{allbox}) ? 1 : $form->{"lineitemdetail_$i"};
+        $form->{"lineitemdetail_$i"} = ($form->{"lineitemdetail_$i"}) ? "checked" : "";
+        if (!$form->{"lineitemdetail_$i"}){
+            $form->{"lineitemdetail_$i"} = ($form->{"memo_$i"} || $form->{"source_$i"} || $form->{"projectnumber_$i"}) ? "checked" : "";
+        }
+        $lineitemdetail = qq|<td align="center"><input name="lineitemdetail_$i" type=checkbox class=checkbox $form->{"lineitemdetail_$i"}></td>|;
+ 
         if ($form->{selecttax}){
             print qq|
             <tr valign=top>
                 <td>$accno</td>
+                $lineitemdetail
                 $fx_transaction
                 <td align="right"><input name="debit_$i" size=12 value="$form->{"debit_$i"}" accesskey=$i></td>
                 <td align="right"><input name="credit_$i" size=12 value=$form->{"credit_$i"}></td>
                 <td>$tax<br/>
-                <td>$taxamount</td>
-            </tr>
+                <td align="right">$taxamount</td>
+            </tr>|;
+            if ($form->{"lineitemdetail_$i"}){
+                print qq|
             <tr>
                 <td>$memo $source</td>
                 $fx_transaction2
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
+                <td>&nbsp;</td>
                 <td>$project</td>
                 <td>&nbsp;</td>
             </tr>|;
+            }
         } else {
             print qq|
             <tr valign=top>
@@ -2130,10 +2146,13 @@ sub form_header {
       <table width=100%>
 	<tr class=listheading>
 |;
+    $form->{allbox} = ($form->{allbox}) ? "checked" : "";
+    $allbox = qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll();"></th>|;
 
     if ( $form->{selecttax} ) {
         print qq|
 	  <th class=listheading>| . $locale->text('Account') . qq| / | . $locale->text('Memo') . qq| / | . $locale->text('Source') . qq|</th>
+      $allbox
 	  $fx_transaction
 	  <th class=listheading>| . $locale->text('Debit') . qq|</th>
 	  <th class=listheading>| . $locale->text('Credit') . qq|</th>
@@ -2156,6 +2175,26 @@ sub form_header {
     }
     print qq|
 	</tr>
+|;
+
+   print qq|
+<script language="JavaScript">
+<!--
+
+function CheckAll(v) {
+
+  var frm = document.forms[0]
+  var el = frm.elements
+  var re = /lineitemdetail_/;
+
+  for (i = 0; i < el.length; i++) {
+    if (el[i].type == 'checkbox' && re.test(el[i].name)) {
+      el[i].checked = frm.allbox.checked
+    }
+  }
+}
+// -->
+</script>
 |;
 
 }
@@ -2181,6 +2220,7 @@ sub form_footer {
 
     print qq|
         <tr class=listtotal>
+	  <th>&nbsp;</th>
 	  <th>&nbsp;</th>
 	  $fx_transaction
 	  <th class=listtotal align=right>$form->{totaldebit}</th>
@@ -2342,31 +2382,98 @@ sub post {
         }
     }
 
-    # Process per line tax information
+    my $dbh = $form->dbconnect(\%myconfig);
+
     $count = $form->{rowcount};
+    my $reversecharge_id; 
     for my $i ( 1 .. $form->{rowcount} ) {
         if ( $form->{"taxamount_$i"} ) {
-            $j                  = $count++;
-            $form->{"accno_$j"} = $form->{"tax_$i"};
-            $form->{"tax_$j"}   = 'auto';
+           my ($accno, $null) = split /--/, $form->{"tax_$i"};
+           ($reversecharge_id) = $dbh->selectrow_array("
+               SELECT reversecharge_id
+               FROM tax
+               WHERE chart_id IN (SELECT id FROM chart WHERE accno = '$accno')
+            ");
 
-            $form->{"source_$j"}        = $form->{"source_$i"};
-            $form->{"memo_$j"}          = $form->{"memo_$i"};
-            $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+           if ($reversecharge_id){
+                ($reversecharge_accno, $reversecharge_description) = $dbh->selectrow_array("
+                    SELECT accno, description
+                    FROM chart
+                    WHERE id = $reversecharge_id"
+                );
+                $j                  = $count++;
+                $form->{"accno_$j"} = $form->{"tax_$i"};
+                $form->{"tax_$j"}   = 'reverse';
 
-            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+                $form->{"source_$j"}        = $form->{"source_$i"};
+                $form->{"memo_$j"}          = $form->{"memo_$i"};
+                $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
 
-            if ( $form->{"debit_$i"} ) {
-                $form->{"debit_$i"} -= $form->{"taxamount_$i"};
-                $form->{"debit_$j"} = $form->{"taxamount_$i"};
-            }
-            else {
-                $form->{"credit_$i"} -= $form->{"taxamount_$i"};
-                $form->{"credit_$j"} = $form->{"taxamount_$i"};
-            }
+                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+
+                $form->{taxamount} = $form->{"taxamount_$i"};
+
+                if ( $form->{"debit_$i"} ) {
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}); 
+                } else {
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
+                }
+
+                $j                  = $count++;
+                $form->{"accno_$j"} = "$reversecharge_accno--$reversecharge_description";
+                $form->{"tax_$j"}   = 'reverse';
+
+                $form->{"source_$j"}        = $form->{"source_$i"};
+                $form->{"memo_$j"}          = $form->{"memo_$i"};
+                $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+
+                if ( $form->{"debit_$i"} ) {
+                    $form->{"debit_$j"} = 0;
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
+                } else {
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
+                    $form->{"credit_$j"} = 0;
+                }
+
+                for my $i ( 1 .. $form->{rowcount} ) {
+                    if (!$form->{"tax_$i"}){
+                        $form->{"tax_$i"} = "$reversecharge_accno--$reversecharge_description";
+                    }
+                    $form->{"taxamount_$i"} = $form->format_amount(\%myconfig, $form->{taxamount});
+                }
+                last;
+           }
         }
     }
     $form->{rowcount} = $count;
+
+    if (!$reversecharge_id){
+        # Process per line tax information
+        for my $i ( 1 .. $form->{rowcount} ) {
+            if ( $form->{"taxamount_$i"} ) {
+                $j                  = $count++;
+                $form->{"accno_$j"} = $form->{"tax_$i"};
+                $form->{"tax_$j"}   = 'auto';
+
+                $form->{"source_$j"}        = $form->{"source_$i"};
+                $form->{"memo_$j"}          = $form->{"memo_$i"};
+                $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+
+                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+
+                if ( $form->{"debit_$i"} ) {
+                    $form->{"debit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                }
+                else {
+                    $form->{"credit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                }
+                for (qw(debit credit)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
+            }
+        }
+        $form->{rowcount} = $count;
+    }
 
     if ( $form->{batch} ) {
         $rc = VR->post_transaction( \%myconfig, \%$form );

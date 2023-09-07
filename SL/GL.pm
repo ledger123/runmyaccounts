@@ -1185,22 +1185,43 @@ sub transaction {
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
     $form->{currency} = $form->{curr};
     $sth->finish;
-  
+
+    # is this reversecharge tax transaction?
+    ($reversecharge_id) = $dbh->selectrow_array("
+        SELECT reversecharge_id
+        FROM tax
+        WHERE chart_id IN (SELECT chart_id FROM acc_trans WHERE trans_id = $form->{id})
+        AND reversecharge_id <> 0
+        LIMIT 1
+    ");
+
+    my ($ignorefx) = $dbh->selectrow_array("
+        SELECT COUNT(*)
+        FROM acc_trans
+        WHERE trans_id = $form->{id}
+        AND tax IS NOT NULL AND fx_transaction"
+    );
+    if ($ignorefx){
+        $ignore_where = " AND NOT fx_transaction";
+    }
     # retrieve individual rows
     $query = qq|SELECT ac.*, c.accno, c.description, p.projectnumber,
                 l.description AS translation
 	        FROM acc_trans ac
 	        JOIN chart c ON (ac.chart_id = c.id)
 	        LEFT JOIN project p ON (p.id = ac.project_id)
-		LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+		    LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 	        WHERE ac.trans_id = $form->{id}
-            AND (tax <> 'auto' OR tax IS NULL)
+            AND (tax <> 'auto' AND tax <> 'reverse' OR tax IS NULL)
+            $ignore_where
 	        ORDER BY accno|;
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
     
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-      $ref->{amount} += $ref->{taxamount};
+      if (!$reversecharge_id){
+        $ref->{amount} += $ref->{taxamount} if $ref->{tax};
+      }
       $ref->{taxamount} = abs($ref->{taxamount});
       $ref->{description} = $ref->{translation} if $ref->{translation};
       push @a, $ref;

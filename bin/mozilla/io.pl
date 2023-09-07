@@ -1709,7 +1709,7 @@ sub print_form {
       $form->{emailed} =~ s/^ //;
 
       # save status
-      $form->update_status(\%myconfig);
+      # $form->update_status(\%myconfig);
     }
 
     $now = scalar localtime;
@@ -1743,9 +1743,9 @@ sub print_form {
       $old_form->{format} = "postscript" if $myconfig{printer};
       $old_form->{media} = $myconfig{printer};
 
-      $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
+      # $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
     
-      $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
+      # $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
     }
     
   }
@@ -1793,6 +1793,10 @@ sub print_form {
 
   $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey) if $form->{copies};
 
+  if ($form->{media} eq 'email') {
+      $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
+      $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
+  }
 
   # if we got back here restore the previous form
   # ISNA: 00023 tekki
