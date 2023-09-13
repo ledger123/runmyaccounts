@@ -3011,6 +3011,27 @@ qq|<meta http-equiv="Content-Type" content="text/plain; charset=$self->{charset}
   <link rel="stylesheet" href="css/select2-4.0.13.min.css" type="text/css"/>
   <link rel="stylesheet" href="css/jquery-ui-1.12.1.min.css" type="text/css"/>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/css/pikaday.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>
+
+<style>
+.dateWithIcon {
+  position: relative;
+}
+
+.dateWithIcon input[type="text"] {
+  padding-right: 24px;
+}
+
+.dateWithIcon .calendarIcon {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+</style>
   $stylesheet
 
   $charset
@@ -3088,6 +3109,45 @@ $(document).ready(function(){
 
 		print q|
 });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  function attachDatePicker(elements) {
+    elements.forEach(element => {
+      let parent = document.createElement('div');
+      let icon = document.createElement('span');
+      
+      // Create calendar icon
+      icon.innerHTML = '<img src="images/calendar.gif" alt="Open date picker">';
+      icon.className = 'calendarIcon';
+      
+      element.parentNode.insertBefore(parent, element);
+      parent.appendChild(element);
+      parent.appendChild(icon);
+      parent.className = 'dateWithIcon';
+      
+      // Initialize Pikaday
+      let picker = new Pikaday({
+        field: element,
+        format: 'DD-MM-YY',
+        onSelect: function(date) {
+          element.value = moment(date).format('DD-MM-YY');
+        }
+      });
+      
+      // Event listener to show date picker when calendar icon is clicked
+      icon.addEventListener('click', () => {
+        picker.show();
+      });
+    });
+  }
+  
+  // Attach date picker to all fields with class 'date'
+  attachDatePicker(Array.from(document.querySelectorAll('.date')));
+});
+
+
 </script>
 </head>
 |;
