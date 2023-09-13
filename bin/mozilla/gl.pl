@@ -2060,7 +2060,7 @@ sub form_header {
 |;
     } else {
         $transdate = qq|
-	  <td><input name=transdate size=11 class=date title="$myconfig{dateformat}" value=$form->{transdate}></td>
+	  <td><input name=transdate size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{transdate}></td>
 |;
     }
 
