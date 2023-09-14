@@ -2343,9 +2343,16 @@ sub form_footer {
       <tr>
         <th align="right">Rule Name</th>
         <td>
-          <input type="text" name="rule_name" size="30" value="$form->{reference}" required>
+          <input type="text" name="rule_name" size="30" value="$form->{reference}">
         </td>
       </tr>
+      <tr>
+        <th align="right">State</th>
+        <td>
+          <input type="text" name="state" value="$hash->{state}" size="30">
+        </td>
+      </tr>
+      -->
       <tr>
         <th align="right">Type</th>
         <td>
@@ -2355,39 +2362,31 @@ sub form_footer {
       <tr>
         <th align="right">Card Number</th>
         <td>
-          <input type="text" name="card_number" value="$hash->{card}->{card_number}" size="30" required>
+          <input type="text" name="card_number" value="$hash->{card}->{card_number}" size="30">
         </td>
       </tr>
-      <tr>
-        <th align="right">State</th>
-        <td>
-          <input type="text" name="state" value="$hash->{state}" size="30" required>
-        </td>
-      </tr>
-      -->
-
       <tr>
         <th align="right">Merchant Name</th>
         <td>
-          <input type="text" name="merchant_name" value="$hash->{merchant}->{name}" size="30" required>
+          <input type="text" name="merchant_name" value="$hash->{merchant}->{name}" size="30">
         </td>
       </tr>
       <tr>
         <th align="right">Merchant City</th>
         <td>
-          <input type="text" name="merchant_city" value="$hash->{merchant}->{city}" size="30" required>
+          <input type="text" name="merchant_city" value="$hash->{merchant}->{city}" size="30">
         </td>
       </tr>
       <tr>
         <th align="right">Merchant Country</th>
         <td>
-          <input type="text" name="merchant_country" value="$hash->{merchant}->{country}" size="30" required>
+          <input type="text" name="merchant_country" value="$hash->{merchant}->{country}" size="30">
         </td>
       </tr>
       <tr>
         <th align="right">Category Code</th>
         <td>
-          <input type="text" name="category_code" value="$hash->{merchant}->{category_code}" size="30" required>
+          <input type="text" name="category_code" value="$hash->{merchant}->{category_code}" size="30">
           <br><b>$category_description</b>
         </td>
       </tr>

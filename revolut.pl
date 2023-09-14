@@ -165,7 +165,7 @@ get 'accounts' => sub ($c) {
             my $rownum = $table_data->addRow(
                 "<a href=" . $c->url_for('/transactions')->query( account => $item->{id} ) . ">Transactions</a>",
                 $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
-                $item->{state}, $item->{public},
+                $item->{state},    $item->{public},
             );
             $table_data->setRowClass( $rownum, 'listrow0' );
             $dbs->query( "
@@ -201,13 +201,12 @@ any 'transactions' => sub ($c) {
     my @accounts        = $dbs->query("SELECT curr, id FROM revolut_accounts ORDER BY curr")->arrays;
     my @chart1          = $dbs->query("SELECT accno || '--' || description, id AS accno FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
     my @chart2          = $dbs->query( "SELECT accno || '--' || description, id AS accno FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->arrays;
+    my $date1           = Time::Piece->strptime( $params->{from_date}, '%d/%m/%Y' );
+    my $date2           = Time::Piece->strptime( $params->{to_date},   '%d/%m/%Y' );
+    my $from_date       = $date1->strftime('%Y-%m-%d');
+    my $to_date         = $date2->strftime('%Y-%m-%d');
+    my $apicall         = "$defaults{revolut_api_url}/transactions?";
 
-    my $date1 = Time::Piece->strptime( $params->{from_date}, '%d/%m/%Y' );
-    my $date2 = Time::Piece->strptime( $params->{to_date},   '%d/%m/%Y' );
-    my $from_date = $date1->strftime('%Y-%m-%d');
-    my $to_date   = $date2->strftime('%Y-%m-%d');
-
-    my $apicall = "$defaults{revolut_api_url}/transactions?";
     $apicall .= "account=$params->{account}&from=$from_date&to=$to_date";
     my $res  = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
     my $code = $res->code;
@@ -232,11 +231,11 @@ any 'transactions' => sub ($c) {
     for my $item ( @{$hash} ) {
         my $transdate = substr( $item->{created_at}, 0, 10 );
         my $rownum    = $table_data->addRow(
-            $transdate, $item->{type},
-            $c->nf->format_price( $item->{legs}->[0]->{amount},  2 ), $c->nf->format_price( $item->{legs}->[0]->{fee}, 2 ),
+            $transdate,                                               $item->{type},
+            $c->nf->format_price( $item->{legs}->[0]->{amount}, 2 ),  $c->nf->format_price( $item->{legs}->[0]->{fee}, 2 ),
             $c->nf->format_price( $item->{legs}->[0]->{balance}, 2 ), $item->{legs}->[0]->{currency},
-            $item->{legs}->[0]->{description}, $item->{state},
-            $item->{card}->{card_number},      $item->{merchant}->{name},
+            $item->{legs}->[0]->{description},                        $item->{state},
+            $item->{card}->{card_number},                             $item->{merchant}->{name},
         );
         $table_data->setRowClass( $rownum, 'listrow0' );
 
@@ -245,8 +244,11 @@ any 'transactions' => sub ($c) {
             if ($exists) {
                 $dbs->query( "DELETE FROM acc_trans WHERE trans_id = ?", $exists );
                 $dbs->query( "DELETE FROM gl WHERE id = ?",              $exists );
+                $msg .= "Updating $reference ...<br/>";
+            } else {
+                $reference = $item->{id};
+                $msg .= "Adding $reference ...<br/>";
             }
-            $msg .= "Adding $reference ...<br/>";
             my $department_id = $dbs->query("SELECT id FROM department LIMIT 1")->list;
             $department_id *= 1;
             my $curr         = $item->{legs}->[0]->{currency};
@@ -257,24 +259,37 @@ any 'transactions' => sub ($c) {
                     AND transdate = ?", $curr, $transdate )->list;
             $exchangerate *= 1;
             $exchangerate = 1 if !$exchangerate;
-            my $transjson     = encode_json($item);
-            my ($other_account, $tax_chart_id) = $dbs->query( "
-                SELECT chart_id, tax_chart_id
-                FROM revolut_rules
-                WHERE merchant_name = ?
-                AND merchant_city = ?
-                AND merchant_country = ?
-                AND category_code = ?",
-                $item->{merchant}->{name},
-                $item->{merchant}->{city},
-                $item->{merchant}->{country},
-                $item->{merchant}->{category_code} )->list;
+            my $transjson = encode_json($item);
+            my $other_account;
+            my $tax_chart_id;
+
+            if ( $item->{type} eq 'topup' ) {
+                ( $other_account, $tax_chart_id ) = $dbs->query( "
+                    SELECT chart_id, tax_chart_id
+                    FROM revolut_rules
+                    WHERE type = ?
+                    LIMIT 1",
+                    $item->{type},
+                )->list;
+            } else {
+                ( $other_account, $tax_chart_id ) = $dbs->query( "
+                    SELECT chart_id, tax_chart_id
+                    FROM revolut_rules
+                    WHERE merchant_name = ?
+                    AND merchant_city = ?
+                    AND merchant_country = ?
+                    AND category_code = ?
+                    LIMIT 1",
+                    $item->{merchant}->{name},
+                    $item->{merchant}->{city},
+                    $item->{merchant}->{country},
+                    $item->{merchant}->{category_code} )->list;
+            }
             $other_account = $params->{clearing_account} if !$other_account;
             my $tax;
-            if ($tax_chart_id){
-                $tax = $dbs->query("SELECT accno || '--' || description FROM chart WHERE id = ?", $tax_chart_id)->list;
+            if ($tax_chart_id) {
+                $tax = $dbs->query( "SELECT accno || '--' || description FROM chart WHERE id = ?", $tax_chart_id )->list;
             }
-
             $dbs->query( "
                     INSERT INTO gl(reference, description, notes, transdate, department_id, curr, exchangerate, transjson)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -289,7 +304,7 @@ any 'transactions' => sub ($c) {
                   or die $dbs->error;
                 $dbs->query( "
                     INSERT INTO acc_trans(trans_id, transdate, chart_id, amount, tax_chart_id, tax) VALUES (?, ?, ?, ?, ?, ?)",
-                    $id, $transdate, $other_account, $item->{legs}->[0]->{amount} + $item->{legs}->[0]->{fee} , $tax_chart_id, $tax)
+                    $id, $transdate, $other_account, $item->{legs}->[0]->{amount} + $item->{legs}->[0]->{fee}, $tax_chart_id, $tax )
                   or die $dbs->error;
                 $dbs->commit;
             }
@@ -319,27 +334,22 @@ any 'counterparties' => sub ($c) {
         return;
     }
 
-    my $dbs      = $c->dbs( $c->session->{myconfig}->{dbname} );
-    my %defaults = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
-
+    my $dbs          = $c->dbs( $c->session->{myconfig}->{dbname} );
+    my %defaults     = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
     my $ua           = Mojo::UserAgent->new;
     my $access_token = $c->session->{access_token};
     my $params       = $c->req->params->to_hash;
-
-    my $apicall = "$defaults{revolut_api_url}/counterparties";
-
-    my $res = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
-
-    my $code = $res->code;
+    my $apicall      = "$defaults{revolut_api_url}/counterparties";
+    my $res          = $ua->get( $apicall => { "Authorization" => "Bearer $access_token" } )->result;
+    my $code         = $res->code;
 
     if ( $code eq '500' ) {
         $c->render( text => "<pre>API call: $apicall\n\n" . $c->dumper($res) );
         return;
     }
 
-    my $body = $res->{content}->{asset}->{content};
-    my $hash = decode_json($body);
-
+    my $body        = $res->{content}->{asset}->{content};
+    my $hash        = decode_json($body);
     my $hash_pretty = format_pretty( $hash, { linum => 1 } );
 
     $c->render(
