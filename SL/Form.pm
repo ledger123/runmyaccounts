@@ -3110,45 +3110,6 @@ $(document).ready(function(){
 		print q|
 });
 </script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-
-  function attachDatePicker(elements) {
-    elements.forEach(element => {
-      let parent = document.createElement('div');
-      let icon = document.createElement('span');
-      
-      // Create calendar icon
-      icon.innerHTML = '<img src="images/calendar.gif" alt="Open date picker">';
-      icon.className = 'calendarIcon';
-      
-      element.parentNode.insertBefore(parent, element);
-      parent.appendChild(element);
-      parent.appendChild(icon);
-      parent.className = 'dateWithIcon';
-      
-      // Initialize Pikaday
-      let picker = new Pikaday({
-        field: element,
-        format: 'DD-MM-YY',
-        onSelect: function(date) {
-          element.value = moment(date).format('DD-MM-YY');
-        }
-      });
-      
-      // Event listener to show date picker when calendar icon is clicked
-      icon.addEventListener('click', () => {
-        picker.show();
-      });
-    });
-  }
-  
-  // Attach date picker to all fields with class 'date'
-  attachDatePicker(Array.from(document.querySelectorAll('.date')));
-});
-
-
-</script>
 </head>
 |;
 		print qq|
