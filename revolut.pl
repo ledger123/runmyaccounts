@@ -484,8 +484,11 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
 
   <link rel="stylesheet" href="//code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
   <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"> -->
-  <link href="/rma/css/sql-ledger.css" rel="stylesheet">
-  
+
+  % my $css_path = $c->url_for('css/sql-ledger.css')->to_abs; 
+  % $css_path =~ s/\/revolut\.pl\//\//;
+  <link rel="stylesheet" type="text/css" href="<%= $css_path %>">
+ 
   <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="//code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
   <script>
