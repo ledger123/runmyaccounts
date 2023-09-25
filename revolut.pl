@@ -13,7 +13,6 @@ use DBI;
 use DBD::Pg;
 use DBIx::Simple;
 use Number::Format;
-use Time::Piece;
 
 $Data::Dumper::Indent = 1;
 
@@ -165,7 +164,7 @@ get 'accounts' => sub ($c) {
             my $rownum = $table_data->addRow(
                 "<a href=" . $c->url_for('/transactions')->query( account => $item->{id} ) . ">Transactions</a>",
                 $item->{currency}, $item->{name}, $c->nf->format_price( $item->{balance}, 2 ),
-                $item->{state},    $item->{public},
+                $item->{state}, $item->{public},
             );
             $table_data->setRowClass( $rownum, 'listrow0' );
             $dbs->query( "
@@ -183,17 +182,17 @@ get 'accounts' => sub ($c) {
 any 'transactions' => sub ($c) {
 
     my $params = $c->req->params->to_hash;
+    my $dbs    = $c->dbs( $c->session->{myconfig}->{dbname} );
 
-    $params->{from_date} = '01/08/2022'                           if !$params->{from_date};
-    $params->{to_date}   = '30/08/2022'                           if !$params->{to_date};
-    $params->{account}   = 'bbe762b6-e590-4880-bb30-f6940060cb57' if !$params->{account};
+    $params->{from_date} = $dbs->query("SELECT transdate FROM gl WHERE transjson IS NOT NULL")->list if !$params->{from_date};
+    $params->{to_date}   = $dbs->query("SELECT '$params->{from_date}'::DATE + 1")->list              if !$params->{to_date};
+    $params->{account}   = 'bbe762b6-e590-4880-bb30-f6940060cb57'                                    if !$params->{account};
 
     if ( !$c->session->{dbname} ) {
         $c->render( text => 'Session timed out' );
         return;
     }
 
-    my $dbs             = $c->dbs( $c->session->{myconfig}->{dbname} );
     my %defaults        = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
     my $ua              = Mojo::UserAgent->new;
     my $access_token    = $c->session->{access_token};
@@ -201,10 +200,8 @@ any 'transactions' => sub ($c) {
     my @accounts        = $dbs->query("SELECT curr, id FROM revolut_accounts ORDER BY curr")->arrays;
     my @chart1          = $dbs->query("SELECT accno || '--' || description, id AS accno FROM chart WHERE link LIKE '%_paid%' ORDER BY 2")->arrays;
     my @chart2          = $dbs->query( "SELECT accno || '--' || description, id AS accno FROM chart WHERE accno LIKE ? ORDER BY 2", $selectedaccount )->arrays;
-    my $date1           = Time::Piece->strptime( $params->{from_date}, '%d/%m/%Y' );
-    my $date2           = Time::Piece->strptime( $params->{to_date},   '%d/%m/%Y' );
-    my $from_date       = $date1->strftime('%Y-%m-%d');
-    my $to_date         = $date2->strftime('%Y-%m-%d');
+    my $from_date       = $params->{from_date};
+    my $to_date         = $params->{to_date};
     my $apicall         = "$defaults{revolut_api_url}/transactions?";
 
     $apicall .= "account=$params->{account}&from=$from_date&to=$to_date";
@@ -231,11 +228,11 @@ any 'transactions' => sub ($c) {
     for my $item ( @{$hash} ) {
         my $transdate = substr( $item->{created_at}, 0, 10 );
         my $rownum    = $table_data->addRow(
-            $transdate,                                               $item->{type},
-            $c->nf->format_price( $item->{legs}->[0]->{amount}, 2 ),  $c->nf->format_price( $item->{legs}->[0]->{fee}, 2 ),
+            $transdate, $item->{type},
+            $c->nf->format_price( $item->{legs}->[0]->{amount},  2 ), $c->nf->format_price( $item->{legs}->[0]->{fee}, 2 ),
             $c->nf->format_price( $item->{legs}->[0]->{balance}, 2 ), $item->{legs}->[0]->{currency},
-            $item->{legs}->[0]->{description},                        $item->{state},
-            $item->{card}->{card_number},                             $item->{merchant}->{name},
+            $item->{legs}->[0]->{description}, $item->{state},
+            $item->{card}->{card_number},      $item->{merchant}->{name},
         );
         $table_data->setRowClass( $rownum, 'listrow0' );
 
@@ -419,13 +416,13 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
             <tr>
                 <th align="right">From Date</th>
                 <td>
-                   %= text_field 'from_date', class => 'datepicker', value => $params->{from_date}, class=>"form-control"
+                   %= date_field 'from_date', class => 'datepicker', value => $params->{from_date}, class=>"form-control"
                 </td>
             </tr>
             <tr>
                 <th align="right">To Date</th>
                 <td>
-                    %= text_field 'to_date', class => 'datepicker', value => $params->{to_date}, class=>"form-control"
+                    %= date_field 'to_date', class => 'datepicker', value => $params->{to_date}, class=>"form-control"
                 </td>
             </tr>
             <tr>
@@ -500,9 +497,6 @@ To manage your revolut connection visit: <a href="https://business.revolut.com/s
   </script>
 </head>
 <body>
-
-<a class="nav-link" href="<%= url_for('/accounts')->query(login => $c->session->{myconfig}->{login}) %>">Accounts</a>
-<a class="nav-link" href="<%= url_for('/transactions')->query(login => $c->session->{myconfig}->{login}) %>">Transactions</a>
 
 <main class="container-fluid">
   <%= content %>
