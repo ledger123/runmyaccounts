@@ -13,42 +13,41 @@
 
 package IM;
 
-
 sub sales_invoice {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
-  
-  $form->{ARAP} = "AR";
+    my $query;
+    my $ref;
 
-  # get AR accounts
-  $query = qq|SELECT accno FROM chart
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
+
+    $form->{ARAP} = "AR";
+
+    # get AR accounts
+    $query = qq|SELECT accno FROM chart
               WHERE link = '$form->{ARAP}'|;
-  my $sth = $dbh->prepare($query) || $form->dberror($query);
+    my $sth = $dbh->prepare($query) || $form->dberror($query);
 
-  my %ARAP = ();
-  my $default_arap_accno;
-  
-  $sth->execute || $form->dberror($query);
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ARAP{"$ref->{accno}"} = 1;
-    $default_arap_accno ||= $ref->{accno};
-  }
+    my %ARAP = ();
+    my $default_arap_accno;
 
-  if (! %ARAP) {
-    $dbh->disconnect;
-    return -1;
-  }
-  
-  # customer
-  $query = qq|SELECT cv.id, cv.name, cv.customernumber, cv.terms,
+    $sth->execute || $form->dberror($query);
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ARAP{"$ref->{accno}"} = 1;
+        $default_arap_accno ||= $ref->{accno};
+    }
+
+    if ( !%ARAP ) {
+        $dbh->disconnect;
+        return -1;
+    }
+
+    # customer
+    $query = qq|SELECT cv.id, cv.name, cv.customernumber, cv.terms,
               e.id AS employee_id, e.name AS employee,
 	      c.accno AS taxaccount, a.accno AS arap_accno,
 	      ad.city
@@ -59,295 +58,293 @@ sub sales_invoice {
 	      LEFT JOIN chart c ON (c.id = ct.chart_id)
 	      LEFT JOIN chart a ON (a.id = cv.arap_accno_id)
 	      WHERE customernumber = ?|;
-  my $cth = $dbh->prepare($query) || $form->dberror($query);
+    my $cth = $dbh->prepare($query) || $form->dberror($query);
 
-  $query = qq|SELECT id, name FROM employee WHERE employeenumber = ?|;
-  my $eth = $dbh->prepare($query) || $form->dberror($query);
+    $query = qq|SELECT id, name FROM employee WHERE employeenumber = ?|;
+    my $eth = $dbh->prepare($query) || $form->dberror($query);
 
-  # parts
-  $query = qq|SELECT p.id, p.unit, p.description, p.notes AS itemnotes,
+    # parts
+    $query = qq|SELECT p.id, p.unit, p.description, p.notes AS itemnotes,
               c.accno
               FROM parts p
               LEFT JOIN partstax pt ON (p.id = pt.parts_id)
 	      LEFT JOIN chart c ON (c.id = pt.chart_id)
               WHERE partnumber = ?|;
-  my $pth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # department
-  $query = qq|SELECT id
+    my $pth = $dbh->prepare($query) || $form->dberror($query);
+
+    # department
+    $query = qq|SELECT id
               FROM department
               WHERE description = ?|;
-  my $dth = $dbh->prepare($query) || $form->dberror($query);
+    my $dth = $dbh->prepare($query) || $form->dberror($query);
 
-  # warehouse
-  $query = qq|SELECT id
+    # warehouse
+    $query = qq|SELECT id
               FROM warehouse
               WHERE description = ?|;
-  my $wth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # project
-  $query = qq|SELECT id
+    my $wth = $dbh->prepare($query) || $form->dberror($query);
+
+    # project
+    $query = qq|SELECT id
               FROM project
               WHERE projectnumber = ?|;
-  my $ptth = $dbh->prepare($query) || $form->dberror($query);
+    my $ptth = $dbh->prepare($query) || $form->dberror($query);
 
-  my $arap_accno;
-  my $terms;
-  my $i = 0;
-  my $j = 0;
-  my %tax;
-  my %customertax;
-  my $customernumber;
-  my $invnumber;
-  my %partstax;
-  my $parts_id;
+    my $arap_accno;
+    my $terms;
+    my $i = 0;
+    my $j = 0;
+    my %tax;
+    my %customertax;
+    my $customernumber;
+    my $invnumber;
+    my %partstax;
+    my $parts_id;
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  for (@d) {
+    for (@d) {
 
-    @a = &ndxline($form);
+        @a = &ndxline($form);
 
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
 
-      if ($customernumber ne $a[$form->{$form->{type}}->{customernumber}{ndx}] || $invnumber ne $a[$form->{$form->{type}}->{invnumber}{ndx}]) {
-	
-	$j = $i;
-	$form->{ndx} .= "$i ";
+            if ( $customernumber ne $a[ $form->{ $form->{type} }->{customernumber}{ndx} ] || $invnumber ne $a[ $form->{ $form->{type} }->{invnumber}{ndx} ] ) {
 
-	%customertax = ();
-	
-	$cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
+                $j = $i;
+                $form->{ndx} .= "$i ";
 
-        $arap_accno = "";
-	$terms = 0;
-	
-	while ($ref = $cth->fetchrow_hashref(NAME_lc)) {
-	  $customernumber = $ref->{customernumber};
-	  $arap_accno = $ref->{arap_accno};
-	  $terms = $ref->{terms};
-	  $form->{"customer_id_$i"} = $ref->{id};
-	  $form->{"customer_$i"} = $ref->{name};
-	  $form->{"city_$i"} = $ref->{city};
-	  $form->{"employee_$i"} = $ref->{employee};
-	  $form->{"employee_id_$i"} = $ref->{employee_id};
-	  $form->{"curr_$i"} = $form->{currency} if !$form->{"curr_$i"};
-	  $customertax{$ref->{accno}} = 1;
-	}
-	$cth->finish;
+                %customertax = ();
 
-        if ($a[$form->{$form->{type}}->{employeenumber}{ndx}]){
-	  $eth->execute("$a[$form->{$form->{type}}->{employeenumber}{ndx}]");
-	  while ($ref = $eth->fetchrow_hashref(NAME_lc)){
-	    $form->{"employee_$i"} = $ref->{name};
-	    $form->{"employee_id_$i"} = $ref->{id};
-          }
-	}
+                $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
 
-	if (! $ARAP{"$a[$form->{$form->{type}}->{$form->{ARAP}}{ndx}]"}) {
-	  $arap_accno ||= $default_arap_accno;
-	  $form->{"$form->{ARAP}_$i"} ||= $arap_accno;
-	}
+                $arap_accno = "";
+                $terms      = 0;
 
-        $form->{"transdate_$i"} ||= $form->current_date($myconfig);
-	
-	# terms and duedate
-	if ($form->{"duedate_$i"}) {
-	    $form->{"terms_$i"} = $form->datediff($myconfig, $form->{"transdate_$i"}, $form->{"duedate_$i"});
-	} else {
-	  $form->{"terms_$i"} = $terms if $form->{"terms_$i"} !~ /\d/;
-	  $form->{"duedate_$i"} ||= $form->{"transdate_$i"};
-	  if ($form->{"terms_$i"} > 0) {
-	    $form->{"duedate_$i"} = $form->add_date($myconfig, $form->{"transdate_$i"}, $form->{"terms_$i"}, 'days');
-	  }
-	}
-	  
-	$dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
-	($form->{"department_id_$i"}) = $dth->fetchrow_array;
-	$dth->finish;
-	
-	$wth->execute("$a[$form->{$form->{type}}->{warehouse}{ndx}]");
-	($form->{"warehouse_id_$i"}) = $wth->fetchrow_array;
-	$wth->finish;
+                while ( $ref = $cth->fetchrow_hashref(NAME_lc) ) {
+                    $customernumber               = $ref->{customernumber};
+                    $arap_accno                   = $ref->{arap_accno};
+                    $terms                        = $ref->{terms};
+                    $form->{"customer_id_$i"}     = $ref->{id};
+                    $form->{"customer_$i"}        = $ref->{name};
+                    $form->{"city_$i"}            = $ref->{city};
+                    $form->{"employee_$i"}        = $ref->{employee};
+                    $form->{"employee_id_$i"}     = $ref->{employee_id};
+                    $form->{"curr_$i"}            = $form->{currency} if !$form->{"curr_$i"};
+                    $customertax{ $ref->{accno} } = 1;
+                }
+                $cth->finish;
 
-      }
-      
-      $form->{transdate} = $form->{"transdate_$i"};
-      %tax = &taxrates("", $myconfig, $form, $dbh);
+                if ( $a[ $form->{ $form->{type} }->{employeenumber}{ndx} ] ) {
+                    $eth->execute("$a[$form->{$form->{type}}->{employeenumber}{ndx}]");
+                    while ( $ref = $eth->fetchrow_hashref(NAME_lc) ) {
+                        $form->{"employee_$i"}    = $ref->{name};
+                        $form->{"employee_id_$i"} = $ref->{id};
+                    }
+                }
 
-      $pth->execute("$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+                if ( !$ARAP{"$a[$form->{$form->{type}}->{$form->{ARAP}}{ndx}]"} ) {
+                    $arap_accno ||= $default_arap_accno;
+                    $form->{"$form->{ARAP}_$i"} ||= $arap_accno;
+                }
 
-      $parts_id = 0;
-      while ($ref = $pth->fetchrow_hashref(NAME_lc)) {
-	$form->{"parts_id_$i"} = $ref->{id};
-	for (qw(description unit)) { $form->{"${_}_$i"} ||= $ref->{$_} }
-	
-	$form->{"itemnotes_$i"} ||= $ref->{notes};
-	
-	$parts_id = 1;
-	if ($customertax{$ref->{accno}}) {
-	  $form->{"tax_$j"} += $a[$form->{$form->{type}}->{sellprice}{ndx}] * $a[$form->{$form->{type}}->{qty}{ndx}] * $tax{$ref->{accno}};
-	}
-      }
-      $pth->finish;
-      
-      $ptth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
-      ($form->{"projectnumber_$i"}) = $ptth->fetchrow_array;
-      $ptth->finish;
+                $form->{"transdate_$i"} ||= $form->current_date($myconfig);
 
-      $form->{"projectnumber_$i"} = qq|--$form->{"projectnumber_$i"}| if $form->{"projectnumber_$i"};
+                # terms and duedate
+                if ( $form->{"duedate_$i"} ) {
+                    $form->{"terms_$i"} = $form->datediff( $myconfig, $form->{"transdate_$i"}, $form->{"duedate_$i"} );
+                } else {
+                    $form->{"terms_$i"} = $terms if $form->{"terms_$i"} !~ /\d/;
+                    $form->{"duedate_$i"} ||= $form->{"transdate_$i"};
+                    if ( $form->{"terms_$i"} > 0 ) {
+                        $form->{"duedate_$i"} = $form->add_date( $myconfig, $form->{"transdate_$i"}, $form->{"terms_$i"}, 'days' );
+                    }
+                }
 
-      if (! $parts_id) {
-	$form->{"customer_id_$j"} = 0;
-	$form->{missingparts} .= "$a[$form->{$form->{type}}->{invnumber}{ndx}] : $a[$form->{$form->{type}}->{partnumber}{ndx}]\n";
-      }
-      
-      $form->{"total_$j"} += $a[$form->{$form->{type}}->{sellprice}{ndx}] * $a[$form->{$form->{type}}->{qty}{ndx}];
-      $form->{"totalqty_$j"} += $a[$form->{$form->{type}}->{qty}{ndx}];
-	
+                $dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
+                ( $form->{"department_id_$i"} ) = $dth->fetchrow_array;
+                $dth->finish;
+
+                $wth->execute("$a[$form->{$form->{type}}->{warehouse}{ndx}]");
+                ( $form->{"warehouse_id_$i"} ) = $wth->fetchrow_array;
+                $wth->finish;
+
+            }
+
+            $form->{transdate} = $form->{"transdate_$i"};
+            %tax = &taxrates( "", $myconfig, $form, $dbh );
+
+            $pth->execute("$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+
+            $parts_id = 0;
+            while ( $ref = $pth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"parts_id_$i"} = $ref->{id};
+                for (qw(description unit)) { $form->{"${_}_$i"} ||= $ref->{$_} }
+
+                $form->{"itemnotes_$i"} ||= $ref->{notes};
+
+                $parts_id = 1;
+                if ( $customertax{ $ref->{accno} } ) {
+                    $form->{"tax_$j"} += $a[ $form->{ $form->{type} }->{sellprice}{ndx} ] * $a[ $form->{ $form->{type} }->{qty}{ndx} ] * $tax{ $ref->{accno} };
+                }
+            }
+            $pth->finish;
+
+            $ptth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
+            ( $form->{"projectnumber_$i"} ) = $ptth->fetchrow_array;
+            $ptth->finish;
+
+            $form->{"projectnumber_$i"} = qq|--$form->{"projectnumber_$i"}| if $form->{"projectnumber_$i"};
+
+            if ( !$parts_id ) {
+                $form->{"customer_id_$j"} = 0;
+                $form->{missingparts} .= "$a[$form->{$form->{type}}->{invnumber}{ndx}] : $a[$form->{$form->{type}}->{partnumber}{ndx}]\n";
+            }
+
+            $form->{"total_$j"}    += $a[ $form->{ $form->{type} }->{sellprice}{ndx} ] * $a[ $form->{ $form->{type} }->{qty}{ndx} ];
+            $form->{"totalqty_$j"} += $a[ $form->{ $form->{type} }->{qty}{ndx} ];
+
+        }
+
+        $invnumber = $a[ $form->{ $form->{type} }->{invnumber}{ndx} ];
+        $form->{rowcount} = $i;
+
     }
 
-    $invnumber = $a[$form->{$form->{type}}->{invnumber}{ndx}];
-    $form->{rowcount} = $i;
+    $dbh->disconnect;
 
-  }
-
-  $dbh->disconnect;
-
-  chop $form->{ndx};
+    chop $form->{ndx};
 
 }
 
-
 sub taxrates {
-  my ($self, $myconfig, $form, $dbh) = @_;
-  
-  # get tax rates
-  my $query = qq|SELECT c.accno, t.rate
+    my ( $self, $myconfig, $form, $dbh ) = @_;
+
+    # get tax rates
+    my $query = qq|SELECT c.accno, t.rate
               FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)
 	      WHERE c.link LIKE '%$form->{ARAP}_tax%'
 	      AND (t.validto >= ? OR t.validto IS NULL)
 	      ORDER BY accno, validto|;
-  my $sth = $dbh->prepare($query);
-  $sth->execute($form->{transdate}) || $form->dberror($query);
-  
-  my %tax = ();
-  
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    if (not exists $tax{$ref->{accno}}) {
-      $tax{$ref->{accno}} = $ref->{rate};
+    my $sth = $dbh->prepare($query);
+    $sth->execute( $form->{transdate} ) || $form->dberror($query);
+
+    my %tax = ();
+
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        if ( not exists $tax{ $ref->{accno} } ) {
+            $tax{ $ref->{accno} } = $ref->{rate};
+        }
     }
-  }
-  $sth->finish;
-  
-  %tax;
-  
+    $sth->finish;
+
+    %tax;
+
 }
 
-
 sub import_sales_invoice {
-  my ($self, $myconfig, $form) = @_;
-  
-  use SL::IS;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database, turn off AutoCommit
-  my $dbh = $form->dbconnect_noauto($myconfig);
+    use SL::IS;
 
-  my $query;
+    # connect to database, turn off AutoCommit
+    my $dbh = $form->dbconnect_noauto($myconfig);
 
-  $query = qq|SELECT curr
+    my $query;
+
+    $query = qq|SELECT curr
               FROM curr
 	      ORDER BY rn|;
-  ($form->{defaultcurrency}) = $dbh->selectrow_array($query);
-  
-  $form->{curr} ||= $form->{defaultcurrency};
-  $form->{currency} = $form->{curr};
+    ( $form->{defaultcurrency} ) = $dbh->selectrow_array($query);
 
-  if ($form->{currency} ne $form->{defaultcurrency}){
-      $form->{exchangerate} *= 1;
-      if (!$form->{exchangerate}){
-          $form->{exchangerate} = $form->get_exchangerate($myconfig, $dbh, $form->{currency}, $form->{transdate}, 'buy');
-      }
-  }
+    $form->{curr} ||= $form->{defaultcurrency};
+    $form->{currency} = $form->{curr};
 
-  my $language_code;
-  $query = qq|SELECT c.customernumber, c.language_code, a.city
+    if ( $form->{currency} ne $form->{defaultcurrency} ) {
+        $form->{exchangerate} *= 1;
+        if ( !$form->{exchangerate} ) {
+            $form->{exchangerate} = $form->get_exchangerate( $myconfig, $dbh, $form->{currency}, $form->{transdate}, 'buy' );
+        }
+    }
+
+    my $language_code;
+    $query = qq|SELECT c.customernumber, c.language_code, a.city
               FROM customer c
 	      JOIN address a ON (a.trans_id = c.id)
 	      WHERE c.id = $form->{customer_id}|;
-  ($form->{customernumber}, $language_code, $form->{city}) = $dbh->selectrow_array($query);
+    ( $form->{customernumber}, $language_code, $form->{city} ) = $dbh->selectrow_array($query);
 
-  $form->{language_code} ||= $language_code;
+    $form->{language_code} ||= $language_code;
 
-  $query = qq|SELECT c.accno, t.rate
+    $query = qq|SELECT c.accno, t.rate
               FROM customertax ct
               JOIN chart c ON (c.id = ct.chart_id)
 	      JOIN tax t ON (t.chart_id = c.id)
               WHERE ct.customer_id = $form->{customer_id}
 	      AND (validto > '$form->{transdate}' OR validto IS NULL)
 	      ORDER BY validto DESC|;
-  my $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute;
+    my $sth = $dbh->prepare($query) || $form->dberror($query);
+    $sth->execute;
 
-  $form->{taxaccounts} = "";
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $form->{taxaccounts} .= "$ref->{accno} ";
-    $form->{"$ref->{accno}_rate"} = $ref->{rate};
-  }
-  $sth->finish;
-  chop $form->{taxaccounts};
+    $form->{taxaccounts} = "";
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $form->{taxaccounts} .= "$ref->{accno} ";
+        $form->{"$ref->{accno}_rate"} = $ref->{rate};
+    }
+    $sth->finish;
+    chop $form->{taxaccounts};
 
-  # post invoice
-  my $rc = IS->post_invoice($myconfig, $form, $dbh);
+    # post invoice
+    my $rc = IS->post_invoice( $myconfig, $form, $dbh );
 
-  $dbh->disconnect;
+    $dbh->disconnect;
 
-  $rc;
+    $rc;
 
 }
 
 sub sales_order {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
-  
-  $form->{ARAP} = "AR";
+    my $query;
+    my $ref;
 
-  # get AR accounts
-  $query = qq|SELECT accno FROM chart
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
+
+    $form->{ARAP} = "AR";
+
+    # get AR accounts
+    $query = qq|SELECT accno FROM chart
               WHERE link = '$form->{ARAP}'|;
-  my $sth = $dbh->prepare($query) || $form->dberror($query);
+    my $sth = $dbh->prepare($query) || $form->dberror($query);
 
-  my %ARAP = ();
-  my $default_arap_accno;
-  
-  $sth->execute || $form->dberror($query);
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ARAP{"$ref->{accno}"} = 1;
-    $default_arap_accno ||= $ref->{accno};
-  }
+    my %ARAP = ();
+    my $default_arap_accno;
 
-  if (! %ARAP) {
-    $dbh->disconnect;
-    return -1;
-  }
-  
-  # customer
-  $query = qq|SELECT cv.id, cv.name, cv.customernumber, cv.terms,
+    $sth->execute || $form->dberror($query);
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ARAP{"$ref->{accno}"} = 1;
+        $default_arap_accno ||= $ref->{accno};
+    }
+
+    if ( !%ARAP ) {
+        $dbh->disconnect;
+        return -1;
+    }
+
+    # customer
+    $query = qq|SELECT cv.id, cv.name, cv.customernumber, cv.terms,
               e.id AS employee_id, e.name AS employee,
 	      c.accno AS taxaccount, a.accno AS arap_accno,
 	      ad.city
@@ -358,260 +355,258 @@ sub sales_order {
 	      LEFT JOIN chart c ON (c.id = ct.chart_id)
 	      LEFT JOIN chart a ON (a.id = cv.arap_accno_id)
 	      WHERE customernumber = ?|;
-  my $cth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # parts
-  $query = qq|SELECT p.id, p.unit, p.description, p.notes AS itemnotes,
+    my $cth = $dbh->prepare($query) || $form->dberror($query);
+
+    # parts
+    $query = qq|SELECT p.id, p.unit, p.description, p.notes AS itemnotes,
               c.accno
               FROM parts p
               LEFT JOIN partstax pt ON (p.id = pt.parts_id)
 	      LEFT JOIN chart c ON (c.id = pt.chart_id)
               WHERE partnumber = ?|;
-  my $pth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # department
-  $query = qq|SELECT id
+    my $pth = $dbh->prepare($query) || $form->dberror($query);
+
+    # department
+    $query = qq|SELECT id
               FROM department
               WHERE description = ?|;
-  my $dth = $dbh->prepare($query) || $form->dberror($query);
+    my $dth = $dbh->prepare($query) || $form->dberror($query);
 
-  # warehouse
-  $query = qq|SELECT id
+    # warehouse
+    $query = qq|SELECT id
               FROM warehouse
               WHERE description = ?|;
-  my $wth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # project
-  $query = qq|SELECT id
+    my $wth = $dbh->prepare($query) || $form->dberror($query);
+
+    # project
+    $query = qq|SELECT id
               FROM project
               WHERE projectnumber = ?|;
-  my $ptth = $dbh->prepare($query) || $form->dberror($query);
+    my $ptth = $dbh->prepare($query) || $form->dberror($query);
 
-  # check if order already exists
-  $query = qq|SELECT COUNT(*) FROM oe WHERE ordnumber = ?|;
-  my $oesth = $dbh->prepare($query) || $form->dberror($query);
+    # check if order already exists
+    $query = qq|SELECT COUNT(*) FROM oe WHERE ordnumber = ?|;
+    my $oesth = $dbh->prepare($query) || $form->dberror($query);
 
-  my $arap_accno;
-  my $terms;
-  my $i = 0;
-  my $j = 0;
-  my %tax;
-  my %customertax;
-  my $customernumber;
-  my $ordnumber;
-  my %partstax;
-  my $parts_id;
+    my $arap_accno;
+    my $terms;
+    my $i = 0;
+    my $j = 0;
+    my %tax;
+    my %customertax;
+    my $customernumber;
+    my $ordnumber;
+    my %partstax;
+    my $parts_id;
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  for (@d) {
+    for (@d) {
 
-    @a = &ndxline($form);
+        @a = &ndxline($form);
 
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
 
-      if ($customernumber ne $a[$form->{$form->{type}}->{customernumber}{ndx}] || $ordnumber ne $a[$form->{$form->{type}}->{ordnumber}{ndx}]) {
-	
-	$j = $i;
-	$form->{ndx} .= "$i ";
+            if ( $customernumber ne $a[ $form->{ $form->{type} }->{customernumber}{ndx} ] || $ordnumber ne $a[ $form->{ $form->{type} }->{ordnumber}{ndx} ] ) {
 
-	%customertax = ();
-	
-	$cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
+                $j = $i;
+                $form->{ndx} .= "$i ";
 
-        $arap_accno = "";
-	$terms = 0;
-	
-	while ($ref = $cth->fetchrow_hashref(NAME_lc)) {
-	  $customernumber = $ref->{customernumber};
-	  $arap_accno = $ref->{arap_accno};
-	  $terms = $ref->{terms};
-	  $form->{"customer_id_$i"} = $ref->{id};
-	  $form->{"customer_$i"} = $ref->{name};
-	  $form->{"city_$i"} = $ref->{city};
-	  $form->{"employee_$i"} = $ref->{employee};
-	  $form->{"employee_id_$i"} = $ref->{employee_id};
-	  $customertax{$ref->{accno}} = 1;
-	}
-	$cth->finish;
+                %customertax = ();
 
-        my $ordcount = $dbh->selectrow_array("
+                $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
+
+                $arap_accno = "";
+                $terms      = 0;
+
+                while ( $ref = $cth->fetchrow_hashref(NAME_lc) ) {
+                    $customernumber               = $ref->{customernumber};
+                    $arap_accno                   = $ref->{arap_accno};
+                    $terms                        = $ref->{terms};
+                    $form->{"customer_id_$i"}     = $ref->{id};
+                    $form->{"customer_$i"}        = $ref->{name};
+                    $form->{"city_$i"}            = $ref->{city};
+                    $form->{"employee_$i"}        = $ref->{employee};
+                    $form->{"employee_id_$i"}     = $ref->{employee_id};
+                    $customertax{ $ref->{accno} } = 1;
+                }
+                $cth->finish;
+
+                my $ordcount = $dbh->selectrow_array( "
 		SELECT COUNT(*) FROM oe 
 		WHERE ordnumber = '$a[$form->{$form->{type}}->{ordnumber}{ndx}]'
-		AND NOT quotation AND vendor_id = 0");
-        $form->{"checked_$i"} = 'checked' if $ordcount == 0;
-	
-	if (! $ARAP{"$a[$form->{$form->{type}}->{$form->{ARAP}}{ndx}]"}) {
-	  $arap_accno ||= $default_arap_accno;
-	  $form->{"$form->{ARAP}_$i"} ||= $arap_accno;
-	}
+		AND NOT quotation AND vendor_id = 0" );
+                $form->{"checked_$i"} = 'checked' if $ordcount == 0;
 
-        $form->{"transdate_$i"} ||= $form->current_date($myconfig);
-	
-	# terms and duedate
-	if ($form->{"duedate_$i"}) {
-	    $form->{"terms_$i"} = $form->datediff($myconfig, $form->{"transdate_$i"}, $form->{"duedate_$i"});
-	} else {
-	  $form->{"terms_$i"} = $terms if $form->{"terms_$i"} !~ /\d/;
-	  $form->{"duedate_$i"} ||= $form->{"transdate_$i"};
-	  if ($form->{"terms_$i"} > 0) {
-	    $form->{"duedate_$i"} = $form->add_date($myconfig, $form->{"transdate_$i"}, $form->{"terms_$i"}, 'days');
-	  }
-	}
-	  
-	$dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
-	($form->{"department_id_$i"}) = $dth->fetchrow_array;
-	$dth->finish;
-	
-	$wth->execute("$a[$form->{$form->{type}}->{warehouse}{ndx}]");
-	($form->{"warehouse_id_$i"}) = $wth->fetchrow_array;
-	$wth->finish;
+                if ( !$ARAP{"$a[$form->{$form->{type}}->{$form->{ARAP}}{ndx}]"} ) {
+                    $arap_accno ||= $default_arap_accno;
+                    $form->{"$form->{ARAP}_$i"} ||= $arap_accno;
+                }
 
-      }
-      
-      $form->{transdate} = $form->{"transdate_$i"};
-      %tax = &taxrates("", $myconfig, $form, $dbh);
+                $form->{"transdate_$i"} ||= $form->current_date($myconfig);
 
-      $pth->execute("$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+                # terms and duedate
+                if ( $form->{"duedate_$i"} ) {
+                    $form->{"terms_$i"} = $form->datediff( $myconfig, $form->{"transdate_$i"}, $form->{"duedate_$i"} );
+                } else {
+                    $form->{"terms_$i"} = $terms if $form->{"terms_$i"} !~ /\d/;
+                    $form->{"duedate_$i"} ||= $form->{"transdate_$i"};
+                    if ( $form->{"terms_$i"} > 0 ) {
+                        $form->{"duedate_$i"} = $form->add_date( $myconfig, $form->{"transdate_$i"}, $form->{"terms_$i"}, 'days' );
+                    }
+                }
 
-      $parts_id = 0;
-      while ($ref = $pth->fetchrow_hashref(NAME_lc)) {
-	$form->{"parts_id_$i"} = $ref->{id};
-	for (qw(description unit)) { $form->{"${_}_$i"} ||= $ref->{$_} }
-	
-	$form->{"itemnotes_$i"} ||= $ref->{notes};
-	
-	$parts_id = 1;
-	if ($customertax{$ref->{accno}}) {
-	  $form->{"tax_$j"} += $a[$form->{$form->{type}}->{sellprice}{ndx}] * $a[$form->{$form->{type}}->{qty}{ndx}] * $tax{$ref->{accno}};
-	}
-      }
-      $pth->finish;
-      
-      $ptth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
-      ($form->{"projectnumber_$i"}) = $ptth->fetchrow_array;
-      $ptth->finish;
+                $dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
+                ( $form->{"department_id_$i"} ) = $dth->fetchrow_array;
+                $dth->finish;
 
-      $form->{"projectnumber_$i"} = qq|--$form->{"projectnumber_$i"}| if $form->{"projectnumber_$i"};
+                $wth->execute("$a[$form->{$form->{type}}->{warehouse}{ndx}]");
+                ( $form->{"warehouse_id_$i"} ) = $wth->fetchrow_array;
+                $wth->finish;
 
-      if (! $parts_id) {
-	$form->{"customer_id_$j"} = 0;
-	$form->{missingparts} .= "$a[$form->{$form->{type}}->{ordnumber}{ndx}] : $a[$form->{$form->{type}}->{partnumber}{ndx}]\n";
-      }
-      
-      $form->{"total_$j"} += $a[$form->{$form->{type}}->{sellprice}{ndx}] * $a[$form->{$form->{type}}->{qty}{ndx}];
-      $form->{"totalqty_$j"} += $a[$form->{$form->{type}}->{qty}{ndx}];
-	
+            }
+
+            $form->{transdate} = $form->{"transdate_$i"};
+            %tax = &taxrates( "", $myconfig, $form, $dbh );
+
+            $pth->execute("$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+
+            $parts_id = 0;
+            while ( $ref = $pth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"parts_id_$i"} = $ref->{id};
+                for (qw(description unit)) { $form->{"${_}_$i"} ||= $ref->{$_} }
+
+                $form->{"itemnotes_$i"} ||= $ref->{notes};
+
+                $parts_id = 1;
+                if ( $customertax{ $ref->{accno} } ) {
+                    $form->{"tax_$j"} += $a[ $form->{ $form->{type} }->{sellprice}{ndx} ] * $a[ $form->{ $form->{type} }->{qty}{ndx} ] * $tax{ $ref->{accno} };
+                }
+            }
+            $pth->finish;
+
+            $ptth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
+            ( $form->{"projectnumber_$i"} ) = $ptth->fetchrow_array;
+            $ptth->finish;
+
+            $form->{"projectnumber_$i"} = qq|--$form->{"projectnumber_$i"}| if $form->{"projectnumber_$i"};
+
+            if ( !$parts_id ) {
+                $form->{"customer_id_$j"} = 0;
+                $form->{missingparts} .= "$a[$form->{$form->{type}}->{ordnumber}{ndx}] : $a[$form->{$form->{type}}->{partnumber}{ndx}]\n";
+            }
+
+            $form->{"total_$j"}    += $a[ $form->{ $form->{type} }->{sellprice}{ndx} ] * $a[ $form->{ $form->{type} }->{qty}{ndx} ];
+            $form->{"totalqty_$j"} += $a[ $form->{ $form->{type} }->{qty}{ndx} ];
+
+        }
+
+        $ordnumber = $a[ $form->{ $form->{type} }->{ordnumber}{ndx} ];
+        $form->{rowcount} = $i;
+
     }
 
-    $ordnumber = $a[$form->{$form->{type}}->{ordnumber}{ndx}];
-    $form->{rowcount} = $i;
+    $dbh->disconnect;
 
-  }
-
-  $dbh->disconnect;
-
-  chop $form->{ndx};
+    chop $form->{ndx};
 
 }
 
-
 sub import_sales_order {
-  my ($self, $myconfig, $form) = @_;
-  
-  use SL::OE;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database, turn off AutoCommit
-  my $dbh = $form->dbconnect_noauto($myconfig);
+    use SL::OE;
 
-  my $query;
+    # connect to database, turn off AutoCommit
+    my $dbh = $form->dbconnect_noauto($myconfig);
 
-  $query = qq|SELECT curr
+    my $query;
+
+    $query = qq|SELECT curr
               FROM curr
 	      ORDER BY rn|;
-  ($form->{defaultcurrency}) = $dbh->selectrow_array($query);
-  
-  $form->{curr} ||= $form->{defaultcurrency};
-  $form->{currency} = $form->{curr};
+    ( $form->{defaultcurrency} ) = $dbh->selectrow_array($query);
 
-  my $language_code;
-  $query = qq|SELECT c.customernumber, c.language_code, a.city
+    $form->{curr} ||= $form->{defaultcurrency};
+    $form->{currency} = $form->{curr};
+
+    my $language_code;
+    $query = qq|SELECT c.customernumber, c.language_code, a.city
               FROM customer c
 	      JOIN address a ON (a.trans_id = c.id)
 	      WHERE c.id = $form->{customer_id}|;
-  ($form->{customernumber}, $language_code, $form->{city}) = $dbh->selectrow_array($query);
+    ( $form->{customernumber}, $language_code, $form->{city} ) = $dbh->selectrow_array($query);
 
-  $form->{language_code} ||= $language_code;
+    $form->{language_code} ||= $language_code;
 
-  $query = qq|SELECT c.accno, t.rate
+    $query = qq|SELECT c.accno, t.rate
               FROM customertax ct
               JOIN chart c ON (c.id = ct.chart_id)
 	      JOIN tax t ON (t.chart_id = c.id)
               WHERE ct.customer_id = $form->{customer_id}
 	      AND (validto > '$form->{transdate}' OR validto IS NULL)
 	      ORDER BY validto DESC|;
-  my $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute;
+    my $sth = $dbh->prepare($query) || $form->dberror($query);
+    $sth->execute;
 
-  $form->{taxaccounts} = "";
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $form->{taxaccounts} .= "$ref->{accno} ";
-    $form->{"$ref->{accno}_rate"} = $ref->{rate};
-  }
-  $sth->finish;
-  chop $form->{taxaccounts};
+    $form->{taxaccounts} = "";
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $form->{taxaccounts} .= "$ref->{accno} ";
+        $form->{"$ref->{accno}_rate"} = $ref->{rate};
+    }
+    $sth->finish;
+    chop $form->{taxaccounts};
 
-  # post invoice
-  my $rc = OE->save($myconfig, $form, $dbh);
+    # post invoice
+    my $rc = OE->save( $myconfig, $form, $dbh );
 
-  $dbh->disconnect;
+    $dbh->disconnect;
 
-  $rc;
+    $rc;
 
 }
 
-
 sub purchase_order {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
-  
-  $form->{ARAP} = "AP";
+    my $query;
+    my $ref;
 
-  # get AR accounts
-  $query = qq|SELECT accno FROM chart
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
+
+    $form->{ARAP} = "AP";
+
+    # get AR accounts
+    $query = qq|SELECT accno FROM chart
               WHERE link = '$form->{ARAP}'|;
-  my $sth = $dbh->prepare($query) || $form->dberror($query);
+    my $sth = $dbh->prepare($query) || $form->dberror($query);
 
-  my %ARAP = ();
-  my $default_arap_accno;
-  
-  $sth->execute || $form->dberror($query);
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ARAP{"$ref->{accno}"} = 1;
-    $default_arap_accno ||= $ref->{accno};
-  }
+    my %ARAP = ();
+    my $default_arap_accno;
 
-  if (! %ARAP) {
-    $dbh->disconnect;
-    return -1;
-  }
-  
-  # vendor
-  $query = qq|SELECT cv.id, cv.name, cv.vendornumber, cv.terms,
+    $sth->execute || $form->dberror($query);
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ARAP{"$ref->{accno}"} = 1;
+        $default_arap_accno ||= $ref->{accno};
+    }
+
+    if ( !%ARAP ) {
+        $dbh->disconnect;
+        return -1;
+    }
+
+    # vendor
+    $query = qq|SELECT cv.id, cv.name, cv.vendornumber, cv.terms,
               e.id AS employee_id, e.name AS employee,
 	      c.accno AS taxaccount, a.accno AS arap_accno,
 	      ad.city
@@ -622,339 +617,334 @@ sub purchase_order {
 	      LEFT JOIN chart c ON (c.id = ct.chart_id)
 	      LEFT JOIN chart a ON (a.id = cv.arap_accno_id)
 	      WHERE vendornumber = ?|;
-  my $cth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # parts
-  $query = qq|SELECT p.id, p.unit, p.description, p.notes AS itemnotes,
+    my $cth = $dbh->prepare($query) || $form->dberror($query);
+
+    # parts
+    $query = qq|SELECT p.id, p.unit, p.description, p.notes AS itemnotes,
               c.accno
               FROM parts p
               LEFT JOIN partstax pt ON (p.id = pt.parts_id)
 	      LEFT JOIN chart c ON (c.id = pt.chart_id)
               WHERE partnumber = ?|;
-  my $pth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # department
-  $query = qq|SELECT id
+    my $pth = $dbh->prepare($query) || $form->dberror($query);
+
+    # department
+    $query = qq|SELECT id
               FROM department
               WHERE description = ?|;
-  my $dth = $dbh->prepare($query) || $form->dberror($query);
+    my $dth = $dbh->prepare($query) || $form->dberror($query);
 
-  # warehouse
-  $query = qq|SELECT id
+    # warehouse
+    $query = qq|SELECT id
               FROM warehouse
               WHERE description = ?|;
-  my $wth = $dbh->prepare($query) || $form->dberror($query);
-  
-  # project
-  $query = qq|SELECT id
+    my $wth = $dbh->prepare($query) || $form->dberror($query);
+
+    # project
+    $query = qq|SELECT id
               FROM project
               WHERE projectnumber = ?|;
-  my $ptth = $dbh->prepare($query) || $form->dberror($query);
+    my $ptth = $dbh->prepare($query) || $form->dberror($query);
 
-  # check if order already exists
-  $query = qq|SELECT COUNT(*) FROM oe WHERE ordnumber = ?|;
-  my $oesth = $dbh->prepare($query) || $form->dberror($query);
+    # check if order already exists
+    $query = qq|SELECT COUNT(*) FROM oe WHERE ordnumber = ?|;
+    my $oesth = $dbh->prepare($query) || $form->dberror($query);
 
-  my $arap_accno;
-  my $terms;
-  my $i = 0;
-  my $j = 0;
-  my %tax;
-  my %vendortax;
-  my $vendornumber;
-  my $ordnumber;
-  my %partstax;
-  my $parts_id;
+    my $arap_accno;
+    my $terms;
+    my $i = 0;
+    my $j = 0;
+    my %tax;
+    my %vendortax;
+    my $vendornumber;
+    my $ordnumber;
+    my %partstax;
+    my $parts_id;
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  for (@d) {
+    for (@d) {
 
-    @a = &ndxline($form);
+        @a = &ndxline($form);
 
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
 
-      if ($vendornumber ne $a[$form->{$form->{type}}->{vendornumber}{ndx}] || $ordnumber ne $a[$form->{$form->{type}}->{ordnumber}{ndx}]) {
-	
-	$j = $i;
-	$form->{ndx} .= "$i ";
+            if ( $vendornumber ne $a[ $form->{ $form->{type} }->{vendornumber}{ndx} ] || $ordnumber ne $a[ $form->{ $form->{type} }->{ordnumber}{ndx} ] ) {
 
-	%vendortax = ();
-	
-	$cth->execute("$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
+                $j = $i;
+                $form->{ndx} .= "$i ";
 
-        $arap_accno = "";
-	$terms = 0;
-	
-	while ($ref = $cth->fetchrow_hashref(NAME_lc)) {
-	  $vendornumber = $ref->{vendornumber};
-	  $arap_accno = $ref->{arap_accno};
-	  $terms = $ref->{terms};
-	  $form->{"vendor_id_$i"} = $ref->{id};
-	  $form->{"vendor_$i"} = $ref->{name};
-	  $form->{"city_$i"} = $ref->{city};
-	  $form->{"employee_$i"} = $ref->{employee};
-	  $form->{"employee_id_$i"} = $ref->{employee_id};
-	  $vendortax{$ref->{accno}} = 1;
-	}
-	$cth->finish;
+                %vendortax = ();
 
-        my $ordcount = $dbh->selectrow_array("
+                $cth->execute("$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
+
+                $arap_accno = "";
+                $terms      = 0;
+
+                while ( $ref = $cth->fetchrow_hashref(NAME_lc) ) {
+                    $vendornumber               = $ref->{vendornumber};
+                    $arap_accno                 = $ref->{arap_accno};
+                    $terms                      = $ref->{terms};
+                    $form->{"vendor_id_$i"}     = $ref->{id};
+                    $form->{"vendor_$i"}        = $ref->{name};
+                    $form->{"city_$i"}          = $ref->{city};
+                    $form->{"employee_$i"}      = $ref->{employee};
+                    $form->{"employee_id_$i"}   = $ref->{employee_id};
+                    $vendortax{ $ref->{accno} } = 1;
+                }
+                $cth->finish;
+
+                my $ordcount = $dbh->selectrow_array( "
 		SELECT COUNT(*) FROM oe 
 		WHERE ordnumber = '$a[$form->{$form->{type}}->{ordnumber}{ndx}]'
-		AND NOT quotation AND vendor_id = 0");
-        $form->{"checked_$i"} = 'checked' if $ordcount == 0;
-	
-	if (! $ARAP{"$a[$form->{$form->{type}}->{$form->{ARAP}}{ndx}]"}) {
-	  $arap_accno ||= $default_arap_accno;
-	  $form->{"$form->{ARAP}_$i"} ||= $arap_accno;
-	}
+		AND NOT quotation AND vendor_id = 0" );
+                $form->{"checked_$i"} = 'checked' if $ordcount == 0;
 
-        $form->{"transdate_$i"} ||= $form->current_date($myconfig);
-	
-	# terms and duedate
-	if ($form->{"duedate_$i"}) {
-	    $form->{"terms_$i"} = $form->datediff($myconfig, $form->{"transdate_$i"}, $form->{"duedate_$i"});
-	} else {
-	  $form->{"terms_$i"} = $terms if $form->{"terms_$i"} !~ /\d/;
-	  $form->{"duedate_$i"} ||= $form->{"transdate_$i"};
-	  if ($form->{"terms_$i"} > 0) {
-	    $form->{"duedate_$i"} = $form->add_date($myconfig, $form->{"transdate_$i"}, $form->{"terms_$i"}, 'days');
-	  }
-	}
-	  
-	$dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
-	($form->{"department_id_$i"}) = $dth->fetchrow_array;
-	$dth->finish;
-	
-	$wth->execute("$a[$form->{$form->{type}}->{warehouse}{ndx}]");
-	($form->{"warehouse_id_$i"}) = $wth->fetchrow_array;
-	$wth->finish;
+                if ( !$ARAP{"$a[$form->{$form->{type}}->{$form->{ARAP}}{ndx}]"} ) {
+                    $arap_accno ||= $default_arap_accno;
+                    $form->{"$form->{ARAP}_$i"} ||= $arap_accno;
+                }
 
-      }
-      
-      $form->{transdate} = $form->{"transdate_$i"};
-      %tax = &taxrates("", $myconfig, $form, $dbh);
+                $form->{"transdate_$i"} ||= $form->current_date($myconfig);
 
-      $pth->execute("$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+                # terms and duedate
+                if ( $form->{"duedate_$i"} ) {
+                    $form->{"terms_$i"} = $form->datediff( $myconfig, $form->{"transdate_$i"}, $form->{"duedate_$i"} );
+                } else {
+                    $form->{"terms_$i"} = $terms if $form->{"terms_$i"} !~ /\d/;
+                    $form->{"duedate_$i"} ||= $form->{"transdate_$i"};
+                    if ( $form->{"terms_$i"} > 0 ) {
+                        $form->{"duedate_$i"} = $form->add_date( $myconfig, $form->{"transdate_$i"}, $form->{"terms_$i"}, 'days' );
+                    }
+                }
 
-      $parts_id = 0;
-      while ($ref = $pth->fetchrow_hashref(NAME_lc)) {
-	$form->{"parts_id_$i"} = $ref->{id};
-	for (qw(description unit)) { $form->{"${_}_$i"} ||= $ref->{$_} }
-	
-	$form->{"itemnotes_$i"} ||= $ref->{notes};
-	
-	$parts_id = 1;
-	if ($vendortax{$ref->{accno}}) {
-	  $form->{"tax_$j"} += $a[$form->{$form->{type}}->{sellprice}{ndx}] * $a[$form->{$form->{type}}->{qty}{ndx}] * $tax{$ref->{accno}};
-	}
-      }
-      $pth->finish;
-      
-      $ptth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
-      ($form->{"projectnumber_$i"}) = $ptth->fetchrow_array;
-      $ptth->finish;
+                $dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
+                ( $form->{"department_id_$i"} ) = $dth->fetchrow_array;
+                $dth->finish;
 
-      $form->{"projectnumber_$i"} = qq|--$form->{"projectnumber_$i"}| if $form->{"projectnumber_$i"};
+                $wth->execute("$a[$form->{$form->{type}}->{warehouse}{ndx}]");
+                ( $form->{"warehouse_id_$i"} ) = $wth->fetchrow_array;
+                $wth->finish;
 
-      if (! $parts_id) {
-	$form->{"vendor_id_$j"} = 0;
-	$form->{missingparts} .= "$a[$form->{$form->{type}}->{ordnumber}{ndx}] : $a[$form->{$form->{type}}->{partnumber}{ndx}]\n";
-      }
-      
-      $form->{"total_$j"} += $a[$form->{$form->{type}}->{sellprice}{ndx}] * $a[$form->{$form->{type}}->{qty}{ndx}];
-      $form->{"totalqty_$j"} += $a[$form->{$form->{type}}->{qty}{ndx}];
-	
+            }
+
+            $form->{transdate} = $form->{"transdate_$i"};
+            %tax = &taxrates( "", $myconfig, $form, $dbh );
+
+            $pth->execute("$a[$form->{$form->{type}}->{partnumber}{ndx}]");
+
+            $parts_id = 0;
+            while ( $ref = $pth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"parts_id_$i"} = $ref->{id};
+                for (qw(description unit)) { $form->{"${_}_$i"} ||= $ref->{$_} }
+
+                $form->{"itemnotes_$i"} ||= $ref->{notes};
+
+                $parts_id = 1;
+                if ( $vendortax{ $ref->{accno} } ) {
+                    $form->{"tax_$j"} += $a[ $form->{ $form->{type} }->{sellprice}{ndx} ] * $a[ $form->{ $form->{type} }->{qty}{ndx} ] * $tax{ $ref->{accno} };
+                }
+            }
+            $pth->finish;
+
+            $ptth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
+            ( $form->{"projectnumber_$i"} ) = $ptth->fetchrow_array;
+            $ptth->finish;
+
+            $form->{"projectnumber_$i"} = qq|--$form->{"projectnumber_$i"}| if $form->{"projectnumber_$i"};
+
+            if ( !$parts_id ) {
+                $form->{"vendor_id_$j"} = 0;
+                $form->{missingparts} .= "$a[$form->{$form->{type}}->{ordnumber}{ndx}] : $a[$form->{$form->{type}}->{partnumber}{ndx}]\n";
+            }
+
+            $form->{"total_$j"}    += $a[ $form->{ $form->{type} }->{sellprice}{ndx} ] * $a[ $form->{ $form->{type} }->{qty}{ndx} ];
+            $form->{"totalqty_$j"} += $a[ $form->{ $form->{type} }->{qty}{ndx} ];
+
+        }
+
+        $ordnumber = $a[ $form->{ $form->{type} }->{ordnumber}{ndx} ];
+        $form->{rowcount} = $i;
+
     }
 
-    $ordnumber = $a[$form->{$form->{type}}->{ordnumber}{ndx}];
-    $form->{rowcount} = $i;
+    $dbh->disconnect;
 
-  }
-
-  $dbh->disconnect;
-
-  chop $form->{ndx};
+    chop $form->{ndx};
 
 }
 
-
 sub import_purchase_order {
-  my ($self, $myconfig, $form) = @_;
-  
-  use SL::OE;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database, turn off AutoCommit
-  my $dbh = $form->dbconnect_noauto($myconfig);
+    use SL::OE;
 
-  my $query;
+    # connect to database, turn off AutoCommit
+    my $dbh = $form->dbconnect_noauto($myconfig);
 
-  $query = qq|SELECT curr
+    my $query;
+
+    $query = qq|SELECT curr
               FROM curr
 	      ORDER BY rn|;
-  ($form->{defaultcurrency}) = $dbh->selectrow_array($query);
-  
-  $form->{curr} ||= $form->{defaultcurrency};
-  $form->{currency} = $form->{curr};
+    ( $form->{defaultcurrency} ) = $dbh->selectrow_array($query);
 
-  my $language_code;
-  $query = qq|SELECT v.vendornumber, v.language_code, a.city
+    $form->{curr} ||= $form->{defaultcurrency};
+    $form->{currency} = $form->{curr};
+
+    my $language_code;
+    $query = qq|SELECT v.vendornumber, v.language_code, a.city
               FROM vendor v
 	      JOIN address a ON (a.trans_id = v.id)
 	      WHERE v.id = $form->{vendor_id}|;
-  ($form->{vendornumber}, $language_code, $form->{city}) = $dbh->selectrow_array($query);
+    ( $form->{vendornumber}, $language_code, $form->{city} ) = $dbh->selectrow_array($query);
 
-  $form->{language_code} ||= $language_code;
+    $form->{language_code} ||= $language_code;
 
-  $query = qq|SELECT c.accno, t.rate
+    $query = qq|SELECT c.accno, t.rate
               FROM vendortax ct
               JOIN chart c ON (c.id = ct.chart_id)
 	      JOIN tax t ON (t.chart_id = c.id)
               WHERE ct.vendor_id = $form->{vendor_id}
 	      AND (validto > '$form->{transdate}' OR validto IS NULL)
 	      ORDER BY validto DESC|;
-  my $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute;
+    my $sth = $dbh->prepare($query) || $form->dberror($query);
+    $sth->execute;
 
-  $form->{taxaccounts} = "";
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $form->{taxaccounts} .= "$ref->{accno} ";
-    $form->{"$ref->{accno}_rate"} = $ref->{rate};
-  }
-  $sth->finish;
-  chop $form->{taxaccounts};
+    $form->{taxaccounts} = "";
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $form->{taxaccounts} .= "$ref->{accno} ";
+        $form->{"$ref->{accno}_rate"} = $ref->{rate};
+    }
+    $sth->finish;
+    chop $form->{taxaccounts};
 
-  # post invoice
-  my $rc = OE->save($myconfig, $form, $dbh);
+    # post invoice
+    my $rc = OE->save( $myconfig, $form, $dbh );
 
-  $dbh->disconnect;
+    $dbh->disconnect;
 
-  $rc;
+    $rc;
 
 }
 
-
-
 sub paymentaccounts {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  $dbh = $form->dbconnect($myconfig);
+    $dbh = $form->dbconnect($myconfig);
 
-  # payment accounts
-  my $query = qq|SELECT c.accno, c.description, c.link,
+    # payment accounts
+    my $query = qq|SELECT c.accno, c.description, c.link,
                  l.description AS translation
 		 FROM chart c
 		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		 WHERE c.link LIKE '%_paid'
 		 ORDER BY c.accno|;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my $ref;
-  
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ref->{description} = $ref->{translation} if $ref->{translation};
-    push @{ $form->{all_paymentaccount} }, $ref;
-  }
-  $sth->finish;
+    my $ref;
 
-  # {ARAP} accounts
-  my $query = qq|SELECT c.accno, c.description, c.link,
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ref->{description} = $ref->{translation} if $ref->{translation};
+        push @{ $form->{all_paymentaccount} }, $ref;
+    }
+    $sth->finish;
+
+    # {ARAP} accounts
+    my $query = qq|SELECT c.accno, c.description, c.link,
                  l.description AS translation
 		 FROM chart c
 		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		 WHERE c.link LIKE '$form->{ARAP}'
 		 ORDER BY c.accno|;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my $ref;
-  
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ref->{description} = $ref->{translation} if $ref->{translation};
-    push @{ $form->{arap_accounts} }, $ref;
-  }
-  $sth->finish;
+    my $ref;
 
-  # Income accounts
-  my $query = qq|SELECT c.accno, c.description, c.link,
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ref->{description} = $ref->{translation} if $ref->{translation};
+        push @{ $form->{arap_accounts} }, $ref;
+    }
+    $sth->finish;
+
+    # Income accounts
+    my $query = qq|SELECT c.accno, c.description, c.link,
                  l.description AS translation
 		 FROM chart c
 		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		 WHERE c.link LIKE '%income'
 		 OR c.link LIKE '%sale'
 		 ORDER BY c.accno|;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my $ref;
-  
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ref->{description} = $ref->{translation} if $ref->{translation};
-    push @{ $form->{income_accounts} }, $ref;
-  }
-  $sth->finish;
+    my $ref;
 
-  # Expense accounts
-  my $query = qq|SELECT c.accno, c.description, c.link,
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ref->{description} = $ref->{translation} if $ref->{translation};
+        push @{ $form->{income_accounts} }, $ref;
+    }
+    $sth->finish;
+
+    # Expense accounts
+    my $query = qq|SELECT c.accno, c.description, c.link,
                  l.description AS translation
 		 FROM chart c
 		 LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		 WHERE c.link LIKE '%expense'
 		 ORDER BY c.accno|;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my $ref;
-  
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ref->{description} = $ref->{translation} if $ref->{translation};
-    push @{ $form->{expense_accounts} }, $ref;
-  }
-  $sth->finish;
+    my $ref;
 
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ref->{description} = $ref->{translation} if $ref->{translation};
+        push @{ $form->{expense_accounts} }, $ref;
+    }
+    $sth->finish;
 
-  # currencies
-  $form->{currencies} = $form->get_currencies($dbh, $myconfig);
+    # currencies
+    $form->{currencies} = $form->get_currencies( $dbh, $myconfig );
 
-  $query = qq|SELECT *
+    $query = qq|SELECT *
               FROM paymentmethod
 	      ORDER BY 2|;
-  $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    push @{ $form->{all_paymentmethod} }, $ref;
-  }
-  $sth->finish;
-  
-  $dbh->disconnect;
-  
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        push @{ $form->{all_paymentmethod} }, $ref;
+    }
+    $sth->finish;
+
+    $dbh->disconnect;
+
 }
 
-
 sub payments {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  $myconfig{numberformat} = "1000.00";
-  
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = ($defaults{precision}) ? $defaults{precision} : 2;
-  
-  $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.city,
+    $myconfig{numberformat} = "1000.00";
+
+    my $query;
+    my $ref;
+
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = ( $defaults{precision} ) ? $defaults{precision} : 2;
+
+    $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.city,
               a.id, a.invnumber, a.description, a.exchangerate,
 	      (a.amount - a.paid) / a.exchangerate AS amount,
 	      a.transdate, a.paymentmethod_id, 'customer' AS vc,
@@ -973,20 +963,20 @@ sub payments {
 	      JOIN vendor c ON (a.vendor_id = c.id)
 	      LEFT JOIN address ad ON (ad.trans_id = c.id)
 	      WHERE a.amount != a.paid|;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my %amount;
-  my $amount;
+    my %amount;
+    my $amount;
 
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $amount = $form->format_amount($myconfig, $ref->{amount}, $form->{precision});
-    push @{ $amount{$amount} }, $ref;
-  }
-  $sth->finish;
-	
-  # retrieve invoice by dcn
-  $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.city,
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $amount = $form->format_amount( $myconfig, $ref->{amount}, $form->{precision} );
+        push @{ $amount{$amount} }, $ref;
+    }
+    $sth->finish;
+
+    # retrieve invoice by dcn
+    $query = qq|SELECT c.name, c.customernumber AS companynumber, ad.city,
               a.id, a.invnumber, a.description, a.dcn,
 	      a.paymentmethod_id, 'customer' AS vc, 'ar' AS arap
 	      FROM ar a
@@ -1004,175 +994,174 @@ sub payments {
 	      WHERE a.amount != a.paid
 	      AND a.dcn = ?
 	      |;
-  $sth = $dbh->prepare($query) || $form->dberror($query);
+    $sth = $dbh->prepare($query) || $form->dberror($query);
 
-  $query = qq|SELECT buy, sell FROM exchangerate
+    $query = qq|SELECT buy, sell FROM exchangerate
 	      WHERE curr = '$form->{currency}'
 	      AND transdate = ?|;
-  my $eth = $dbh->prepare($query) || $form->dberror($query);
-  
-  my $i = 0;
-  my $j = 0;
+    my $eth = $dbh->prepare($query) || $form->dberror($query);
 
-  my $vc;
-  my $buy;
-  my $sell;
+    my $i = 0;
+    my $j = 0;
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my $vc;
+    my $buy;
+    my $sell;
 
-  my $am;
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  for (@d) {
+    my $am;
 
-    @a = &ndxline($form);
+    for (@d) {
 
-    if (@a) {
-#$form->info($a[$form->{$form->{type}}->{invnumber}{ndx}]);
-      
-      $amount = $form->format_amount($myconfig, $a[$form->{$form->{type}}->{credit}{ndx}] - $a[$form->{$form->{type}}->{debit}{ndx}], $form->{precision});
-      $am = 1;
-      
-#$form->info($amount);
-      # dcn
-      if (exists $form->{$form->{type}}->{dcn}) {
+        @a = &ndxline($form);
 
-	if ($a[$form->{$form->{type}}->{dcn}{ndx}]) {
-	  $am = 0;
-	  $sth->execute("$a[$form->{$form->{type}}->{dcn}{ndx}]", "$a[$form->{$form->{type}}->{dcn}{ndx}]");
-	  $ref = $sth->fetchrow_hashref(NAME_lc);
+        if (@a) {
 
-	  if ($ref->{invnumber}) {
+            #$form->info($a[$form->{$form->{type}}->{invnumber}{ndx}]);
 
-	    $i++;
+            $amount = $form->format_amount( $myconfig, $a[ $form->{ $form->{type} }->{credit}{ndx} ] - $a[ $form->{ $form->{type} }->{debit}{ndx} ], $form->{precision} );
+            $am     = 1;
 
-	    for (keys %{$form->{$form->{type}}}) {
-	      $a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	      $form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-	    }
+            #$form->info($amount);
+            # dcn
+            if ( exists $form->{ $form->{type} }->{dcn} ) {
 
-            $vc = $ref->{vc};
-	    for (qw(id invnumber description name companynumber vc arap city paymentmethod_id)) { $form->{"${_}_$i"} = $ref->{$_} }
-	    $form->{"amount_$i"} = $amount;
-	  }
-	  $sth->finish;
-	} else {
-	  $am = 1;
-	}
-	
-      }
-      
-      if ($am) {
-	
-	if ($amount * 1) {
-	  if ($amount{$amount}->[0]->{vc}) {
-	      
-	    $i++;
-    
-	    for (keys %{$form->{$form->{type}}}) {
-	      $a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	      $form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-	    }
+                if ( $a[ $form->{ $form->{type} }->{dcn}{ndx} ] ) {
+                    $am = 0;
+                    $sth->execute( "$a[$form->{$form->{type}}->{dcn}{ndx}]", "$a[$form->{$form->{type}}->{dcn}{ndx}]" );
+                    $ref = $sth->fetchrow_hashref(NAME_lc);
 
-            $vc = $amount{$amount}->[0]->{vc};
-	    for (qw(id invnumber description name companynumber vc arap city paymentmethod_id)) { $form->{"${_}_$i"} = $amount{$amount}->[0]->{$_} }
-	    $form->{"amount_$i"} = $amount;
+                    if ( $ref->{invnumber} ) {
 
-	    shift @{ $amount{$amount} };
-	  }
-	}
-      }
+                        $i++;
 
-      # get exchangerate
-      if ($form->{currency} ne $form->{defaultcurrency}) {
-	$eth->execute($a[$form->{$form->{type}}->{datepaid}{ndx}]);
-	($buy, $sell) = $eth->fetchrow_array;
-	$eth->finish;
-	($form->{"exchangerate_$i"}) = ($vc eq 'customer') ? $buy : $sell;
-      }
+                        for ( keys %{ $form->{ $form->{type} } } ) {
+                            $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                            $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+                        }
+
+                        $vc = $ref->{vc};
+                        for (qw(id invnumber description name companynumber vc arap city paymentmethod_id)) { $form->{"${_}_$i"} = $ref->{$_} }
+                        $form->{"amount_$i"} = $amount;
+                    }
+                    $sth->finish;
+                } else {
+                    $am = 1;
+                }
+
+            }
+
+            if ($am) {
+
+                if ( $amount * 1 ) {
+                    if ( $amount{$amount}->[0]->{vc} ) {
+
+                        $i++;
+
+                        for ( keys %{ $form->{ $form->{type} } } ) {
+                            $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                            $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+                        }
+
+                        $vc = $amount{$amount}->[0]->{vc};
+                        for (qw(id invnumber description name companynumber vc arap city paymentmethod_id)) { $form->{"${_}_$i"} = $amount{$amount}->[0]->{$_} }
+                        $form->{"amount_$i"} = $amount;
+
+                        shift @{ $amount{$amount} };
+                    }
+                }
+            }
+
+            # get exchangerate
+            if ( $form->{currency} ne $form->{defaultcurrency} ) {
+                $eth->execute( $a[ $form->{ $form->{type} }->{datepaid}{ndx} ] );
+                ( $buy, $sell ) = $eth->fetchrow_array;
+                $eth->finish;
+                ( $form->{"exchangerate_$i"} ) = ( $vc eq 'customer' ) ? $buy : $sell;
+            }
+
+        }
+
+        $form->{rowcount} = $i;
 
     }
 
-    $form->{rowcount} = $i;
-
-  }
-
-  $dbh->disconnect;
+    $dbh->disconnect;
 
 }
-
 
 sub ndxline {
-  my ($form) = @_;
- 
- my @a = ();
- my $string = 0;
- my $chr = "";
- my $m = 0;
+    my ($form) = @_;
 
-  if ($form->{tabdelimited}) {
-    @a = split /\t/, $_;
-  } else {
-    
-    foreach $chr (split //, $_) {
-      if ($chr eq '"') {
-	if (! $string) {
-	  $string = 1;
-	  next;
-	}
-      }
-      if ($string) {
-	if ($chr eq '"') {
-	  $string = 0;
-	  next;
-	}
-      }
-      if ($chr eq $form->{delimiter}) {
-	if (! $string) {
-	  $m++;
-	  next;
-	}
-      }
-      $a[$m] .= $chr;
+    my @a      = ();
+    my $string = 0;
+    my $chr    = "";
+    my $m      = 0;
+
+    if ( $form->{tabdelimited} ) {
+        @a = split /\t/, $_;
+    } else {
+
+        foreach $chr ( split //, $_ ) {
+            if ( $chr eq '"' ) {
+                if ( !$string ) {
+                    $string = 1;
+                    next;
+                }
+            }
+            if ($string) {
+                if ( $chr eq '"' ) {
+                    $string = 0;
+                    next;
+                }
+            }
+            if ( $chr eq $form->{delimiter} ) {
+                if ( !$string ) {
+                    $m++;
+                    next;
+                }
+            }
+            $a[$m] .= $chr;
+        }
     }
-  }
 
-  return @a;
+    return @a;
 
 }
 
-
 sub unreconciled_payments {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  my $null;
+    my $query;
+    my $ref;
+    my $null;
 
-  my ($accno) = split /--/, $form->{paymentaccount};
+    my ($accno) = split /--/, $form->{paymentaccount};
 
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
 
-  my $where;
-  
-  if ($form->{currency}) {
-    $where = " AND a.curr = '$form->{currency}'";
-    $query = qq|SELECT precision FROM curr
+    my $where;
+
+    if ( $form->{currency} ) {
+        $where = " AND a.curr = '$form->{currency}'";
+        $query = qq|SELECT precision FROM curr
                 WHERE curr = '$form->{currency}'|;
-    ($form->{precision}) = $dbh->selectrow_array($query);
-  }
+        ( $form->{precision} ) = $dbh->selectrow_array($query);
+    }
 
-  my $paymentmethod_id;
-  if ($form->{paymentmethod}) {
-    ($null, $paymentmethod_id) = split /--/, $form->{paymentmethod};
-    $where .= " AND a.paymentmethod_id = $paymentmethod_id";
-  }
-  
-  $query = qq|SELECT vc.name, vc.customernumber AS companynumber,
+    my $paymentmethod_id;
+    if ( $form->{paymentmethod} ) {
+        ( $null, $paymentmethod_id ) = split /--/, $form->{paymentmethod};
+        $where .= " AND a.paymentmethod_id = $paymentmethod_id";
+    }
+
+    $query = qq|SELECT vc.name, vc.customernumber AS companynumber,
               a.id, a.invnumber, a.description, a.curr,
 	      ac.source, ac.memo, ac.amount, ac.transdate AS datepaid
 	      FROM ar a
@@ -1201,347 +1190,346 @@ sub unreconciled_payments {
 	      $where
 	      ORDER BY datepaid
 	      |;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    push @{ $form->{TR} }, $ref;
-  }
-  $sth->finish;
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        push @{ $form->{TR} }, $ref;
+    }
+    $sth->finish;
 
-  $dbh->disconnect;
+    $dbh->disconnect;
 
 }
 
-
 sub vc {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my $query;
+    my $ref;
 
-  $query = qq|SELECT id FROM $form->{db} WHERE $form->{db}number = ?|;
-  $sth = $dbh->prepare($query);
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
 
-  $query = qq|
+    $query = qq|SELECT id FROM $form->{db} WHERE $form->{db}number = ?|;
+    $sth   = $dbh->prepare($query);
+
+    $query = qq|
 	SELECT name, contact, phone, fax, email, notes, terms, taxincluded, cc, bcc, business_id, taxnumber, sic_code, discount, creditlimit, iban, bic, employee_id, language_code, pricegroup_id, curr, startdate, enddate, arap_accno_id, payment_accno_id, discount_accno_id, cashdiscount, threshold, paymentmethod_id, remittancevoucher
         FROM $form->{db}
 	WHERE id = ?
   |;
-  my $vc = $dbh->prepare($query);
+    my $vc = $dbh->prepare($query);
 
-  $query = qq|
+    $query = qq|
 	SELECT id AS contactid, salutation, firstname, lastname, contacttitle, occupation, phone, fax, mobile, email, gender, typeofcontact
 	FROM contact WHERE trans_id = ?
   |;
-  my $contact = $dbh->prepare($query);
- 
-  $query = qq|
+    my $contact = $dbh->prepare($query);
+
+    $query = qq|
 	SELECT id AS addressid, address1, address2, city, state, zipcode, country
 	FROM address WHERE trans_id = ?
   |;
-  my $address = $dbh->prepare($query);
+    my $address = $dbh->prepare($query);
 
-  $query = qq|
+    $query = qq|
 	SELECT shiptoname, shiptoaddress1, shiptoaddress2, shiptocity, shiptostate, shiptozipcode, shiptocountry, shiptophone, shiptofax, shiptoemail
 	FROM shipto WHERE trans_id = ?
   |;
-  my $shipto = $dbh->prepare($query);
+    my $shipto = $dbh->prepare($query);
 
-  $query = qq|
+    $query = qq|
 	SELECT name AS bankname, iban, bic, address_id AS bankaddress_id, dcn, rvc, membernumber
 	FROM bank WHERE id = ?
   |;
-  my $bank = $dbh->prepare($query);
+    my $bank = $dbh->prepare($query);
 
-  $query = qq|
+    $query = qq|
 	SELECT address1 AS bankaddress1, address2 AS bankaddress2, city AS bankcity, state AS bankstate, zipcode AS bankzipcode, country AS bankcountry
 	FROM address WHERE trans_id = ?
   |;
-  my $bankaddress = $dbh->prepare($query);
+    my $bankaddress = $dbh->prepare($query);
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
-      if (!$form->{"id_$i"}){
-	   if ($form->{"$form->{db}number_$i"}){
-	      $sth->execute($form->{"$form->{db}number_$i"});
-	      $ref = $sth->fetchrow_hashref(NAME_lc);
-	      $form->{"id_$i"} = $ref->{id};
-	      $sth->finish;
- 	   }
-      }
-      if ($form->{"id_$i"}){
-	 # vc
-	 $vc->execute($form->{"id_$i"});
-         $ref = $vc->fetchrow_hashref(NAME_lc);
-         foreach (keys %$ref){
-	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
-	 }
-	 $vc->finish;
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
+            if ( !$form->{"id_$i"} ) {
+                if ( $form->{"$form->{db}number_$i"} ) {
+                    $sth->execute( $form->{"$form->{db}number_$i"} );
+                    $ref = $sth->fetchrow_hashref(NAME_lc);
+                    $form->{"id_$i"} = $ref->{id};
+                    $sth->finish;
+                }
+            }
+            if ( $form->{"id_$i"} ) {
 
-	 # contact
-	 $contact->execute($form->{"id_$i"});
-         $ref = $contact->fetchrow_hashref(NAME_lc);
-         foreach (keys %$ref){
-	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
-	 }
-	 $contact->finish;
+                # vc
+                $vc->execute( $form->{"id_$i"} );
+                $ref = $vc->fetchrow_hashref(NAME_lc);
+                foreach ( keys %$ref ) {
+                    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+                }
+                $vc->finish;
 
-	 # address
-	 $address->execute($form->{"id_$i"});
-         $ref = $address->fetchrow_hashref(NAME_lc);
-         foreach (keys %$ref){
-	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
-	 }
-         $address->finish;
+                # contact
+                $contact->execute( $form->{"id_$i"} );
+                $ref = $contact->fetchrow_hashref(NAME_lc);
+                foreach ( keys %$ref ) {
+                    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+                }
+                $contact->finish;
 
-	 # shipto
-	 $shipto->execute($form->{"id_$i"});
-         $ref = $shipto->fetchrow_hashref(NAME_lc);
-         foreach (keys %$ref){
-	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
-	 }
-	 $shipto->finish;
+                # address
+                $address->execute( $form->{"id_$i"} );
+                $ref = $address->fetchrow_hashref(NAME_lc);
+                foreach ( keys %$ref ) {
+                    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+                }
+                $address->finish;
 
-	 # bank
-	 $bank->execute($form->{"id_$i"});
-         $ref = $bank->fetchrow_hashref(NAME_lc);
-         foreach (keys %$ref){
-	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
-	 }
-	 $bank->finish;
+                # shipto
+                $shipto->execute( $form->{"id_$i"} );
+                $ref = $shipto->fetchrow_hashref(NAME_lc);
+                foreach ( keys %$ref ) {
+                    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+                }
+                $shipto->finish;
 
-	 # bankaddress
-	 $bankaddress->execute($form->{"bankaddress_id_$i"});
-         $ref = $bankaddress->fetchrow_hashref(NAME_lc);
-         foreach (keys %$ref){
-	    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
-	 }
-	 $bankaddress->finish;
-      }
+                # bank
+                $bank->execute( $form->{"id_$i"} );
+                $ref = $bank->fetchrow_hashref(NAME_lc);
+                foreach ( keys %$ref ) {
+                    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+                }
+                $bank->finish;
+
+                # bankaddress
+                $bankaddress->execute( $form->{"bankaddress_id_$i"} );
+                $ref = $bankaddress->fetchrow_hashref(NAME_lc);
+                foreach ( keys %$ref ) {
+                    $form->{"${_}_$i"} = $ref->{$_} if !$form->{"${_}_$i"};
+                }
+                $bankaddress->finish;
+            }
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
 
-  $dbh->disconnect;
-  chop $form->{ndx};
+    $dbh->disconnect;
+    chop $form->{ndx};
 
 }
 
 sub partscustomer {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my $ref;
 
-  my $pquery = qq|SELECT id, description FROM parts WHERE LOWER(partnumber) = ?|; 
-  my $psth = $dbh->prepare($pquery) || $form->dberror($pquery);
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
 
-  my $cquery = qq|SELECT id, name FROM customer WHERE LOWER(customernumber) = ?|; 
-  my $csth = $dbh->prepare($cquery) || $form->dberror($cquery);
+    my $pquery = qq|SELECT id, description FROM parts WHERE LOWER(partnumber) = ?|;
+    my $psth   = $dbh->prepare($pquery) || $form->dberror($pquery);
 
-  my $pgquery = qq|SELECT id FROM pricegroup WHERE LOWER(pricegroup) = ?|; 
-  my $pgsth = $dbh->prepare($pgquery) || $form->dberror($pgquery);
+    my $cquery = qq|SELECT id, name FROM customer WHERE LOWER(customernumber) = ?|;
+    my $csth   = $dbh->prepare($cquery) || $form->dberror($cquery);
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my $pgquery = qq|SELECT id FROM pricegroup WHERE LOWER(pricegroup) = ?|;
+    my $pgsth   = $dbh->prepare($pgquery) || $form->dberror($pgquery);
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
-      $psth->execute(lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]");
-      if ($ref = $psth->fetchrow_hashref(NAME_lc)) {
-	$form->{"parts_id_$i"} = $ref->{id};
-	$form->{"description_$i"} = $ref->{description};
-      }
-      $psth->finish;
-      $csth->execute(lc "$a[$form->{$form->{type}}->{customernumber}{ndx}]");
-      if ($ref = $csth->fetchrow_hashref(NAME_lc)) {
-	$form->{"customer_id_$i"} = $ref->{id};
-	$form->{"name_$i"} = $ref->{name};
-      }
-      $csth->finish;
-      $pgsth->execute(lc "$a[$form->{$form->{type}}->{pricegroup}{ndx}]");
-      if ($ref = $pgsth->fetchrow_hashref(NAME_lc)) {
-	$form->{"pricegroup_id_$i"} = $ref->{id};
-      }
-      $pgsth->finish;
-      $form->{"pricegroup_id_$i"} *= 1;
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
+
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
+            $psth->execute( lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]" );
+            if ( $ref = $psth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"parts_id_$i"}    = $ref->{id};
+                $form->{"description_$i"} = $ref->{description};
+            }
+            $psth->finish;
+            $csth->execute( lc "$a[$form->{$form->{type}}->{customernumber}{ndx}]" );
+            if ( $ref = $csth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"customer_id_$i"} = $ref->{id};
+                $form->{"name_$i"}        = $ref->{name};
+            }
+            $csth->finish;
+            $pgsth->execute( lc "$a[$form->{$form->{type}}->{pricegroup}{ndx}]" );
+            if ( $ref = $pgsth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"pricegroup_id_$i"} = $ref->{id};
+            }
+            $pgsth->finish;
+            $form->{"pricegroup_id_$i"} *= 1;
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
 
-  $dbh->disconnect;
-  chop $form->{ndx};
+    $dbh->disconnect;
+    chop $form->{ndx};
 }
 
 sub partsvendor {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my $ref;
 
-  my $pquery = qq|SELECT id, description FROM parts WHERE LOWER(partnumber) = ?|; 
-  my $psth = $dbh->prepare($pquery) || $form->dberror($pquery);
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
 
-  my $vquery = qq|SELECT id, name FROM vendor WHERE LOWER(vendornumber) = ?|; 
-  my $vsth = $dbh->prepare($vquery) || $form->dberror($vquery);
+    my $pquery = qq|SELECT id, description FROM parts WHERE LOWER(partnumber) = ?|;
+    my $psth   = $dbh->prepare($pquery) || $form->dberror($pquery);
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my $vquery = qq|SELECT id, name FROM vendor WHERE LOWER(vendornumber) = ?|;
+    my $vsth   = $dbh->prepare($vquery) || $form->dberror($vquery);
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
-      $psth->execute(lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]");
-      if ($ref = $psth->fetchrow_hashref(NAME_lc)) {
-	$form->{"parts_id_$i"} = $ref->{id};
-	$form->{"description_$i"} = $ref->{description};
-      }
-      $psth->finish;
-      $vsth->execute(lc "$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
-      if ($ref = $vsth->fetchrow_hashref(NAME_lc)) {
-	$form->{"vendor_id_$i"} = $ref->{id};
-	$form->{"name_$i"} = $ref->{name};
-      }
-      $vsth->finish;
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
+
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
+            $psth->execute( lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]" );
+            if ( $ref = $psth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"parts_id_$i"}    = $ref->{id};
+                $form->{"description_$i"} = $ref->{description};
+            }
+            $psth->finish;
+            $vsth->execute( lc "$a[$form->{$form->{type}}->{vendornumber}{ndx}]" );
+            if ( $ref = $vsth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"vendor_id_$i"} = $ref->{id};
+                $form->{"name_$i"}      = $ref->{name};
+            }
+            $vsth->finish;
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
 
-  $dbh->disconnect;
-  chop $form->{ndx};
+    $dbh->disconnect;
+    chop $form->{ndx};
 }
 
 sub parts {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my $query;
+    my $ref;
 
-  $gquery = qq|SELECT id FROM partsgroup WHERE LOWER(partsgroup) = ?|; 
-  my $gsth = $dbh->prepare($gquery) || $form->dberror($gquery);
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
 
-  $pquery = qq|SELECT id FROM parts WHERE LOWER(partnumber) = ?|; 
-  my $psth = $dbh->prepare($pquery) || $form->dberror($pquery);
+    $gquery = qq|SELECT id FROM partsgroup WHERE LOWER(partsgroup) = ?|;
+    my $gsth = $dbh->prepare($gquery) || $form->dberror($gquery);
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    $pquery = qq|SELECT id FROM parts WHERE LOWER(partnumber) = ?|;
+    my $psth = $dbh->prepare($pquery) || $form->dberror($pquery);
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
-      $gsth->execute(lc "$a[$form->{$form->{type}}->{partsgroup}{ndx}]");
-      if ($ref = $gsth->fetchrow_hashref(NAME_lc)) {
-	$form->{"partsgroup_id_$i"} = $ref->{id};
-      }
-      $gsth->finish;
-      $psth->execute(lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]");
-      if ($ref = $psth->fetchrow_hashref(NAME_lc)) {
-	$form->{"parts_id_$i"} = $ref->{id};
-      }
-      $psth->finish;
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
+
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
+            $gsth->execute( lc "$a[$form->{$form->{type}}->{partsgroup}{ndx}]" );
+            if ( $ref = $gsth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"partsgroup_id_$i"} = $ref->{id};
+            }
+            $gsth->finish;
+            $psth->execute( lc "$a[$form->{$form->{type}}->{partnumber}{ndx}]" );
+            if ( $ref = $psth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"parts_id_$i"} = $ref->{id};
+            }
+            $psth->finish;
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
 
-  $dbh->disconnect;
-  chop $form->{ndx};
+    $dbh->disconnect;
+    chop $form->{ndx};
 }
 
 sub accounts {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
-  
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my $query;
+    my $ref;
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
+
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
+
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
 
-  $dbh->disconnect;
-  chop $form->{ndx};
+    $dbh->disconnect;
+    chop $form->{ndx};
 
 }
 
-
 sub transactions {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my $query;
+    my $ref;
 
-  # customer/vendor
-  $query = qq|SELECT vc.id, vc.name, vc.$form->{vc}number, vc.terms,
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
+
+    # customer/vendor
+    $query = qq|SELECT vc.id, vc.name, vc.$form->{vc}number, vc.terms,
               e.id AS employee_id, e.name AS employee,
               c.accno AS taxaccount, a.accno AS arap_accno,
               ad.city
@@ -1552,362 +1540,356 @@ sub transactions {
               LEFT JOIN chart c ON (c.id = ct.chart_id)
               LEFT JOIN chart a ON (a.id = vc.arap_accno_id)
               WHERE $form->{vc}number = ?|;
-  my $cth = $dbh->prepare($query) || $form->dberror($query);
+    my $cth = $dbh->prepare($query) || $form->dberror($query);
 
-  $query = qq|SELECT description FROM chart WHERE accno = ?|;
-  my $ath = $dbh->prepare($query) || $form->dberror($query);
+    $query = qq|SELECT description FROM chart WHERE accno = ?|;
+    my $ath = $dbh->prepare($query) || $form->dberror($query);
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
 
-      $ath->execute("$a[$form->{$form->{type}}->{account}{ndx}]");
-      my $ref = $ath->fetchrow_hashref(NAME_lc);
-      $form->{"account_description_$i"} = $ref->{description};
+            $ath->execute("$a[$form->{$form->{type}}->{account}{ndx}]");
+            my $ref = $ath->fetchrow_hashref(NAME_lc);
+            $form->{"account_description_$i"} = $ref->{description};
 
-      if ($form->{vc} eq 'customer'){
-      $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
-      } else {
-      $cth->execute("$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
-      }
-      while ($ref = $cth->fetchrow_hashref(NAME_lc)) {
-          $arap_accno = $ref->{arap_accno};
-          $terms = $ref->{terms};
-          $form->{"$form->{vc}_id_$i"} = $ref->{id};
-          $form->{"name_$i"} = $ref->{name};
-          $form->{"city_$i"} = $ref->{city};
-          $form->{"employee_$i"} = $ref->{employee};
-          $form->{"employee_id_$i"} = $ref->{employee_id};
-          $customertax{$ref->{accno}} = 1;
-      }
-      $cth->finish;
+            if ( $form->{vc} eq 'customer' ) {
+                $cth->execute("$a[$form->{$form->{type}}->{customernumber}{ndx}]");
+            } else {
+                $cth->execute("$a[$form->{$form->{type}}->{vendornumber}{ndx}]");
+            }
+            while ( $ref = $cth->fetchrow_hashref(NAME_lc) ) {
+                $arap_accno                   = $ref->{arap_accno};
+                $terms                        = $ref->{terms};
+                $form->{"$form->{vc}_id_$i"}  = $ref->{id};
+                $form->{"name_$i"}            = $ref->{name};
+                $form->{"city_$i"}            = $ref->{city};
+                $form->{"employee_$i"}        = $ref->{employee};
+                $form->{"employee_id_$i"}     = $ref->{employee_id};
+                $customertax{ $ref->{accno} } = 1;
+            }
+            $cth->finish;
 
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
 
-  $cth->finish;
-  $ath->finish;
+    $cth->finish;
+    $ath->finish;
 
-  $dbh->disconnect;
-  chop $form->{ndx};
+    $dbh->disconnect;
+    chop $form->{ndx};
 }
 
-
 sub gl {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my $query;
+    my $ref;
 
-  $query = qq|SELECT curr FROM curr ORDER BY rn|;
-  ($form->{defaultcurrency}) = $dbh->selectrow_array($query);
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
 
-  $query = qq|SELECT c.id, c.description
+    $query = qq|SELECT curr FROM curr ORDER BY rn|;
+    ( $form->{defaultcurrency} ) = $dbh->selectrow_array($query);
+
+    $query = qq|SELECT c.id, c.description
               FROM chart c
               WHERE accno = ?|;
-  my $cth = $dbh->prepare($query) || $form->dberror($query);
- 
-  $query = qq|SELECT id FROM department WHERE description = ?|;
-  my $dth = $dbh->prepare($query) || $form->dberror($query);
+    my $cth = $dbh->prepare($query) || $form->dberror($query);
 
-  $query = qq|SELECT id
+    $query = qq|SELECT id FROM department WHERE description = ?|;
+    my $dth = $dbh->prepare($query) || $form->dberror($query);
+
+    $query = qq|SELECT id
               FROM project
               WHERE projectnumber = ?|;
-  my $pth = $dbh->prepare($query) || $form->dberror($query);
+    my $pth = $dbh->prepare($query) || $form->dberror($query);
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
-      $cth->execute("$a[$form->{$form->{type}}->{accno}{ndx}]");
-      if ($ref = $cth->fetchrow_hashref(NAME_lc)) {
-	$form->{"accdescription_$i"} = $ref->{description};
-	$form->{"ndx_$i"} = 'Y';
-      } else {
-	$form->{"accdescription_$i"} = '*****';
-      }
-      $dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
-      if ($ref = $dth->fetchrow_hashref(NAME_lc)) {
-	$form->{"department_id_$i"} = $ref->{id};
-      } else {
-        $a[$form->{$form->{type}}->{department}{ndx}] = '***';
-	$form->{"department_id_$i"} = 0;
-      }
-      $pth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
-      if ($ref = $pth->fetchrow_hashref(NAME_lc)) {
-	$form->{"project_id_$i"} = $ref->{id};
-      } else {
-        $a[$form->{$form->{type}}->{projectnumber}{ndx}] = '***';
-	$form->{"project_id_$i"} = 0;
-      }
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
+            $cth->execute("$a[$form->{$form->{type}}->{accno}{ndx}]");
+            if ( $ref = $cth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"accdescription_$i"} = $ref->{description};
+                $form->{"ndx_$i"}            = 'Y';
+            } else {
+                $form->{"accdescription_$i"} = '*****';
+            }
+            $dth->execute("$a[$form->{$form->{type}}->{department}{ndx}]");
+            if ( $ref = $dth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"department_id_$i"} = $ref->{id};
+            } else {
+                $a[ $form->{ $form->{type} }->{department}{ndx} ] = '***';
+                $form->{"department_id_$i"} = 0;
+            }
+            $pth->execute("$a[$form->{$form->{type}}->{projectnumber}{ndx}]");
+            if ( $ref = $pth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"project_id_$i"} = $ref->{id};
+            } else {
+                $a[ $form->{ $form->{type} }->{projectnumber}{ndx} ] = '***';
+                $form->{"project_id_$i"} = 0;
+            }
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
-  $cth->finish;
-  $dth->finish;
-  $pth->finish;
-  $dbh->disconnect;
+    $cth->finish;
+    $dth->finish;
+    $pth->finish;
+    $dbh->disconnect;
 }
 
 sub vendor_payment {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $ref;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision']});
-  $form->{precision} = $defaults{precision};
+    my $ref;
 
-  # Payment account
-  my $pquery = qq|SELECT id, accno FROM chart WHERE LOWER(description) = ?|; 
-  my $psth = $dbh->prepare($pquery) || $form->dberror($pquery);
+    my %defaults = $form->get_defaults( $dbh, \@{ ['precision'] } );
+    $form->{precision} = $defaults{precision};
 
-  # Vendor lookup
-  my $vquery = qq|SELECT id, vendornumber FROM vendor WHERE LOWER(name) = ?|; 
-  my $vsth = $dbh->prepare($vquery) || $form->dberror($vquery);
+    # Payment account
+    my $pquery = qq|SELECT id, accno FROM chart WHERE LOWER(description) = ?|;
+    my $psth   = $dbh->prepare($pquery) || $form->dberror($pquery);
 
-  # Expense account lookup
-  my $equery = qq|SELECT id, accno FROM chart WHERE LOWER(description) = ?|; 
-  my $esth = $dbh->prepare($equery) || $form->dberror($equery);
+    # Vendor lookup
+    my $vquery = qq|SELECT id, vendornumber FROM vendor WHERE LOWER(name) = ?|;
+    my $vsth   = $dbh->prepare($vquery) || $form->dberror($vquery);
 
-  my @d = split /\n/, $form->{data};
-  shift @d if ! $form->{mapfile};
+    # Expense account lookup
+    my $equery = qq|SELECT id, accno FROM chart WHERE LOWER(description) = ?|;
+    my $esth   = $dbh->prepare($equery) || $form->dberror($equery);
 
-  for (@d) {
-    @a = &ndxline($form);
-    if (@a) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-	$a[$form->{$form->{type}}->{$_}{ndx}] =~ s/(^"|"$)//g;
-	$form->{"${_}_$i"} = $a[$form->{$form->{type}}->{$_}{ndx}];
-      }
-      $psth->execute(lc "$a[$form->{$form->{type}}->{paidfrom}{ndx}]");
-      if ($ref = $psth->fetchrow_hashref(NAME_lc)) {
-	$form->{"payment_chart_id_$i"} = $ref->{id};
-	$form->{"payment_accno_$i"} = $ref->{accno};
-      }
-      $psth->finish;
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-      $vsth->execute(lc "$a[$form->{$form->{type}}->{payee}{ndx}]");
-      if ($ref = $vsth->fetchrow_hashref(NAME_lc)) {
-	$form->{"vendor_id_$i"} = $ref->{id};
-	$form->{"vendornumber_$i"} = $ref->{vendornumber};
-      }
-      $vsth->finish;
+    for (@d) {
+        @a = &ndxline($form);
+        if (@a) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                $a[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/(^"|"$)//g;
+                $form->{"${_}_$i"} = $a[ $form->{ $form->{type} }->{$_}{ndx} ];
+            }
+            $psth->execute( lc "$a[$form->{$form->{type}}->{paidfrom}{ndx}]" );
+            if ( $ref = $psth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"payment_chart_id_$i"} = $ref->{id};
+                $form->{"payment_accno_$i"}    = $ref->{accno};
+            }
+            $psth->finish;
 
-      $esth->execute(lc "$a[$form->{$form->{type}}->{category}{ndx}]");
-      if ($ref = $esth->fetchrow_hashref(NAME_lc)) {
-	$form->{"expense_chart_id_$i"} = $ref->{id};
-	$form->{"expense_accno_$i"} = $ref->{accno};
-      }
-      $esth->finish;
+            $vsth->execute( lc "$a[$form->{$form->{type}}->{payee}{ndx}]" );
+            if ( $ref = $vsth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"vendor_id_$i"}    = $ref->{id};
+                $form->{"vendornumber_$i"} = $ref->{vendornumber};
+            }
+            $vsth->finish;
+
+            $esth->execute( lc "$a[$form->{$form->{type}}->{category}{ndx}]" );
+            if ( $ref = $esth->fetchrow_hashref(NAME_lc) ) {
+                $form->{"expense_chart_id_$i"} = $ref->{id};
+                $form->{"expense_accno_$i"}    = $ref->{accno};
+            }
+            $esth->finish;
+        }
+        $form->{rowcount} = $i;
     }
-    $form->{rowcount} = $i;
-  }
 
-  $dbh->disconnect;
-  chop $form->{ndx};
+    $dbh->disconnect;
+    chop $form->{ndx};
 }
 
 sub delete_import {
-  my ($dbh, $form) = @_;
+    my ( $dbh, $form ) = @_;
 
-  my $query = qq|SELECT reportid FROM report
+    my $query = qq|SELECT reportid FROM report
                  WHERE reportcode = '$form->{reportcode}'
 	         AND login = '$form->{login}'|;
-  my ($reportid) = $dbh->selectrow_array($query);
+    my ($reportid) = $dbh->selectrow_array($query);
 
-  if (!$reportid) {
-    $query = qq|INSERT INTO report (reportcode, login)
+    if ( !$reportid ) {
+        $query = qq|INSERT INTO report (reportcode, login)
                 VALUES ('$form->{reportcode}', '$form->{login}')|;
-    $dbh->do($query) || $form->dberror($query);
+        $dbh->do($query) || $form->dberror($query);
 
-    $query = qq|SELECT reportid FROM report
+        $query = qq|SELECT reportid FROM report
                 WHERE reportcode = '$form->{reportcode}'
 		AND login = '$form->{login}'|;
-    ($reportid) = $dbh->selectrow_array($query);
-  }
+        ($reportid) = $dbh->selectrow_array($query);
+    }
 
-  $query = qq|DELETE FROM reportvars
+    $query = qq|DELETE FROM reportvars
               WHERE reportid = $reportid|;
-  $dbh->do($query) || $form->dberror($query);
+    $dbh->do($query) || $form->dberror($query);
 
-  $reportid;
+    $reportid;
 }
 
 sub dataline {
-  my ($form) = @_;
+    my ($form) = @_;
 
-  my @dl     = ();
-  my $string = 0;
-  my $chr    = "";
-  my $m      = 0;
+    my @dl     = ();
+    my $string = 0;
+    my $chr    = "";
+    my $m      = 0;
 
-  chomp;
+    chomp;
 
-  if ($form->{tabdelimited}) {
-    @dl = split /\t/, $_;
-  }
-  else {
-    if ($form->{stringsquoted}) {
-      foreach $chr (split //, $_) {
-        if ($chr eq '"') {
-          if (!$string) {
-            $string = 1;
-            next;
-          }
+    if ( $form->{tabdelimited} ) {
+        @dl = split /\t/, $_;
+    } else {
+        if ( $form->{stringsquoted} ) {
+            foreach $chr ( split //, $_ ) {
+                if ( $chr eq '"' ) {
+                    if ( !$string ) {
+                        $string = 1;
+                        next;
+                    }
+                }
+                if ($string) {
+                    if ( $chr eq '"' ) {
+                        $string = 0;
+                        next;
+                    }
+                }
+                if ( $chr eq $form->{delimiter} ) {
+                    if ( !$string ) {
+                        $m++;
+                        next;
+                    }
+                }
+                $dl[$m] .= $chr;
+            }
+        } else {
+            @dl = split /$form->{delimiter}/, $_;
         }
-        if ($string) {
-          if ($chr eq '"') {
-            $string = 0;
-            next;
-          }
-        }
-        if ($chr eq $form->{delimiter}) {
-          if (!$string) {
-            $m++;
-            next;
-          }
-        }
-        $dl[$m] .= $chr;
-      }
     }
-    else {
-      @dl = split /$form->{delimiter}/, $_;
-    }
-  }
 
-  unshift @dl, "";
-  return @dl;
+    unshift @dl, "";
+    return @dl;
 
 }
 
-
-
 sub prepare_import_data {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  my $query;
-  my $sth;
-  my $ref;
+    my $query;
+    my $sth;
+    my $ref;
 
-  # clean out report
-  my $reportid = &delete_import($dbh, $form);
+    # clean out report
+    my $reportid = &delete_import( $dbh, $form );
 
-  $query = qq|DELETE FROM reportvars
+    $query = qq|DELETE FROM reportvars
               WHERE reportid = $reportid|;
-  $dbh->do($query) || $form->dberror($query);
+    $dbh->do($query) || $form->dberror($query);
 
-  $query = qq|INSERT INTO reportvars (reportid, reportvariable, reportvalue)
+    $query = qq|INSERT INTO reportvars (reportid, reportvariable, reportvalue)
               VALUES ($reportid, ?, ?)|;
-  my $rth = $dbh->prepare($query) || $form->dberror($query);
+    my $rth = $dbh->prepare($query) || $form->dberror($query);
 
-  my $i = 0;
-  my $j = 0;
+    my $i = 0;
+    my $j = 0;
 
-  my @d = split /\n/, $form->{data};
-  shift @d if !$form->{mapfile};
+    my @d = split /\n/, $form->{data};
+    shift @d if !$form->{mapfile};
 
-  my @dl;
+    my @dl;
 
-  for (@d) {
+    for (@d) {
 
-    @dl = &dataline($form);
+        @dl = &dataline($form);
 
-    if ($#dl) {
-      $i++;
-      for (keys %{$form->{$form->{type}}}) {
-        if (defined $form->{$form->{type}}->{$_}{ndx}) {
+        if ($#dl) {
+            $i++;
+            for ( keys %{ $form->{ $form->{type} } } ) {
+                if ( defined $form->{ $form->{type} }->{$_}{ndx} ) {
 
-          # Remove non-printable character
-          $dl[$form->{$form->{type}}->{$_}{ndx}] =~ s/[^[:print:]]+//g;
-          $form->{"${_}_$i"} = $dl[$form->{$form->{type}}->{$_}{ndx}];
-          if ($form->{"${_}_$i"}) {
-            $rth->execute("${_}_$i", $form->{"${_}_$i"});
-            $rth->finish;
-          }
+                    # Remove non-printable character
+                    $dl[ $form->{ $form->{type} }->{$_}{ndx} ] =~ s/[^[:print:]]+//g;
+                    $form->{"${_}_$i"} = $dl[ $form->{ $form->{type} }->{$_}{ndx} ];
+                    if ( $form->{"${_}_$i"} ) {
+                        $rth->execute( "${_}_$i", $form->{"${_}_$i"} );
+                        $rth->finish;
+                    }
+                }
+            }
         }
-      }
-    }
-    $form->{rowcount} = $i;
+        $form->{rowcount} = $i;
 
-  }
-  $dbh->disconnect;
+    }
+    $dbh->disconnect;
 }
 
 sub import_generic {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  use DBIx::Simple;
-  $form->{dbh} = $form->dbconnect($myconfig);
-  $form->{dbs} = DBIx::Simple->connect($form->{dbh});
+    use DBIx::Simple;
+    $form->{dbh} = $form->dbconnect($myconfig);
+    $form->{dbs} = DBIx::Simple->connect( $form->{dbh} );
 
-  my $reportid = $form->{dbs}->query('SELECT reportid FROM report WHERE reportcode = ?', $form->{reportcode})->list;
+    my $reportid = $form->{dbs}->query( 'SELECT reportid FROM report WHERE reportcode = ?', $form->{reportcode} )->list;
 
-  my $newform = new Form;
+    my $newform = new Form;
 
-  $query = qq|SELECT * FROM reportvars
+    $query = qq|SELECT * FROM reportvars
               WHERE reportid = $reportid
 	      AND reportvariable LIKE ?|;
-  my $sth = $form->{dbh}->prepare($query) || $form->dberror($query);
+    my $sth = $form->{dbh}->prepare($query) || $form->dberror($query);
 
-  $form->{dbs}->query('delete from generic_import') or die($form->{dbs}->error);
+    $form->{dbs}->query('delete from generic_import') or die( $form->{dbs}->error );
 
-  for my $i (1 .. $form->{rowcount}) {
-    if ($form->{"ndx_$i"}) {
+    for my $i ( 1 .. $form->{rowcount} ) {
+        if ( $form->{"ndx_$i"} ) {
 
-      for (keys %$newform) { delete $newform->{$_} }
+            for ( keys %$newform ) { delete $newform->{$_} }
 
-      $sth->execute("%\\_$i");
-      while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-        $ref->{reportvariable} =~ s/_(\d+)//;
-        if ($1 == $i) {
-          $newform->{$ref->{reportvariable}} = $ref->{reportvalue};
-        }
-      }
-      $sth->finish;
+            $sth->execute("%\\_$i");
+            while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+                $ref->{reportvariable} =~ s/_(\d+)//;
+                if ( $1 == $i ) {
+                    $newform->{ $ref->{reportvariable} } = $ref->{reportvalue};
+                }
+            }
+            $sth->finish;
 
-      my $query = qq|
+            my $query = qq|
          INSERT INTO generic_import (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       |;
-      $form->{dbs}->query($query, 
-            $newform->{c1}, $newform->{c2}, $newform->{c3}, $newform->{c4}, $newform->{c5}, $newform->{c6}, $newform->{c7},
-            $newform->{c8}, $newform->{c9}, $newform->{c10}, $newform->{c11}, $newform->{c12}, $newform->{c13}, $newform->{c14}, $newform->{c15}, $newform->{c16}, $newform->{c17}, $newform->{c18},
-            $newform->{c19}, $newform->{c20}
-      ) or error($form->dberror);
+            $form->{dbs}->query(
+                $query,          $newform->{c1},  $newform->{c2},  $newform->{c3},  $newform->{c4},  $newform->{c5},  $newform->{c6},
+                $newform->{c7},  $newform->{c8},  $newform->{c9},  $newform->{c10}, $newform->{c11}, $newform->{c12}, $newform->{c13},
+                $newform->{c14}, $newform->{c15}, $newform->{c16}, $newform->{c17}, $newform->{c18}, $newform->{c19}, $newform->{c20}
+            ) or error( $form->dberror );
+        }
+        $i++;
     }
-    $i++;
-  }
 }
 
 1;
-
 
