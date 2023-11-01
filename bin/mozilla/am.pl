@@ -71,11 +71,22 @@ sub edit_account {
 
 sub account_header {
 
+  @curr = split /:/, $form->{currencies};
+  $form->{defaultcurrency} = $curr[0];
+  chomp $form->{defaultcurrency};
+  for (@curr) { $form->{selectcurrency} .= "$_\n" }
+
+  my $currency = qq|
+    <th align=right nowrap>| . $locale->text('Currency') . qq|</th>
+    <td><select name=curr>|.$form->select_option( $form->{selectcurrency}, $form->{curr} ).qq|</select></td>
+  |;
+
   my %checked;
   $checked{$form->{charttype}} = "checked";
   $checked{contra} = "checked" if $form->{contra};
   $checked{allow_gl} = "checked" if $form->{allow_gl};
   $checked{"$form->{category}_"} = "checked";
+
 
   for (qw(accno description)) { $form->{$_} = $form->quote($form->{$_}) }
 
@@ -107,6 +118,7 @@ sub account_header {
 	  <th align=right>|.$locale->text('Account Number').qq| <font color=red>*</font></th>
 	  <td><input name=accno size=20 value="|.$form->quote($form->{accno}).qq|"></td>
 	</tr>
+    <tr>$currency</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Description').qq|</th>
 	  <td><input name=description size=40 value="|.$form->quote($form->{description}).qq|"></td>
@@ -296,11 +308,12 @@ sub list_account {
   # construct callback
   my $callback = "$form->{script}?action=list_account&path=$form->{path}&login=$form->{login}";
 
-  my @column_index = qw(accno gifi_accno description link allow_gl);
+  my @column_index = qw(accno curr gifi_accno description link allow_gl);
 
   my %column_data;
 
   $column_data{accno} = qq|<th class=listtop>|.$locale->text('Account').qq|</a></th>|;
+  $column_data{curr} = qq|<th class=listtop>|.$locale->text('Currency').qq|</a></th>|;
   $column_data{gifi_accno} = qq|<th class=listtop>|.$locale->text('GIFI').qq|</a></th>|;
   $column_data{description} = qq|<th class=listtop>|.$locale->text('Description').qq|</a></th>|;
   $column_data{debit} = qq|<th class=listtop>|.$locale->text('Debit').qq|</a></th>|;
@@ -365,6 +378,7 @@ sub list_account {
       print qq|
 <tr valign=top class=listrow$i>|;
       $column_data{accno} = qq|<td><a href=$form->{script}?action=edit_account&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</a></td>|;
+      $column_data{curr} = qq|<td>$ref->{curr}&nbsp;</td>|;
       $column_data{gifi_accno} = qq|<td><a href=$form->{script}?action=edit_gifi&accno=$ref->{gifi_accno}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{gifi_accno}</a>&nbsp;</td>|;
       $column_data{description} = qq|<td>$ref->{description}&nbsp;</td>|;
       $column_data{debit} = qq|<td align=right>$ref->{debit}</td>|;

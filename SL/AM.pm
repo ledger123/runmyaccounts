@@ -24,10 +24,12 @@ sub get_account {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
+  $form->{currencies} = $form->get_currencies($dbh, $myconfig);
+
   $form->{id} *= 1;
 
   my $query = qq|SELECT accno, description, charttype, gifi_accno,
-                 category, link, contra, allow_gl
+                 category, link, contra, allow_gl, curr
                  FROM chart
 	         WHERE id = $form->{id}|;
   my $sth = $dbh->prepare($query);
@@ -101,6 +103,7 @@ sub save_account {
   if ($form->{id} *= 1) {
     $query = qq|UPDATE chart SET
                 accno = '$form->{accno}',
+                curr = '$form->{curr}',
 		description = |.$dbh->quote($form->{description}).qq|,
 		charttype = |.$dbh->quote($form->{charttype}).qq|,
 		gifi_accno = '$form->{gifi_accno}',
