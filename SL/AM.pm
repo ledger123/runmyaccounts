@@ -1552,6 +1552,7 @@ sub taxes {
 
   my $query = qq|SELECT c.id, c.accno, c.description,
               t.rate * 100 AS rate, t.taxnumber, t.validto,
+              t.vatkey, t.formdigit, t.validfrom,
 	      l.description AS translation, t.reversecharge_id, c2.accno reversecharge
               FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)
@@ -1589,12 +1590,17 @@ sub save_taxes {
       my $rate = $form->parse_amount($myconfig, $form->{"taxrate_$i"}) / 100;
 
       $form->{"reversecharge_$i"} *= 1;
+      $form->{"formdigit_$i"} *= 1;
       my $reversecharge_id = $dbh->selectrow_array(qq|SELECT id FROM chart WHERE accno = '$form->{"reversecharge_$i"}'|);
       $reversecharge_id *= 1;
 
-      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto, reversecharge_id)
-                  VALUES ($chart_id, $rate,|.$dbh->quote($form->{"taxnumber_$i"}).qq|, |
-		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE). qq|, $reversecharge_id )|;
+      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, vatkey, validfrom, validto, reversecharge_id, formdigit)
+                  VALUES ($chart_id, $rate,|
+                  . $dbh->quote($form->{"taxnumber_$i"}).qq|, |
+                  . $dbh->quote($form->{"vatkey_$i"}).qq|, |
+		  .$form->dbquote($form->dbclean($form->{"validfrom_$i"}), SQL_DATE). qq|, |
+		  .$form->dbquote($form->dbclean($form->{"validto$i"}), SQL_DATE). 
+          qq|, $reversecharge_id, $form->{"formdigit_$i"} )|;
       $dbh->do($query) || $form->dberror($query);
     }
   }

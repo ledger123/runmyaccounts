@@ -2075,7 +2075,7 @@ sub taxes {
     $form->{"taxdescription_$i"} = $ref->{description};
     $form->{"reversecharge_$i"} = $ref->{reversecharge};
 
-    for (qw(taxnumber validto)) { $form->{"${_}_$i"} = $ref->{$_} }
+    for (qw(taxnumber vatkey formdigit validfrom validto)) { $form->{"${_}_$i"} = $ref->{$_} }
     $form->{taxaccounts} .= "$ref->{id}_$i ";
   }
   chop $form->{taxaccounts};
@@ -2108,7 +2108,10 @@ sub display_taxes {
           <th>|.$locale->text('Account').qq|</th>
 	  <th>|.$locale->text('Rate').qq|</th>
 	  <th>|.$locale->text('Number').qq|</th>
+	  <th>|.$locale->text('VAT Key').qq|</th>
+	  <th>|.$locale->text('Valid From').qq|</th>
 	  <th>|.$locale->text('Valid To').qq|</th>
+	  <th>|.$locale->text('Form Digit').qq|</th>
 	  <th>|.$locale->text('Reverse Charge').qq|</th>
 	</tr>
 |;
@@ -2136,7 +2139,10 @@ sub display_taxes {
     print qq|</th>
 	  <td><input name="taxrate_$i" size=6 value=$form->{"taxrate_$i"}></td>
 	  <td><input name="taxnumber_$i" value="$form->{"taxnumber_$i"}"></td>
+	  <td><input name="vatkey_$i" value="$form->{"vatkey_$i"}"></td>
+	  <td><input name="validfrom_$i" size=11 class=date value="$form->{"validfrom_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
 	  <td><input name="validto_$i" size=11 class=date value="$form->{"validto_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
+	  <td><input name="formdigit_$i" size=10 value="$form->{"formdigit_$i"}"></td>
 	  <td><input name="reversecharge_$i" size=10 value="$form->{"reversecharge_$i"}"></td>
 	</tr>
 |;
@@ -2185,7 +2191,7 @@ sub update {
 sub update_taxes {
 
   @tax = ();
-  @flds = qw(id taxrate taxdescription taxnumber accno validto);
+  @flds = qw(id taxrate taxdescription taxnumber vatkey accno validfrom validto formdigit);
   foreach $item (split / /, $form->{taxaccounts}) {
     ($id, $i) = split /_/, $item;
     $form->{"id_$i"} = $id;
