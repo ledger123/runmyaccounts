@@ -46,6 +46,8 @@ sub add_account {
 
   $form->{callback} = "$form->{script}?action=list_account&path=$form->{path}&login=$form->{login}" unless $form->{callback};
 
+  $form->{currencies} = $form->get_currencies('', \%myconfig);
+
   &account_header;
   &form_footer;
 
@@ -74,6 +76,7 @@ sub account_header {
   @curr = split /:/, $form->{currencies};
   $form->{defaultcurrency} = $curr[0];
   chomp $form->{defaultcurrency};
+  $form->{selectcurrency} = "\n";
   for (@curr) { $form->{selectcurrency} .= "$_\n" }
 
   my $currency = qq|
@@ -372,6 +375,7 @@ sub list_account {
       $column_data{credit} = qq| <th>&nbsp;</th>|;
       $column_data{link} = qq|<th>&nbsp;</th>|;
       $column_data{allow_gl} = qq|<th>&nbsp;</th>|;
+      $column_data{curr} = qq|<td>&nbsp;</td>|;
 
     } else {
       $i++; $i %= 2;
