@@ -1558,7 +1558,7 @@ sub taxes {
 	      JOIN tax t ON (c.id = t.chart_id)
           LEFT JOIN chart c2 ON c2.id = t.reversecharge_id
 	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-	      ORDER BY 3, 6|;
+	      ORDER BY c.accno, t.validto|;
 
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);

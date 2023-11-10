@@ -2116,7 +2116,7 @@ sub display_taxes {
 	</tr>
 |;
 
-  my @array = sort(split(/ /, $form->{taxaccounts}));
+  my @array = split(/ /, $form->{taxaccounts});
 
   foreach $ref (@array) {
 
@@ -2125,6 +2125,7 @@ sub display_taxes {
     $form->{"taxrate_$i"} = $form->format_amount(\%myconfig, $form->{"taxrate_$i"}, undef, 0);
 
     $form->hide_form("taxdescription_$i");
+    $form->hide_form("taxaccno_$i");
 
     print qq|
 	<tr>
