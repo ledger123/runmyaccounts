@@ -6,6 +6,7 @@ $self{texts} = {
   'Customer Number'             => 'Debtor Number',
   'Vendor Invoice'              => 'Creditor Invoice',
   'Vendor Number'               => 'Creditor Number',
+  'System Defaults'             => 'Client settings',
 };
 
 $self{subs} = {
