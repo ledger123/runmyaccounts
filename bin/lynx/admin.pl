@@ -1294,7 +1294,7 @@ sub update_dataset {
 
     $form->{callback} = "$form->{script}?action=list_users&path=$form->{path}";
     $form->{nextsub} = "dbupdate";
-    $form->hide_form(qw(dbdriver dbhost dbport dbuser dbpasswd dbdefault dbupdate mextsub callback path));
+    $form->hide_form(qw(dbdriver dbhost dbport dbuser dbpasswd dbdefault dbupdate nextsub callback path));
 
     print qq|
 <tr class=listheading>
