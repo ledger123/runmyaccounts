@@ -114,9 +114,10 @@ sub save_account {
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO chart
-                (accno, description, charttype, gifi_accno, category, link,
+                (accno, curr, description, charttype, gifi_accno, category, link,
 		contra, allow_gl)
-                VALUES ('$form->{accno}',|
+                VALUES ('$form->{accno}',
+    '$form->{curr}',|
 		.$dbh->quote($form->{description}).qq|,
 		|.$dbh->quote($form->{charttype}).qq|, |
 		.$dbh->quote($form->{gifi_accno}).qq|,
