@@ -24,10 +24,12 @@ sub get_account {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
+  $form->{currencies} = $form->get_currencies($dbh, $myconfig);
+
   $form->{id} *= 1;
 
   my $query = qq|SELECT accno, description, charttype, gifi_accno,
-                 category, link, contra, allow_gl
+                 category, link, contra, allow_gl, curr
                  FROM chart
 	         WHERE id = $form->{id}|;
   my $sth = $dbh->prepare($query);
@@ -101,6 +103,7 @@ sub save_account {
   if ($form->{id} *= 1) {
     $query = qq|UPDATE chart SET
                 accno = '$form->{accno}',
+                curr = '$form->{curr}',
 		description = |.$dbh->quote($form->{description}).qq|,
 		charttype = |.$dbh->quote($form->{charttype}).qq|,
 		gifi_accno = '$form->{gifi_accno}',
@@ -111,9 +114,10 @@ sub save_account {
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO chart
-                (accno, description, charttype, gifi_accno, category, link,
+                (accno, curr, description, charttype, gifi_accno, category, link,
 		contra, allow_gl)
-                VALUES ('$form->{accno}',|
+                VALUES ('$form->{accno}',
+    '$form->{curr}',|
 		.$dbh->quote($form->{description}).qq|,
 		|.$dbh->quote($form->{charttype}).qq|, |
 		.$dbh->quote($form->{gifi_accno}).qq|,
@@ -1552,12 +1556,13 @@ sub taxes {
 
   my $query = qq|SELECT c.id, c.accno, c.description,
               t.rate * 100 AS rate, t.taxnumber, t.validto,
+              t.vatkey, t.formdigit, t.validfrom,
 	      l.description AS translation, t.reversecharge_id, c2.accno reversecharge
               FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)
           LEFT JOIN chart c2 ON c2.id = t.reversecharge_id
 	      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-	      ORDER BY 3, 6|;
+	      ORDER BY c.accno, t.validto|;
 
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -1589,12 +1594,17 @@ sub save_taxes {
       my $rate = $form->parse_amount($myconfig, $form->{"taxrate_$i"}) / 100;
 
       $form->{"reversecharge_$i"} *= 1;
+      $form->{"formdigit_$i"} *= 1;
       my $reversecharge_id = $dbh->selectrow_array(qq|SELECT id FROM chart WHERE accno = '$form->{"reversecharge_$i"}'|);
       $reversecharge_id *= 1;
 
-      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, validto, reversecharge_id)
-                  VALUES ($chart_id, $rate,|.$dbh->quote($form->{"taxnumber_$i"}).qq|, |
-		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE). qq|, $reversecharge_id )|;
+      $query = qq|INSERT INTO tax (chart_id, rate, taxnumber, vatkey, validfrom, validto, reversecharge_id, formdigit)
+                  VALUES ($chart_id, $rate,|
+                  . $dbh->quote($form->{"taxnumber_$i"}).qq|, |
+                  . $dbh->quote($form->{"vatkey_$i"}).qq|, |
+		  .$form->dbquote($form->dbclean($form->{"validfrom_$i"}), SQL_DATE). qq|, |
+		  .$form->dbquote($form->dbclean($form->{"validto$i"}), SQL_DATE). 
+          qq|, $reversecharge_id, $form->{"formdigit_$i"} )|;
       $dbh->do($query) || $form->dberror($query);
     }
   }
@@ -2226,6 +2236,7 @@ sub get_currency {
 
   $query = qq|SELECT DISTINCT curr FROM ar WHERE curr = '$form->{curr}'
         UNION SELECT DISTINCT curr FROM ap WHERE curr = '$form->{curr}'
+        UNION SELECT DISTINCT curr FROM gl WHERE curr = '$form->{curr}'
 	UNION SELECT DISTINCT curr FROM oe WHERE curr = '$form->{curr}'|;
   ($form->{orphaned}) = $dbh->selectrow_array($query);
   $form->{orphaned} = !$form->{orphaned};
