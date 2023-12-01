@@ -463,10 +463,10 @@ sub invoice_details {
   
   if ($form->{taxincluded}) {
     $form->{invtotal} = $form->{total};
-    $form->{subtotal} = $form->{total} - $tax;
+    $form->{subtotal} = $form->{total} - $total;
   } else {
     $form->{subtotal} = $form->{total};
-    $form->{invtotal} = $form->{total} + $tax;
+    $form->{invtotal} = $form->{total} + $total;
   }
 
   for (qw(subtotal invtotal)) { $form->{"cd_$_"} = $form->{$_} }
