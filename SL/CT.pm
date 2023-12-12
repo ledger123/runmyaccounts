@@ -602,20 +602,6 @@ sub save {
     }
   }
 
-  # post_office processing
-  if (!$form->{post_office}){
-      for (@postoffice){
-        if (lc($form->{address1}) =~ $_){
-            $form->{post_office} = $form->{address1};
-            $form->{address1} = $form->{address2};
-        }
-        if (lc($form->{address2}) =~ $_){
-            $form->{post_office} = $form->{address2};
-            $form->{address2} = '';
-        }
-      }
-  }
-
   $query = qq|INSERT INTO address ($id trans_id, address1, address2,
               city, state, zipcode, country, post_office, is_migrated) VALUES ($var
 	      $form->{id},
