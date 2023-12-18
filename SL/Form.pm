@@ -4706,6 +4706,12 @@ sub dbconnect_noauto {
 
 }
 
+sub db_init {
+   my ($self, $myconfig) = @_;
+   $self->{dbh} = $self->dbconnect_noauto($myconfig);
+   $self->{dbs} = DBIx::Simple->connect($self->{dbh});
+}
+
 sub param {
 	my ( $self, $fldname ) = @_;
 	return $self->{$fldname};
