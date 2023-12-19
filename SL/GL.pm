@@ -112,6 +112,9 @@ sub delete_transaction {
     $dbh->do($query) || $form->dberror($query);
   }
   
+  $query = qq|DELETE FROM gl WHERE id = $form->{id}|;
+  $dbh->do($query) || $form->dberror($query);
+
   $form->remove_locks($myconfig, $dbh, 'gl');
 
   # commit and redirect
