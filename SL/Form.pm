@@ -93,7 +93,7 @@ sub new {
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
 	$self->{version}   = "2.8.33";
-	$self->{dbversion} = "2.8.25";
+	$self->{dbversion} = "2.8.26";
 
 	bless $self, $type;
 
@@ -4968,6 +4968,36 @@ sub get_currencies {
 	chop $currencies;
 	$currencies;
 
+}
+
+sub get_parent {
+	my ( $self, $dbh, $myconfig ) = @_;
+
+	my $disconnect = ($dbh) ? 0 : 1;
+
+	if ( !$dbh ) {
+		$dbh = $self->dbconnect($myconfig);
+	}
+
+	my $query = qq|
+        SELECT accno, description
+        FROM chart
+        WHERE charttype = 'H'
+        ORDER BY accno
+    |;
+
+	my $sth = $dbh->prepare($query);
+	$sth->execute || $self->dberror($query);
+
+    $self->{selectparent} = "\n";
+	while ( $row = $sth->fetchrow_hashref(NAME_lc) ) {
+        $self->{selectparent} .= "$row->{accno}--$row->{description}\n";
+	}
+	$sth->finish;
+
+	$dbh->disconnect if $disconnect;
+
+	$self->{selectparent};
 }
 
 # bp 2010/02/10
