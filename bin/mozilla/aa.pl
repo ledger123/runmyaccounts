@@ -121,7 +121,7 @@ sub edit {
     }
 
     $form->{firsttime} = 1; # do not use parse_amount if is first time and amounts are not formatted.
-    &display_form;
+    &update;
 
 }
 
@@ -366,7 +366,7 @@ sub create_links {
                     if ( $akey eq 'amount' ) {
                         $form->{"description_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{memo};
                         $form->{"tax_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{tax};
-                        $form->{"linetaxamount_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{taxamount};
+                        $form->{"linetaxamount_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{taxamount} * -1;
                         $form->{rowcount}++;
                         $netamount += $form->{"${akey}_$i"};
 
