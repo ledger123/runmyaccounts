@@ -16,6 +16,8 @@ use Number::Format;
 
 $Data::Dumper::Indent = 1;
 
+# TODO populate revolut_accounts table on setup/initialization only.
+
 helper dbs => sub {
     my ( $c, $dbname ) = @_;
     state $dbs;
@@ -158,7 +160,7 @@ get 'accounts' => sub ($c) {
     my $hash       = $res->json;
     my $table_data = HTML::Table->new( -head => [qw/transactions currency name balance state public/], );
     $table_data->setRowClass( 1, 'listheading' );
-    $dbs->query("DELETE FROM revolut_accounts");
+    # $dbs->query("DELETE FROM revolut_accounts");
     for my $item ( @{$hash} ) {
         if ( $item->{balance} ) {
             my $rownum = $table_data->addRow(
@@ -167,10 +169,8 @@ get 'accounts' => sub ($c) {
                 $item->{state}, $item->{public},
             );
             $table_data->setRowClass( $rownum, 'listrow0' );
-            $dbs->query( "
-                INSERT INTO revolut_accounts (id, curr, name, balance) VALUES (?,?,?,?)",
-                $item->{id}, $item->{currency}, $item->{name}, $item->{balance} );
-            $dbs->commit;
+            # $dbs->query( "INSERT INTO revolut_accounts (id, curr, name, balance) VALUES (?,?,?,?)", $item->{id}, $item->{currency}, $item->{name}, $item->{balance} );
+            # $dbs->commit;
         }
     }
     my $tablehtml   = $table_data;
@@ -191,6 +191,14 @@ any 'transactions' => sub ($c) {
     if ( !$c->session->{dbname} ) {
         $c->render( text => 'Session timed out' );
         return;
+    }
+
+    if ($params->{bank_account}){
+        $dbs->query("UPDATE revolut_accounts SET chart_id = ? WHERE id = ?", $params->{bank_account}, $params->{account});
+        $dbs->commit;
+    } else {
+        my $bank_account = $dbs->query("SELECT chart_id FROM revolut_accounts WHERE id = ?", $params->{account})->list;
+        $c->param(bank_account => $bank_account);
     }
 
     my %defaults        = $dbs->query("SELECT fldname, fldvalue FROM defaults")->map;
