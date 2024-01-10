@@ -121,7 +121,7 @@ sub edit {
     }
 
     $form->{firsttime} = 1; # do not use parse_amount if is first time and amounts are not formatted.
-    &display_form;
+    &update;
 
 }
 
