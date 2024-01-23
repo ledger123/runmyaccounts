@@ -1202,7 +1202,7 @@ sub transaction {
         SELECT COUNT(*)
         FROM acc_trans
         WHERE trans_id = $form->{id}
-        AND tax IS NOT NULL AND fx_transaction"
+        AND NOT (tax IS NULL OR tax = '') AND fx_transaction"
     );
     if ($ignorefx){
         $ignore_where = " AND NOT fx_transaction";
