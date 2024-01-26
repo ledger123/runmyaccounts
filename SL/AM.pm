@@ -1603,7 +1603,7 @@ sub save_taxes {
                   . $dbh->quote($form->{"taxnumber_$i"}).qq|, |
                   . $dbh->quote($form->{"vatkey_$i"}).qq|, |
 		  .$form->dbquote($form->dbclean($form->{"validfrom_$i"}), SQL_DATE). qq|, |
-		  .$form->dbquote($form->dbclean($form->{"validto$i"}), SQL_DATE). 
+		  .$form->dbquote($form->dbclean($form->{"validto_$i"}), SQL_DATE). 
           qq|, $reversecharge_id, $form->{"formdigit_$i"} )|;
       $dbh->do($query) || $form->dberror($query);
     }
