@@ -1709,7 +1709,7 @@ sub print_form {
       $form->{emailed} =~ s/^ //;
 
       # save status
-      # $form->update_status(\%myconfig);
+      $form->update_status(\%myconfig);
     }
 
     $now = scalar localtime;
