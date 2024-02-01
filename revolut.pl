@@ -184,7 +184,7 @@ any 'transactions' => sub ($c) {
     my $params = $c->req->params->to_hash;
     my $dbs    = $c->dbs( $c->session->{myconfig}->{dbname} );
 
-    $params->{from_date} = $dbs->query("SELECT transdate FROM gl WHERE transjson IS NOT NULL")->list if !$params->{from_date};
+    $params->{from_date} = $dbs->query("SELECT MAX(transdate) FROM gl WHERE transjson IS NOT NULL")->list if !$params->{from_date};
     $params->{to_date}   = $dbs->query("SELECT current_date")->list              if !$params->{to_date};
     $params->{account}   = 'bbe762b6-e590-4880-bb30-f6940060cb57'                                    if !$params->{account};
 
