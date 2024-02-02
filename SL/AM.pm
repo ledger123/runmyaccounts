@@ -130,7 +130,7 @@ sub save_account {
 		contra, allow_gl)
                 VALUES ('$form->{accno}',
     '$form->{curr}',
-    $form->{parent_id}',|
+    $form->{parent_id},|
 		.$dbh->quote($form->{description}).qq|,
 		|.$dbh->quote($form->{charttype}).qq|, |
 		.$dbh->quote($form->{gifi_accno}).qq|,
