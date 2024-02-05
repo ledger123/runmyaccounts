@@ -1,9 +1,9 @@
 CREATE TABLE vat_settlement (
                                id SERIAL PRIMARY KEY,
-                               vatFormId INT,
-                               periodFrom DATE,
-                               periodTo DATE,
-                               creationDate DATE,
+                               vat_form_id INT,
+                               period_from DATE,
+                               period_to DATE,
+                               creation_date DATE,
                                data JSON,
                                xml BYTEA
 );
