@@ -2462,14 +2462,15 @@ sub post {
                 for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
                 if ( $form->{"debit_$i"} ) {
-                    $form->{"debit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
-                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"debit_$i"} -= $form->{"taxamount_$i"};
+                    $form->{"debit_$j"} = $form->{"taxamount_$i"};
                 }
                 else {
-                    $form->{"credit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
-                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"credit_$i"} -= $form->{"taxamount_$i"};
+                    $form->{"credit_$j"} = $form->{"taxamount_$i"};
                 }
-                for (qw(debit credit)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
+                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
+                for (qw(debit credit taxamount)) { $form->{"${_}_$j"} = $form->format_amount( \%myconfig, $form->{"${_}_$j"}, 2 ) }
             }
         }
         $form->{rowcount} = $count;
