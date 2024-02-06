@@ -1171,7 +1171,13 @@ sub transaction {
   $form->closedto_user($myconfig, $dbh);
 
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
-  
+
+  $form->{id} *= 1;
+  if ($form->{id}){
+    my ($exists) = $dbh->selectrow_array("SELECT 1 FROM gl WHERE id = $form->{id}");
+    $form->error("Transaction does not exist ...") if !$exists;
+  }
+ 
   if ($form->{id} *= 1) {
     $query = qq|SELECT g.*, 
                 d.description AS department,
