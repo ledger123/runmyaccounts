@@ -29,7 +29,7 @@ sub get_account {
   $form->{id} *= 1;
 
   my $query = qq|SELECT accno, description, charttype, gifi_accno,
-                 category, link, contra, allow_gl, curr
+                 category, link, contra, allow_gl, curr, parent_id
                  FROM chart
 	         WHERE id = $form->{id}|;
   my $sth = $dbh->prepare($query);
@@ -38,6 +38,11 @@ sub get_account {
   my $ref = $sth->fetchrow_hashref(NAME_lc);
   for (keys %$ref) { $form->{$_} = $ref->{$_} }
   $sth->finish;
+
+  if ($form->{parent_id}){
+    ($form->{parent_accno}, $form->{parent_accno_description}) = $dbh->selectrow_array("SELECT accno, description FROM chart WHERE id = $form->{parent_id}");
+    $form->{parent_accno} = "$form->{parent_accno}--$form->{parent_accno_description}";
+  }
 
   # get default accounts
   my %defaults = $form->get_defaults($dbh, \@{['%accno_id']});
@@ -84,9 +89,11 @@ sub save_account {
   chop $form->{link};
 
   # strip blanks from accno
-  for (qw(accno gifi_accno)) { $form->{$_} =~ s/( |')//g }
+  ($form->{parent_accno}, $null) = split /--/, $form->{parent_accno};
 
-  foreach my $item (qw(accno gifi_accno description)) {
+  for (qw(accno gifi_accno parent_accno)) { $form->{$_} =~ s/( |')//g }
+
+  foreach my $item (qw(accno gifi_accno description parent_accno)) {
     $form->{$item} =~ s/-(-+)/-/g;
     $form->{$item} =~ s/ ( )+/ /g;
     $form->{$item} =~ s/^\s+//;
@@ -96,6 +103,10 @@ sub save_account {
   my $query;
   my $sth;
 
+  if ($form->{parent_accno}){
+    ($form->{parent_id}) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$form->{parent_accno}'");
+  }
+  $form->{parent_id} *=1;
   $form->{contra} *= 1;
   $form->{allow_gl} *= 1;
 
@@ -104,6 +115,7 @@ sub save_account {
     $query = qq|UPDATE chart SET
                 accno = '$form->{accno}',
                 curr = '$form->{curr}',
+                parent_id = $form->{parent_id},
 		description = |.$dbh->quote($form->{description}).qq|,
 		charttype = |.$dbh->quote($form->{charttype}).qq|,
 		gifi_accno = '$form->{gifi_accno}',
@@ -114,10 +126,11 @@ sub save_account {
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO chart
-                (accno, curr, description, charttype, gifi_accno, category, link,
+                (accno, curr, parent_id, description, charttype, gifi_accno, category, link,
 		contra, allow_gl)
                 VALUES ('$form->{accno}',
-    '$form->{curr}',|
+    '$form->{curr}',
+    $form->{parent_id},|
 		.$dbh->quote($form->{description}).qq|,
 		|.$dbh->quote($form->{charttype}).qq|, |
 		.$dbh->quote($form->{gifi_accno}).qq|,

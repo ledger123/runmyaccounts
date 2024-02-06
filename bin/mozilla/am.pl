@@ -79,6 +79,8 @@ sub account_header {
   $form->{selectcurrency} = "\n";
   for (@curr) { $form->{selectcurrency} .= "$_\n" }
 
+  $form->get_parent('', \%myconfig);
+
   my $currency = qq|
     <th align=right nowrap>| . $locale->text('Currency') . qq|</th>
     <td><select name=curr>|.$form->select_option( $form->{selectcurrency}, $form->{curr} ).qq|</select></td>
@@ -125,6 +127,10 @@ sub account_header {
 	<tr>
 	  <th align=right>|.$locale->text('Description').qq|</th>
 	  <td><input name=description size=40 value="|.$form->quote($form->{description}).qq|"></td>
+	</tr>
+	<tr>
+	  <th align=right>|.$locale->text('Parent Account').qq|</th>
+      <td><select name="parent_accno">|.$form->select_option( $form->{selectparent}, $form->{parent_accno}  ).qq|</select></td>
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Account Type').qq| <font color=red>*</font></th>
@@ -311,11 +317,12 @@ sub list_account {
   # construct callback
   my $callback = "$form->{script}?action=list_account&path=$form->{path}&login=$form->{login}";
 
-  my @column_index = qw(accno curr gifi_accno description link allow_gl);
+  my @column_index = qw(accno parent_accno curr gifi_accno description link allow_gl);
 
   my %column_data;
 
   $column_data{accno} = qq|<th class=listtop>|.$locale->text('Account').qq|</a></th>|;
+  $column_data{parent_accno} = qq|<th class=listtop>|.$locale->text('Parent').qq|</a></th>|;
   $column_data{curr} = qq|<th class=listtop>|.$locale->text('Currency').qq|</a></th>|;
   $column_data{gifi_accno} = qq|<th class=listtop>|.$locale->text('GIFI').qq|</a></th>|;
   $column_data{description} = qq|<th class=listtop>|.$locale->text('Description').qq|</a></th>|;
@@ -369,6 +376,7 @@ sub list_account {
       print qq|<tr class=listheading>|;
 
       $column_data{accno} = qq|<th><a class=listheading href=$form->{script}?action=edit_account&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</a></th>|;
+      $column_data{parent_accno} = qq|<td>$ref->{parent_accno}&nbsp;</td>|;
       $column_data{gifi_accno} = qq|<th class=listheading><a href=$form->{script}?action=edit_gifi&accno=$gifi_accno&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{gifi_accno}</a>&nbsp;</th>|;
       $column_data{description} = qq|<th class=listheading>$ref->{description}&nbsp;</th>|;
       $column_data{debit} = qq|<th>&nbsp;</th>|;
@@ -382,6 +390,7 @@ sub list_account {
       print qq|
 <tr valign=top class=listrow$i>|;
       $column_data{accno} = qq|<td><a href=$form->{script}?action=edit_account&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</a></td>|;
+      $column_data{parent_accno} = qq|<td>$ref->{parent_accno}&nbsp;</td>|;
       $column_data{curr} = qq|<td>$ref->{curr}&nbsp;</td>|;
       $column_data{gifi_accno} = qq|<td><a href=$form->{script}?action=edit_gifi&accno=$ref->{gifi_accno}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{gifi_accno}</a>&nbsp;</td>|;
       $column_data{description} = qq|<td>$ref->{description}&nbsp;</td>|;
