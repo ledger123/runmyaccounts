@@ -5464,6 +5464,13 @@ sub create_links {
 
 	my $dbh = $self->dbconnect($myconfig);
 
+	my $arap = ( $vc eq 'customer' ) ? 'ar' : 'ap';
+    $self->{id} *= 1;
+    if ($self->{id}){
+        my ($exists) = $dbh->selectrow_array("SELECT 1 FROM $arap WHERE id = $self->{id}");
+        $self->error("Transaction does not exist ...") if !$exists;
+    }
+ 
 	my %xkeyref = ();
 
 	$vc = 'customer' if $vc ne 'vendor';    #SQLI protection
@@ -5507,8 +5514,6 @@ sub create_links {
 		}
 	}
 	$sth->finish;
-
-	my $arap = ( $vc eq 'customer' ) ? 'ar' : 'ap';
 
 	$self->remove_locks( $myconfig, $dbh );
 
