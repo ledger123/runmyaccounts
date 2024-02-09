@@ -1727,6 +1727,8 @@ sub gl_subtotal_to_csv {
 
 sub update {
 
+    my $nodisplay = shift; # Skip displaying form. Called from post.
+
     $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
 
     if ( $form->{currency} ne $form->{defaultcurrency} ) {
@@ -1799,6 +1801,8 @@ sub update {
     $dbh->disconnect;
 
     $form->{rowcount} = $count + 1;
+
+    return if $nodisplay;
 
     &display_form;
 
@@ -2341,6 +2345,14 @@ sub yes {
 }
 
 sub post {
+
+    &update(1); # Update calculations but return before displaying form.
+
+    for $i ( 1 .. $form->{rowcount} ) {
+        for (qw(debit credit taxamount)) { 
+            $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" 
+        }
+    }
 
     $form->isblank( "transdate", $locale->text('Transaction Date missing!') );
 
