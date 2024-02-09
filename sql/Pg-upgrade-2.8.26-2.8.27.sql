@@ -1,4 +1,4 @@
-CREATE TABLE vat_settlement (
+CREATE TABLE IF NOT EXISTS vat_settlement (
                                id SERIAL PRIMARY KEY,
                                vat_form_id INT,
                                period_from DATE,
