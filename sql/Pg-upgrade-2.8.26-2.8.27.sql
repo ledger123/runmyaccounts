@@ -3,7 +3,7 @@ CREATE TABLE vat_settlement (
                                vat_form_id INT,
                                period_from DATE,
                                period_to DATE,
-                               creation_date DATE,
+                               creation_date TIMESTAMP,
                                data JSON,
                                xml BYTEA
 );
