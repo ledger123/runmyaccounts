@@ -460,6 +460,11 @@ sub invoice_details {
     push(@{ $form->{linetax} }, $form->format_amount($myconfig, $_->{tax}, $form->{precision}, '0.00'));
   }
   
+  my $totaltax;
+  for (sort keys %taxaccs) {
+      $totaltax += $taxaccounts{$_};
+  };
+  $total = $totaltax;
   
   if ($form->{taxincluded}) {
     $form->{invtotal} = $form->{total};
