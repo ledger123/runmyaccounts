@@ -8,4 +8,10 @@ CREATE TABLE IF NOT EXISTS vat_settlement (
                                xml BYTEA
 );
 
+CREATE TABLE IF NOT EXISTS booking_to_settlement (
+    id SERIAL PRIMARY KEY,
+    booking_id INT NOT NULL,
+    settlement_id INT REFERENCES vat_settlement(id) NOT NULL
+);
+
 UPDATE defaults SET fldvalue = '2.8.27' where fldname = 'version';
