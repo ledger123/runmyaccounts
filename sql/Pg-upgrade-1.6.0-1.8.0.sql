@@ -10,10 +10,11 @@ create table def (
   yearend varchar(5),
   weightunit varchar(5),
   businessnumber text,
+  taxnumber text,
   version varchar(8),
   curr text
 );
-insert into def (inventory_accno_id, income_accno_id, expense_accno_id, invnumber, ordnumber, yearend, weightunit, businessnumber, version, curr) select inventory_accno_id, income_accno_id, expense_accno_id, invnumber, ponumber, yearend, weightunit, businessnumber, version, nativecurr from defaults;
+insert into def (inventory_accno_id, income_accno_id, expense_accno_id, invnumber, ordnumber, yearend, weightunit, businessnumber, taxnumber, version, curr) select inventory_accno_id, income_accno_id, expense_accno_id, invnumber, ponumber, yearend, weightunit, businessnumber, taxnumber, version, nativecurr from defaults;
 drop table defaults;
 alter table def rename to defaults;
 update defaults set version = '1.8.0';
