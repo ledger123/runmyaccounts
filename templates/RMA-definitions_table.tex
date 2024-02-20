@@ -133,7 +133,7 @@
         \csnumgdef{ST\rowlabel}{\SUBTOTAL}%
         \IfSubStr{<%number%>}{Titel}{}{\cellcontenttext{#4}{runningnumber}{<%runningnumber%>}}
         \IfSubStr{<%number%>}{Titel}{}{\cellcontenttext{#4}{number}{<%number%>}}
-        \IfSubStr{<%number%>}{Titel}{}{\csgdef{CELLDESCFONT\columnlabel\rowlabel}{\bfseries}}{\csgdef{CELLDESCFONT\columnlabel\rowlabel}{}}
+        \IfSubStr{<%number%>}{Titel}{\csgdef{CELLDESCFONT\columnlabel\rowlabel}{\bfseries}}{\csgdef{CELLDESCFONT\columnlabel\rowlabel}{}}
         \cellcontenttext{#4}{description}{%
                 {\csuse{CELLDESCFONT\columnlabel\rowlabel}<%description%>}%
                 \ifstrempty{<%itemnotes%>}{}{\strut\newline <%itemnotes%>}
