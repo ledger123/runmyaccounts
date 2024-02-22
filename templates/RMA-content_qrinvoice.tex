@@ -2,7 +2,7 @@
 % Typ: QR-Rechnung
 % Name: content-qrinvoice.tex
 % Sprache: Deutsch
-% Erstellungsdatum: 25. Juni 2020
+% Erstellungsdatum: 14. November 2022
 % © by Run my Accounts AG
 
 \ifthenelse{\equal{<%qriban%>}{}}{}{
@@ -34,18 +34,14 @@
 \newcommand{\QRrtitle}{\QRfontdef{11}{11.1}{b}}
 \newcommand{\QRrsubtitle}{\QRfontdef{6}{10.60}{b}}
 \newcommand{\QRrcontent}{\QRfontdef{8}{10.8}{m}}
+\newcommand{\QRacontent}{\QRfontdef{7}{10.8}{m}}
+\newcommand{\QRabcontent}{\QRfontdef{7}{10.8}{b}}
 \newcommand{\QRptitle}{\QRfontdef{11}{11.1}{b}}
 \newcommand{\QRpsubtitle}{\QRfontdef{6}{10.60}{b}}
 \newcommand{\QRpcontent}{\QRfontdef{8}{10.8}{m}}
 
 \renewcommand{\QRposX}{0}
 \renewcommand{\QRposY}{187}
-
-% REFORMATING OF VARIABLES
-
-\StrMid{<%strdbkginf%>}{1}{50}[\strdbkginfi]
-\StrMid{<%strdbkginf%>}{51}{100}[\strdbkginfii]
-\StrMid{<%strdbkginf%>}{100}{140}[\strdbkginfiii]
 
 \noindent
 % Block where the QR code is
@@ -111,7 +107,7 @@
         % Swiss QR Code section
             \node (PSQRCS) at ({\QRrwid+\QRpad},{\QRphei-2.34*\QRpad+5mm}) {
                 \begin{minipage}{\linewidth}\raggedright
-\unicodeqrcode{SPC\\0200\\1\\<%qribanqr%>\\K\\<%companyqr%>\\<%companyaddress1qr%>\\<%companyzipqr%> <%companycityqr%>\\\\\\CH\\\\\\\\\\\\\\\\<%integer_out_amount%>.<%out_decimal%>\\<%currency%>\\K\\<%nameqr%>\\<%address1qr%>\\<%zipcodeqr%> <%cityqr%>\\\\\\CH\\QRR\\<%dcn%>\\<%invdescriptionqr%>\\EPD\\<%strdbkginfqr%>\\\\}
+\ifthenelse{\equal{<%customeremail%>}{}}{\unicodeqrcode{SPC\\0200\\1\\<%qribanqr%>\\K\\<%companyqr%>\\<%companyaddress1qr%>\\<%companyzipqr%> <%companycityqr%>\\\\\\CH\\\\\\\\\\\\\\\\<%integer_out_amount%>.<%out_decimal%>\\<%currency%>\\K\\<%nameqr%>\\<%address1qr%>\\<%zipcodeqr%> <%cityqr%>\\\\\\CH\\QRR\\<%dcn%>\\<%invdescriptionqr%>\\EPD\\<%strdbkginfqr%>\\\\}}{\unicodeqrcode{SPC\\0200\\1\\<%qribanqr%>\\K\\<%companyqr%>\\<%companyaddress1qr%>\\<%companyzipqr%> <%companycityqr%>\\\\\\CH\\\\\\\\\\\\\\\\<%integer_out_amount%>.<%out_decimal%>\\<%currency%>\\K\\<%nameqr%>\\<%address1qr%>\\<%zipcodeqr%> <%cityqr%>\\\\\\CH\\QRR\\<%dcn%>\\<%invdescriptionqr%>\\EPD\\<%strdbkginfqr%>\\eBill/B/<%customeremail%>\\}}
 
                 \end{minipage}
             };
@@ -145,12 +141,12 @@
                     \vskip1ex
                     {\par\medskip
 \QRpsubtitle \LANGuse{qr_additionalinformation}}\par
-                    \strut <%invdescriptionqr2%>
-                    \strut \strdbkginfi
-                    \strut \strdbkginfii \par
-                    \strut \strdbkginfiii
+                   \ifthenelse{\equal{<%invdescriptionqr2%>}{}}{}{\strut <%invdescriptionqr2%> \par}
+                   \ifthenelse{\equal{<%strdbkginfline1qr%>}{}}{}{\strut <%strdbkginfline1qr%> \par}
+                   \ifthenelse{\equal{<%strdbkginfline2qr%>}{}}{}{\strut <%strdbkginfline2qr%>}
                     \vskip1ex
-                    {\QRpsubtitle \LANGuse{qr_payableby}}\par
+                    {\par\medskip
+\QRpsubtitle \LANGuse{qr_payableby}}\par
                     \strut \ifthenelse{\equal{<%typeofcontact%>}{company}}{<%name%>}{<%firstname%> <%lastname%>}\par
                     \strut <%address1%>\par
                     \strut <%zipcode%> <%city%> \par
@@ -159,9 +155,9 @@
         \end{scope}
         % Further information section
         \begin{scope}[every node/.style={anchor=north west,text width={\QRpwid-2*\QRpad},align=left,inner sep=0pt,outer sep=0pt}]
-            \node at ([shift={(0pt,{-\QRpad})}]PAS.south west) {%
+            \node at ([shift={(0pt,{-40pt})}]PAS.south west) {%
                 \begin{minipage}{\linewidth}\raggedright\QRpcontent
-
+%\ifthenelse{\equal{<%customeremail%>}{}}{}{\QRabcontent Name AV1: \QRacontent eBill/B/<%customeremail%>}
                 \end{minipage}
             };
         \end{scope}
