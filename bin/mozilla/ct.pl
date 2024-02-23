@@ -452,6 +452,7 @@ sub search {
 
 # $locale->text('Customers')
 # $locale->text('Vendors')
+  $form->countries(\%myconfig,$form->{country}, 0);
 
   $default_checked = "name,firstname,lastname,phone,email";
   $form->get_lastused(\%myconfig, "$form->{db}", $default_checked);
