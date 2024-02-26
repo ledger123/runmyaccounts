@@ -6,6 +6,10 @@
 
 use FileHandle;
 
+BEGIN {
+   push @INC, '.';
+}
+
 
 $basedir = "../..";
 $bindir = "$basedir/bin/mozilla";
