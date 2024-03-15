@@ -2163,11 +2163,11 @@ sub display_taxes {
       }
 
       print qq|
-	  <td><input name="taxrate_$i"  class='form-control form-control-sm' size=6 value=$form->{"taxrate_$i"}></td>
+	  <td><input name="taxrate_$i" size=6 value=$form->{"taxrate_$i"}></td>
 	  <td><input name="taxnumber_$i" value="$form->{"taxnumber_$i"}"></td>
 	  <td><input name="vatkey_$i" value="$form->{"vatkey_$i"}"></td>
 	  <td><input name="validfrom_$i" size=11 class=date value="$form->{"validfrom_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
-	  <td><input name="validto_$i" class='form-control form-control-sm' class=date value="$form->{"validto_$i"}" title="$myconfig{dateformat}"></td>
+	  <td><input name="validto_$i" size=11 value="$form->{"validto_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
 	  <td><input name="formdigit_$i" size=10 value="$form->{"formdigit_$i"}"></td>
 	  <td><input name="reversecharge_$i" size=10 value="$form->{"reversecharge_$i"}"></td>
 	</tr>
