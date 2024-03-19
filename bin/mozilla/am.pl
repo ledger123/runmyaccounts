@@ -2096,13 +2096,10 @@ sub taxes {
   my $i = 0;
   foreach my $ref (@{ $form->{taxrates} }) {
     $i++;
-    $form->{"taxaccno_$i"} = $ref->{accno};
     $form->{"taxrate_$i"} = $ref->{rate};
     $form->{"taxdescription_$i"} = $ref->{description};
-    $form->{"taxdescription_$i"} = $ref->{description};
-    $form->{"reversecharge_$i"} = $ref->{reversecharge};
 
-    for (qw(taxnumber vatkey formdigit validfrom validto)) { $form->{"${_}_$i"} = $ref->{$_} }
+    for (qw(accno taxnumber reversecharge vatkey formdigit validfrom validto)) { $form->{"${_}_$i"} = $ref->{$_} }
     $form->{taxaccounts} .= "$ref->{id}_$i ";
   }
   chop $form->{taxaccounts};
@@ -2143,42 +2140,43 @@ sub display_taxes {
 	</tr>
 |;
 
-  my @array = split(/ /, $form->{taxaccounts});
+    my $sametax;
 
-  foreach $ref (@array) {
+    for (split(/ /, $form->{taxaccounts})) {
 
-    my ($null, $i) = split /_/, $ref;
+      my ($id, $i) = split /_/, $_;
 
-    $form->{"taxrate_$i"} = $form->format_amount(\%myconfig, $form->{"taxrate_$i"}, undef, 0);
+      $form->{"taxrate_$i"} = $form->format_amount( \%myconfig, $form->{"taxrate_$i"}, undef, 0 );
 
-    $form->hide_form("taxdescription_$i");
-    $form->hide_form("taxaccno_$i");
+      $form->hide_form( map { "${_}_$i" } qw(taxdescription accno) );
 
-    print qq|
-	<tr>
-	  <th align=left>|;
+      print qq|
+	<tr>|;
 
-    if ($form->{"taxdescription_$i"} eq $sametax) {
-      print "</th><th align=left>";
-    } else {
-      print qq|$form->{"taxaccno_$i"}</th><th align=left>$form->{"taxdescription_$i"}|;
-    }
+      if ( $form->{"accno_$i"} eq $sametax ) {
+        print qq|
+	  <th></th>
+	  <th></th>|;
+      } else {
+        print qq|<th align=left>$form->{"accno_$i"}</th>|;
+        print qq|<th align=left>$form->{"taxdescription_$i"}</th>|;
+      }
 
-    print qq|</th>
+      print qq|
 	  <td><input name="taxrate_$i" size=6 value=$form->{"taxrate_$i"}></td>
 	  <td><input name="taxnumber_$i" value="$form->{"taxnumber_$i"}"></td>
 	  <td><input name="vatkey_$i" value="$form->{"vatkey_$i"}"></td>
 	  <td><input name="validfrom_$i" size=11 class=date value="$form->{"validfrom_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
-	  <td><input name="validto_$i" size=11 class=date value="$form->{"validto_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
+	  <td><input name="validto_$i" size=11 value="$form->{"validto_$i"}" title="$myconfig{dateformat}" onChange="validateDate(this)"></td>
 	  <td><input name="formdigit_$i" size=10 value="$form->{"formdigit_$i"}"></td>
 	  <td><input name="reversecharge_$i" size=10 value="$form->{"reversecharge_$i"}"></td>
 	</tr>
 |;
-    my $sametax = $form->{"taxdescription_$i"};
+      $sametax = $form->{"accno_$i"};
 
-  }
+    }
 
-  print qq|
+    print qq|
       </table>
     </td>
   </tr>
@@ -2208,18 +2206,16 @@ sub display_taxes {
 
 }
 
-
 sub update {
 
   &{ "update_$form->{type}" }
 
 }
 
-
 sub update_taxes {
 
   @tax = ();
-  @flds = qw(id taxrate taxdescription taxnumber vatkey accno validfrom validto formdigit);
+  @flds = qw(id taxrate taxdescription taxnumber reversecharge vatkey accno validfrom validto formdigit);
   foreach $item (split / /, $form->{taxaccounts}) {
     ($id, $i) = split /_/, $item;
     $form->{"id_$i"} = $id;
@@ -2227,16 +2223,15 @@ sub update_taxes {
   }
 
   foreach $item (keys %tax) {
-    $i = 0;
     for $ref (@{$tax{$item}}) {
       push @tax, $ref;
-      $i++;
       $validto = $ref->{validto};
       $id = $ref->{id};
       $accno = $ref->{accno};
       $taxdescription = $ref->{taxdescription};
+      last unless $validto;
     }
-    if ($i >= 1 && $validto) {
+    if ($validto) {
       push @tax, { id => $id, accno => $accno, taxdescription => $taxdescription };
     }
   }
