@@ -1727,6 +1727,8 @@ sub gl_subtotal_to_csv {
 
 sub update {
 
+    my $nodisplay = shift; # Skip displaying form. Called from post.
+
     $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
 
     if ( $form->{currency} ne $form->{defaultcurrency} ) {
@@ -1799,6 +1801,8 @@ sub update {
     $dbh->disconnect;
 
     $form->{rowcount} = $count + 1;
+
+    return if $nodisplay;
 
     &display_form;
 
@@ -2342,6 +2346,14 @@ sub yes {
 
 sub post {
 
+    &update(1); # Update calculations but return before displaying form.
+
+    for $i ( 1 .. $form->{rowcount} ) {
+        for (qw(debit credit taxamount)) { 
+            $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" 
+        }
+    }
+
     $form->isblank( "transdate", $locale->text('Transaction Date missing!') );
 
     my $dbh = $form->dbconnect( \%myconfig );
@@ -2462,14 +2474,15 @@ sub post {
                 for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
                 if ( $form->{"debit_$i"} ) {
-                    $form->{"debit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
-                    $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"debit_$i"} -= $form->{"taxamount_$i"};
+                    $form->{"debit_$j"} = $form->{"taxamount_$i"};
                 }
                 else {
-                    $form->{"credit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
-                    $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                    $form->{"credit_$i"} -= $form->{"taxamount_$i"};
+                    $form->{"credit_$j"} = $form->{"taxamount_$i"};
                 }
-                for (qw(debit credit)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
+                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
+                for (qw(debit credit taxamount)) { $form->{"${_}_$j"} = $form->format_amount( \%myconfig, $form->{"${_}_$j"}, 2 ) }
             }
         }
         $form->{rowcount} = $count;
