@@ -2447,6 +2447,24 @@ sub post {
     }
     $form->{rowcount} = $count;
 
+
+
+    # Following code helps in debugging by showing each lines values grouped
+    # as array elements instead of individual variables in form dump.
+    my @formarray;
+    foreach my $key (keys %{$form}) {
+        next if $key !~ /(accno|debit|credit|tax|taxamount)/;
+        if ($key =~ /(.+)_(\d+)$/) {
+            my $prefix = $1;
+            my $number = $2;
+            $formarray[$number-1] ||= {};
+            $formarray[$number-1]->{$prefix} = $form->{$key};
+        }
+    }
+    # $form->dumper(\@formarray);
+
+
+
     if (!$reversecharge_id){
         # Process per line tax information
         for my $i ( 1 .. $form->{rowcount} ) {
