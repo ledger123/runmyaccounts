@@ -2396,6 +2396,20 @@ sub post {
 
     my $dbh = $form->dbconnect(\%myconfig);
 
+    for my $i ( 1 .. $form->{rowcount} ) {
+        if ( $form->{"taxamount_$i"} ) {
+           # flag lines with reverse charge accounts
+           my ($accno, $null) = split /--/, $form->{"tax_$i"};
+           ($form->{"rcflag_$i"}) = $dbh->selectrow_array("
+               SELECT 1
+               FROM tax
+               WHERE chart_id IN (SELECT id FROM chart WHERE accno = '$accno')
+               AND reversecharge_id > 0
+            ");
+        }
+    }
+
+
     $count = $form->{rowcount};
     my $reversecharge_id; 
     for my $i ( 1 .. $form->{rowcount} ) {
@@ -2431,10 +2445,12 @@ sub post {
                     $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"});
                 }
 
+                $form->{"rcflag_$j"} = 1;
                 $j                  = $count++;
+                $form->{"rcflag_$j"} = 1;
+
                 $form->{"accno_$j"} = "$reversecharge_accno--$reversecharge_description";
                 $form->{"tax_$j"}   = 'reverse';
-
                 $form->{"source_$j"}        = $form->{"source_$i"};
                 $form->{"memo_$j"}          = $form->{"memo_$i"};
                 $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
@@ -2448,6 +2464,7 @@ sub post {
                 }
 
                 for my $i ( 1 .. $form->{rowcount} ) {
+                    next if !$form->{"rcfag_$i"};
                     if (!$form->{"tax_$i"}){
                         $form->{"tax_$i"} = "$reversecharge_accno--$reversecharge_description";
                     }
@@ -2459,34 +2476,49 @@ sub post {
     }
     $form->{rowcount} = $count;
 
-    if (!$reversecharge_id){
-        # Process per line tax information
-        for my $i ( 1 .. $form->{rowcount} ) {
-            if ( $form->{"taxamount_$i"} ) {
-                $j                  = $count++;
-                $form->{"accno_$j"} = $form->{"tax_$i"};
-                $form->{"tax_$j"}   = 'auto';
 
-                $form->{"source_$j"}        = $form->{"source_$i"};
-                $form->{"memo_$j"}          = $form->{"memo_$i"};
-                $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
-
-                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
-
-                if ( $form->{"debit_$i"} ) {
-                    $form->{"debit_$i"} -= $form->{"taxamount_$i"};
-                    $form->{"debit_$j"} = $form->{"taxamount_$i"};
-                }
-                else {
-                    $form->{"credit_$i"} -= $form->{"taxamount_$i"};
-                    $form->{"credit_$j"} = $form->{"taxamount_$i"};
-                }
-                for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
-                for (qw(debit credit taxamount)) { $form->{"${_}_$j"} = $form->format_amount( \%myconfig, $form->{"${_}_$j"}, 2 ) }
-            }
+    # Following code helps in debugging by showing each line values grouped
+    # as array elements instead of individual variables in form dump.
+    my @formarray;
+    foreach my $key (keys %{$form}) {
+        next if $key !~ /(accno|debit|credit|tax|taxamount|rcflag)/;
+        if ($key =~ /(.+)_(\d+)$/) {
+            my $prefix = $1;
+            my $number = $2;
+            $formarray[$number-1] ||= {};
+            $formarray[$number-1]->{$prefix} = $form->{$key};
         }
-        $form->{rowcount} = $count;
     }
+    # $form->dumper(\@formarray);
+
+
+
+    # Process per line tax information
+    for my $i ( 1 .. $form->{rowcount} ) {
+        next if $form->{"rcflag_$i"};
+        if ( $form->{"taxamount_$i"} ) {
+            $j                  = $count++;
+            $form->{"accno_$j"} = $form->{"tax_$i"};
+            $form->{"tax_$j"}   = 'auto';
+
+            $form->{"source_$j"}        = $form->{"source_$i"};
+            $form->{"memo_$j"}          = $form->{"memo_$i"};
+            $form->{"projectnumber_$j"} = $form->{"projectnumber_$i"};
+
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
+
+            if ( $form->{"debit_$i"} ) {
+                $form->{"debit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+            }
+            else {
+                $form->{"credit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+            }
+            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
+        }
+    }
+    $form->{rowcount} = $count;
 
     if ( $form->{batch} ) {
         $rc = VR->post_transaction( \%myconfig, \%$form );
