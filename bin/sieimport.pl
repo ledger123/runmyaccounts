@@ -6,7 +6,7 @@ use DBIx::Simple;
 use Data::Dumper;
 use Text::CSV;
 
-my $importfile = 'sample.se';
+my $importfile = 'GT2023.se';
 my $dbname     = 'test';
 my $curr       = 'SEK';
 
@@ -64,7 +64,7 @@ foreach my $acc_num ( sort keys %accounts ) {
 close $fh;
 close $csv;
 
-my $db = DBIx::Simple->connect( "dbi:Pg:dbname=$dbname", 'postgres', '', { RaiseError => 1, AutoCommit => 1 } ) or die DBIx::Simple->error;
+my $db = DBIx::Simple->connect( "dbi:Pg:dbname=$dbname", 'sql-ledger', '', { RaiseError => 1, AutoCommit => 1 } ) or die DBIx::Simple->error;
 
 open my $csv_read, '<', 'chart.csv' or die "Cannot open chart.csv: $!";
 
@@ -116,13 +116,13 @@ while ( my $line = <$fh> ) {
     if ( $line =~ /^#VER\s+\w+\s+(\d+)\s+(\d+)\s+"([^"]+)"\s+(\d+)/ ) {
         $current_ver = sprintf( "%06d", $1 );              # Pad with leading zeros to length of 6
         $text        = $3;
-        my $raw_date = $4;
+        my $raw_date = $2;
         $raw_date =~ s/(\d{4})(\d{2})(\d{2})/$1-$2-$3/;    # Format the date as 'YYYY-MM-DD'
         $date = $raw_date;
 
     } elsif ( $line =~ /^#TRANS\s+(\d+)\s+\{\}\s+(-?\d+\.?\d*)\s+""\s+""\s+0/ ) {
         my $account = $1;
-        my $amount  = $2;
+        my $amount  = $2 * -1;
         print $csv "$current_ver,$account,$amount,\"$text\",$date\n";
     }
 }
@@ -135,7 +135,7 @@ open my $fh, '<', 'trans.csv' or die "Cannot open transactions.csv: $!";
 
 $csv->getline($fh);
 
-my $db = DBIx::Simple->connect( "dbi:Pg:dbname=$dbname", 'postgres', '', { RaiseError => 1, AutoCommit => 1 } ) or die DBIx::Simple->error;
+my $db = DBIx::Simple->connect( "dbi:Pg:dbname=$dbname", 'sql-ledger', '', { RaiseError => 1, AutoCommit => 1 } ) or die DBIx::Simple->error;
 
 my $last_reference = '';
 my $trans_id;
@@ -146,22 +146,24 @@ while ( my $row = $csv->getline($fh) ) {
     if ( $reference ne $last_reference ) {
 
         my ($existing_trans_id) = $db->query( "SELECT id FROM gl WHERE reference = ?", $reference )->list;
-        if ( defined $existing_trans_id ) {
-            print "Reference $reference already exists in 'gl'.\n";
-            $trans_id = $existing_trans_id;
-            next;
-        } else {
-            $db->query( "INSERT INTO gl (reference, transdate, description, curr) VALUES (?, ?, ?, ?)", $reference, $transdate, $description, $curr );
-            print "Inserted into 'gl': $reference\n";
-            ($trans_id) = $db->query( "SELECT max(id) FROM gl WHERE reference = ?", $reference )->list;
-        }
+
+        #   if ( defined $existing_trans_id ) {
+        #       print "Reference $reference already exists in 'gl'.\n";
+        #       $trans_id = $existing_trans_id;
+        #       next;
+        #   } else {
+        $db->query( "INSERT INTO gl (reference, transdate, description, curr) VALUES (?, ?, ?, ?)", $reference, $transdate, $description, $curr );
+        print "Inserted into 'gl': $reference\n";
+        ($trans_id) = $db->query( "SELECT max(id) FROM gl WHERE reference = ?", $reference )->list;
+
+        #   }
         $last_reference = $reference;
     }
 
     my ($chart_id) = $db->query( "SELECT id FROM chart WHERE accno = ?", $accno )->list;
 
-    $db->query( "INSERT INTO acc_trans (trans_id, chart_id, amount) VALUES (?, ?, ?)", $trans_id, $chart_id, $amount );
-    print "Inserted into 'acc_trans': trans_id = $trans_id, chart_id = $chart_id, amount = $amount\n";
+    $db->query( "INSERT INTO acc_trans (trans_id, chart_id, amount, transdate) VALUES (?, ?, ?,?)", $trans_id, $chart_id, $amount, $transdate );
+    print "Inserted into 'acc_trans': trans_id = $trans_id, chart_id = $chart_id, amount = $amount, transdate = $transdate\n";
 }
 
 close $fh;
