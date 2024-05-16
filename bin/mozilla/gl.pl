@@ -1638,13 +1638,7 @@ sub transactions_to_csv {
             $i++;
             $i %= 2;
         }
-        for (@column_index) { 
-            if ($_ =~ /(debit|credit|balance)/){
-                print $fh qq|$column_data{$_},| 
-            } else {
-                print $fh qq|"$column_data{$_}",| 
-            }
-        }
+        for (@column_index) { print $fh qq|"$column_data{$_}",| }
         print $fh "\n";
 
         $sameid = $ref->{id};
