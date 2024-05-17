@@ -1243,9 +1243,9 @@ sub gl_list {
         if ($groupbreak ne "$ref->{accno}--$ref->{accdescription}"){
            if ($groupbreak ne 'none'){
               for (@column_index){ $column_data{$_} = " " }
-              $column_data{debit} = $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0");
-              $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
-              $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
+              $column_data{debit} = $debit_subtotal * -1;
+              $column_data{credit} = $credit_subtotal;
+              $column_data{balance} = $balance * -1;
               for (@column_index) { print $fh "$column_data{$_}," }
               print $fh "\n";
            }
@@ -1268,9 +1268,9 @@ sub gl_list {
              ($balance) = $dbh->selectrow_array($openingquery);
              if ($balance != 0){
                 for (@column_index){ $column_data{$_} = " " }
-            $column_data{debit}     = '"0"';
-            $column_data{credit}    = '"0"';
-            $column_data{balance}   = '"' . (0 - $balance) . '"';
+            $column_data{debit}     = 0;
+            $column_data{credit}    = 0;
+            $column_data{balance}   = $balance * -1;
     
             # print footer
             for (@column_index) { print $fh "$column_data{$_}," }
@@ -1296,14 +1296,14 @@ sub gl_list {
         $column_data{name}      = '"' . &escape_csv($ref->{name}) . '"';
         $column_data{source}        = '"' . &escape_csv($ref->{source}) . '"';
         if ($ref->{amount} > 0){
-          $column_data{debit}       = '"0"';
-          $column_data{credit}      = '"' . $ref->{amount} . '"';
+          $column_data{debit}       = 0;
+          $column_data{credit}      = $ref->{amount};
         } else {
-          $column_data{debit}       = '"' . (0 - $ref->{amount}) . '"';
-          $column_data{credit}      = '"0"';
+          $column_data{debit}       = $ref->{amount} * -1;
+          $column_data{credit}      = 0;
         }
         $balance += $ref->{amount};
-        $column_data{balance}       = '"' . ($balance * -1) . '"';
+        $column_data{balance}       = $balance;
     
         for (@column_index) { print $fh "$column_data{$_}," }
         print $fh "\n";
@@ -1320,19 +1320,19 @@ sub gl_list {
        for (@column_index) { $column_data{$_} = ' ' }
     
        # subtotal for last group
-       $column_data{debit} = $form->format_amount(\%myconfig, $debit_subtotal * -1, $form->{precision}, "0");
-       $column_data{credit} = $form->format_amount(\%myconfig, $credit_subtotal, $form->{precision}, "0");
-       $column_data{balance} = $form->format_amount(\%myconfig, $balance * -1, $form->{precision}, "0");
+       $column_data{debit} = $debit_subtotal * -1;
+       $column_data{credit} = $credit_subtotal;
+       $column_data{balance} = $balance * -1;
     
-       for (@column_index) { print $fh "$column_data{$_}," }
+       for (@column_index) { print $fh $column_data{$_} . "," }
         print $fh "\n";
     
-       $column_data{debit} = $form->format_amount(\%myconfig, $debit_total * -1, $form->{precision}, "0");
-       $column_data{credit} = $form->format_amount(\%myconfig, $credit_total, $form->{precision}, "0");
+       $column_data{debit} = $debit_total * -1;
+       $column_data{credit} = $credit_total;
        $column_data{balance} = ' ';
     
        # grand totals
-       for (@column_index) { print $fh "$column_data{$_}," }
+       for (@column_index) { print $fh $column_data{$_} . "," }
        print $fh "\n";
            
        # end of create csv data
