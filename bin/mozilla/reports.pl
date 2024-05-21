@@ -1290,7 +1290,7 @@ sub gl_list {
           
         $link = qq|$script?action=edit&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$form->{callback}|;
         $column_data{no}        = '"' . $no . '"';
-        $column_data{transdate}     = '"' . $ref->{transdate} . '"';
+        $column_data{transdate}     = $ref->{transdate};
         $column_data{reference}     = '"' . &escape_csv($ref->{reference}) . '"';
         $column_data{description}   = '"' . &escape_csv($ref->{description}) . '"';
         $column_data{name}      = '"' . &escape_csv($ref->{name}) . '"';
