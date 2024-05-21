@@ -1639,7 +1639,7 @@ sub transactions_to_csv {
             $i %= 2;
         }
         for (@column_index) { 
-            if ($_ =~ /(debit|credit|balance)/){
+            if ($_ =~ /(transdate|debit|credit|balance)/){
                 print $fh qq|$column_data{$_},| 
             } else {
                 print $fh qq|"$column_data{$_}",| 
