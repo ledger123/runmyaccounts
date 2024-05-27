@@ -593,14 +593,14 @@ sub save {
   }
 
   # c/o processing
-  for (@careof){
-    if (lc($form->{address1}) =~ $_){
-        my $address1 = $form->{address1};
-        $form->{address1} = $form->{address2};
-        $form->{address2} = $address1;
-        last;
-    }
-  }
+  #for (@careof){
+  #  if (lc($form->{address1}) =~ $_){
+  #      my $address1 = $form->{address1};
+  #      $form->{address1} = $form->{address2};
+  #      $form->{address2} = $address1;
+  #      last;
+  #  }
+  #}
 
   $query = qq|INSERT INTO address ($id trans_id, address1, address2,
               city, state, zipcode, country, post_office, is_migrated) VALUES ($var
