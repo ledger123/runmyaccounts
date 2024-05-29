@@ -35,10 +35,8 @@ $| = 1;
 use SL::Form;
 
 eval { require "sql-ledger.conf"; };
-
 $form = new Form;
-
-  
+ 
 # name of this script
 $0 =~ tr/\\/\//;
 $pos = rindex $0, '/';
@@ -56,6 +54,10 @@ $form->{login} =~ s/(\.\.|\/|\\|\x00)//g;
 
 # check for user config file, could be missing or ???
 eval { require("$userspath/$form->{login}.conf"); };
+
+$form->{dateformat} = $myconfig{dateformat};
+$form->db_init(\%myconfig);
+ 
 
 if ($@) {
   $locale = new Locale "$language", "$script";
