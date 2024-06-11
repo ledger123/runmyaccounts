@@ -433,31 +433,6 @@ sub save {
 
   }
   
-    if ($form->{"bankaddress1"}) {
-        # c/o processing
-        for (@careof){
-          if (lc($form->{bankaddress1}) =~ $_){
-              my $bankaddress1 = $form->{bankaddress1};
-              $form->{bankaddress1} = $form->{bankaddress2};
-              $form->{bankaddress2} = $bankaddress1;
-              last;
-          }
-        }
-        # bankpost_office processing
-        if (!$form->{bankpost_office}){
-            for (@postoffice){
-              if (lc($form->{bankaddress1}) =~ $_){
-                  $form->{bankpost_office} = $form->{bankaddress1};
-                  $form->{bankaddress1} = $form->{bankaddress2};
-              }
-              if (lc($form->{bankaddress2}) =~ $_){
-                  $form->{bankpost_office} = $form->{bankaddress2};
-                  $form->{bankaddress2} = '';
-              }
-            }
-        }
-    }
-
   $form->{bankis_migrated} = ($form->{bankis_migrated}) ? '1' : '0';
   for (qw(address1 address2 city state zipcode country)) {
     if ($form->{"bank$_"}) {
@@ -593,14 +568,14 @@ sub save {
   }
 
   # c/o processing
-  for (@careof){
-    if (lc($form->{address1}) =~ $_){
-        my $address1 = $form->{address1};
-        $form->{address1} = $form->{address2};
-        $form->{address2} = $address1;
-        last;
-    }
-  }
+  #for (@careof){
+  #  if (lc($form->{address1}) =~ $_){
+  #      my $address1 = $form->{address1};
+  #      $form->{address1} = $form->{address2};
+  #      $form->{address2} = $address1;
+  #      last;
+  #  }
+  #}
 
   $query = qq|INSERT INTO address ($id trans_id, address1, address2,
               city, state, zipcode, country, post_office, is_migrated) VALUES ($var
