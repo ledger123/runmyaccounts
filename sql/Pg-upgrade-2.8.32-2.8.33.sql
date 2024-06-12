@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS imported_transaction (
     origin_currency VARCHAR(3),
     exchange_rate DOUBLE PRECISION,
     third_party_name TEXT,
-    third_party_address JSON,
+    third_party_address JSONB,
     parent_imported_transaction_id INT REFERENCES imported_transaction (id),
     end_to_end_id TEXT,
     purpose TEXT,
