@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS bank_file_import (
     imported_when DATE NOT NULL,
     source_type TEXT NOT NULL,
     is_manual BOOLEAN NOT NULL,
-    filename TEXT
+    filename TEXT,
+    file_content TEXT
 );
 
 CREATE TABLE IF NOT EXISTS imported_transaction (
