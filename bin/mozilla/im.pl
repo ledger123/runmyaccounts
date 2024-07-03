@@ -342,6 +342,10 @@ print qq|
 		<th align=right colspan=2>|.$locale->text('Tab delimited file').qq|</th>
 		<td align=left><input name=tabdelimited type=checkbox class=checkbox></td>
 	      </tr>
+	      <tr>
+		<th align=right colspan=2>|.$locale->text('DATEV file').qq|</th>
+		<td align=left><input name=datev type=checkbox class=checkbox></td>
+	      </tr>
 	    </table>
 	  </td>
 	</tr>
@@ -1135,6 +1139,42 @@ sub im_purchase_order {
 
 
 sub xrefhdr {
+
+  if ($form->{datev}){
+    my $data   = $form->{data};
+    my @lines  = split /\n/, $data;
+    my $header = shift @lines;
+    $header =~ s/debit_accno,credit_accno,amount/accno,debit,credit/;
+
+    my $new_data = "$header\n";
+    my @fields   = qw(reference department description transdate debit_accno credit_accno amount);
+
+    foreach my $line (@lines) {
+
+        $line =~ s/"//g;
+        my @values = split /,/, $line;
+
+        my %row;
+
+        $row{reference}    = $values[0];
+        $row{department}   = $values[1];
+        $row{description}  = $values[2];
+        $row{transdate}    = $values[3];
+        $row{debit_accno}  = $values[4];
+        $row{credit_accno} = $values[5];
+        $row{amount}       = $values[6];
+
+        my $debit_line = join( ",", map { "\"$_\"" } @row{qw(reference department description transdate)}, $row{debit_accno}, $row{amount}, 0 );
+
+        my $credit_line = join( ",", map { "\"$_\"" } @row{qw(reference department description transdate)}, $row{credit_accno}, 0, $row{amount} );
+        $new_data .= "$debit_line\n";
+        $new_data .= "$credit_line\n";
+    }
+
+    $form->{data} = $new_data;
+
+  }
+
   
   $form->{delimiter} ||= ',';
  
