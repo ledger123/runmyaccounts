@@ -183,6 +183,10 @@ sub save_project {
   
   $form->{customer_id} ||= 'NULL';
 
+  if ($form->{projectnumber} =~ /--/) {
+     $form->error("Project number contains invalid characters '--'.");
+  }
+
   $form->{projectnumber} = $form->update_defaults($myconfig, "projectnumber", $dbh) unless $form->{projectnumber};
 
   if ($form->{id} *= 1) {
