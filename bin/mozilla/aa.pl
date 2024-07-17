@@ -367,7 +367,6 @@ sub create_links {
                         $form->{"description_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{memo};
                         $form->{"tax_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{tax};
                         $form->{"linetaxamount_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{taxamount} * $ml;
-                        $form->{"lineamount_$i"} = $form->{acc_trans}{$key}->[ $i - 1 ]->{lineamount} * $ml;
                         $form->{rowcount}++;
                         $netamount += $form->{"${akey}_$i"};
 
@@ -396,10 +395,10 @@ sub create_links {
     if ( $form->{taxincluded} ) {
         $diff = 0;
 
+        # add tax to individual amounts
         for $i ( 1 .. $form->{rowcount} ) {
             if ($netamount) {
                 $amount = $form->{"amount_$i"} * ( 1 + $tax / $netamount );
-                $amount = $form->{"lineamount_$i"} if $form->{"lineamount_$i"} * 1 != 0; # 2024-04-22 armaghan fix for rounding tkt 466
                 $form->{"amount_$i"} = $form->round_amount( $amount, $form->{precision} );
             }
         }
