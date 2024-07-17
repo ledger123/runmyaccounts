@@ -5847,7 +5847,7 @@ sub create_links {
                 ac.memo, ac.transdate, ac.cleared, ac.project_id,
 		p.projectnumber, ac.id, y.exchangerate,
 		l.description AS translation,
-		pm.description AS paymentmethod, y.paymentmethod_id, ac.tax, ac.taxamount
+		pm.description AS paymentmethod, y.paymentmethod_id, ac.tax, ac.taxamount, ac.lineamount
 		FROM acc_trans ac
 		JOIN chart c ON (c.id = ac.chart_id)
 		LEFT JOIN project p ON (p.id = ac.project_id)
