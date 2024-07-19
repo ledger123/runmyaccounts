@@ -11,8 +11,8 @@ BEGIN
         ORDER BY transdate ASC 
     LOOP
         UPDATE yearend
-        SET id = new_id;
-        WHERE id = yearend_rec.id
+        SET id = new_id
+        WHERE id = yearend_rec.id;
 
         new_id := new_id + 1;
     END LOOP;
