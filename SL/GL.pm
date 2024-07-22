@@ -156,7 +156,7 @@ sub post_transaction {
         $query = qq|INSERT INTO gl_log SELECT * FROM gl WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
         $query = qq|
-            INSERT INTO acc_trans_log 
+            INSERT INTO acc_trans_log (trans_id, chart_id, amount, transdate, source, approved, fx_transaction, project_id, memo, id, cleared, vr_id, entry_id, tax, taxamount, tax_chart_id, ts, lineamount) 
             SELECT acc_trans.trans_id, acc_trans.chart_id, acc_trans.amount, acc_trans.transdate, acc_trans.source, acc_trans.approved, acc_trans.fx_transaction, acc_trans.project_id, acc_trans.memo, acc_trans.id, acc_trans.cleared, acc_trans.vr_id, acc_trans.entry_id, acc_trans.tax, acc_trans.taxamount, acc_trans.tax_chart_id, gl.ts, acc_trans.lineamount
             FROM acc_trans
             JOIN gl ON (gl.id = acc_trans.trans_id)
