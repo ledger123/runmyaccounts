@@ -246,7 +246,7 @@ sub post_transaction {
         $dbh->do($query) || $form->dberror($query);
         $query = qq|
             INSERT INTO acc_trans_log 
-            SELECT acc_trans.*, ${table}.ts
+            SELECT acc_trans.trans_id, acc_trans.chart_id, acc_trans.amount, acc_trans.transdate, acc_trans.source, acc_trans.approved, acc_trans.fx_transaction, acc_trans.project_id, acc_trans.memo, acc_trans.id, acc_trans.cleared, acc_trans.vr_id, acc_trans.entry_id, acc_trans.tax, acc_trans.taxamount, acc_trans.tax_chart_id, ${table}.ts, acc_trans.lineamount
             FROM acc_trans
             JOIN $table ON (${table}.id = acc_trans.trans_id)
             WHERE trans_id = $form->{id}
