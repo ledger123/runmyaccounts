@@ -574,7 +574,7 @@ sub delete_invoice {
             approved, fx_transaction, project_id,
             memo, id, cleared,
             vr_id, entry_id,
-            tax, taxamount, tax_chart_id,
+            tax, taxamount, tax_chart_id, lineamount,
             ts
             )
         SELECT 
@@ -583,7 +583,7 @@ sub delete_invoice {
             ac.approved, ac.fx_transaction, ac.project_id,
             ac.memo, ac.id, ac.cleared,
             vr_id, ac.entry_id,
-            ac.tax, ac.taxamount, ac.tax_chart_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id, ac.lineamount,
             ts
         FROM acc_trans ac
         JOIN ap aa ON (aa.id = ac.trans_id)
@@ -597,7 +597,7 @@ sub delete_invoice {
             approved, fx_transaction, project_id,
             memo, id, cleared,
             vr_id, entry_id,
-            tax, taxamount, tax_chart_id,
+            tax, taxamount, tax_chart_id, lineamount,
             ts
             )
         SELECT 
@@ -606,7 +606,7 @@ sub delete_invoice {
             ac.approved, ac.fx_transaction, ac.project_id,
             ac.memo, ac.id, ac.cleared,
             vr_id, ac.entry_id,
-            ac.tax, ac.taxamount, ac.tax_chart_id,
+            ac.tax, ac.taxamount, ac.tax_chart_id, ac.lineamount,
             NOW() 
         FROM acc_trans ac
         JOIN ap aa ON (aa.id = ac.trans_id)
