@@ -1,6 +1,6 @@
 ALTER TABLE IF EXISTS imported_transaction
     ADD COLUMN booking_id INTEGER,
-    ADD COLUMN suppression TEXT;
+    ADD COLUMN suppression TEXT NOT NULL DEFAULT 'NONE';
 
 UPDATE imported_transaction
 SET suppression = 'EXCLUDED'
