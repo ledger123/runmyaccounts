@@ -2211,6 +2211,10 @@ function CheckAll(v) {
 
 sub form_footer {
 
+    use DBIx::Simple;
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+
     for (qw(totaldebit totalcredit)) { $form->{$_} = $form->format_amount( \%myconfig, $form->{$_}, $form->{precision}, "&nbsp;" ) }
 
     $project = qq|
@@ -2307,7 +2311,63 @@ sub form_footer {
 
     print qq|
   </form>
+|;
 
+    print qq|
+    <table>
+        <tr class="listheading">
+            <th>| . $locale->text('Date') . qq|</th>
+            <th>| . $locale->text('Account') . qq|</th>
+            <th>| . $locale->text('Description') . qq|</th>
+            <th>| . $locale->text('Debit') . qq|</th>
+            <th>| . $locale->text('Credit') . qq|</th>
+        </tr>
+    |;
+
+    my $query = qq|
+        SELECT ac.transdate, c.accno account, c.description account_name, 
+               CASE WHEN ac.amount < 0 THEN 0 - ac.amount ELSE 0 END debit,
+               CASE WHEN ac.amount > 0 THEN ac.amount ELSE 0 END credit,
+               source, memo, c.link
+        FROM acc_trans ac
+        LEFT JOIN chart c ON (c.id = ac.chart_id)
+        WHERE ac.trans_id = ?
+        AND ac.amount <> 0
+        ORDER BY ac.transdate, c.accno
+    |;
+
+    my $result = $dbs->query($query, $form->{id});
+
+    my $total_debit = 0;
+    my $total_credit = 0;
+
+    while (my $row = $result->hash) {
+        $total_debit += $row->{debit};
+        $total_credit += $row->{credit};
+
+        print qq|
+            <tr class="listrow0">
+                <td>| . $row->{transdate} . qq|</td>
+                <td>| . $row->{account} . qq|</td>
+                <td>| . $row->{account_name} . qq|</td>
+                <td align="right">| . $form->format_amount(\%myconfig, $row->{debit}, 2) . qq|</td>
+                <td align="right">| . $form->format_amount(\%myconfig, $row->{credit}, 2) . qq|</td>
+            </tr>
+        |;
+    }
+
+    # Print totals row
+    print qq|
+            <tr class="listheading">
+                <th colspan="3">Totals</th>
+                <th class="right-align">| . $form->format_amount(\%myconfig, $total_debit, 2) . qq|</th>
+                <th class="right-align">| . $form->format_amount(\%myconfig, $total_credit, 2) . qq|</th>
+                <th colspan="3"></th>
+            </tr>
+        </table>
+    |;
+
+   print qq|
 </body>
 </html>
 |;
