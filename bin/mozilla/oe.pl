@@ -2447,7 +2447,6 @@ sub ship_receive {
 
 
 sub display_ship_receive {
-    $form->error;
 
   $form->{rowcount}++;
 #$form->error( join '', map { "$_:\t$form->{$_}\n" } sort keys %{$form} );
