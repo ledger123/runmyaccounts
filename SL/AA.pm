@@ -160,7 +160,7 @@ sub post_transaction {
 	fx_transaction => 0,
     tax => $form->{"tax_$i"},
     taxamount => $form->{"linetaxamount_$i"},
-    lineamount => $form->{"lineamount_$i"},
+    lineamount => $form->{"lineamount_$i"} * $ml,
     };
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
