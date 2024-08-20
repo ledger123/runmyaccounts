@@ -1195,15 +1195,6 @@ sub transaction {
     $form->{currency} = $form->{curr};
     $sth->finish;
 
-    # is this reversecharge tax transaction?
-    ($reversecharge_id) = $dbh->selectrow_array("
-        SELECT reversecharge_id
-        FROM tax
-        WHERE chart_id IN (SELECT chart_id FROM acc_trans WHERE trans_id = $form->{id})
-        AND reversecharge_id <> 0
-        LIMIT 1
-    ");
-
     my ($ignorefx) = $dbh->selectrow_array("
         SELECT COUNT(*)
         FROM acc_trans
@@ -1228,6 +1219,15 @@ sub transaction {
     $sth->execute || $form->dberror($query);
     
     while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+      # is this reversecharge tax line?
+      my $reversecharge_id;
+      ($reversecharge_id) = $dbh->selectrow_array("
+           SELECT 1
+           FROM tax
+           WHERE chart_id = $ref->{tax_chart_id}
+           AND reversecharge_id <> 0
+           LIMIT 1
+      ");
       if (!$reversecharge_id){
         $ref->{amount} += $ref->{taxamount} if $ref->{tax};
       }
