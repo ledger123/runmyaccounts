@@ -1177,6 +1177,79 @@ sub transactions {
     }
 
     $sth->finish;
+
+    # Capture the date used in the query
+    if ( $query =~ /a\.transdate <= '(\d{2}-\d{2}-\d{4})'/ ) {
+        my $date = $1;
+
+        # Replace 'a.transdate' with 'ac.transdate' in the first line and elsewhere as necessary
+        $query =~ s/\ba\.transdate\b/ac.transdate/;
+
+        # Modify the query to change the FROM clause
+        $query =~ s/FROM ar a/FROM acc_trans ac\nJOIN ar a ON a.id = ac.trans_id/;
+
+        # Modify the query to replace the amount calculation with a subquery
+        $query =~
+s/a\.amount, / (SELECT sum(ac.amount)\nFROM acc_trans ac\nJOIN chart c ON \(c.id = ac.chart_id\)\nWHERE ac.trans_id = a.id\nAND ac.approved = '1'\nAND c.link = '$ARAP'\nAND ac.transdate <= '$date'\nAND amount * $ml < 0) * $ml AS amount,/;
+
+        # Modify the WHERE clause to add new conditions
+        $query =~
+s/WHERE a.approved = '1'/WHERE a.approved = '1'\nAND ac.transdate < a.transdate\nAND ac.chart_id IN \(SELECT id FROM chart WHERE link LIKE '%_paid%'\) AND ac.transdate <= '$date'\nAND a.id NOT IN \(SELECT id FROM ar WHERE transdate <= '$date' AND amount - paid <> 0\)/;
+
+        # Replace 'a.transdate' with 'ac.transdate' in the final comparison
+        $query =~ s/AND a.transdate <= '$date'/AND ac.transdate <= '$date'/g;
+
+        #### repeated code block starts
+        my $sth = $dbh->prepare($query);
+        $sth->execute || $form->dberror($query);
+
+        my $i = -1;
+        my $sameid;
+
+        while ( my $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+            $ref->{exchangerate} ||= 1;
+            if ( $ref->{linetotal} <= 0 ) {
+                $ref->{debit}  = $ref->{linetotal} * -1;
+                $ref->{credit} = 0;
+            } else {
+                $ref->{debit}  = 0;
+                $ref->{credit} = $ref->{linetotal};
+            }
+
+            if ( $ref->{invoice} ) {
+                $ref->{memo} ||= $ref->{linedescription};
+            }
+
+            $ref->{netamount} = $ref->{amount} - $ref->{tax};
+
+            if ( $form->{outstanding} ) {
+                next if $form->round_amount( $ref->{amount}, $form->{precision} ) == $form->round_amount( $ref->{paid}, $form->{precision} );
+            }
+
+            for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
+
+            if ( $form->{summary} ) {
+                if ( $sameid != $ref->{id} ) {
+                    $i++;
+                    push @{ $form->{transactions} }, $ref;
+                } else {
+                    if ( $ref->{memo} && !$ref->{fx_transaction} ) {
+                        if ( $form->{transactions}[$i]->{memo} ) {
+                            $form->{transactions}[$i]->{memo} .= "\n";
+                        }
+                        $form->{transactions}[$i]->{memo} .= $ref->{memo};
+                    }
+                }
+            } else {
+                push @{ $form->{transactions} }, $ref;
+            }
+            $sameid = $ref->{id};
+        }
+
+        $sth->finish;
+        #### repeated code block ends
+    }
+
     $dbh->disconnect;
 
 }
