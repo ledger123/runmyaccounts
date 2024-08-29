@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS imported_transaction_to_booking (
-    imported_transaction_id INT REFERENCES imported_transaction (id),
-    booking_id INT,
-    ledger_type VARCHAR(2)
+    imported_transaction_id INT NOT NULL REFERENCES imported_transaction (id),
+    booking_id INT NOT NULL,
+    ledger_type VARCHAR(2) NOT NULL
 );
 
 INSERT INTO imported_transaction_to_booking (imported_transaction_id, booking_id, ledger_type)
