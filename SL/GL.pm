@@ -1192,6 +1192,7 @@ sub transaction {
 
     $ref = $sth->fetchrow_hashref(NAME_lc);
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
+    $form->{oldtransdate} = $form->{transdate};
     $form->{currency} = $form->{curr};
     $sth->finish;
 
