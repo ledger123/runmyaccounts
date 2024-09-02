@@ -1808,7 +1808,10 @@ sub update {
 
     $form->{rowcount} = $count + 1;
 
-    return if $nodisplay;
+    if ($nodisplay){
+        $form->{exchangerate} = $form->format_amount(\%myconfig, $form->{exchangerate}, 2);
+        return;
+    }
 
     &display_form;
 
