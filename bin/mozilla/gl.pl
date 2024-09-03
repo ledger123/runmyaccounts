@@ -1809,7 +1809,7 @@ sub update {
     $form->{rowcount} = $count + 1;
 
     if ($nodisplay){
-        $form->{exchangerate} = $form->format_amount(\%myconfig, $form->{exchangerate}, 2);
+        $form->{exchangerate} = $form->format_amount(\%myconfig, $form->{exchangerate});
         return;
     }
 
