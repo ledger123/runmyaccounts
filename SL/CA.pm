@@ -53,7 +53,7 @@ sub all_accounts {
   $sth->finish;
 
   $query = qq|SELECT c.id, c.accno, c.description, c.charttype, c.gifi_accno,
-              c.category, c.link, c.allow_gl, c.curr, c2.accno parent_accno,
+              c.category, c.link, c.allow_gl, c2.accno parent_accno,
 	      l.description AS translation
               FROM chart c
           LEFT JOIN chart c2 ON c2.id = c.parent_id

@@ -24,12 +24,10 @@ sub get_account {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
-  $form->{currencies} = $form->get_currencies($dbh, $myconfig);
-
   $form->{id} *= 1;
 
   my $query = qq|SELECT accno, description, charttype, gifi_accno,
-                 category, link, contra, allow_gl, curr, parent_id
+                 category, link, contra, allow_gl, parent_id
                  FROM chart
 	         WHERE id = $form->{id}|;
   my $sth = $dbh->prepare($query);
@@ -114,7 +112,6 @@ sub save_account {
   if ($form->{id} *= 1) {
     $query = qq|UPDATE chart SET
                 accno = '$form->{accno}',
-                curr = '$form->{curr}',
                 parent_id = $form->{parent_id},
 		description = |.$dbh->quote($form->{description}).qq|,
 		charttype = |.$dbh->quote($form->{charttype}).qq|,
@@ -126,10 +123,9 @@ sub save_account {
 		WHERE id = $form->{id}|;
   } else {
     $query = qq|INSERT INTO chart
-                (accno, curr, parent_id, description, charttype, gifi_accno, category, link,
+                (accno, parent_id, description, charttype, gifi_accno, category, link,
 		contra, allow_gl)
                 VALUES ('$form->{accno}',
-    '$form->{curr}',
     $form->{parent_id},|
 		.$dbh->quote($form->{description}).qq|,
 		|.$dbh->quote($form->{charttype}).qq|, |
