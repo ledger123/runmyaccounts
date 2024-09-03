@@ -73,18 +73,7 @@ sub edit_account {
 
 sub account_header {
 
-  @curr = split /:/, $form->{currencies};
-  $form->{defaultcurrency} = $curr[0];
-  chomp $form->{defaultcurrency};
-  $form->{selectcurrency} = "\n";
-  for (@curr) { $form->{selectcurrency} .= "$_\n" }
-
   $form->get_parent('', \%myconfig);
-
-  my $currency = qq|
-    <th align=right nowrap>| . $locale->text('Currency') . qq|</th>
-    <td><select name=curr>|.$form->select_option( $form->{selectcurrency}, $form->{curr} ).qq|</select></td>
-  |;
 
   my %checked;
   $checked{$form->{charttype}} = "checked";
@@ -123,7 +112,6 @@ sub account_header {
 	  <th align=right>|.$locale->text('Account Number').qq| <font color=red>*</font></th>
 	  <td><input name=accno size=20 value="|.$form->quote($form->{accno}).qq|"></td>
 	</tr>
-    <tr>$currency</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Description').qq|</th>
 	  <td><input name=description size=40 value="|.$form->quote($form->{description}).qq|"></td>
@@ -317,13 +305,12 @@ sub list_account {
   # construct callback
   my $callback = "$form->{script}?action=list_account&path=$form->{path}&login=$form->{login}";
 
-  my @column_index = qw(accno parent_accno curr gifi_accno description link allow_gl);
+  my @column_index = qw(accno parent_accno gifi_accno description link allow_gl);
 
   my %column_data;
 
   $column_data{accno} = qq|<th class=listtop>|.$locale->text('Account').qq|</a></th>|;
   $column_data{parent_accno} = qq|<th class=listtop>|.$locale->text('Parent').qq|</a></th>|;
-  $column_data{curr} = qq|<th class=listtop>|.$locale->text('Currency').qq|</a></th>|;
   $column_data{gifi_accno} = qq|<th class=listtop>|.$locale->text('GIFI').qq|</a></th>|;
   $column_data{description} = qq|<th class=listtop>|.$locale->text('Description').qq|</a></th>|;
   $column_data{debit} = qq|<th class=listtop>|.$locale->text('Debit').qq|</a></th>|;
@@ -383,7 +370,6 @@ sub list_account {
       $column_data{credit} = qq| <th>&nbsp;</th>|;
       $column_data{link} = qq|<th>&nbsp;</th>|;
       $column_data{allow_gl} = qq|<th>&nbsp;</th>|;
-      $column_data{curr} = qq|<td>&nbsp;</td>|;
 
     } else {
       $i++; $i %= 2;
@@ -391,7 +377,6 @@ sub list_account {
 <tr valign=top class=listrow$i>|;
       $column_data{accno} = qq|<td><a href=$form->{script}?action=edit_account&id=$ref->{id}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{accno}</a></td>|;
       $column_data{parent_accno} = qq|<td>$ref->{parent_accno}&nbsp;</td>|;
-      $column_data{curr} = qq|<td>$ref->{curr}&nbsp;</td>|;
       $column_data{gifi_accno} = qq|<td><a href=$form->{script}?action=edit_gifi&accno=$ref->{gifi_accno}&path=$form->{path}&login=$form->{login}&callback=$callback>$ref->{gifi_accno}</a>&nbsp;</td>|;
       $column_data{description} = qq|<td>$ref->{description}&nbsp;</td>|;
       $column_data{debit} = qq|<td align=right>$ref->{debit}</td>|;
