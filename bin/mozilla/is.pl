@@ -1025,6 +1025,8 @@ sub form_footer {
 
 sub update {
 
+  $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
+
   for (qw(exchangerate cashdiscount discount_paid)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
   
   if ($newname = &check_name(customer)) {
