@@ -94,6 +94,7 @@ sub new {
 
 	$self->{version}   = "2.8.37";
 	$self->{dbversion} = "2.8.37";
+    $self->{dateoffset} = 3652;
 
 	bless $self, $type;
 
@@ -4728,6 +4729,14 @@ sub isvaldate {
 		if ( $date ne $cleandate ) {
 			$self->error($text);
 		}
+        if (!$self->{id}){
+            my $current_date = $self->current_date($myconfig);
+            my $datediff = $self->datediff($myconfig, $current_date, $date);
+            $datediff = abs($datediff);
+            if ($datediff > $self->{dateoffset}){
+                $self->error($text);
+            }
+        }
 	}
 }
 
