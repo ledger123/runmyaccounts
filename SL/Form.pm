@@ -92,14 +92,9 @@ sub new {
 
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-<<<<<<< HEAD
 	$self->{version}   = "2.8.38";
 	$self->{dbversion} = "2.8.38";
     $self->{dateoffset} = 3652;
-=======
-	$self->{version}   = "2.8.37";
-	$self->{dbversion} = "2.8.37";
->>>>>>> parent of 8988f88 (Merge pull request #567 from ledger123/IBP-1278)
 
 	bless $self, $type;
 
@@ -4734,6 +4729,17 @@ sub isvaldate {
 		if ( $date ne $cleandate ) {
 			$self->error($text);
 		}
+        if ($date =~ /^\d{4}-\d{2}-\d{2}$/) {
+            $date =~ s/(\d{4})-(\d{2})-(\d{2})/$3-$2-$1/;
+        }
+        if (!$self->{id}){
+            my $current_date = $self->current_date($myconfig);
+            my $datediff = $self->datediff($myconfig, $current_date, $date);
+            $datediff = abs($datediff);
+            if ($datediff > $self->{dateoffset}){
+                $self->error($text);
+            }
+        }
 	}
 }
 
