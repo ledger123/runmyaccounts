@@ -120,12 +120,15 @@ sub apisend {
   system(qq~$commandline~);
   unlink $filename;
 
+  &insert_email_data($self);
+
   return "";
 }
 
 
 sub send {
   my ($self, $out) = @_;
+
 
   my $boundary = time;
   my $domain = $self->{from};
@@ -231,10 +234,50 @@ $self->{message}
 
   close(OUT);
 
+  &insert_email_data($self);
+
   return "";
   
 }
 
+sub insert_email_data {
+    my ($self) = @_;
+
+    my $json_xs = JSON::XS->new;
+    my $attachments_json = $json_xs->encode($self->{attachments});
+
+    my $dsn = $self->{dbh}->{Name};
+    my ($dbname) = $dsn =~ /dbname=([^;]+)/;
+
+    my $sql = qq{
+        INSERT INTO email_data (
+            notify, fromname, apikey, reply_to, cc, subject, charset,
+            to_email, attachments, format, from_address, fileid, message,
+            replyto, bcc, dbname
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    };
+
+    my $sth = $self->{dbh}->prepare($sql);
+
+    $sth->execute(
+        $self->{notify},
+        $self->{fromname},
+        $self->{apikey},
+        $self->{'reply-to'},
+        $self->{cc},
+        $self->{subject},
+        $self->{charset},
+        $self->{to},
+        $attachments_json,
+        $self->{format},
+        $self->{from},
+        $self->{fileid},
+        $self->{message},
+        $self->{replyto},
+        $self->{bcc},
+        $dbname,
+    );
+}
 
 sub encode_base64 ($;$) {
 
