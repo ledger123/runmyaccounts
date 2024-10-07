@@ -3617,7 +3617,6 @@ sub parse_template {
 		$self->{ $ref->{fldname} } = $ref->{fldvalue};
 	}
 	$sth->finish;
-	$dbh->disconnect;
 
 	## Uncomment following line to view template variables with values in browser.
 	# $self->dumper($self); $self->error;
@@ -4043,6 +4042,7 @@ sub parse_template {
 			}
 
             my $err;
+            $mail->{dbh} = $dbh;
             if ($noreplyemail){
                $mail->{from}         = $noreply;
                $mail->{fromname}     = "$myconfig->{name} ($company)";
@@ -4105,7 +4105,7 @@ Content-Disposition: attachment; filename="$self->{tmpfile}"\n\n|;
 		$self->cleanup;
 
 	}
-
+	$dbh->disconnect;
 }
 
 sub string_abbreviate {
