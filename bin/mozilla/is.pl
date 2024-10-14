@@ -1013,6 +1013,26 @@ sub form_footer {
         print $table->output;
     }
   
+
+use JSON;
+my $json_data = encode_json([{
+    ARAP => 'AR',
+    id   => $form->{id},
+    payment => {
+        date         => $form->{transdate},
+        amount       => $form->{oldinvtotal},
+        source       => 'testsource',
+        memo         => 'testmemo',
+        exchangeRate => $form->{exchangerate} || 1,
+        account      => $form->{AR_paid_1}
+    }
+}]);
+
+my $url = 'https://app.ledger123.com/rma/api.pl/post_payment';
+my $curl_command = qq(curl -X POST $url \\\n    -H "Content-Type: application/json" \\\n    -d '$json_data');
+print "<pre>$curl_command</pre><br/><br/><br/><br/>";
+
+
   print qq|
 </form>
 
