@@ -13,18 +13,18 @@ use SL::Form;
 helper db => sub {
     my ( $c, $dbname ) = @_;
 
-    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname", 'postgres', '' );
+    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname;host=host.docker.internal", 'postgres', '' );
 };
 
 helper myconfig => sub {
     my $c = shift;
 
     my %myconfig = (
-        dbconnect    => "dbi:Pg:dbname=ledger28",
-        dateformat   => 'dd/mm/yy',
+        dbconnect    => "dbi:Pg:dbname=runmyaccounts;host=host.docker.internal",
+        dateformat   => 'yyyy-mm-dd',
         dbdriver     => 'Pg',
-        dbhost       => '',
-        dbname       => 'ledger28',
+        dbhost       => 'host.docker.internal',
+        dbname       => 'runmyaccounts',
         dbpasswd     => '',
         dbport       => '',
         dbuser       => 'postgres',
@@ -37,17 +37,17 @@ helper myconfig => sub {
 
 post '/post_payment' => sub {
     my $c             = shift;
-    my $database_name = 'ledger28';
+    my $database_name = 'runmyaccounts';
     my $db            = $c->db($database_name);
     my $json          = $c->req->json;
 
-    my $arap = lc( $json->[0]->{ARAP} );
+    my $arap = lc( $json->[0]->{invoiceType} );
     my $vc   = $arap eq 'ar' ? 'customer' : 'vendor';
     my $type = $arap eq 'ar' ? 'receipt'  : 'payment';
     my ($customer_id, $currency) = $db->query("
         SELECT customer_id, curr
         FROM ar
-        WHERE id = ?", $json->[0]->{id}
+        WHERE id = ?", $json->[0]->{invoiceId}
     )->list;
 
     my $hash = {
@@ -60,12 +60,12 @@ post '/post_payment' => sub {
         'currency'     => $currency,
         'exchangerate' => $json->[0]->{payment}->{exchangeRate},    # Use exchange rate from JSON
         'customer_id'  => $customer_id,
-        'ARAP'         => $json->[0]->{ARAP},
+        'ARAP'         => $json->[0]->{invoiceType},
         'datepaid'     => $json->[0]->{payment}->{date},
         'source'       => $json->[0]->{payment}->{source},
         'memo'         => $json->[0]->{payment}->{memo},
         'amount'       => $json->[0]->{payment}->{amount},
-        'id_1'         => $json->[0]->{id},
+        'id_1'         => $json->[0]->{invoiceId},
         'transdate_1'  => $json->[0]->{payment}->{date},
         'discount_1'   => '0',
         'paid_1'       => $json->[0]->{payment}->{amount},
@@ -97,8 +97,8 @@ get '/' => sub {
     # Prepare the sample JSON data
     my $json_data = [
         {
-            "ARAP"    => "AR",
-            "id"      => 10000,
+            "invoiceType"    => "AR",
+            "invoiceId"      => 10000,
             "payment" => {
                 "date"         => "01.01.1970",
                 "amount"       => 100.00,
