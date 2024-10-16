@@ -49,25 +49,12 @@ post '/post_payment' => sub {
         FROM ar
         WHERE id = ?", $json->[0]->{id}
     )->list;
-    my ($ar_accno, $ar_description) = $db->query("
-        SELECT accno, description
-        FROM chart
-        WHERE link = 'AR'
-        AND id IN (SELECT chart_id FROM acc_trans WHERE trans_id = ?)
-        LIMIT 1",
-        $json->[0]->{id}
-    )->list;
-
-
-    my $AR = "$ar_accno--$ar_description";
 
     my $hash = {
         'formname'     => 'receipt',
-        'AR'           => $AR,
         'AR_paid'      => $json->[0]->{payment}->{account},
         'arap'         => $arap,
         'vc'           => $vc,
-        'payment'      => 'payment',
         'type'         => $type,
         'rowcount'     => 1,
         'currency'     => $currency,
