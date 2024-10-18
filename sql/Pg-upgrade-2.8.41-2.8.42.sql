@@ -11,4 +11,4 @@ CREATE TEXT SEARCH CONFIGURATION simple_related_party(
 ALTER TEXT SEARCH CONFIGURATION simple_related_party
     ALTER MAPPING REPLACE simple WITH simple_related_party;
 
-UPDATE defaults SET fldvalue = '2.8.41' WHERE fldname = 'version';
+UPDATE defaults SET fldvalue = '2.8.42' WHERE fldname = 'version';
