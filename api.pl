@@ -11,20 +11,20 @@ use Data::Dumper;
 use SL::Form;
 
 helper db => sub {
-    my ( $c, $dbname ) = @_;
+    my ( $c, $dbname, $dbhost ) = @_;
 
-    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname;host=host.docker.internal", 'postgres', '' );
+    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname;host=$dbhost", 'postgres', '' );
 };
 
 helper myconfig => sub {
-    my $c = shift;
+    my ( $c, $dbname, $dbhost ) = @_;
 
     my %myconfig = (
-        dbconnect    => "dbi:Pg:dbname=runmyaccounts;host=host.docker.internal",
+        dbconnect    => "dbi:Pg:dbname=$dbname;host=$dbhost",
         dateformat   => 'yyyy-mm-dd',
         dbdriver     => 'Pg',
-        dbhost       => 'host.docker.internal',
-        dbname       => 'runmyaccounts',
+        dbhost       => '$dbhost',
+        dbname       => $dbname,
         dbpasswd     => '',
         dbport       => '',
         dbuser       => 'postgres',
@@ -34,21 +34,19 @@ helper myconfig => sub {
     return \%myconfig;    # Return a reference to the hash
 };
 
-
 post '/post_payment' => sub {
-    my $c             = shift;
-    my $database_name = 'runmyaccounts';
-    my $db            = $c->db($database_name);
-    my $json          = $c->req->json;
-
+    my $c    = shift;
+    my $json = $c->req->json;
+    my $db   = $c->db( $json->[0]->{dbname}, 'localhost' );
     my $arap = lc( $json->[0]->{invoiceType} );
     my $vc   = $arap eq 'ar' ? 'customer' : 'vendor';
     my $type = $arap eq 'ar' ? 'receipt'  : 'payment';
-    my ($customer_id, $currency) = $db->query("
-        SELECT customer_id, curr
-        FROM ar
-        WHERE id = ?", $json->[0]->{invoiceId}
-    )->list;
+
+    #die $json->[0]->{invoiceId};
+
+    my $query = qq|SELECT customer_id, curr FROM ar WHERE id = $json->[0]->{invoiceId}|;
+
+    my ( $customer_id, $currency ) = $db->query($query)->list;
 
     my $hash = {
         'formname'     => 'receipt',
@@ -72,17 +70,15 @@ post '/post_payment' => sub {
         'checked_1'    => '1',
     };
 
-    #die $c->dumper($hash);
-
-    my $form         = new Form;
-    foreach my $key (keys %$hash) {
+    my $form = new Form;
+    foreach my $key ( keys %$hash ) {
         $form->{$key} = $hash->{$key};
     }
 
     use SL::OP;
     use SL::CP;
 
-    CP->post_payment($c->myconfig, $form);
+    CP->post_payment( $c->myconfig( $json->[0]->{dbname}, 'localhost' ), $form );
 
     $c->render(
         json   => { message => 'Payment is posted' },
@@ -90,16 +86,15 @@ post '/post_payment' => sub {
     );
 };
 
-
 get '/' => sub {
     my $c = shift;
 
     # Prepare the sample JSON data
     my $json_data = [
         {
-            "invoiceType"    => "AR",
-            "invoiceId"      => 10000,
-            "payment" => {
+            "invoiceType" => "AR",
+            "invoiceId"   => 10000,
+            "payment"     => {
                 "date"         => "01.01.1970",
                 "amount"       => 100.00,
                 "source"       => "Text",

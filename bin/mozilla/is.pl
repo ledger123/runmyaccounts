@@ -1012,12 +1012,13 @@ sub form_footer {
         $form->info($locale->text('Invoice GL log ...'));
         print $table->output;
     }
-  
 
 use JSON;
+$form->{transdate} =~ s{(\d{2})-(\d{2})-(\d{4})}{$3-$2-$1};
 my $json_data = encode_json([{
-    ARAP => 'AR',
-    id   => $form->{id},
+    dbname      => 'ledger28',
+    invoiceType => 'AR',
+    invoiceId   => $form->{id},
     payment => {
         date         => $form->{transdate},
         amount       => $form->{oldinvtotal},
@@ -1030,7 +1031,8 @@ my $json_data = encode_json([{
 
 my $url = 'https://app.ledger123.com/rma/api.pl/post_payment';
 my $curl_command = qq(curl -X POST $url \\\n    -H "Content-Type: application/json" \\\n    -d '$json_data');
-print "<pre>$curl_command</pre><br/><br/><br/><br/>";
+print "<pre>$curl_command
+> error.html</pre><br/><br/><br/><br/>";
 
 
   print qq|
