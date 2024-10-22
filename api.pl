@@ -11,20 +11,20 @@ use Data::Dumper;
 use SL::Form;
 
 helper db => sub {
-    my ( $c, $dbname ) = @_;
+    my ( $c, $dbname, $dbhost ) = @_;
 
-    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname", 'postgres', '' );
+    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname;host=$dbhost", 'postgres', '' );
 };
 
 helper myconfig => sub {
-    my $c = shift;
+    my ( $c, $dbname, $dbhost ) = @_;
 
     my %myconfig = (
-        dbconnect    => "dbi:Pg:dbname=ledger28",
-        dateformat   => 'dd/mm/yy',
+        dbconnect    => "dbi:Pg:dbname=$dbname;host=$dbhost",
+        dateformat   => 'yyyy-mm-dd',
         dbdriver     => 'Pg',
-        dbhost       => '',
-        dbname       => 'ledger28',
+        dbhost       => '$dbhost',
+        dbname       => $dbname,
         dbpasswd     => '',
         dbport       => '',
         dbuser       => 'postgres',
@@ -34,128 +34,122 @@ helper myconfig => sub {
     return \%myconfig;    # Return a reference to the hash
 };
 
-
 post '/post_payment' => sub {
-    my $c             = shift;
-    my $database_name = 'ledger28';
-    my $db            = $c->db($database_name);
-    my $json          = $c->req->json;
+    my $c    = shift;
+    my $json = $c->req->json;
+    my $db   = $c->db( $json->{dbname}, 'localhost' );
 
-    my $arap = lc( $json->[0]->{ARAP} );
-    my $vc   = $arap eq 'ar' ? 'customer' : 'vendor';
-    my $type = $arap eq 'ar' ? 'receipt'  : 'payment';
-    my ($customer_id, $currency) = $db->query("
-        SELECT customer_id, curr
-        FROM ar
-        WHERE id = ?", $json->[0]->{id}
-    )->list;
+    # Loop through each invoice in the JSON array
+    foreach my $invoice ( @{ $json->{invoices} } ) {
+        my $arap = lc( $invoice->{invoiceType} );
+        my $vc   = $arap eq 'ar' ? 'customer' : 'vendor';
+        my $type = $arap eq 'ar' ? 'receipt'  : 'payment';
 
-    my $hash = {
-        'formname'     => 'receipt',
-        'AR_paid'      => $json->[0]->{payment}->{account},
-        'arap'         => $arap,
-        'vc'           => $vc,
-        'type'         => $type,
-        'rowcount'     => 1,
-        'currency'     => $currency,
-        'exchangerate' => $json->[0]->{payment}->{exchangeRate},    # Use exchange rate from JSON
-        'customer_id'  => $customer_id,
-        'ARAP'         => $json->[0]->{ARAP},
-        'datepaid'     => $json->[0]->{payment}->{date},
-        'source'       => $json->[0]->{payment}->{source},
-        'memo'         => $json->[0]->{payment}->{memo},
-        'amount'       => $json->[0]->{payment}->{amount},
-        'id_1'         => $json->[0]->{id},
-        'transdate_1'  => $json->[0]->{payment}->{date},
-        'discount_1'   => '0',
-        'paid_1'       => $json->[0]->{payment}->{amount},
-        'checked_1'    => '1',
-    };
+        my $query = qq|SELECT customer_id, curr FROM $arap WHERE id = $invoice->{invoiceId}|;
+        my ( $customer_id, $currency ) = $db->query($query)->list;
 
-    #die $c->dumper($hash);
+        my $total_amount = 0;
+        my $rowcount     = 0;
+        my %hash         = (
+            'formname'    => $type,
+            'AR_paid'     => '',                        # We'll set this later
+            'arap'        => $arap,
+            'vc'          => $vc,
+            'type'        => $type,
+            'currency'    => $currency,
+            'customer_id' => $customer_id,
+            'ARAP'        => $invoice->{invoiceType},
+            'datepaid'    => '',                        # We'll set this later
+            'source'      => '',                        # We'll set this later
+            'memo'        => '',                        # We'll set this later
+        );
 
-    my $form         = new Form;
-    foreach my $key (keys %$hash) {
-        $form->{$key} = $hash->{$key};
+        # Loop through each payment for the current invoice
+        foreach my $i ( 0 .. $#{ $invoice->{payments} } ) {
+            my $payment = $invoice->{payments}->[$i];
+            my $index   = $i + 1;
+
+            $hash{"id_$index"}        = $invoice->{invoiceId};
+            $hash{"transdate_$index"} = $payment->{date};
+            $hash{"paid_$index"}      = $payment->{amount};
+            $hash{"discount_$index"}  = '0';
+            $hash{"checked_$index"}   = '1';
+            $hash{'AR_paid'}          = $payment->{account};
+            $hash{'datepaid'}         = $payment->{date};
+            $hash{'source'}           = $payment->{source};
+            $hash{'memo'}             = $payment->{memo};
+            $hash{'exchangerate'}     = $payment->{exchangeRate};
+
+            $total_amount += $payment->{amount};
+            $rowcount++;
+        }
+
+        $hash{'amount'}   = $total_amount;
+        $hash{'rowcount'} = $rowcount;
+
+        my $form = new Form;
+        foreach my $key ( keys %hash ) {
+            $form->{$key} = $hash{$key};
+        }
+
+        use SL::OP;
+        use SL::CP;
+        CP->post_payment( $c->myconfig( $json->{dbname}, 'localhost' ), $form );
     }
 
-    use SL::OP;
-    use SL::CP;
-
-    CP->post_payment($c->myconfig, $form);
-
     $c->render(
-        json   => { message => 'Payment is posted' },
+        json   => { message => 'All payments are posted' },
         status => 200
     );
 };
-
-
-get '/' => sub {
-    my $c = shift;
-
-    # Prepare the sample JSON data
-    my $json_data = [
-        {
-            "ARAP"    => "AR",
-            "id"      => 10000,
-            "payment" => {
-                "date"         => "01.01.1970",
-                "amount"       => 100.00,
-                "source"       => "Text",
-                "memo"         => "Text",
-                "exchangeRate" => 1.02,
-                "account"      => "1001--Chart of acc"
-            }
-        }
-    ];
-
-    # Pass the JSON data to the template
-    $c->stash( json_data => encode_json($json_data) );
-    $c->render( template => 'index' );
-} => 'home';
 
 app->start;
 
 __DATA__
 
-@@ index.html.ep
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Form</title>
-</head>
-<body>
-  <h1>Post Payment</h1>
-  <button id="postButton">Post Payment</button>
-
-  <script>
-    // Define the postPayment function here
-    async function postPayment() {
-      // Get the JSON data passed from the route and convert to valid JS
-      const data = <%== $json_data %>;
-
-      try {
-        const response = await fetch('<%= url_for('post_payment')->to_abs->scheme('https') %>', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        alert('Status: ' + response.status + ', Message: ' + result.message);
-      } catch (error) {
-        alert('Error posting payment: ' + error );
-      }
-    }
-
-    // Attach the postPayment function to the button after the DOM is loaded
-    document.getElementById('postButton').addEventListener('click', postPayment);
-  </script>
-</body>
-</html>
+@@ endpoint_testing.txt
+curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
+    -H "Content-Type: application/json" \
+    -d '{
+          "dbname": "ledger28",
+          "invoices": [
+            {
+              "invoiceId": 10148,
+              "invoiceType": "AR",
+              "payments": [
+                {
+                  "account": "1200--Bank Account GBP",
+                  "source": "testsource",
+                  "memo": "testmemo",
+                  "exchangeRate": "1",
+                  "date": "2007-07-06",
+                  "amount": 225.37
+                }
+              ]
+            },
+            {
+              "invoiceId": 10148,
+              "invoiceType": "AR",
+              "payments": [
+                {
+                  "account": "1200--Bank Account GBP",
+                  "source": "testsource",
+                  "memo": "testmemo",
+                  "exchangeRate": "1",
+                  "date": "2007-07-06",
+                  "amount": 225.37
+                },
+                {
+                  "account": "1200--Bank Account GBP",
+                  "source": "testsource",
+                  "memo": "testmemo",
+                  "exchangeRate": "1",
+                  "date": "2007-07-07",
+                  "amount": 300.50
+                }
+              ]
+            }
+          ]
+        }' 
+> error.html
 
