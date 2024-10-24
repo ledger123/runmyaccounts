@@ -45,7 +45,7 @@ post '/post_payment' => sub {
         my $vc   = $arap eq 'ar' ? 'customer' : 'vendor';
         my $type = $arap eq 'ar' ? 'receipt'  : 'payment';
 
-        my $query = qq|SELECT customer_id, curr FROM $arap WHERE id = $invoice->{invoiceId}|;
+        my $query = qq|SELECT customer_id, curr FROM $arap WHERE id = $invoice->{invoiceId}*1|;
         my ( $customer_id, $currency ) = $db->query($query)->list;
 
         my $total_amount = 0;
@@ -69,18 +69,19 @@ post '/post_payment' => sub {
             my $payment = $invoice->{payments}->[$i];
             my $index   = $i + 1;
 
-            $hash{"id_$index"}        = $invoice->{invoiceId};
-            $hash{"transdate_$index"} = $payment->{date};
-            $hash{"paid_$index"}      = $payment->{amount};
-            $hash{"discount_$index"}  = '0';
-            $hash{"checked_$index"}   = '1';
-            $hash{'AR_paid'}          = $payment->{account};
-            $hash{'datepaid'}         = $payment->{date};
-            $hash{'source'}           = $payment->{source};
-            $hash{'memo'}             = $payment->{memo};
-            $hash{'exchangerate'}     = $payment->{exchangeRate};
+            $hash{"id_$index"}                      = $invoice->{invoiceId} * 1;                  # Convert to number
+            $hash{"transdate_$index"}               = $payment->{date};
+            $hash{"paid_$index"}                    = $payment->{amount} * 1;                     # Convert to number
+            $hash{"discount_$index"}                = '0';
+            $hash{"checked_$index"}                 = '1';
+            $hash{'AR_paid'}                        = $payment->{account};
+            $hash{'datepaid'}                       = $payment->{date};
+            $hash{'source'}                         = $payment->{source};
+            $hash{'memo'}                           = $payment->{memo};
+            $hash{'exchangerate'}                   = $payment->{exchangeRate} * 1;               # Convert to number
+            $hash{"imported_transaction_id_$index"} = $payment->{imported_transaction_id} * 1;    # Convert to integer
 
-            $total_amount += $payment->{amount};
+            $total_amount += $payment->{amount} * 1;                                              # Convert to number
             $rowcount++;
         }
 
@@ -123,7 +124,8 @@ curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
                   "memo": "testmemo",
                   "exchangeRate": "1",
                   "date": "2007-07-06",
-                  "amount": 225.37
+                  "amount": 225.37,
+                  "imported_transaction_id": 123
                 }
               ]
             },
@@ -137,7 +139,8 @@ curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
                   "memo": "testmemo",
                   "exchangeRate": "1",
                   "date": "2007-07-06",
-                  "amount": 225.37
+                  "amount": 225.37,
+                  "imported_transaction_id": 124
                 },
                 {
                   "account": "1200--Bank Account GBP",
@@ -145,7 +148,8 @@ curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
                   "memo": "testmemo",
                   "exchangeRate": "1",
                   "date": "2007-07-07",
-                  "amount": 300.50
+                  "amount": 300.50,
+                  "imported_transaction_id": 125
                 }
               ]
             }

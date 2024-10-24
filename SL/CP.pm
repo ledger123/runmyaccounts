@@ -790,14 +790,15 @@ sub post_payment {
 
       # add payment
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
-                  amount, source, memo, approved, vr_id, id)
+                      amount, source, memo, imported_transaction_id, approved, vr_id, id)
                   VALUES (|.$form->dbclean($form->{"id_$i"}).qq|,
-		         (SELECT id FROM chart
-		          WHERE accno = |.$dbh->quote($paymentaccno).qq|),
-		  '$form->{datepaid}', $form->{"paid_$i"} * $ml * -1, |
-		  .$dbh->quote($form->{source}).qq|, |
-		  .$dbh->quote($form->{memo}).qq|, '$approved',
-		  $voucherid, $paymentid)|;
+                    (SELECT id FROM chart
+                      WHERE accno = |.$dbh->quote($paymentaccno).qq|),
+                 '$form->{datepaid}', $form->{"paid_$i"} * $ml * -1, |
+                 .$dbh->quote($form->{source}).qq|, |
+                 .$dbh->quote($form->{memo}).qq|, |
+                 .$form->{"imported_transaction_id_$i"} * 1 .qq|, '$approved',
+                 $voucherid, $paymentid)|;
       $dbh->do($query) || $form->dberror($query);
 
       $query = qq|INSERT INTO payment (id, trans_id, exchangerate,
