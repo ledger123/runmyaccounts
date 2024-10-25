@@ -698,7 +698,7 @@ sub form_footer {
   $column_data{AR_paid} = "<th>".$locale->text('Account')."</th>";
   $column_data{source} = "<th>".$locale->text('Source')."</th>";
   $column_data{memo} = "<th>".$locale->text('Memo')."</th>";
-  $column_data{imported_transaction_id} = "<th>".$locale->text('Import ID')."</th>";
+  $column_data{imported_transaction_id} = "<th></th>";
   $column_data{paymentmethod} = "<th>".$locale->text('Method')."</th>";
   
   $cashdiscount = "";
@@ -737,7 +737,7 @@ sub form_footer {
     $column_data{exchangerate} = qq|<td align=center>$exchangerate</td>|;
     $column_data{source} = qq|<td align=center><input name="discount_source" size=11 value="|.$form->quote($form->{"discount_source"}).qq|"></td>|;
     $column_data{memo} = qq|<td align=center><input name="discount_memo" size=11 value="|.$form->quote($form->{"discount_memo"}).qq|"></td>|;
-    $column_data{imported_transaction_id} = qq|<td align=center><input name="imported_transaction_id" size=11 value="$form->{imported_transaction_id}"></td>|;
+    $column_data{imported_transaction_id} = qq|<td align=center><input type=hidden name="imported_transaction_id" value="$form->{imported_transaction_id}"></td>|;
     $column_data{paymentmethod} = qq|<td align=center><select name="discount_paymentmethod">|.$form->select_option($form->{"selectpaymentmethod"}, $form->{discount_paymentmethod}, 1).qq|</select></td>|;
     
     $cashdiscount .= qq|
@@ -846,7 +846,7 @@ sub form_footer {
     $column_data{datepaid} = qq|<td align=center><input name="datepaid_$i" size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{"datepaid_$i"}></td>|;
     $column_data{source} = qq|<td align=center><input name="source_$i" size=11 value="|.$form->quote($form->{"source_$i"}).qq|"></td>|;
     $column_data{memo} = qq|<td align=center><input name="memo_$i" size=11 value="|.$form->quote($form->{"memo_$i"}).qq|"></td>|;
-    $column_data{imported_transaction_id} = qq|<td align=center><input name="imported_transaction_id_$i" size=11 value="|.$form->quote($form->{"imported_transaction_id_$i"}).qq|"></td>|;
+    $column_data{imported_transaction_id} = qq|<td align=center><input name="imported_transaction_id_$i" type=hidden value="|.$form->quote($form->{"imported_transaction_id_$i"}).qq|"></td>|;
     $column_data{paymentmethod} = qq|<td align=center><select name="paymentmethod_$i">|.$form->select_option($form->{"selectpaymentmethod"}, $form->{"paymentmethod_$i"}, 1).qq|</select></td>|;
 
     for (@column_index) { print qq|$column_data{$_}\n| }
@@ -1016,28 +1016,6 @@ sub form_footer {
         $form->info($locale->text('Invoice GL log ...'));
         print $table->output;
     }
-
-use JSON;
-$form->{transdate} =~ s{(\d{2})-(\d{2})-(\d{4})}{$3-$2-$1};
-my $json_data = encode_json([{
-    dbname      => 'ledger28',
-    invoiceType => 'AR',
-    invoiceId   => $form->{id},
-    payment => {
-        date         => $form->{transdate},
-        amount       => $form->{oldinvtotal},
-        source       => 'testsource',
-        memo         => 'testmemo',
-        exchangeRate => $form->{exchangerate} || 1,
-        account      => $form->{AR_paid_1}
-    }
-}]);
-
-my $url = 'https://app.ledger123.com/rma/api.pl/post_payment';
-my $curl_command = qq(curl -X POST $url \\\n    -H "Content-Type: application/json" \\\n    -d '$json_data');
-print "<pre>$curl_command
-> error.html</pre><br/><br/><br/><br/>";
-
 
   print qq|
 </form>

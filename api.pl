@@ -37,7 +37,9 @@ helper myconfig => sub {
 post '/post_payment' => sub {
     my $c    = shift;
     my $json = $c->req->json;
-    my $db   = $c->db( $json->{dbname}, 'localhost' );
+    my $db   = $c->db( $json->{clientName}, 'localhost' );
+
+    my $rc;
 
     # Loop through each invoice in the JSON array
     foreach my $invoice ( @{ $json->{invoices} } ) {
@@ -69,19 +71,19 @@ post '/post_payment' => sub {
             my $payment = $invoice->{payments}->[$i];
             my $index   = $i + 1;
 
-            $hash{"id_$index"}                      = $invoice->{invoiceId} * 1;                  # Convert to number
+            $hash{"id_$index"}                      = $invoice->{invoiceId} * 1;                # Convert to number
             $hash{"transdate_$index"}               = $payment->{date};
-            $hash{"paid_$index"}                    = $payment->{amount} * 1;                     # Convert to number
+            $hash{"paid_$index"}                    = $payment->{amount} * 1;                   # Convert to number
             $hash{"discount_$index"}                = '0';
             $hash{"checked_$index"}                 = '1';
             $hash{'AR_paid'}                        = $payment->{account};
             $hash{'datepaid'}                       = $payment->{date};
             $hash{'source'}                         = $payment->{source};
             $hash{'memo'}                           = $payment->{memo};
-            $hash{'exchangerate'}                   = $payment->{exchangeRate} * 1;               # Convert to number
-            $hash{"imported_transaction_id_$index"} = $payment->{imported_transaction_id} * 1;    # Convert to integer
+            $hash{'exchangerate'}                   = $payment->{exchangeRate} * 1;             # Convert to number
+            $hash{"imported_transaction_id_$index"} = $payment->{importedTransactionId} * 1;    # Convert to integer
 
-            $total_amount += $payment->{amount} * 1;                                              # Convert to number
+            $total_amount += $payment->{amount} * 1;                                            # Convert to number
             $rowcount++;
         }
 
@@ -95,13 +97,20 @@ post '/post_payment' => sub {
 
         use SL::OP;
         use SL::CP;
-        CP->post_payment( $c->myconfig( $json->{dbname}, 'localhost' ), $form );
+        $rc += CP->post_payment( $c->myconfig( $json->{clientName}, 'localhost' ), $form );
     }
 
-    $c->render(
-        json   => { message => 'All payments are posted' },
-        status => 200
-    );
+    if ( !$rc ) {
+        return $c->render(
+            json   => { error => 'Failed to post payments' },
+            status => 400
+        );
+    } else {
+        return $c->render(
+            json   => { message => "Payments are posted for $rc invoices." },
+            status => 200
+        );
+    }
 };
 
 app->start;
@@ -112,7 +121,7 @@ __DATA__
 curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
     -H "Content-Type: application/json" \
     -d '{
-          "dbname": "ledger28",
+          "clientName": "ledger28",
           "invoices": [
             {
               "invoiceId": 10148,
@@ -122,10 +131,10 @@ curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
                   "account": "1200--Bank Account GBP",
                   "source": "testsource",
                   "memo": "testmemo",
-                  "exchangeRate": "1",
+                  "exchangeRate": 1,
                   "date": "2007-07-06",
                   "amount": 225.37,
-                  "imported_transaction_id": 123
+                  "importedTransactionId": 123
                 }
               ]
             },
@@ -137,23 +146,23 @@ curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
                   "account": "1200--Bank Account GBP",
                   "source": "testsource",
                   "memo": "testmemo",
-                  "exchangeRate": "1",
+                  "exchangeRate": 1,
                   "date": "2007-07-06",
                   "amount": 225.37,
-                  "imported_transaction_id": 124
+                  "importedTransactionId": 124
                 },
                 {
                   "account": "1200--Bank Account GBP",
                   "source": "testsource",
                   "memo": "testmemo",
-                  "exchangeRate": "1",
+                  "exchangeRate": 1,
                   "date": "2007-07-07",
                   "amount": 300.50,
-                  "imported_transaction_id": 125
+                  "importedTransactionId": 125
                 }
               ]
             }
           ]
-        }' 
+        }'
 > error.html
 
