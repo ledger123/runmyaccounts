@@ -7,27 +7,33 @@ use Mojolicious::Lite;
 use Mojo::JSON qw(decode_json encode_json);
 use DBIx::Simple;
 use Data::Dumper;
-
+use Config::Tiny;
 use SL::Form;
 
-helper db => sub {
-    my ( $c, $dbname, $dbhost ) = @_;
+plugin 'JSONConfig' => { file => 'api.json' };
 
-    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname;host=$dbhost", 'postgres', '' );
+my $dbhost   = app->config->{dbhost};
+my $dbuser   = app->config->{dbuser};
+my $dbpasswd = app->config->{dbpasswd};
+
+helper db => sub {
+    my ( $c, $dbname ) = @_;
+
+    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpasswd);
 };
 
 helper myconfig => sub {
-    my ( $c, $dbname, $dbhost ) = @_;
+    my ( $c, $dbname ) = @_;
 
     my %myconfig = (
         dbconnect    => "dbi:Pg:dbname=$dbname;host=$dbhost",
         dateformat   => 'yyyy-mm-dd',
         dbdriver     => 'Pg',
-        dbhost       => '$dbhost',
+        dbhost       => $dbhost,
         dbname       => $dbname,
-        dbpasswd     => '',
+        dbpasswd     => $dbpasswd,
         dbport       => '',
-        dbuser       => 'postgres',
+        dbuser       => $dbuser,
         numberformat => '1,000.00',
     );
 
@@ -37,7 +43,7 @@ helper myconfig => sub {
 post '/post_payment' => sub {
     my $c    = shift;
     my $json = $c->req->json;
-    my $db   = $c->db( $json->{clientName}, 'localhost' );
+    my $db   = $c->db( $json->{clientName}  );
 
     my $rc;
 
@@ -97,7 +103,7 @@ post '/post_payment' => sub {
 
         use SL::OP;
         use SL::CP;
-        $rc += CP->post_payment( $c->myconfig( $json->{clientName}, 'localhost' ), $form );
+        $rc += CP->post_payment( $c->myconfig( $json->{clientName} ), $form );
     }
 
     if ( !$rc ) {
