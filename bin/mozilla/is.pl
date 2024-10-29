@@ -177,6 +177,7 @@ sub invoice_links {
 	$form->{"exchangerate_$i"} = $form->{acc_trans}{$key}->[$i-1]->{exchangerate};
 	$form->{"source_$i"} = $form->{acc_trans}{$key}->[$i-1]->{source};
 	$form->{"memo_$i"} = $form->{acc_trans}{$key}->[$i-1]->{memo};
+	$form->{"imported_transaction_id_$i"} = $form->{acc_trans}{$key}->[$i-1]->{imported_transaction_id};
 	$form->{"cleared_$i"} = $form->{acc_trans}{$key}->[$i-1]->{cleared};
 	$form->{"vr_id_$i"} = $form->{acc_trans}{$key}->[$i-1]->{vr_id};
 	$form->{"paymentmethod_$i"} = "$form->{acc_trans}{$key}->[$i-1]->{paymentmethod}--$form->{acc_trans}{$key}->[$i-1]->{paymentmethod_id}";
@@ -681,9 +682,9 @@ sub form_footer {
   $form->{invtotal} -= $form->{discount_paid};
 
   if ($form->{currency} eq $form->{defaultcurrency}) {
-    @column_index = qw(datepaid source memo paid);
+    @column_index = qw(datepaid source memo imported_transaction_id paid);
   } else {
-    @column_index = qw(datepaid source memo paid exchangerate);
+    @column_index = qw(datepaid source memo imported_transaction_id paid exchangerate);
   }
   push @column_index, "paymentmethod" if $form->{selectpaymentmethod};
   push @column_index, "AR_paid";
@@ -697,6 +698,7 @@ sub form_footer {
   $column_data{AR_paid} = "<th>".$locale->text('Account')."</th>";
   $column_data{source} = "<th>".$locale->text('Source')."</th>";
   $column_data{memo} = "<th>".$locale->text('Memo')."</th>";
+  $column_data{imported_transaction_id} = "<th></th>";
   $column_data{paymentmethod} = "<th>".$locale->text('Method')."</th>";
   
   $cashdiscount = "";
@@ -735,6 +737,7 @@ sub form_footer {
     $column_data{exchangerate} = qq|<td align=center>$exchangerate</td>|;
     $column_data{source} = qq|<td align=center><input name="discount_source" size=11 value="|.$form->quote($form->{"discount_source"}).qq|"></td>|;
     $column_data{memo} = qq|<td align=center><input name="discount_memo" size=11 value="|.$form->quote($form->{"discount_memo"}).qq|"></td>|;
+    $column_data{imported_transaction_id} = qq|<td align=center><input type=hidden name="imported_transaction_id" value="$form->{imported_transaction_id}"></td>|;
     $column_data{paymentmethod} = qq|<td align=center><select name="discount_paymentmethod">|.$form->select_option($form->{"selectpaymentmethod"}, $form->{discount_paymentmethod}, 1).qq|</select></td>|;
     
     $cashdiscount .= qq|
@@ -843,6 +846,7 @@ sub form_footer {
     $column_data{datepaid} = qq|<td align=center><input name="datepaid_$i" size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{"datepaid_$i"}></td>|;
     $column_data{source} = qq|<td align=center><input name="source_$i" size=11 value="|.$form->quote($form->{"source_$i"}).qq|"></td>|;
     $column_data{memo} = qq|<td align=center><input name="memo_$i" size=11 value="|.$form->quote($form->{"memo_$i"}).qq|"></td>|;
+    $column_data{imported_transaction_id} = qq|<td align=center><input name="imported_transaction_id_$i" type=hidden value="|.$form->quote($form->{"imported_transaction_id_$i"}).qq|"></td>|;
     $column_data{paymentmethod} = qq|<td align=center><select name="paymentmethod_$i">|.$form->select_option($form->{"selectpaymentmethod"}, $form->{"paymentmethod_$i"}, 1).qq|</select></td>|;
 
     for (@column_index) { print qq|$column_data{$_}\n| }
@@ -1013,28 +1017,6 @@ sub form_footer {
         print $table->output;
     }
 
-use JSON;
-$form->{transdate} =~ s{(\d{2})-(\d{2})-(\d{4})}{$3-$2-$1};
-my $json_data = encode_json([{
-    dbname      => 'ledger28',
-    invoiceType => 'AR',
-    invoiceId   => $form->{id},
-    payment => {
-        date         => $form->{transdate},
-        amount       => $form->{oldinvtotal},
-        source       => 'testsource',
-        memo         => 'testmemo',
-        exchangeRate => $form->{exchangerate} || 1,
-        account      => $form->{AR_paid_1}
-    }
-}]);
-
-my $url = 'https://app.ledger123.com/rma/api.pl/post_payment';
-my $curl_command = qq(curl -X POST $url \\\n    -H "Content-Type: application/json" \\\n    -d '$json_data');
-print "<pre>$curl_command
-> error.html</pre><br/><br/><br/><br/>";
-
-
   print qq|
 </form>
 
@@ -1105,7 +1087,7 @@ sub update {
   $j = 1;
   for $i (1 .. $form->{paidaccounts}) {
     if ($form->{"paid_$i"}) {
-      for (qw(olddatepaid datepaid source memo cleared vr_id paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
+      for (qw(olddatepaid datepaid source memo imported_transaction_id cleared vr_id paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
       for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
 
       if ($form->{"datepaid_$j"} ne $form->{"olddatepaid_$j"} || $form->{currency} ne $form->{oldcurrency}) {
@@ -1115,10 +1097,10 @@ sub update {
       $form->{"olddatepaid_$j"} = $form->{"datepaid_$j"};
       
       if ($j++ != $i) {
-	for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id paymentmethod)) { delete $form->{"${_}_$i"} }
+	for (qw(olddatepaid datepaid source memo imported_transaction_id cleared paid exchangerate vr_id paymentmethod)) { delete $form->{"${_}_$i"} }
       }
     } else {
-      for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id)) { delete $form->{"${_}_$i"} }
+      for (qw(olddatepaid datepaid source memo imported_transaction_id cleared paid exchangerate vr_id)) { delete $form->{"${_}_$i"} }
     }
   }
   
@@ -1286,7 +1268,7 @@ sub post {
     $form->{paidaccounts}++ if $form->{"paid_$form->{paidaccounts}"};
     $i = $form->{paidaccounts};
 
-    for (qw(paid datepaid source memo exchangerate cleared vr_id paymentmethod)) { $form->{"${_}_$i"} = $form->{"discount_$_"} }
+    for (qw(paid datepaid source memo imported_transaction_id exchangerate cleared vr_id paymentmethod)) { $form->{"${_}_$i"} = $form->{"discount_$_"} }
     $form->{discount_index} = $i;
     $form->{"AR_paid_$i"} = $form->{"AR_discount_paid"};
     $form->{"paymentmethod_$i"} = $form->{discount_paymentmethod};
