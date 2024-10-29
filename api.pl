@@ -19,7 +19,9 @@ my $dbpasswd = app->config->{dbpasswd};
 helper db => sub {
     my ( $c, $dbname ) = @_;
 
-    return DBIx::Simple->connect( "dbi:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpasswd);
+    my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpasswd, { AutoCommit => 0, RaiseError => 1 } );
+
+    return DBIx::Simple->connect($dbh);
 };
 
 helper myconfig => sub {
@@ -43,7 +45,7 @@ helper myconfig => sub {
 post '/post_payment' => sub {
     my $c    = shift;
     my $json = $c->req->json;
-    my $db   = $c->db( $json->{clientName}  );
+    my $db   = $c->db( $json->{clientName} );
 
     my $rc;
 
@@ -119,6 +121,38 @@ post '/post_payment' => sub {
     }
 };
 
+post '/delete_payment' => sub {
+    my $c    = shift;
+    my $json = $c->req->json;
+    my $db   = $c->db( $json->{clientName} );
+
+    my $rc;
+
+    foreach my $invoice ( @{ $json->{invoices} } ) {
+        my $arap = lc( $invoice->{invoiceType} );
+
+        my $acc_trans_deleted = $db->query( 'DELETE FROM acc_trans WHERE imported_transaction_id = ?',     $invoice->{importedTransactionId} );
+        my $payment_deleted   = $db->query( 'DELETE FROM payment WHERE trans_id = ? AND exchangerate = ?', $invoice->{invoiceId}, $invoice->{exchangeRate} );
+        my $arap_updated      = $db->query( "UPDATE $arap SET paid = 0, datepaid = null WHERE id = ?",     $invoice->{invoiceId} );
+
+        $rc++ if $acc_trans_deleted && $payment_deleted && $arap_updated;
+    }
+
+    if ( !$rc ) {
+        $db->rollback;
+        return $c->render(
+            json   => { error => 'Failed to post payments' },
+            status => 400
+        );
+    } else {
+        $db->commit;
+        return $c->render(
+            json   => { message => "Payments are posted for $rc invoices." },
+            status => 200
+        );
+    }
+};
+
 app->start;
 
 __DATA__
@@ -169,6 +203,73 @@ curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
               ]
             }
           ]
-        }'
-> error.html
+        }' > error.html
+
+# Single invoice payment posting call
+curl -X POST https://app.ledger123.com/rma/api.pl/post_payment \
+    -H "Content-Type: application/json" \
+    -d '{
+          "clientName": "ledger28",
+          "invoices": [
+            {
+              "invoiceId": 10148,
+              "invoiceType": "AR",
+              "payments": [
+                {
+                  "account": "1200--Bank Account GBP",
+                  "source": "testsource",
+                  "memo": "testmemo",
+                  "exchangeRate": 1.3,
+                  "date": "2007-07-06",
+                  "amount": 225.37,
+                  "importedTransactionId": 123
+                }
+              ]
+            }
+          ]
+        }' > error.html
+
+
+# Single invoice delete payment
+curl -X POST https://app.ledger123.com/rma/api.pl/delete_payment \
+    -H "Content-Type: application/json" \
+    -d '{
+          "clientName": "ledger28",
+          "invoices": [
+            {
+              "invoiceId": 10148,
+              "invoiceType": "AR",
+              "exchangeRate": 1.3,
+              "importedTransactionId": 123
+            }
+          ]
+        }' > error.html
+
+
+# Multiple invoices delete payment
+curl -X POST https://app.ledger123.com/rma/api.pl/delete_payment \
+    -H "Content-Type: application/json" \
+    -d '{
+          "clientName": "ledger28",
+          "invoices": [
+            {
+              "invoiceId": 10148,
+              "invoiceType": "AR",
+              "exchangeRate": 1,
+              "importedTransactionId": 123
+            },
+            {
+              "invoiceId": 10148,
+              "invoiceType": "AR",
+              "exchangeRate": 1,
+              "importedTransactionId": 124
+            },
+            {
+              "invoiceId": 10148,
+              "invoiceType": "AR",
+              "exchangeRate": 1,
+              "importedTransactionId": 125
+            }
+          ]
+        }' > error.html
 
