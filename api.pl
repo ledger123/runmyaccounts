@@ -133,7 +133,7 @@ post '/delete_payment' => sub {
 
         my $acc_trans_deleted = $db->query( 'DELETE FROM acc_trans WHERE imported_transaction_id = ?',     $invoice->{importedTransactionId} );
         my $payment_deleted   = $db->query( 'DELETE FROM payment WHERE trans_id = ? AND exchangerate = ?', $invoice->{invoiceId}, $invoice->{exchangeRate} );
-        my $arap_updated      = $db->query( "UPDATE $arap SET paid = 0, datepaid = null WHERE id = ?",     $invoice->{invoiceId} );
+        my $arap_updated      = $db->query( "UPDATE $arap SET paid = 0, fxpaid = 0, datepaid = null WHERE id = ?",     $invoice->{invoiceId} );
 
         $rc++ if $acc_trans_deleted && $payment_deleted && $arap_updated;
     }
