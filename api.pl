@@ -133,7 +133,33 @@ post '/delete_payment' => sub {
 
         my $acc_trans_deleted = $db->query( 'DELETE FROM acc_trans WHERE imported_transaction_id = ?',     $invoice->{importedTransactionId} );
         my $payment_deleted   = $db->query( 'DELETE FROM payment WHERE trans_id = ? AND exchangerate = ?', $invoice->{invoiceId}, $invoice->{exchangeRate} );
-        my $arap_updated      = $db->query( "UPDATE $arap SET paid = 0, fxpaid = 0, datepaid = null WHERE id = ?",     $invoice->{invoiceId} );
+
+        my $datepaid = $db->query("
+            SELECT MAX(transdate)
+            FROM acc_trans
+            WHERE trans_id = ? 
+            AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%_paid%')", $invoice->{invoiceId}
+        )->list;
+
+        my $paid = $db->query("
+            SELECT SUM(amount)
+            FROM acc_trans
+            WHERE trans_id = ? 
+            AND NOT fx_transaction
+            AND chart_id IN (SELECT id FROM chart WHERE link LIKE '%_paid%')", $invoice->{invoiceId}
+        )->list;
+        $paid *= -1; 
+
+        my $exchangerate = $db->query("SELECT exchangerate FROM ar WHERE id = ?", $invoice->{invoiceId})->list;
+        $exchangerate ||= 1;
+
+        my $fxpaid = $paid * $exchangerate;
+
+        my $arap_updated      = $db->query( "
+            UPDATE $arap
+            SET paid = ?, fxpaid = ?, datepaid = ?
+            WHERE id = ?", $paid, $fxpaid, $datepaid, $invoice->{invoiceId} 
+        );
 
         $rc++ if $acc_trans_deleted && $payment_deleted && $arap_updated;
     }
