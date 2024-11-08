@@ -48,6 +48,8 @@ post '/post_payment' => sub {
     my $db   = $c->db( $json->{clientName} );
 
     my $rc;
+    my $precision = $db->query("SELECT fldvalue FROM defaults WHERE fldname='precision'")->list;
+    $precision *= 1;
 
     # Loop through each invoice in the JSON array
     foreach my $invoice ( @{ $json->{invoices} } ) {
@@ -99,6 +101,7 @@ post '/post_payment' => sub {
         $hash{'rowcount'} = $rowcount;
 
         my $form = new Form;
+        $form->{precision} = $precision;
         foreach my $key ( keys %hash ) {
             $form->{$key} = $hash{$key};
         }
