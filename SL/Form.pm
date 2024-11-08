@@ -4957,7 +4957,7 @@ sub dbquote {
 	$var =~ s/;/\\;/g;
 
 	# DBI does not return NULL for SQL_DATE if the date is empty
-	if ( $type eq 'SQL_DATE' ) {
+	if ( $type eq 'SQL_DATE' or $type eq 'NUMBER' ) {
 		$_ = ($var) ? "'" . $self->dbclean($var) . "'" : "NULL";
 	}
 	if ( $type eq 'SQL_INT' ) {
