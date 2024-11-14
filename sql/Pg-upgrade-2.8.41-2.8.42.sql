@@ -33,6 +33,8 @@ VALUES ('RELATED_PARTY', 'sàrl'),
        ('COMMON', 'un'),
        ('COMMON', 'une');
 
+CREATE EXTENSION fuzzystrmatch;
+
 CREATE OR REPLACE FUNCTION to_filtered_tsvector(input TEXT, filter_type TEXT DEFAULT 'COMMON', ts_config REGCONFIG DEFAULT 'simple')
     RETURNS tsvector AS $$
 DECLARE
