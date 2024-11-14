@@ -4957,7 +4957,7 @@ sub dbquote {
 	$var =~ s/;/\\;/g;
 
 	# DBI does not return NULL for SQL_DATE if the date is empty
-	if ( $type eq 'SQL_DATE' ) {
+	if ( $type eq 'SQL_DATE' or $type eq 'NUMBER' ) {
 		$_ = ($var) ? "'" . $self->dbclean($var) . "'" : "NULL";
 	}
 	if ( $type eq 'SQL_INT' ) {
@@ -5853,7 +5853,7 @@ sub create_links {
 
 		# get amounts from individual entries
 		$query = qq|SELECT c.accno, c.description, ac.source, ac.amount,
-                ac.memo, ac.transdate, ac.cleared, ac.project_id,
+                ac.memo, ac.transdate, ac.cleared, ac.project_id, imported_transaction_id,
 		p.projectnumber, ac.id, y.exchangerate,
 		l.description AS translation,
 		pm.description AS paymentmethod, y.paymentmethod_id, ac.tax, ac.taxamount, ac.lineamount
