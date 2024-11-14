@@ -1641,9 +1641,9 @@ sub post_invoice {
 
       
       if ($form->{receivables}) {
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+	$query = qq|INSERT INTO acc_trans (trans_id, imported_transaction_id, chart_id, amount,
 	            transdate, approved, vr_id)
-		    VALUES ($form->{id}, (SELECT id FROM chart
+		    VALUES ($form->{id}, |.$form->dbquote($form->{"imported_transaction_id_$i"}, 'NUMBER').qq|, (SELECT id FROM chart
 					WHERE accno = '$araccno'),
 		    $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|,
 		    '$approved', $voucherid)|;
@@ -1662,9 +1662,9 @@ sub post_invoice {
 	$cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
       }
       
-      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
+      $query = qq|INSERT INTO acc_trans (trans_id, imported_transaction_id, chart_id, amount, transdate,
                   source, memo, cleared, approved, vr_id, id)
-                  VALUES ($form->{id}, (SELECT id FROM chart
+                  VALUES ($form->{id}, |.$form->dbquote($form->{"imported_transaction_id_$i"}, 'NUMBER').qq|, (SELECT id FROM chart
 		                      WHERE accno = '$accno'),
 		  $amount, |.$dbh->quote($form->{"datepaid_$i"}).qq|, |
 		  .$dbh->quote($form->{"source_$i"}).qq|, |
