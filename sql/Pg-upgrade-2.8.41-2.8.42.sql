@@ -35,6 +35,19 @@ VALUES ('RELATED_PARTY', 'sàrl'),
 
 CREATE EXTENSION fuzzystrmatch;
 
-CREATE OR REPLACE FUNCTION to_filtered_tsvector(input TEXT, filter_type TEXT DEFAULT 'COMMON', ts_config REGCONFIG DEFAULT 'simple') RETURNS tsvector AS $$ DECLARE filtered_input TEXT; BEGIN SELECT string_agg(input_word, ' ') INTO filtered_input FROM unnest(string_to_array(input, ' ')) AS input_word WHERE lower(input_word) NOT IN (SELECT lower(word) FROM search_irrelevant_words WHERE search_target = 'COMMON' OR search_target = filter_type); RETURN to_tsvector(ts_config, filtered_input); END $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION to_filtered_tsvector(input TEXT, filter_type TEXT DEFAULT 'COMMON', ts_config REGCONFIG DEFAULT 'simple')
+    RETURNS tsvector AS '
+DECLARE
+    filtered_input TEXT;
+BEGIN
+    SELECT string_agg(input_word, '' '') INTO filtered_input
+    FROM unnest(string_to_array(input, '' '')) AS input_word
+    WHERE lower(input_word) NOT IN (SELECT lower(word)
+                                    FROM search_irrelevant_words
+                                    WHERE search_target = ''COMMON'' OR search_target = filter_type);
+
+    RETURN to_tsvector(ts_config, filtered_input);
+END;
+' LANGUAGE plpgsql;
 
 UPDATE defaults SET fldvalue = '2.8.42' WHERE fldname = 'version';
