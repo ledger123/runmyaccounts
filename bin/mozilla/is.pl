@@ -737,7 +737,7 @@ sub form_footer {
     $column_data{exchangerate} = qq|<td align=center>$exchangerate</td>|;
     $column_data{source} = qq|<td align=center><input name="discount_source" size=11 value="|.$form->quote($form->{"discount_source"}).qq|"></td>|;
     $column_data{memo} = qq|<td align=center><input name="discount_memo" size=11 value="|.$form->quote($form->{"discount_memo"}).qq|"></td>|;
-    $column_data{imported_transaction_id} = qq|<td align=center><input type=text name="imported_transaction_id" value="$form->{imported_transaction_id}"></td>|;
+    $column_data{imported_transaction_id} = qq|<td align=center><input type=hidden name="imported_transaction_id" value="$form->{imported_transaction_id}"></td>|;
     $column_data{paymentmethod} = qq|<td align=center><select name="discount_paymentmethod">|.$form->select_option($form->{"selectpaymentmethod"}, $form->{discount_paymentmethod}, 1).qq|</select></td>|;
     
     $cashdiscount .= qq|
@@ -846,7 +846,7 @@ sub form_footer {
     $column_data{datepaid} = qq|<td align=center><input name="datepaid_$i" size=11 class=date title="$myconfig{dateformat}" onChange="validateDate(this)" value=$form->{"datepaid_$i"}></td>|;
     $column_data{source} = qq|<td align=center><input name="source_$i" size=11 value="|.$form->quote($form->{"source_$i"}).qq|"></td>|;
     $column_data{memo} = qq|<td align=center><input name="memo_$i" size=11 value="|.$form->quote($form->{"memo_$i"}).qq|"></td>|;
-    $column_data{imported_transaction_id} = qq|<td align=center><input name="imported_transaction_id_$i" type=text value="|.$form->quote($form->{"imported_transaction_id_$i"}).qq|"></td>|;
+    $column_data{imported_transaction_id} = qq|<td align=center><input name="imported_transaction_id_$i" type=hidden value="|.$form->quote($form->{"imported_transaction_id_$i"}).qq|"></td>|;
     $column_data{paymentmethod} = qq|<td align=center><select name="paymentmethod_$i">|.$form->select_option($form->{"selectpaymentmethod"}, $form->{"paymentmethod_$i"}, 1).qq|</select></td>|;
 
     for (@column_index) { print qq|$column_data{$_}\n| }
