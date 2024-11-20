@@ -1960,9 +1960,6 @@ sub reminder {
 
   }
 
-  my @debugcols = qw(nameqr address1qr zipcodeqr cityqr name firstname lastname typeofcontact address1 zipcode city);
-  $form->info("<pre>"); for my $row (@{$form->{AG}}){ for (@debugcols) { print "$_: $row->{$_}\n" } print "\n\n" }
-
   # get language
   $form->all_languages($myconfig, $dbh);
 

@@ -3194,6 +3194,10 @@ sub print_reminder {
 		$form->{OUT} = qq~| $printer{$form->{media}}~;
 	}
 
+  my @debugcols = qw(nameqr address1qr zipcodeqr cityqr name firstname lastname typeofcontact address1 zipcode city);
+  $form->info("<pre>"); for my $row (@{$form->{AG}}){ for (@debugcols) { print "$_: $row->{$_}\n" } print "\n\n" }
+
+
 	&do_print_reminder;
 
 	if ( $form->{callback} ) {
