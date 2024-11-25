@@ -1326,8 +1326,6 @@ sub update {
     # recalculate taxes
     @taxaccounts = split / /, $form->{taxaccounts};
 
-    $form->isvaldate(\%myconfig, $form->{transdate}, $locale->text('Invalid date ...'));
-
     if ( $form->{taxincluded} ) {
 
         $ml = 1;
