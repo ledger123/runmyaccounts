@@ -781,11 +781,13 @@ sub post_payment {
       $amount = $form->round_amount($form->{"paid_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
 
       # add AR/AP
+      my $imported_transaction_id = defined $form->{"imported_transaction_id_$i"} ? $form->{"imported_transaction_id_$i"} * 1 : 'NULL';
+
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
                   amount, approved, vr_id, imported_transaction_id)
                   VALUES (|.$form->dbclean($form->{"id_$i"}).qq|, |.$form->dbclean($arap).qq|, '|.$form->dbclean($form->{datepaid}).qq|',
 		  $amount * $ml, '$approved',
-		  $voucherid, |. $form->{"imported_transaction_id_$i"}*1 .qq|)|;
+		  $voucherid, $imported_transaction_id)|;
       $dbh->do($query) || $form->dberror($query);
 
       # add payment
@@ -797,7 +799,7 @@ sub post_payment {
                  '$form->{datepaid}', $form->{"paid_$i"} * $ml * -1, |
                  .$dbh->quote($form->{source}).qq|, |
                  .$dbh->quote($form->{memo}).qq|, |
-                 .$form->{"imported_transaction_id_$i"} * 1 .qq|, '$approved',
+                 .$imported_transaction_id.qq|, '$approved',
                  $voucherid, $paymentid)|;
       $dbh->do($query) || $form->dberror($query);
 
@@ -818,7 +820,7 @@ sub post_payment {
 		           (SELECT id FROM chart
 			    WHERE accno = '$paymentaccno'),
 		  '$form->{datepaid}', $amount, '1', |
-		  .$dbh->quote($form->{source}). qq|, |. $form->{"imported_transaction_id_$i"}*1 . qq|, '$approved',
+		  .$dbh->quote($form->{source}). qq|, $imported_transaction_id, '$approved',
 		  $voucherid)|;
 	$dbh->do($query) || $form->dberror($query);
       }
@@ -831,7 +833,7 @@ sub post_payment {
 		    amount, fx_transaction, approved, vr_id, imported_transaction_id)
 		    VALUES ($form->{"id_$i"}, $accno_id,
 		    '|.$form->dbclean($form->{datepaid}).qq|', $amount, '1', '$approved',
-		        $voucherid, |. $form->{"imported_transaction_id_$i"}*1 . qq|)|;
+		        $voucherid, $imported_transaction_id)|;
 	$dbh->do($query) || $form->dberror($query);
       }
       # deduct tax for cash discount
