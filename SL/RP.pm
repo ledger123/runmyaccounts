@@ -1813,6 +1813,8 @@ sub reminder {
       $sth->execute($item->{id}, $curr);
 
       while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+        $form->dumper($ref);
+
 		$ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
