@@ -3353,7 +3353,7 @@ qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|
 				);
 			}
   my @debugcols = qw(invnumber nameqr address1qr zipcodeqr cityqr name firstname lastname typeofcontact address1 zipcode city);
-  $form->info("<pre>"); for my $row (@{$form->{AG}}){ for (@debugcols) { print "$_: $row->{$_}\n" } print "\n\n" }
+  $form->info("<pre>"); for (@debugcols) { print "$_: $form->{$_}\n" }
   			$form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey);
 		}
 	}
