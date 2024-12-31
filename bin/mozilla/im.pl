@@ -30,6 +30,7 @@ require "$form->{path}/mylib.pl";
 sub import {
 
   %title = ( sales_invoice => 'Sales Invoices',
+         purchase_invoice => 'Purchase Invoices',
 	     sales_order => 'Sales Orders',
 	     purchase_order => 'Purchase Orders',
 	     payment => 'Payments',
@@ -837,6 +838,175 @@ sub im_sales_invoice {
 
 }
 
+sub im_purchase_invoice {
+
+  $form->error($locale->text('Import File missing!')) if ! $form->{data};
+
+  @column_index = qw(ndx transdate invnumber vendor vendornumber city dcn invoicedescription total curr exchangerate totalqty unit duedate employee department warehouse);
+  @flds = @column_index;
+  shift @flds;
+  push @flds, qw(ordnumber quonumber vendor_id datepaid dcn shippingpoint shipvia waybill terms notes intnotes language_code ponumber cashdiscount discountterms employee_id parts_id description sellprice discount qty unit serialnumber projectnumber deliverydate AP taxincluded department_id warehouse_id);
+  unshift @column_index, "runningnumber";
+    
+  $form->{callback} = "$form->{script}?action=import";
+  for (qw(type login path)) { $form->{callback} .= "&$_=$form->{$_}" }
+
+  &xrefhdr;
+  
+  $form->{vc} = 'vendor';
+  IM->purchase_invoice(\%myconfig, \%$form);
+  #$form->header; print "<pre>"; $form->dumper($form);
+
+  $column_data{runningnumber} = "&nbsp;";
+  $column_data{transdate} = $locale->text('Invoice Date');
+  $column_data{invnumber} = $locale->text('Invoice Number');
+  $column_data{invoicedescription} = $locale->text('Description');
+  $column_data{dcn} = $locale->text('DCN');
+  $column_data{vendor} = $locale->text('Vendor');
+  $column_data{vendornumber} = $locale->text('Vendor Number');
+  $column_data{city} = $locale->text('City');
+  $column_data{total} = $locale->text('Total');
+  $column_data{totalqty} = $locale->text('Qty');
+  $column_data{curr} = $locale->text('Curr');
+  $column_data{exchangerate} = $locale->text('Exchange Rate');
+  $column_data{unit} = $locale->text('Unit');
+  $column_data{duedate} = $locale->text('Due Date');
+  $column_data{employee} = $locale->text('Employee');
+  $column_data{department} = $locale->text('Department');
+  $column_data{warehouse} = $locale->text('Warehouse');
+
+  $form->header(0, 0, $locale);
+ 
+  print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr>
+    <th class=listtop>$form->{title}</th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr class=listheading>
+|;
+
+  for (@column_index) { print "\n<th>$column_data{$_}</th>" }
+
+  print qq|
+        </tr>
+|;
+
+  # $form->{ndx} contains sequence number of each unqiue invoice number.
+  # For example we have 5 lines items CSV file and first invoice has 
+  # two items, 2nd,3rd,4th invoices one item, then $form->{ndx} will
+  # be 1,3,4,5 (as in our sample csv file on wiki) and $form->{rowcount} = 5
+  @ndx = split / /, $form->{ndx};
+  $ndx = shift @ndx;
+  $k = 0;
+
+  if ($form->{batch_import}){
+     for $i (1 .. $form->{rowcount}){
+        if ($form->{"vendor_id_$i"}) {
+           $form->{"ndx_$i"} = "on";
+	}
+     }
+     &import_purchase_invoices;
+     exit;
+  }
+
+  for $i (1 .. $form->{rowcount}) {
+    
+    # Show only first line for multi-line invoices
+    if ($i == $ndx) {
+      $k++;
+      $j++; $j %= 2;
+      $ndx = shift @ndx;
+   
+      print qq|
+        <tr class=listrow$j>
+|;
+
+      $total += $form->{"total_$i"};
+      
+      for (@column_index) { $column_data{$_} = qq|<td>$form->{"${_}_$i"}</td>| }
+      $column_data{total} = qq|<td align=right>|.$form->format_amount(\%myconfig, $form->{"total_$i"}, $form->{precision}).qq|</td>|;
+      $column_data{totalqty} = qq|<td align=right>|.$form->format_amount(\%myconfig, $form->{"totalqty_$i"}).qq|</td>|;
+
+      $column_data{runningnumber} = qq|<td align=right>$k</td>|;
+      
+      if ($form->{"vendor_id_$i"}) {
+	$column_data{ndx} = qq|<td><input name="ndx_$i" type=checkbox class=checkbox checked></td>|;
+      } else {
+	$column_data{ndx} = qq|<td>&nbsp;</td>|;
+      }
+
+      for (@column_index) { print $column_data{$_} }
+
+      print qq|
+	</tr>
+|;
+    
+    }
+
+    $form->hide_form(map { "${_}_$i" } @flds);
+    
+  }
+
+  # print total
+  for (@column_index) { $column_data{$_} = qq|<td>&nbsp;</td>| }
+  $column_data{total} = qq|<th class=listtotal align=right>|.$form->format_amount(\%myconfig, $total, $form->{precision}, "&nbsp;")."</th>";
+
+  print qq|
+        <tr class=listtotal>
+|;
+
+  for (@column_index) { print "\n$column_data{$_}" }
+  
+  print qq|
+        </tr>
+      </table>
+    </td>
+  </tr>
+|;
+
+  if ($form->{missingparts}) {
+    print qq|
+    <tr>
+      <td>|;
+      $form->info($locale->text('The following parts could not be found:')."\n\n");
+      for (split /\n/, $form->{missingparts}) {
+	$form->info("$_\n");
+      }
+    print qq|
+      </td>
+    </tr>
+|;
+  }
+
+  print qq|
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+
+</table>
+|;
+   
+  $form->hide_form(qw(vc rowcount ndx type login path callback markpaid paymentaccount closedto));
+
+  print qq|
+<input name=action class=submit type=submit value="|.$locale->text('Import Purchase Invoices').qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+
 sub im_sales_order {
 
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
@@ -1361,6 +1531,101 @@ sub import_sales_orders {
   $form->info("\n".$locale->text('Total:')." ".$form->format_amount(\%myconfig, $total, $form->{precision}));
   
 }
+
+sub import_purchase_invoices {
+
+  my $numberformat = $myconfig{numberformat};
+  $myconfig{numberformat} = "1000.00";
+
+  my %ndx = ();
+  my @ndx = split / /, $form->{ndx};
+  
+  my $i;
+  my $j = shift @ndx;
+  my $k = shift @ndx;
+  $k ||= $j;
+
+  for $i (1 .. $form->{rowcount}) {
+    if ($i == $k) {
+      $j = $k;
+      $k = shift @ndx;
+    }
+    push @{$ndx{$j}}, $i;
+  }
+
+  my $total = 0;
+  
+  $newform = new Form;
+
+  my $m = 0;
+  
+  for $k (keys %ndx) {
+    
+    if ($form->{"ndx_$k"}) {
+
+      $m++;
+
+      for (keys %$newform) { delete $newform->{$_} };
+
+      $newform->{importing} = 1;
+      $newform->{precision} = $form->{precision};
+
+      for (qw(invnumber ordnumber quonumber transdate vendor vendor_id datepaid duedate dcn shippingpoint shipvia waybill terms notes intnotes curr exchangerate language_code ponumber cashdiscount discountterms AP taxincluded)) { $newform->{$_} = $form->{"${_}_$k"} }
+      $newform->{description} = $form->{"invoicedescription_$k"};
+
+      $newform->{employee} = qq|--$form->{"employee_id_$k"}|;
+      $newform->{department} = qq|--$form->{"department_id_$k"}|;
+      $newform->{warehouse} = qq|--$form->{"warehouse_id_$k"}|;
+
+      $newform->{type} = "invoice";
+
+      $j = 1; 
+
+      for $i (@{ $ndx{$k} }) {
+
+        $total += $form->{"sellprice_$i"} * $form->{"qty_$i"};
+	
+	$newform->{"id_$j"} = $form->{"parts_id_$i"};
+	for (qw(qty discount)) { $newform->{"${_}_$j"} = $form->format_amount($myconfig, $form->{"${_}_$i"}) }
+	for (qw(description unit deliverydate serialnumber itemnotes projectnumber)) { $newform->{"${_}_$j"} = $form->{"${_}_$i"} }
+	$newform->{"sellprice_$j"} = $form->format_amount($myconfig, $form->{"sellprice_$i"});
+
+	$j++; 
+      }
+
+      $newform->{rowcount} = $j;
+      if ($form->{markpaid}){
+	$newform->{markpaid} = 'Y';
+	$newform->{datepaid_1} = $newform->{transdate};
+	$newform->{AP_paid_1} = $form->{paymentaccount};
+	$newform->{paidaccounts} = 2;
+      }
+
+      # post invoice
+
+      $form->{locked} = ($form->datetonum(\%myconfig, $newform->{transdate}) <= $form->{closedto});
+      if ($form->{locked}){
+        $form->info($locale->text('Cannot post invoice in closed period. ') . $newform->{invnumber} . "\n");
+     } else {
+      $form->info("${m}. ".$locale->text('Posting Invoice ...'));
+      if (IM->import_purchase_invoice(\%myconfig, \%$newform)) {
+	$form->info(qq| $newform->{invnumber}, $newform->{description}, $newform->{vendornumber}, $newform->{name}, $newform->{city}, |);
+	$myconfig{numberformat} = $numberformat;
+	$form->info($form->format_amount(\%myconfig, $form->{"total_$k"}, $form->{precision}));
+	$myconfig{numberformat} = "1000.00";
+	$form->info(" ... ".$locale->text('ok')."\n");
+      } else {
+	$form->error($locale->text('Posting failed!'));
+      }
+     }
+    }
+  }
+
+  $myconfig{numberformat} = $numberformat;
+  $form->info("\n".$locale->text('Total:')." ".$form->format_amount(\%myconfig, $total, $form->{precision}));
+  
+}
+
 
 sub import_purchase_orders {
 
