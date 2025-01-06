@@ -3197,7 +3197,7 @@ sub numtextrows {
 sub dberror {
 	my ( $self, $msg ) = @_;
 
-	$self->error( $msg, $DBI::errstr );
+	$self->error( $msg . " : " . $DBI::errstr );
 
 }
 
