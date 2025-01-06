@@ -476,7 +476,7 @@ sub process_query {
       $query =~ s/\\'/''/g;
 
       $sth = $dbh->prepare($query);
-      $sth->execute || $form->dberror($query);
+      $sth->execute;
       $sth->finish;
 
       $query = "";
