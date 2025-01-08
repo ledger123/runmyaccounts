@@ -3194,6 +3194,7 @@ sub print_reminder {
 		$form->{OUT} = qq~| $printer{$form->{media}}~;
 	}
 
+
 	&do_print_reminder;
 
 	if ( $form->{callback} ) {
@@ -3231,7 +3232,7 @@ sub do_print_reminder {
 	);
 
 	@a =
-	  qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn);
+	  qw(id invnumber name nameqr address1 address1qr address2 city cityqr state stateqr zipcode zipcodeqr country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";
 	push @a, 'email' if !$form->{media} eq 'email';
@@ -3283,7 +3284,7 @@ sub do_print_reminder {
 				$form->{IN} =~ s/html$/tex/;
 			}
 
-			$form->{ $form->{vc} }    = $form->{name};
+            $form->{ $form->{vc} }    = $form->{name};
 			$form->{"$form->{vc}_id"} = $ref->{vc_id};
 			$form->{language_code}    = $form->{"language_code_$ref->{id}"};
 			$form->{currency}         = $ref->{curr};
