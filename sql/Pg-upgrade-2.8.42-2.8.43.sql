@@ -9,9 +9,17 @@ CREATE TABLE blink_import_process(
     id SERIAL PRIMARY KEY,
     bank_account_id BIGINT REFERENCES bank_account(id),
     status TEXT NOT NULL,
-    details JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    last_modified_at TIMESTAMP NOT NULL DEFAULT NOW()
+    error JSONB,
+    created_at TIMESTAMP NOT NULL,
+    last_modified_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE blink_import_process_log(
+    id SERIAL PRIMARY KEY,
+    blink_import_process_id BIGINT REFERENCES blink_import_process(id),
+    processed_payload JSONB NOT NULL,
+    error JSONB,
+    banking_import_event_id BIGINT REFERENCES banking_import_event(id)
 );
 
 UPDATE defaults SET fldvalue = '2.8.43' WHERE fldname = 'version';
