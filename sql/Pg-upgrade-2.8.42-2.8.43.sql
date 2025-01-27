@@ -2,9 +2,6 @@ ALTER TABLE bank_account
     ADD COLUMN blink_permission_id BIGINT,
     ADD COLUMN blink_account_id TEXT;
 
-ALTER TABLE banking_import_event
-    ADD COLUMN blink_import_process_id BIGINT DEFAULT NULL;
-
 CREATE TABLE blink_import_process(
     id SERIAL PRIMARY KEY,
     bank_account_id BIGINT REFERENCES bank_account(id),
@@ -17,6 +14,7 @@ CREATE TABLE blink_import_process(
 CREATE TABLE blink_import_process_log(
     id SERIAL PRIMARY KEY,
     blink_import_process_id BIGINT REFERENCES blink_import_process(id),
+    processed_target_id TEXT NOT NULL,
     processed_payload JSONB NOT NULL,
     error JSONB,
     banking_import_event_id BIGINT REFERENCES banking_import_event(id)
