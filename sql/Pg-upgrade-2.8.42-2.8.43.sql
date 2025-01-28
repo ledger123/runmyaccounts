@@ -4,16 +4,16 @@ ALTER TABLE bank_account
 
 CREATE TABLE blink_import_process(
     id SERIAL PRIMARY KEY,
-    bank_account_id BIGINT REFERENCES bank_account(id),
+    bank_account_id BIGINT REFERENCES bank_account(id) NOT NULL,
     status TEXT NOT NULL,
     error JSONB,
     created_at TIMESTAMP NOT NULL,
-    last_modified_at TIMESTAMP NOT NULL
+    last_modified_at TIMESTAMP
 );
 
 CREATE TABLE blink_import_process_log(
     id SERIAL PRIMARY KEY,
-    blink_import_process_id BIGINT REFERENCES blink_import_process(id),
+    blink_import_process_id BIGINT REFERENCES blink_import_process(id) NOT NULL,
     processed_target_id TEXT NOT NULL,
     processed_payload JSONB NOT NULL,
     error JSONB,
