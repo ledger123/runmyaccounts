@@ -103,6 +103,7 @@ $self{texts} = {
   'Yes'                         => 'Ja',
   'html'                        => 'HTML',
   'ok'                          => 'OK',
+  'Mark as sent'                => 'Als versendet markieren',
 };
 
 $self{subs} = {
@@ -111,6 +112,8 @@ $self{subs} = {
   'deselect_all'                => 'deselect_all',
   'display'                     => 'display',
   'download_zip_file'           => 'download_zip_file',
+  'als_versendet_markieren'     => 'mark_as_sent',
+  'mark_as_sent'                => 'mark_as_sent',
   'e_mail'                      => 'e_mail',
   'js_menu'                     => 'js_menu',
   'list_spool'                  => 'list_spool',
