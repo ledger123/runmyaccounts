@@ -539,11 +539,22 @@ sub print {
 }
 
 sub mark_as_sent {
-  $myform = new Form;
-  $form->{media} = 'mark_as_sent';
-  &print
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+    for my $i (1 .. $form->{rowcount}){
+        if ($form->{"ndx_$i"}){
+            my $id = $form->{"id_$i"};
+            my $invnumber = $dbs->query("SELECT invnumber FROM ar WHERE id = ?", $id)->list;
+            my $statusexists = $dbs->query("SELECT 1 FROM status WHERE trans_id = ? AND formname='invoice'", $id)->list;
+            if ($statusexists){
+                $dbs->update('status', {emailed => '1'}, {trans_id => $id, formname => 'invoice'});
+            } else {
+                $dbs->insert('status', {trans_id => $id, formname => 'invoice', emailed => '1'});
+            }
+            $form->info("Invoice $invnumber marked as emailed ...\n");
+        }
+    }
 }
-
 
 sub e_mail { 
     if ($form->{type} eq 'reminder'){
