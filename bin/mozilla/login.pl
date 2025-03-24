@@ -258,7 +258,7 @@ sub login {
   }
 
 
-  $user = new User $memberfile, $form->{login};
+  $user = new User $memberfile, $form->{login}, 1;
 
   # if we get an error back, bale out
   if (($errno = $user->login(\%$form, $userspath)) <= -1) {
