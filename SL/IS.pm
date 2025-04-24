@@ -1813,8 +1813,6 @@ sub post_invoice {
 
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
-  warn sprintf "DEBUG: invamount = %s, exchangerate = %s\n",
-     $invamount, $form->{exchangerate};
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
