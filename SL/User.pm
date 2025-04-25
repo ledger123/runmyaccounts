@@ -18,11 +18,13 @@
 package User;
 
 sub new {
-  my ($type, $memfile, $login) = @_;
+  my ($type, $memfile, $login, $ignorelock) = @_;
   my $self = {};
 
   if ($login ne "") {
+    if (!$ignorelock){
     &error("", "$memfile locked!") if (-f "${memfile}.LCK");
+    }
     
     open(MEMBER, "$memfile") or &error("", "$memfile : $!");
     
