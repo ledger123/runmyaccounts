@@ -1516,7 +1516,7 @@ sub print_form {
     $form->{vc} = "customer";
     $form->{customer_id} = 0;
   }
-
+ 
   &validate_items;
  
   $form->{"${inv}date"} = $form->{transdate};
@@ -1666,7 +1666,7 @@ sub print_form {
 
   $form->{pre} = "<body bgcolor=#ffffff>\n<pre>" if $form->{format} eq 'txt';
 
-  if ($form->{media} !~ /(screen|email)/) {
+  if ($form->{media} !~ /(screen|email|mark_as_sent|)/) {
     $form->{OUT} = "| $printer{$form->{media}}";
     
     $form->{OUT} =~ s/<%(fax)%>/<%$form->{vc}$1%>/;
@@ -1748,6 +1748,24 @@ sub print_form {
       # $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
     }
     
+  }
+  if ($form->{media} eq 'mark_as_sent') {
+    # if ($form->{emailed} !~ /$form->{formname}/) {
+      $form->{mark_as_sent} .= " $form->{formname}";
+      $form->{mark_as_sent} =~ s/^ //;
+
+      # save status
+      $form->update_status(\%myconfig);
+    # }
+
+    $now = scalar localtime;
+    
+    
+    %audittrail = ( tablename	=> ($order) ? 'oe' : lc $ARAP,
+                    reference	=> $form->{"${inv}number"},
+		    formname	=> $form->{formname},
+		    action	=> 'emailed',
+		    id		=> $form->{id} );
   }
 
 
