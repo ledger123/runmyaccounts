@@ -22,6 +22,7 @@ our %Lexicon = (
     'Archive filename'  => 'Archiv-Dateiname',
     'Contents'          => 'Inhalt',
     'Download ZIP file' => 'ZIP-Datei herunterladen',
+    'Mark as sent'      => 'Als versendet markieren',
 
     # Preliminary VAT Return:
     'Preliminary VAT Return' => 'Umsatzsteuer-Voranmeldung',
