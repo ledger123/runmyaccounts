@@ -462,7 +462,7 @@ sub invoice_details {
   
   my $totaltax;
   for (sort keys %taxaccs) {
-      $totaltax += $taxaccounts{$_};
+      $totaltax += $form->round_amount($taxaccounts{$_}, $form->{precision});
   };
   $total = $totaltax;
   
