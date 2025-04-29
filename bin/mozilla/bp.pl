@@ -455,38 +455,38 @@ sub print {
       $form->{shipto} = 1;
       
       if ($myform->{"module_$i"} eq 'oe') {
-	&order_links;
-	&prepare_order;
-	$form->{formname} = $myform->{type};
-	$inv = 'ord'
+        &order_links;
+        &prepare_order;
+        $form->{formname} = $myform->{type};
+        $inv = 'ord'
       } elsif ($myform->{"module_$i"} eq 'jc') {
-	&{"prepare_$myform->{type}"};
-	$form->{formname} = $myform->{type};
+        &{"prepare_$myform->{type}"};
+        $form->{formname} = $myform->{type};
       } else {
-	&invoice_links;
-	&prepare_invoice;
-	if ($myform->{type} ne 'invoice') {
-	  $form->{formname} = $myform->{type};
-	}
-    if ($form->{type} eq 'invoice' and $form->{vc} eq 'vendor'){
-      $form->{formname} = 'vendor_invoice';
-    }
-	delete $form->{paid};
-	
-	$arap = ($form->{vc} eq 'customer') ? "AR" : "AP";
-        $form->{payment_accno} = $form->unescape($form->{payment_accno});
-	
-        # default
-        @a = split /\n/, $form->unescape($form->{"select${arap}_paid"});
-	$form->{payment_accno} ||= $a[0];
+        &invoice_links;
+        &prepare_invoice;
+        if ($myform->{type} ne 'invoice') {
+          $form->{formname} = $myform->{type};
+        }
+        if ($form->{type} eq 'invoice' and $form->{vc} eq 'vendor'){
+          $form->{formname} = 'vendor_invoice';
+        }
+        delete $form->{paid};
+        
+        $arap = ($form->{vc} eq 'customer') ? "AR" : "AP";
+              $form->{payment_accno} = $form->unescape($form->{payment_accno});
+        
+              # default
+              @a = split /\n/, $form->unescape($form->{"select${arap}_paid"});
+        $form->{payment_accno} ||= $a[0];
 
-	for (2 .. $form->{paidaccounts}) {
-	  $form->{"paid_$_"} = $form->format_amount(\%myconfig, $form->{"paid_$_"}, $form->{precision});
-	  $form->{payment_accno} = $form->{"${arap}_paid_$_"};
-	}
+        for (2 .. $form->{paidaccounts}) {
+          $form->{"paid_$_"} = $form->format_amount(\%myconfig, $form->{"paid_$_"}, $form->{precision});
+          $form->{payment_accno} = $form->{"${arap}_paid_$_"};
+        }
 
-        $form->{"${arap}_paid_$form->{paidaccounts}"} = $form->{payment_accno};
-	$inv = 'inv'
+              $form->{"${arap}_paid_$form->{paidaccounts}"} = $form->{payment_accno};
+        $inv = 'inv'
       }
 
       $form->{rowcount}++;
@@ -502,6 +502,7 @@ sub print {
 
       $myform->{description} = $form->{description};
 
+      
       &print_form($old_form);
       # ISNA_end
 
@@ -537,6 +538,23 @@ sub print {
   
 }
 
+sub mark_as_sent {
+    my $dbh = $form->dbconnect(\%myconfig);
+    my $dbs = DBIx::Simple->connect($dbh);
+    for my $i (1 .. $form->{rowcount}){
+        if ($form->{"ndx_$i"}){
+            my $id = $form->{"id_$i"};
+            my $invnumber = $dbs->query("SELECT invnumber FROM ar WHERE id = ?", $id)->list;
+            my $statusexists = $dbs->query("SELECT 1 FROM status WHERE trans_id = ? AND formname='invoice'", $id)->list;
+            if ($statusexists){
+                $dbs->update('status', {emailed => '1'}, {trans_id => $id, formname => 'invoice'});
+            } else {
+                $dbs->insert('status', {trans_id => $id, formname => 'invoice', emailed => '1'});
+            }
+            $form->info("Invoice $invnumber marked as emailed ...\n");
+        }
+    }
+}
 
 sub e_mail { 
     if ($form->{type} eq 'reminder'){
@@ -1044,6 +1062,7 @@ function CheckAll() {
                'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
 	       'Remove' => { ndx => 6, key => 'R', value => $locale->text('Remove') },
 	       'Download zip file' => { ndx => 7, key => 'R', value => $locale->text('Download zip file') },
+	       'Mark as sent' => { ndx => 8, key => 'R', value => $locale->text('Mark as sent') },
 	      );
 
 
@@ -1055,6 +1074,7 @@ function CheckAll() {
   
   if ($form->{batch} eq 'print') {
     delete $button{'E-mail'};
+    delete $button{'Mark as sent'};
   }
   if ($form->{batch} ne 'queue') {
     delete $button{'Remove'};
@@ -1065,7 +1085,8 @@ function CheckAll() {
   }
   if ($form->{batch} eq 'queue') {
     delete $button{'E-mail'} if $form->{batch2} ne 'email';
-    delete $button{'Print'} if ! %printer;
+    delete $button{'Mark as sent'} if $form->{batch2} ne 'email';
+    delete $button{'Print'} if ! %printer;x
   }
 
   print qq|<input type=checkbox name="attach_reminder_invoice" value="1">|;
