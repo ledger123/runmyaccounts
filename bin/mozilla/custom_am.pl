@@ -654,6 +654,7 @@ WHERE trans_id NOT IN
 
 sub click_here_to_delete_blank_rows {
   my $dbh = $form->dbconnect(\%myconfig);
+  print STDERR "\nDeleted blank Rows\n";
   $query = qq|
     DELETE
     FROM acc_trans 
@@ -667,6 +668,7 @@ sub click_here_to_delete_blank_rows {
 
 sub click_here_to_delete_blank_tax_rows {
   my $dbh = $form->dbconnect(\%myconfig);
+  print STDERR "\nDeleted blank Tax Rows\n";
   $query = qq|
     DELETE
     FROM acc_trans 
@@ -679,6 +681,7 @@ sub click_here_to_delete_blank_tax_rows {
 
 sub click_here_to_delete_blank_non_tax_rows {
   my $dbh = $form->dbconnect(\%myconfig);
+  print STDERR "\nDeleted blank Non - Tax Rows\n";
   $query = qq|
     DELETE
     FROM acc_trans 
