@@ -262,6 +262,7 @@ $self{texts} = {
   'Tax'                         => 'MWST',
   'Taxable'                     => 'Steuerpflichtig',
   'Taxes'                       => 'MWST',
+  'Tax Number'                  => 'Steuernummer',
   'Taxes saved!'                => 'MWST gespeichert',
   'Template saved!'             => 'Druckvorlage gespeichert!',
   'Times'                       => 'mal',
