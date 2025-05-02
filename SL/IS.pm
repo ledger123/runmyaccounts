@@ -2552,11 +2552,12 @@ sub retrieve_item {
 		 p.unit, p.assembly, p.bin, $onhandvar, p.notes AS itemnotes,
 		 p.inventory_accno_id, p.income_accno_id, p.expense_accno_id,
 		 pg.partsgroup, p.partsgroup_id, p.partnumber AS sku,
-		 p.weight,
+		 p.weight, p.project_id, project.projectnumber,
 		 t1.description AS translation,
 		 t2.description AS grouptranslation
                  FROM parts p
 		 LEFT JOIN partsgroup pg ON (pg.id = p.partsgroup_id)
+		 LEFT JOIN project ON (project.id = p.project_id)
 		 LEFT JOIN translation t1 ON (t1.trans_id = p.id AND t1.language_code = |.$dbh->quote($form->{language_code}).qq|)
 		 LEFT JOIN translation t2 ON (t2.trans_id = p.partsgroup_id AND t2.language_code = |.$dbh->quote($form->{language_code}).qq|)
 	         $where|;
@@ -2603,6 +2604,7 @@ sub retrieve_item {
 
     $ref->{description} = $ref->{translation} if $ref->{translation};
     $ref->{partsgroup} = $ref->{grouptranslation} if $ref->{grouptranslation};
+    $ref->{projectnumber} = "$ref->{projectnumber}--$ref->{project_id}";
     
     push @{ $form->{item_list} }, $ref;
 
