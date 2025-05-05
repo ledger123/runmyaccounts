@@ -1022,8 +1022,6 @@ sub transactions {
   }
   $sth->finish;
 
-  $dbh->disconnect;
-
     for my $id (keys %trans) {
 
       my $arap = "";
@@ -1150,6 +1148,27 @@ sub transactions {
   }
   @{ $form->{GL} } = @gl;
 
+  if ($form->{accnofrom} eq $form->{accnoto}){
+      my $dbs = DBIx::Simple->connect($dbh);
+      my $rows = $form->{GL};
+      my $chart_id = $dbs->query("SELECT id FROM chart WHERE accno = ?", $form->{accnofrom})->list;
+      for my $row (@$rows){
+        if ($row->{module} eq 'gl' and $row->{contra} ne ''){
+            my @contra_rows = $dbs->query("
+                SELECT c.accno
+                FROM acc_trans ac
+                JOIN chart c ON c.id = ac.chart_id
+                WHERE ac.trans_id = ?
+                AND ac.chart_id <> ?
+                ORDER BY c.accno",
+                $row->{id}, $chart_id
+            )->hashes;
+            delete $row->{contra};
+            for (@contra_rows){ $row->{contra} .= "$_->{accno} " }
+        }
+      }
+  }
+  $dbh->disconnect;
 }
 
 
