@@ -2085,6 +2085,290 @@ sub get_taxaccounts {
 
 }
 
+sub alltaxes {
+    my ($self, $form) = @_;
+
+    # $form->dumper($form);
+
+    ($form->{department_name}, $form->{department_id}) = split /--/, $form->{department};
+    $form->{department_id} *= 1;
+
+    my $aawhere;
+
+    if ( $form->{fromdate} ) {
+        $aawhere .= qq| AND aa.transdate >= '$form->{fromdate}'|;
+    }
+    if ( $form->{todate} ) {
+        $aawhere .= qq| AND aa.transdate <= '$form->{todate}'|;
+    }
+    if ( $form->{department_id} ) {
+        $aawhere .= qq| AND aa.department_id = $form->{department_id}|;
+    }
+
+#    if ( $form->{method} eq 'cash' ) {
+#        $transdate = "aa.datepaid";
+#
+#        my $todate = $form->{todate};
+#        if ( !$todate ) {
+#            $todate = $form->current_date($myconfig);
+#        }
+#
+#        $cashwhere = qq|
+#             AND ac.trans_id IN (
+#                 SELECT trans_id
+#                 FROM acc_trans
+#                 JOIN chart ON (chart_id = chart.id)
+#                 WHERE link LIKE '%_paid%'
+#                 AND aa.approved = '1'
+#                 AND $transdate <= '$todate'
+#                 AND aa.paid = aa.amount
+#               )
+#              |;
+#    }
+    
+    print STDERR "$cashwhere\n";
+
+    my $query;
+
+    $query = qq~
+        -- 1. AR Invoices
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount) amount, SUM(it.taxamount) AS tax
+        FROM invoicetax it
+        JOIN chart c ON (c.id = it.chart_id)
+        JOIN ar aa ON (aa.id = it.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE 1 = 1
+        $aawhere
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 2. AR Transactions with line tax
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.tax_chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE c.link LIKE '%tax%'
+        $aawhere
+        $cashwhere
+        AND NOT invoice
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 2b. AR Transactions with line tax
+        SELECT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE 1 = 1
+        $aawhere
+        $cashwhere
+        AND NOT invoice
+        AND aa.linetax
+        AND ac.taxamount = 0
+        AND (c.link like '%AR_amount%' OR c.link like '%IC_sale%' OR c.link like '%IC_income%')
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 3. AR Transactions cumulative tax
+        SELECT 1 AS ordr, 'AR' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '*' f,
+        aa.netamount amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE c.link LIKE '%tax%'
+        $aawhere
+        $cashwhere
+        AND NOT invoice
+        AND NOT aa.linetax
+        AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        -- 4. AR Transactions without tax
+        SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'ar.pl' script, vc.id as vc_id,
+        '*' f,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE aa.netamount = aa.amount
+        AND NOT aa.invoice
+        AND NOT aa.linetax
+        $aawhere
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        -- 4. AR Invoices without tax
+        SELECT DISTINCT 1 AS ordr, 'AR' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.customernumber number, 'is.pl' script, vc.id as vc_id,
+        '*' f,
+        aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ar aa ON (aa.id = ac.trans_id)
+        JOIN customer vc ON (vc.id = aa.customer_id)
+        WHERE aa.netamount = aa.amount
+        AND aa.invoice
+        $aawhere
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        -- 5. AP Invoices
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ir.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount)*-1 amount, SUM(it.taxamount)*-1 AS tax
+        FROM invoicetax it
+        JOIN chart c ON (c.id = it.chart_id)
+        JOIN ap aa ON (aa.id = it.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        $aawhere
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 5b. AP Invoices
+        SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ir.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(it.amount)*-1 amount, SUM(it.taxamount)*-1 AS tax
+        FROM invoicetax it
+        JOIN ap aa ON (aa.id = it.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE 1 = 1
+        $aawhere
+        $cashwhere
+        AND it.taxamount = 0
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 6. AP Transactions with line tax
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.tax_chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        $aawhere
+        $cashwhere
+        AND NOT invoice
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        -- 6b. AP Transactions with line tax
+        SELECT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE 1 = 1
+        $aawhere
+        $cashwhere
+        AND NOT invoice
+        AND aa.linetax
+        AND ac.taxamount = 0
+        AND (c.link like '%AP_amount%' OR c.link like '%IC_cogs%' OR c.link like '%IC_expense%')
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        UNION ALL
+
+        SELECT 2 AS ordr, 'AP' module, c.accno || '--' || c.description account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '*' f,
+        0-aa.netamount amount, SUM(ac.amount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE c.link LIKE '%tax%'
+        $aawhere
+        $cashwhere
+        AND NOT invoice
+        AND aa.id NOT IN (SELECT DISTINCT trans_id FROM acc_trans WHERE taxamount <> 0)
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        SELECT DISTINCT 2 AS ordr, 'AP' module, 'Non-taxable' account,
+        aa.id, aa.invnumber, aa.transdate,
+        aa.description, vc.name, vc.vendornumber number, 'ap.pl' script, vc.id as vc_id,
+        '' f,
+        0-aa.netamount amount, 0 as tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.chart_id)
+        JOIN ap aa ON (aa.id = ac.trans_id)
+        JOIN vendor vc ON (vc.id = aa.vendor_id)
+        WHERE aa.netamount = aa.amount
+        AND NOT invoice
+        $aawhere
+        $cashwhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+
+        UNION ALL
+
+        SELECT 3 AS ordr, 'GL' module, c.accno || '--' || c.description account,
+        aa.id, aa.reference, aa.transdate,
+        aa.description, '', '', 'gl.pl' script, 0 as vc_id,
+        '' f,
+        SUM(ac.amount), SUM(ac.taxamount) AS tax
+        FROM acc_trans ac
+        JOIN chart c ON (c.id = ac.tax_chart_id)
+        JOIN gl aa ON (aa.id = ac.trans_id)
+        $aawhere
+        GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+
+        ORDER BY 1, 2, 3, 6
+    ~;
+
+    my $allrows = $form->{dbs}->query($query)->hashes;
+
+}
 
 
 sub tax_report {
