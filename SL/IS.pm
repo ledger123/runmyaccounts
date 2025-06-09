@@ -462,7 +462,7 @@ sub invoice_details {
   
   my $totaltax;
   for (sort keys %taxaccs) {
-      $totaltax += $taxaccounts{$_};
+      $totaltax += $form->round_amount($taxaccounts{$_}, $form->{precision});
   };
   $total = $totaltax;
   
@@ -1805,10 +1805,14 @@ sub post_invoice {
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
-  $fxamount_total = $invamount if $form->{currency} eq $form->{defaultcurrency};
+  $fxamount_total =
+  $form->{currency} eq $form->{defaultcurrency}
+    ? $invamount
+    : $form->round_amount($invamount / $form->{exchangerate}, $form->{precision});
+
+
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
-
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
