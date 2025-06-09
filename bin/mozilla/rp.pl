@@ -2066,6 +2066,26 @@ sub deselect_all_reminder {
 
 }
 
+sub generate_reminder {
+
+    # split customer
+    my @values = split( /--/, $form->{customer} );
+    $form->{customer_id} = $values[1];
+    ( $form->{customer} ) = split( /--/, $form->{customer} );
+    $form->{vc}   = "customer";
+    $form->{arap} = "ar";
+
+    $form->{initcallback} = qq|$form->{script}?action=generate_reminder|;
+
+    RP->reminder( \%myconfig, \%$form );
+
+    &reminder;
+
+    if ( -f "$spool/$form->{login}_reminders.pdf" ) {
+        print qq|<a href="$spool/$form->{login}_reminders.pdf">Download reminders pdf</a>|;
+    }
+}
+
 sub export_as_csv {
     if ( $form->{type} eq "reminder" ) {
 
@@ -2158,31 +2178,8 @@ sub export_as_csv {
     }
 }
 
-# This is the primary entry point for the reminder system
-sub generate_reminder {
-
-    # split customer
-    my @values = split( /--/, $form->{customer} );
-    $form->{customer_id} = $values[1];
-    ( $form->{customer} ) = split( /--/, $form->{customer} );
-    $form->{vc}   = "customer";
-    $form->{arap} = "ar";
-
-    $form->{initcallback} = qq|$form->{script}?action=generate_reminder|;
-
-    RP->reminder( \%myconfig, \%$form );
-
-    &reminder;
-
-    if ( -f "$spool/$form->{login}_reminders.pdf" ) {
-        print qq|<a href="$spool/$form->{login}_reminders.pdf">Download reminders pdf</a>|;
-    }
-}
-
-
 sub reminder {
 
-    # Set up callback URL with current form parameters for navigation
     $form->{callback} = $form->{initcallback};
     for (qw(path login type format)) { $form->{callback} .= "&$_=$form->{$_}" }
     for (qw(title media report)) {
@@ -2191,14 +2188,10 @@ sub reminder {
     $form->{callback} .=
       qq|&$form->{vc}=| . $form->escape( $form->{"$form->{vc}"}, 1 );
 
-    # Set up localized text for customer/vendor number
     $vcnumber = $locale->text('Customer Number');
 
-    # Configure the "select all" checkbox behavior
     $form->{allbox} = ( $form->{allbox} ) ? "checked" : "";
     $action = ( $form->{deselect} ) ? "deselect_all" : "select_all";
-    
-    # Define column headers for the reminder table
     $column_header{ndx} =
 qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=checkbox value="1" $form->{allbox} onChange="CheckAll(); javascript:document.forms[0].submit()"><input type=hidden name=action value="$action"></th>|;
     $column_header{vc}                  = qq|<th class=listheading width=60%>| . $locale->text( ucfirst $form->{vc} ) . qq|</th>|;
@@ -2213,15 +2206,12 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
     $column_header{duedays}             = qq|<th class=listheading nowrap>| . $locale->text('Due Days') . qq|</th>|;
     $column_header{due}                 = qq|<th class=listheading nowrap>| . $locale->text('Due') . qq|</th>|;
 
-    # Set up column order for display
     @column_index = qw(ndx vc);
     push @column_index, "$form->{vc}number";
     push @column_index, "level";
 
-    # Configure reminder levels (1, 2, 3)
     $form->{selectlevel} = "\n1\n2\n3";
 
-    # Add language selection if multiple languages are available
     if ( @{ $form->{all_language} } ) {
         push @column_index, "language";
         $form->{selectlanguage} = qq|\n|;
@@ -2232,10 +2222,8 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
         }
     }
 
-    # Add remaining columns to display order
     push @column_index, qw(invnumber invdescription ordnumber transdate duedate duedays due);
 
-    # Build filter options display text
     if ( $form->{department} ) {
         $option .= "\n<br>" if $option;
         ($department) = split /--/, $form->{department};
@@ -2255,13 +2243,10 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
         $form->{callback} .= "&duedateto=" . $form->{duedateto};
     }
 
-    # Set page title
     $title = "$form->{title} / $form->{company}";
 
-    # Output HTML header
     $form->header( 0, 0, $locale );
 
-    # Output JavaScript for checkbox selection functionality
     print qq|
 <script language="JavaScript">
 <!--
@@ -2299,21 +2284,17 @@ function CheckAll() {
       <table width=100%>
 |;
 
-    # Initialize variables for processing reminder data
     $curr = "";
     $form->{ids} = "";
 
     $callback = $form->escape( $form->{callback}, 1 );
 
-    # Process each reminder record from the database results
     for $ref ( @{ $form->{AG} } ) {
 
-        # Group reminders by currency - start new currency section if changed
         if ( $curr ne $ref->{curr} ) {
 
             for (@column_index) { $column_data{$_} = qq|<th>&nbsp;</th>| }
 
-            # Close previous currency section if exists
             if ($curr) {
 
                 print qq|
@@ -2327,7 +2308,6 @@ function CheckAll() {
 |;
             }
 
-            # Start new currency section header
             print qq|
         <tr>
 	  <td></td>
@@ -2346,19 +2326,16 @@ function CheckAll() {
 
         $curr = $ref->{curr};
 
-        # Build data cells for each reminder row
         $column_data{vc} = qq|<td><a href=ct.pl?path=$form->{path}&login=$form->{login}&action=edit&id=$ref->{vc_id}&db=$form->{vc}&callback=$callback>$ref->{name}</a></td>
     <input type=hidden name="vc_$ref->{id}" value="$ref->{vc_id}">|;
 
         $column_data{"$form->{vc}number"} = qq|<td>$ref->{"$form->{vc}number"}</td>|;
 
-        # Handle reminder level selection dropdown
         if ( exists $form->{"level_$ref->{id}"} ) {
             $ref->{level} = $form->{"level_$ref->{id}"};
         }
         $column_data{level} = qq|<td><select name="level_$ref->{id}">| . $form->select_option( $form->{selectlevel}, $ref->{level} ) . qq|</select></td>|;
 
-        # Handle language selection dropdown if available
         if ( $form->{selectlanguage} ) {
             if ( exists $form->{"language_code_$ref->{id}"} ) {
                 $ref->{language_code} = $form->{"language_code_$ref->{id}"};
@@ -2367,17 +2344,13 @@ function CheckAll() {
             $column_data{language} = qq|<td><select name="language_code_$ref->{id}">| . $form->select_option( $form->{selectlanguage}, $ref->{language_code}, undef, 1 ) . qq|</select></td>|;
         }
 
-        # Create selection checkbox for this reminder
         $checked = ( $form->{"ndx_$ref->{id}"} ) ? "checked" : "";
         $column_data{ndx} = qq|<td><input name="ndx_$ref->{id}" type=checkbox class=checkbox value=1 $checked></td>|;
 
-        # Add this ID to the list of all reminder IDs
         $form->{ids} .= "$ref->{id} ";
 
-        # Create edit link for the invoice/transaction
         $href = qq|$ref->{module}.pl?path=$form->{path}&action=edit&id=$ref->{id}&login=$form->{login}&callback=| . $form->escape( $form->{callback} );
 
-        # Build remaining data columns
         $column_data{invnumber}      = qq|<td nowrap><a href=$href>$ref->{invnumber}</a></td>|;
         $column_data{ordnumber}      = qq|<td nowrap>$ref->{ordnumber}</td>|;
         $column_data{invdescription} = qq|<td nowrap>$ref->{invdescription}</td>|;
@@ -2388,24 +2361,20 @@ function CheckAll() {
             $column_data{$_} = qq|<td nowrap align="right">$ref->{$_}</td>|;
         }
 
-        # Format and display the amount due
         $column_data{due} = qq|<td align=right nowrap>| . $form->format_amount( \%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision} ) . qq|</td>|;
 
-        # Alternate row colors for better readability
         $j++;
         $j %= 2;
         print qq|
       <tr class=listrow$j>
 |;
 
-        # Output all column data for this row
         for (@column_index) { print "$column_data{$_}\n" }
 
         print qq|
       </tr>
 |;
 
-        # Clear some columns for the next row to avoid duplication
         for (qw(vc ndx language level)) {
             $column_data{$_} = qq|<td>&nbsp;</td>|;
         }
@@ -2413,7 +2382,6 @@ function CheckAll() {
 
     }
 
-    # Close the final currency section
     print qq|
         </tr>
         <tr class=listtotal>
@@ -2432,8 +2400,6 @@ function CheckAll() {
     <td>
 |;
 
-    # Call subroutine to display print/email options
-    # print_options sub is called here to display printing and email options
     &print_options;
 
     print qq|
@@ -2445,44 +2411,38 @@ function CheckAll() {
 </table>
 |;
 
-    # Clean up the IDs list (remove trailing space)
     chop $form->{ids};
 
-    # Hide form fields that need to be preserved between requests
     $form->hide_form(qw(title initcallback callback vc department path login ids duedateto));
     $form->hide_form( $form->{vc} );
     $form->hide_form(qw(type report));
 
-    # Define action buttons available on the reminder screen
     %button = (
-        'Select all'    => { ndx => 1, key => 'A', value => $locale->text('Select all') },
-        'Deselect all'  => { ndx => 2, key => 'A', value => $locale->text('Deselect all') },
-        'Preview'       => { ndx => 3, key => 'V', value => $locale->text('Preview') },
-        'Print'         => { ndx => 4, key => 'P', value => $locale->text('Print') },      # Calls print_reminder sub
-        'E-mail'        => { ndx => 5, key => 'E', value => $locale->text('E-mail') },    # Calls e_mail_reminder sub
-        'Save Level'    => { ndx => 6, key => 'L', value => $locale->text('Save Level') },
-        'Export as CSV' => { ndx => 7, key => 'X', value => $locale->text('Export as CSV') },
+        'Select all'           => { ndx => 1, key => 'A', value => $locale->text('Select all') },
+        'Deselect all'         => { ndx => 2, key => 'A', value => $locale->text('Deselect all') },
+        'Preview'              => { ndx => 3, key => 'V', value => $locale->text('Preview') },
+        'Print'                => { ndx => 4, key => 'P', value => $locale->text('Print') },
+        'E-mail'               => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
+        'E-mail All Reminders' => { ndx => 5, key => 'E', value => $locale->text('E-mail All Reminders') },
+        'Save Level'           => { ndx => 6, key => 'L', value => $locale->text('Save Level') },
+        'Export as CSV'        => { ndx => 7, key => 'X', value => $locale->text('Export as CSV') },
     );
 
-    # Show appropriate select/deselect button based on current state
     if ( $form->{deselect} ) {
         delete $button{'Select all'};
     } else {
         delete $button{'Deselect all'};
     }
 
-    # Output all buttons in order
     for ( sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button ) {
         $form->print_button( \%button, $_ );
     }
 
-    # Include menu bar if enabled
     if ( $form->{menubar} ) {
         require "$form->{path}/menu.pl";
         &menubar;
     }
 
-    # Close HTML form and page
     print qq|
 </form>
 
@@ -2492,38 +2452,32 @@ function CheckAll() {
 
 }
 
-# Prepare and send email reminder - handles single reminder email setup
-# Called when user clicks "E-mail" button from the reminder interface
-sub e_mail_reminder {
+# Email multiple reminders - setup
+sub e_mail_all_reminders {
 
-    # Validate that only one reminder is selected for emailing
-    $found = 0;
+    my $found = 0;
     for ( split / /, $form->{ids} ) {
         if ( $form->{"ndx_$_"} ) {
             $found++;
         }
     }
 
-    # Error if more than one reminder selected (can only email one at a time)
-    $form->error( $locale->text('Can only send one reminder at a time!') )
-      if $found > 1;
+    # Error if no reminders selected
+    $form->error( $locale->text('Nothing selected!') ) unless $found;
 
-    # Get customer/vendor details for the selected reminder
+    # Get the first selected customer/vendor for default email settings
+    # This provides a reasonable default email address and company info
     for ( split / /, $form->{ids} ) {
         if ( $form->{"ndx_$_"} ) {
             $form->{"$form->{vc}_id"} = $form->{"vc_$_"};
             $form->{language_code}    = $form->{"language_code_$_"};
-            # RP->get_customer is called here to retrieve customer/vendor contact information
+
+            # RP->get_customer is called here to get default email settings from first selected customer
             RP->get_customer( \%myconfig, \%$form );
-            $selected = 1;
-            last;
+            last;    # Only need the first one for defaults
         }
     }
 
-    # Error if no reminder was selected
-    $form->error( $locale->text('Nothing selected!') ) unless $selected;
-
-    # Add BCC field for admin/manager roles
     if ( $myconfig{role} =~ /(admin|manager)/ ) {
         $bcc = qq|
           <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
@@ -2531,61 +2485,118 @@ sub e_mail_reminder {
 |;
     }
 
-    # Set email subject line
-    $title = $locale->text('E-mail Reminder to') . " $form->{$form->{vc}}";
+    $title = $locale->text('E-mail Reminders to Multiple Recipients') . " ($found " . $locale->text('selected') . ")";
 
-    # Call subroutine to prepare the email form interface
-    # prepare_e_mail sub is called here to set up the email composition interface
+    $form->{subject} = $locale->text('Reminder') unless $form->{subject};
+
+    # Call the existing prepare_e_mail subroutine to get user preferences
+    # This will display the email composition form and set nextsub to send_email_reminder
+    # We need to modify the nextsub to point to our bulk sending routine
+    $form->{nextsub} = 'send_e_mail_all_reminders';
+
+    # prepare_e_mail sub is called here to display the email composition interface
     &prepare_e_mail;
-
 }
 
-# Print reminder documents - handles printing of selected reminders
-# Called when user clicks "Print" button from the reminder interface
-sub print_reminder {
+# Actual bulk email sending routine - called after user submits email preferences
+sub send_e_mail_all_reminders {
 
-    # Clear customer field
-    $form->{customer} = "";
+    $form->isblank( "subject", $locale->text('Subject missing!') );
 
-    # Find which reminders are selected for printing
-    @ids = split / /, $form->{ids};
-    for (@ids) {
+    # Initialize counters for success/failure tracking
+    my $sent_count  = 0;
+    my $error_count = 0;
+    my @sent_to     = ();
+    my @failed_to   = ();
+
+    # Store the original email settings from the form
+    my $original_subject = $form->{subject};
+    my $original_message = $form->{message};
+    my $original_cc      = $form->{cc};
+    my $original_bcc     = $form->{bcc};
+
+    # Process each selected reminder individually using the same approach as print_reminder
+    for ( split / /, $form->{ids} ) {
         if ( $form->{"ndx_$_"} ) {
-            $selected = "ndx_$_";
-            $form->{id} = $_;
-            last;
+            my $reminder_id = $_;
+
+            # Create a backup of current form state
+            my %form_backup = %$form;
+
+            eval {
+                # Set up form data for this specific reminder - mimic print_reminder setup
+                $form->{customer}         = "";
+                $form->{id}               = $reminder_id;
+                $form->{"$form->{vc}_id"} = $form->{"vc_$reminder_id"};
+                $form->{language_code}    = $form->{"language_code_$reminder_id"};
+
+                # Set up for email output - same as send_email_reminder
+                $form->{OUT}   = "$sendmail";
+                $form->{media} = 'email';
+
+                # Restore the email settings for each reminder
+                $form->{subject} = $original_subject;
+                $form->{message} = $original_message;
+                $form->{cc}      = $original_cc;
+                $form->{bcc}     = $original_bcc;
+
+                # Clear all other reminder selections to process only this one
+                for ( split / /, $form->{ids} ) {
+                    $form->{"ndx_$_"} = "";
+                }
+                $form->{"ndx_$reminder_id"} = 1;
+
+                # Get customer/vendor details for this reminder
+                # RP->get_customer is called here to retrieve contact information for each reminder
+                RP->get_customer( \%myconfig, \%$form );
+                $form->{subject} = "$original_subject - $form->{customer}";
+
+                # Check if email address exists
+                if ( !$form->{email} || $form->{email} =~ /^\s*$/ ) {
+                    push @failed_to, "$form->{name} (No email address)";
+                    $error_count++;
+
+                    # Restore form state and continue to next
+                    %$form = %form_backup;
+                    next;
+                }
+
+                # Retrieve reminder data for this specific reminder - same as print_reminder
+                # RP->reminder is called here to fetch reminder data for email processing
+                RP->reminder( \%myconfig, \%$form );
+
+                # Generate and send the email for this reminder - same as print_reminder
+                # do_print_reminder sub is called here to generate the reminder document for email
+                &do_print_reminder;
+
+                # Track successful send
+                push @sent_to, $form->{name};
+                $sent_count++;
+
+            } or do {
+
+                # Handle any errors during processing
+                my $error = $@ || 'Unknown error';
+                push @failed_to, "$form->{name} (Error: $error)";
+                $error_count++;
+            };
+
+            # Restore form state for next iteration
+            %$form = %form_backup;
         }
     }
 
-    # Error if no reminders selected
-    $form->error( $locale->text('Nothing selected!') ) unless $selected;
+    # Build result message
+    my $message = "";
 
-    # For screen preview, clear all selections except the current one
-    if ( $form->{media} eq 'screen' ) {
-        for (@ids) {
-            $form->{"ndx_$_"} = "";
-        }
-        $form->{$selected} = 1;
+    if ( $sent_count > 0 ) {
+        $message .= $locale->text('Reminders sent to') . " ($sent_count): " . join( ', ', @sent_to );
     }
 
-    # Set up for non-screen output (printer/file)
-    if ( $form->{media} !~ /(screen|email)/ ) {
-        $form->{"$form->{vc}_id"} = "";
-        $SIG{INT} = 'IGNORE';
+    if ( $error_count > 0 ) {
+        $message .= "\n" if $message;
+        $message .= $locale->text('Failed to send to') . " ($error_count): " . join( ', ', @failed_to );
     }
-
-    # Retrieve reminder data from database
-    # RP->reminder is called here to fetch reminder data for printing
-    RP->reminder( \%myconfig, \%$form );
-    
-    # Set up printer output if not screen or email
-    if ( $form->{media} !~ /(screen|email)/ ) {
-        $form->{OUT} = qq~| $printer{$form->{media}}~;
-    }
-
-    # Call subroutine to perform the actual printing
-    # do_print_reminder sub is called here to generate and output the reminder documents
-    &do_print_reminder;
 
     # Update callback URL with current selections for return navigation
     if ( $form->{callback} ) {
@@ -2596,300 +2607,16 @@ sub print_reminder {
         }
     }
 
-    # Redirect with success message for non-screen output
-    $form->redirect( $locale->text('Reminders sent to printer!') )
-      if ( $form->{media} !~ /(screen|email)/ );
+    # Redirect with comprehensive status message
+    if ( $error_count > 0 && $sent_count == 0 ) {
 
-}
-
-# Generate and output reminder documents - core printing logic
-# Called by print_reminder sub to handle the actual document generation
-sub do_print_reminder {
-
-    my $pdfs;  # String to collect PDF filenames for merging
-    my $ids;   # String to collect reminder IDs
-
-    $out = $form->{OUT};
-
-    # Set default date and format statement date
-    $form->{todate} ||= $form->current_date( \%myconfig );
-    $form->{statementdate} = $locale->date( \%myconfig, $form->{todate}, 1 );
-
-    # Set template directory
-    $form->{templates} = "$myconfig{templates}";
-
-    # Set user information for the reminder
-    for (qw(name email)) { $form->{"user$_"} = $myconfig{$_} }
-
-    # Format company and user information for template
-    $form->format_string(qw(companyemail companywebsite company address businessnumber username useremail tel fax));
-
-    # Define fields to be formatted for template output
-    @a =
-      qw(id invnumber name nameqr address1 address1qr address2 city cityqr state stateqr zipcode zipcodeqr country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn);
-    push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
-    push @a, 'email' if !$form->{media} eq 'email';
-    push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
-    push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country bic);
-
-    # Connect to database for additional queries
-    my $dbh = $form->dbconnect( \%myconfig );
-
-    # Process each selected reminder for printing
-    while ( @{ $form->{AG} } ) {
-
-        $ref = shift @{ $form->{AG} };
-        $form->{OUT} = $out;
-
-        # Only process selected reminders
-        if ( $form->{"ndx_$ref->{id}"} ) {
-
-            # Default ship-to address to main address if empty
-            if ( !$ref->{shiptoaddress1} ) {
-                for (qw(name address1 address2 city state zipcode country contact phone fax email)) {
-                    $ref->{"shipto$_"} = $ref->{$_};
-                }
-            }
-            
-            # Copy reference data to form for template processing
-            for (@a) { $form->{$_} = $ref->{$_} }
-
-            # Handle external DCN (Document Control Number) lookup
-            if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
-                $query = qq|SELECT dcn FROM ar
-              WHERE id = $form->{id}|;
-                my $sth = $dbh->prepare($query);
-                $sth->execute || $form->dberror($query);
-                $form->{dcn} = $sth->fetchrow_array;
-                $sth->finish;
-            }
-
-            # Format bank and document control numbers
-            $form->{bankrvc} = $ref->{rvc};
-            $form->{rvc}     = $form->format_dcn( $form->{rvc} );
-            $form->{dcn}     = $form->format_dcn( $form->{dcn} );
-
-            # Format all string fields for template output
-            $form->format_string(@a);
-
-            # Determine template file based on reminder type and level
-            $form->{IN} = qq|$form->{type}$form->{"level_$ref->{id}"}.html|;
-
-            # Use LaTeX template for PostScript/PDF output
-            if ( $form->{format} =~ /(postscript|pdf)/ ) {
-                $form->{IN} =~ s/html$/tex/;
-            }
-
-            # Set customer/vendor information
-            $form->{ $form->{vc} }    = $form->{name};
-            $form->{"$form->{vc}_id"} = $ref->{vc_id};
-            $form->{language_code}    = $form->{"language_code_$ref->{id}"};
-            $form->{currency}         = $ref->{curr};
-
-            # Clear invoice-specific fields
-            for (qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill)) {
-                $form->{$_} = ();
-            }
-
-            # Set up invoice data for this reminder
-            $ref->{invdate} = $ref->{transdate};
-            my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill);
-            for (@a) { $form->{"${_}_1"} = $ref->{$_} }
-
-            # Format invoice-specific strings
-            $form->format_string( map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription shippingpoint shipvia waybill) );
-            for (@a) { $form->{$_} = $form->{"${_}_1"} }
-
-            # Calculate and format amounts
-            $ref->{exchangerate} ||= 1;
-            $form->{due}                = $form->format_amount( \%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision} );
-            $form->{total}              = $form->{due};
-            $form->{integer_out_amount} = $ref->{integer_out_amount};
-            $form->{out_decimal}        = $ref->{out_decimal};
-
-            $form->{formname} = 'reminder';
-
-            # Handle print queue processing
-            if ( $form->{media} eq 'queue' ) {
-                # Check for existing spool file
-                ($filename) = $dbh->selectrow_array("SELECT spoolfile FROM status WHERE trans_id = $form->{id}");
-
-                if ($filename) {
-                    # Remove old spool file
-                    unlink "$spool/$filename";
-                    $filename =~ s/\..*$//g;
-                } else {
-                    # Generate new filename
-                    $filename = time;
-                    $filename .= int rand 10000;
-                    $filename = "$myconfig{dbname}_$filename";
-                }
-
-                # Set file extension based on format
-                $filename .= ( $form->{format} eq 'postscript' ) ? '.ps' : '.pdf';
-                $form->{OUT} = ">$spool/$filename";
-                $pdfs .= "$spool/$filename ";  # Collect for potential merging
-                $ids  .= "$form->{id} ";       # Collect IDs for status updates
-
-                # Save status in database
-                $form->update_status( \%myconfig );
-
-                # Create audit trail entry
-                %audittrail = (
-                    tablename => ($order) ? 'oe' : lc $ARAP,
-                    reference => $form->{"${inv}number"},
-                    formname  => $form->{formname},
-                    action    => 'queued',
-                    id        => $form->{id}
-                );
-                $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
-            }
-            
-            # Parse and generate the final document using the template
-            # form->parse_template is called here to process the reminder template and generate output
-            $form->parse_template( \%myconfig, $tmppath, $debuglatex, $noreply, $apikey );
-        }
-    }
-    
-    # Handle PDF merging if requested
-    if ( $form->{create_single_pdf} ) {
-        # Merge all individual PDFs into one file
-        system("/usr/bin/pdftk $pdfs cat output $spool/$form->{login}_reminders.pdf");
-        
-        # Clean up individual spool files from database
-        my $dbh = $form->dbconnect( \%myconfig );
-        my @ids = split( / /, $ids );
-        for (@ids) {
-            $dbh->do("UPDATE status SET spoolfile = NULL WHERE trans_id = $_");
-        }
-        $dbh->disconnect;
+        # All failed
+        $form->error($message);
     } else {
-        # Remove any existing merged PDF
-        unlink "$spool/$form->{login}_reminders.pdf";
+
+        # At least some succeeded
+        $form->redirect($message);
     }
-}
-
-# Send reminder via email - handles email delivery of reminders
-# Called when user submits the email reminder form (typically after e_mail_reminder)
-sub send_email_reminder {
-
-    # Set output to sendmail for email delivery
-    $form->{OUT} = "$sendmail";
-
-    # Validate that email address is provided
-    $form->isblank( "email", $locale->text('E-mail address missing!') );
-
-    # Retrieve reminder data for emailing
-    # RP->reminder is called here to fetch reminder data for email delivery
-    RP->reminder( \%myconfig, \%$form );
-
-    # Set default subject if not provided
-    $form->{subject} = $locale->text('Reminder') unless $form->{subject};
-
-    # Set language code for all selected reminders
-    for ( split / /, $form->{ids} ) {
-        if ( $form->{"ndx_$_"} ) {
-            $form->{"language_code_$_"} = $form->{language_code};
-        }
-    }
-
-    # Call print routine to generate and send the email
-    # print_reminder sub is called here to generate the reminder document for email
-    &print_reminder;
-
-    # Update callback with current selections for navigation
-    if ( $form->{callback} ) {
-        for ( split / /, $form->{ids} ) {
-            if ( $form->{"ndx_$_"} ) {
-                $form->{callback} .= qq|&ndx_$_=1&level_$_=$form->{"level_$_"}&language_code_$_=| . $form->escape( $form->{language_code}, 1 );
-            }
-        }
-    }
-
-    # Redirect with success message
-    $form->redirect( $locale->text('Reminder sent to') . " $form->{$form->{vc}}" );
-
-}
-
-
-sub prepare_e_mail {
-
-    $form->{media} = "email";
-
-    $form->header( 0, 0, $locale );
-
-    print qq|
-<body>
-
-<form method=post action=$form->{script}>
-
-<table width=100%>
-  <tr class=listtop>
-    <th>$form->{helpref}$title</a></th>
-  </tr>
-  <tr height="5"></tr>
-  <tr>
-    <td>
-      <table width=100%>
-        <tr>
-	  <th align=right nowrap>| . $locale->text('E-mail') . qq|</th>
-	  <td><input name=email size=30 value="$form->{email}"></td>
-	  <th align=right nowrap>| . $locale->text('Cc') . qq|</th>
-	  <td><input name=cc size=30 value="$form->{cc}"></td>
-	 </tr>
-	<tr>
-          <th align=right nowrap>| . $locale->text('Subject') . qq|</th>
-	  <td><input name=subject size=30 value="|
-      . $form->quote( $form->{subject} ) . qq|"></td>
-	  $bcc
-	</tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <table width=100%>
-        <tr>
-	  <th align=left nowrap>| . $locale->text('Message') . qq|</th>
-	</tr>
-	<tr>
-	  <td><textarea name=message rows=15 cols=60 wrap=soft>$form->{message}</textarea></td>
-	</tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td>
-|;
-
-    &print_options;
-
-    $nextsub = "send_email_$form->{type}";
-
-    for (qw(language_code email cc bcc subject message type sendmode format action nextsub)) {
-        delete $form->{$_};
-    }
-
-    $form->hide_form;
-
-    print qq|
-    </td>
-  </tr>
-  <tr>
-    <td><hr size=3 noshade></td>
-  </tr>
-</table>
-
-<input type=hidden name=nextsub value="$nextsub">
-<br>
-<input name=action class=submit type=submit value="|
-      . $locale->text('Continue') . qq|">
-</form>
-
-</body>
-</html>
-|;
-
 }
 
 sub save_level {
@@ -2901,51 +2628,6 @@ sub save_level {
     $form->error( $locale->text('Could not save reminder level!') );
 
 }
-
-sub e_mail_statement {
-
-    # get name and email addresses
-    @vc_ids = split / /, $form->{vc_ids};
-    $found  = 0;
-    for $curr ( split / /, $form->{curr} ) {
-        for (@vc_ids) {
-            if ( $form->{"ndx_${curr}_$_"} ) {
-                $form->{"$form->{vc}_id"} = $_;
-                $found++;
-            }
-        }
-    }
-
-    $form->error( $locale->text('Can only send one statement at a time!') )
-      if $found > 1;
-
-    for $curr ( split / /, $form->{curr} ) {
-        for (@vc_ids) {
-            if ( $form->{"ndx_${curr}_$_"} ) {
-                $form->{"$form->{vc}_id"} = $_;
-                $form->{language_code}    = $form->{"language_code_${curr}_$_"};
-                RP->get_customer( \%myconfig, \%$form );
-                $selected = 1;
-                last;
-            }
-        }
-    }
-
-    $form->error( $locale->text('Nothing selected!') ) unless $selected;
-
-    if ( $myconfig{role} =~ /(admin|manager)/ ) {
-        $bcc = qq|
-          <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
-	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
-|;
-    }
-
-    $title = $locale->text('E-mail Statement to') . " $form->{$form->{vc}}";
-
-    &prepare_e_mail;
-
-}
-
 
 sub print_options {
 
@@ -3038,6 +2720,171 @@ sub print_options {
 
 sub e_mail { &{"e_mail_$form->{type}"} }
 
+sub e_mail_statement {
+
+    # get name and email addresses
+    @vc_ids = split / /, $form->{vc_ids};
+    $found  = 0;
+    for $curr ( split / /, $form->{curr} ) {
+        for (@vc_ids) {
+            if ( $form->{"ndx_${curr}_$_"} ) {
+                $form->{"$form->{vc}_id"} = $_;
+                $found++;
+            }
+        }
+    }
+
+    $form->error( $locale->text('Can only send one statement at a time!') )
+      if $found > 1;
+
+    for $curr ( split / /, $form->{curr} ) {
+        for (@vc_ids) {
+            if ( $form->{"ndx_${curr}_$_"} ) {
+                $form->{"$form->{vc}_id"} = $_;
+                $form->{language_code}    = $form->{"language_code_${curr}_$_"};
+                RP->get_customer( \%myconfig, \%$form );
+                $selected = 1;
+                last;
+            }
+        }
+    }
+
+    $form->error( $locale->text('Nothing selected!') ) unless $selected;
+
+    if ( $myconfig{role} =~ /(admin|manager)/ ) {
+        $bcc = qq|
+          <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
+	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
+|;
+    }
+
+    $title = $locale->text('E-mail Statement to') . " $form->{$form->{vc}}";
+
+    &prepare_e_mail;
+
+}
+
+sub e_mail_reminder {
+
+    $found = 0;
+    for ( split / /, $form->{ids} ) {
+        if ( $form->{"ndx_$_"} ) {
+            $found++;
+        }
+    }
+
+    $form->error( $locale->text('Can only send one reminder at a time!') )
+      if $found > 1;
+
+    # get name and email addresses
+    for ( split / /, $form->{ids} ) {
+        if ( $form->{"ndx_$_"} ) {
+            $form->{"$form->{vc}_id"} = $form->{"vc_$_"};
+            $form->{language_code}    = $form->{"language_code_$_"};
+            RP->get_customer( \%myconfig, \%$form );
+            $selected = 1;
+            last;
+        }
+    }
+
+    $form->error( $locale->text('Nothing selected!') ) unless $selected;
+
+    if ( $myconfig{role} =~ /(admin|manager)/ ) {
+        $bcc = qq|
+          <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
+	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
+|;
+    }
+
+    $title = $locale->text('E-mail Reminder to') . " $form->{$form->{vc}}";
+
+    &prepare_e_mail;
+
+}
+
+sub prepare_e_mail {
+
+    $form->{media} = "email";
+
+    $form->header( 0, 0, $locale );
+
+    print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr class=listtop>
+    <th>$form->{helpref}$title</a></th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr>
+	  <th align=right nowrap>| . $locale->text('E-mail') . qq|</th>
+	  <td><input name=email size=30 value="$form->{email}"></td>
+	  <th align=right nowrap>| . $locale->text('Cc') . qq|</th>
+	  <td><input name=cc size=30 value="$form->{cc}"></td>
+	 </tr>
+	<tr>
+          <th align=right nowrap>| . $locale->text('Subject') . qq|</th>
+	  <td><input name=subject size=30 value="|
+      . $form->quote( $form->{subject} ) . qq|"></td>
+	  $bcc
+	</tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr>
+	  <th align=left nowrap>| . $locale->text('Message') . qq|</th>
+	</tr>
+	<tr>
+	  <td><textarea name=message rows=15 cols=60 wrap=soft>$form->{message}</textarea></td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+|;
+
+    &print_options;
+
+    if ( !$form->{nextsub} ) {
+        $nextsub = "send_email_$form->{type}";
+    } else {
+        $nextsub = $form->{nextsub};
+    }
+
+    for (qw(language_code email cc bcc subject message type sendmode format action nextsub)) {
+        delete $form->{$_};
+    }
+
+    $form->hide_form;
+
+    print qq|
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+</table>
+
+<input type=hidden name=nextsub value="$nextsub">
+<br>
+<input name=action class=submit type=submit value="|
+      . $locale->text('Continue') . qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
 
 sub send_email_statement {
 
@@ -3070,6 +2917,36 @@ sub send_email_statement {
     }
 
     $form->redirect( $locale->text('Statement sent to') . " $form->{$form->{vc}}" );
+
+}
+
+sub send_email_reminder {
+
+    $form->{OUT} = "$sendmail";
+
+    $form->isblank( "email", $locale->text('E-mail address missing!') );
+
+    RP->reminder( \%myconfig, \%$form );
+
+    $form->{subject} = $locale->text('Reminder') unless $form->{subject};
+
+    for ( split / /, $form->{ids} ) {
+        if ( $form->{"ndx_$_"} ) {
+            $form->{"language_code_$_"} = $form->{language_code};
+        }
+    }
+
+    &print_reminder;
+
+    if ( $form->{callback} ) {
+        for ( split / /, $form->{ids} ) {
+            if ( $form->{"ndx_$_"} ) {
+                $form->{callback} .= qq|&ndx_$_=1&level_$_=$form->{"level_$_"}&language_code_$_=| . $form->escape( $form->{language_code}, 1 );
+            }
+        }
+    }
+
+    $form->redirect( $locale->text('Reminder sent to') . " $form->{$form->{vc}}" );
 
 }
 
@@ -3148,6 +3025,183 @@ sub print_statement {
     $form->redirect( $locale->text('Statements sent to printer!') )
       if ( $form->{media} !~ /(screen|email)/ );
 
+}
+
+sub print_reminder {
+
+    $form->{customer} = "";
+
+    @ids = split / /, $form->{ids};
+    for (@ids) {
+        if ( $form->{"ndx_$_"} ) {
+            $selected = "ndx_$_";
+            $form->{id} = $_;
+            last;
+        }
+    }
+
+    $form->error( $locale->text('Nothing selected!') ) unless $selected;
+
+    if ( $form->{media} eq 'screen' ) {
+        for (@ids) {
+            $form->{"ndx_$_"} = "";
+        }
+        $form->{$selected} = 1;
+    }
+
+    if ( $form->{media} !~ /(screen|email)/ ) {
+        $form->{"$form->{vc}_id"} = "";
+        $SIG{INT} = 'IGNORE';
+    }
+
+    RP->reminder( \%myconfig, \%$form );
+    if ( $form->{media} !~ /(screen|email)/ ) {
+        $form->{OUT} = qq~| $printer{$form->{media}}~;
+    }
+
+    &do_print_reminder;
+
+    if ( $form->{callback} ) {
+        for ( split / /, $form->{ids} ) {
+            if ( $form->{"ndx_$_"} ) {
+                $form->{callback} .= qq|&ndx_$_=1&level_$_=$form->{"level_$_"}&language_code_$_=| . $form->escape( $form->{"language_code_$_"}, 1 );
+            }
+        }
+    }
+
+    $form->redirect( $locale->text('Reminders sent to printer!') )
+      if ( $form->{media} !~ /(screen|email)/ );
+
+}
+
+sub do_print_reminder {
+
+    my $pdfs;
+    my $ids;
+
+    $out = $form->{OUT};
+
+    $form->{todate} ||= $form->current_date( \%myconfig );
+    $form->{statementdate} = $locale->date( \%myconfig, $form->{todate}, 1 );
+
+    $form->{templates} = "$myconfig{templates}";
+
+    for (qw(name email)) { $form->{"user$_"} = $myconfig{$_} }
+
+    # setup variables for the form
+    $form->format_string(qw(companyemail companywebsite company address businessnumber username useremail tel fax));
+
+    @a = qw(id invnumber name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn);
+    push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
+    push @a, 'email' if !$form->{media} eq 'email';
+    push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
+    push @a, map { "bank$_" } qw(name address1 address2 city state zipcode country bic);
+
+    my $dbh = $form->dbconnect( \%myconfig );
+
+    while ( @{ $form->{AG} } ) {
+
+        $ref = shift @{ $form->{AG} };
+        $form->{OUT} = $out;
+
+        if ( $form->{"ndx_$ref->{id}"} ) {
+
+            # default shipto to main address if shipto address is empty.
+            if ( !$ref->{shiptoaddress1} ) {
+                for (qw(name address1 address2 city state zipcode country contact phone fax email)) {
+                    $ref->{"shipto$_"} = $ref->{$_};
+                }
+            }
+            for (@a) { $form->{$_} = $ref->{$_} }
+
+            if ( $form->{id} && $form->{dcn} eq "<%external%>" ) {
+                $query = qq|SELECT dcn FROM ar
+              WHERE id = $form->{id}|;
+                my $sth = $dbh->prepare($query);
+                $sth->execute || $form->dberror($query);
+                $form->{dcn} = $sth->fetchrow_array;
+                $sth->finish;
+            }
+
+            $form->{bankrvc} = $ref->{rvc};
+            $form->{rvc}     = $form->format_dcn( $form->{rvc} );
+            $form->{dcn}     = $form->format_dcn( $form->{dcn} );
+
+            $form->format_string(@a);
+
+            $form->{IN} = qq|$form->{type}$form->{"level_$ref->{id}"}.html|;
+
+            if ( $form->{format} =~ /(postscript|pdf)/ ) {
+                $form->{IN} =~ s/html$/tex/;
+            }
+
+            $form->{ $form->{vc} }    = $form->{name};
+            $form->{"$form->{vc}_id"} = $ref->{vc_id};
+            $form->{language_code}    = $form->{"language_code_$ref->{id}"};
+            $form->{currency}         = $ref->{curr};
+
+            for (qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill)) {
+                $form->{$_} = ();
+            }
+
+            $ref->{invdate} = $ref->{transdate};
+            my @a = qw(invnumber ordnumber ponumber notes invdate duedate invdescription shippingpoint shipvia waybill);
+            for (@a) { $form->{"${_}_1"} = $ref->{$_} }
+
+            $form->format_string( map { "${_}_1" } qw(invnumber ordnumber ponumber notes invdescription shippingpoint shipvia waybill) );
+            for (@a) { $form->{$_} = $form->{"${_}_1"} }
+
+            $ref->{exchangerate} ||= 1;
+            $form->{due}                = $form->format_amount( \%myconfig, $ref->{due} / $ref->{exchangerate}, $form->{precision} );
+            $form->{total}              = $form->{due};
+            $form->{integer_out_amount} = $ref->{integer_out_amount};
+            $form->{out_decimal}        = $ref->{out_decimal};
+
+            $form->{formname} = 'reminder';
+
+            if ( $form->{media} eq 'queue' ) {
+                ($filename) = $dbh->selectrow_array("SELECT spoolfile FROM status WHERE trans_id = $form->{id}");
+
+                if ($filename) {
+                    unlink "$spool/$filename";
+                    $filename =~ s/\..*$//g;
+                } else {
+                    $filename = time;
+                    $filename .= int rand 10000;
+                    $filename = "$myconfig{dbname}_$filename";
+                }
+
+                $filename .= ( $form->{format} eq 'postscript' ) ? '.ps' : '.pdf';
+                $form->{OUT} = ">$spool/$filename";
+                $pdfs .= "$spool/$filename ";
+                $ids  .= "$form->{id} ";
+
+                # save status
+                $form->update_status( \%myconfig );
+
+                %audittrail = (
+                    tablename => ($order) ? 'oe' : lc $ARAP,
+                    reference => $form->{"${inv}number"},
+                    formname  => $form->{formname},
+                    action    => 'queued',
+                    id        => $form->{id}
+                );
+                $dbh->do(qq|UPDATE status SET spoolfile='$filename' WHERE trans_id = $form->{id}|);
+            }
+            $form->parse_template( \%myconfig, $tmppath, $debuglatex, $noreply, $apikey );
+        }
+    }
+    if ( $form->{create_single_pdf} ) {
+        system("/usr/bin/pdftk $pdfs cat output $spool/$form->{login}_reminders.pdf");
+        my $dbh = $form->dbconnect( \%myconfig );
+        my @ids = split( / /, $ids );
+        for (@ids) {
+            $dbh->do("UPDATE status SET spoolfile = NULL WHERE trans_id = $_");
+        }
+        $dbh->disconnect;
+    } else {
+        unlink "$spool/$form->{login}_reminders.pdf";
+    }
 }
 
 sub do_print_statement {
