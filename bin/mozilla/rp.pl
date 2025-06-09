@@ -2707,6 +2707,7 @@ qq|$ref->{module}.pl?path=$form->{path}&action=edit&id=$ref->{id}&login=$form->{
 		  { ndx => 3, key => 'V', value => $locale->text('Preview') },
 		'Print'  => { ndx => 4, key => 'P', value => $locale->text('Print') },
 		'E-mail' => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
+		'E-mail All Reminders' => { ndx => 5, key => 'E', value => $locale->text('E-mail All Reminders') },
 		'Save Level' =>
 		  { ndx => 6, key => 'L', value => $locale->text('Save Level') },
 		'Export as CSV' =>
@@ -2737,6 +2738,170 @@ qq|$ref->{module}.pl?path=$form->{path}&action=edit&id=$ref->{id}&login=$form->{
 |;
 
 }
+
+
+# Email multiple reminders - setup 
+sub e_mail_all_reminders {
+
+    my $found = 0;
+    for ( split / /, $form->{ids} ) {
+        if ( $form->{"ndx_$_"} ) {
+            $found++;
+        }
+    }
+
+    # Error if no reminders selected
+    $form->error( $locale->text('Nothing selected!') ) unless $found;
+
+    # Get the first selected customer/vendor for default email settings
+    # This provides a reasonable default email address and company info
+    for ( split / /, $form->{ids} ) {
+        if ( $form->{"ndx_$_"} ) {
+            $form->{"$form->{vc}_id"} = $form->{"vc_$_"};
+            $form->{language_code}    = $form->{"language_code_$_"};
+            # RP->get_customer is called here to get default email settings from first selected customer
+            RP->get_customer( \%myconfig, \%$form );
+            last; # Only need the first one for defaults
+        }
+    }
+
+    if ( $myconfig{role} =~ /(admin|manager)/ ) {
+        $bcc = qq|
+          <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
+	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
+|;
+    }
+
+    $title = $locale->text('E-mail Reminders to Multiple Recipients') . " ($found " . $locale->text('selected') . ")";
+
+    $form->{subject} = $locale->text('Reminder') unless $form->{subject};
+
+    # Call the existing prepare_e_mail subroutine to get user preferences
+    # This will display the email composition form and set nextsub to send_email_reminder
+    # We need to modify the nextsub to point to our bulk sending routine
+    $form->{nextsub} = 'send_e_mail_all_reminders';
+
+    # prepare_e_mail sub is called here to display the email composition interface
+    &prepare_e_mail;
+}
+
+# Actual bulk email sending routine - called after user submits email preferences
+sub send_e_mail_all_reminders {
+
+    $form->isblank( "subject", $locale->text('Subject missing!') );
+
+    # Initialize counters for success/failure tracking
+    my $sent_count = 0;
+    my $error_count = 0;
+    my @sent_to = ();
+    my @failed_to = ();
+
+    # Store the original email settings from the form
+    my $original_subject = $form->{subject};
+    my $original_message = $form->{message};
+    my $original_cc = $form->{cc};
+    my $original_bcc = $form->{bcc};
+
+    # Process each selected reminder individually using the same approach as print_reminder
+    for ( split / /, $form->{ids} ) {
+        if ( $form->{"ndx_$_"} ) {
+            my $reminder_id = $_;
+
+            # Create a backup of current form state
+            my %form_backup = %$form;
+
+            eval {
+                # Set up form data for this specific reminder - mimic print_reminder setup
+                $form->{customer} = "";
+                $form->{id} = $reminder_id;
+                $form->{"$form->{vc}_id"} = $form->{"vc_$reminder_id"};
+                $form->{language_code} = $form->{"language_code_$reminder_id"};
+
+                # Set up for email output - same as send_email_reminder
+                $form->{OUT} = "$sendmail";
+                $form->{media} = 'email';
+
+                # Restore the email settings for each reminder
+                $form->{subject} = $original_subject;
+                $form->{message} = $original_message;
+                $form->{cc} = $original_cc;
+                $form->{bcc} = $original_bcc;
+
+                # Clear all other reminder selections to process only this one
+                for ( split / /, $form->{ids} ) {
+                    $form->{"ndx_$_"} = "";
+                }
+                $form->{"ndx_$reminder_id"} = 1;
+
+                # Get customer/vendor details for this reminder
+                # RP->get_customer is called here to retrieve contact information for each reminder
+                RP->get_customer( \%myconfig, \%$form );
+                $form->{subject} = "$original_subject - $form->{customer}";
+
+                # Check if email address exists
+                if ( !$form->{email} || $form->{email} =~ /^\s*$/ ) {
+                    push @failed_to, "$form->{name} (No email address)";
+                    $error_count++;
+                    # Restore form state and continue to next
+                    %$form = %form_backup;
+                    next;
+                }
+
+                # Retrieve reminder data for this specific reminder - same as print_reminder
+                # RP->reminder is called here to fetch reminder data for email processing
+                RP->reminder( \%myconfig, \%$form );
+
+                # Generate and send the email for this reminder - same as print_reminder
+                # do_print_reminder sub is called here to generate the reminder document for email
+                &do_print_reminder;
+
+                # Track successful send
+                push @sent_to, $form->{name};
+                $sent_count++;
+
+            } or do {
+                # Handle any errors during processing
+                my $error = $@ || 'Unknown error';
+                push @failed_to, "$form->{name} (Error: $error)";
+                $error_count++;
+            };
+
+            # Restore form state for next iteration
+            %$form = %form_backup;
+        }
+    }
+
+    # Build result message
+    my $message = "";
+
+    if ( $sent_count > 0 ) {
+        $message .= $locale->text('Reminders sent to') . " ($sent_count): " . join(', ', @sent_to);
+    }
+
+    if ( $error_count > 0 ) {
+        $message .= "\n" if $message;
+        $message .= $locale->text('Failed to send to') . " ($error_count): " . join(', ', @failed_to);
+    }
+
+    # Update callback URL with current selections for return navigation
+    if ( $form->{callback} ) {
+        for ( split / /, $form->{ids} ) {
+            if ( $form->{"ndx_$_"} ) {
+                $form->{callback} .= qq|&ndx_$_=1&level_$_=$form->{"level_$_"}&language_code_$_=| . $form->escape( $form->{"language_code_$_"}, 1 );
+            }
+        }
+    }
+
+    # Redirect with comprehensive status message
+    if ( $error_count > 0 && $sent_count == 0 ) {
+        # All failed
+        $form->error($message);
+    } else {
+        # At least some succeeded
+        $form->redirect($message);
+    }
+}
+
 
 sub save_level {
 
@@ -2982,7 +3147,11 @@ sub prepare_e_mail {
 
 	&print_options;
 
-	$nextsub = "send_email_$form->{type}";
+    if (!$form->{nextsub}) {
+        $nextsub = "send_email_$form->{type}";
+    } else {
+        $nextsub = $form->{nextsub};
+    }
 
 	for (
 		qw(language_code email cc bcc subject message type sendmode format action nextsub)
