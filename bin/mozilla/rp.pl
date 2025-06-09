@@ -2451,151 +2451,6 @@ function CheckAll() {
 
 }
 
-sub save_level {
-
-    if ( RP->save_level( \%myconfig, \%$form ) ) {
-        $form->redirect;
-    }
-
-    $form->error( $locale->text('Could not save reminder level!') );
-
-}
-
-sub print_options {
-
-    $form->{copies} ||= 1;
-    $form->{PD}{ $form->{type} } = "selected";
-
-    if ( $myconfig{printer} ) {
-        $form->{format} ||= "postscript";
-    } else {
-        $form->{format} ||= "pdf";
-    }
-    $form->{media} ||= $myconfig{printer};
-
-    $form->{sendmode} = "attachment";
-    $form->{format}   = "pdf" if ( $latex && $form->{media} eq 'email' );
-
-    if ( $form->{media} eq 'email' ) {
-        $media = qq|<select name=sendmode>
-	    <option value=attachment>| . $locale->text('Attachment') . qq|
-	    <option value=inline>| . $locale->text('In-line') . qq|</select>|;
-
-        if ( $form->{selectlanguage} ) {
-            $lang = qq|<select name="language_code">| . $form->select_option( $form->{selectlanguage}, $form->{language_code}, undef, 1 ) . qq|</select>|;
-        }
-    } else {
-        $media = qq|<select name=media>
-	    <option value=screen>| . $locale->text('Screen');
-        $media .= qq|
-            <option value="queue">| . $locale->text('Queue');
-
-        if ( %printer && $latex ) {
-            for ( sort keys %printer ) {
-                $media .= qq|
-            <option value="$_">$_|;
-            }
-        }
-    }
-
-    $format = qq|<select name=format>
-            <option value="html">html|;
-
-    $formname{statement} = $locale->text('Statement');
-    $formname{reminder}  = $locale->text('Reminder');
-
-    $type = qq|<select name=type>
-	    <option value="$form->{type}" $form->{PD}{$form->{type}}>$formname{$form->{type}}
-	    </select>|;
-
-    $media .= qq|</select>|;
-    $media =~ s/(<option value="\Q$form->{media}\E")/$1 selected/;
-
-    if ($latex) {
-        $format .= qq|
-	    <option value="pdf">| . $locale->text('PDF');
-    }
-
-    $format .= qq|</select>|;
-    $format =~ s/(<option value="\Q$form->{format}\E")/$1 selected/;
-
-    print qq|
-<table>
-  <tr>
-    <td>$type</td>
-    <td>$lang</td>
-    <td>$format</td>
-    <td>$media</td>
-|;
-
-    if ( %printer && $latex && $form->{media} ne 'email' ) {
-        print qq|
-      <td nowrap>| . $locale->text('Copies') . qq|
-      <input name=copies size=2 value=$form->{copies}></td>
-|;
-    }
-
-    print qq|
-  <th><input type=checkbox name=create_single_pdf value=1> |
-      . $locale->text("Create single PDF") . qq|</th>
-|;
-
-    $form->{selectlanguage} = $form->escape( $form->{selectlanguage}, 1 );
-    $form->hide_form(qw(selectlanguage));
-
-    print qq|
-  </tr>
-</table>
-|;
-
-}
-
-sub e_mail { &{"e_mail_$form->{type}"} }
-
-sub e_mail_statement {
-
-    # get name and email addresses
-    @vc_ids = split / /, $form->{vc_ids};
-    $found  = 0;
-    for $curr ( split / /, $form->{curr} ) {
-        for (@vc_ids) {
-            if ( $form->{"ndx_${curr}_$_"} ) {
-                $form->{"$form->{vc}_id"} = $_;
-                $found++;
-            }
-        }
-    }
-
-    $form->error( $locale->text('Can only send one statement at a time!') )
-      if $found > 1;
-
-    for $curr ( split / /, $form->{curr} ) {
-        for (@vc_ids) {
-            if ( $form->{"ndx_${curr}_$_"} ) {
-                $form->{"$form->{vc}_id"} = $_;
-                $form->{language_code}    = $form->{"language_code_${curr}_$_"};
-                RP->get_customer( \%myconfig, \%$form );
-                $selected = 1;
-                last;
-            }
-        }
-    }
-
-    $form->error( $locale->text('Nothing selected!') ) unless $selected;
-
-    if ( $myconfig{role} =~ /(admin|manager)/ ) {
-        $bcc = qq|
-          <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
-	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
-|;
-    }
-
-    $title = $locale->text('E-mail Statement to') . " $form->{$form->{vc}}";
-
-    &prepare_e_mail;
-
-}
-
 sub e_mail_reminder {
 
     $found = 0;
@@ -2631,227 +2486,6 @@ sub e_mail_reminder {
     $title = $locale->text('E-mail Reminder to') . " $form->{$form->{vc}}";
 
     &prepare_e_mail;
-
-}
-
-sub prepare_e_mail {
-
-    $form->{media} = "email";
-
-    $form->header( 0, 0, $locale );
-
-    print qq|
-<body>
-
-<form method=post action=$form->{script}>
-
-<table width=100%>
-  <tr class=listtop>
-    <th>$form->{helpref}$title</a></th>
-  </tr>
-  <tr height="5"></tr>
-  <tr>
-    <td>
-      <table width=100%>
-        <tr>
-	  <th align=right nowrap>| . $locale->text('E-mail') . qq|</th>
-	  <td><input name=email size=30 value="$form->{email}"></td>
-	  <th align=right nowrap>| . $locale->text('Cc') . qq|</th>
-	  <td><input name=cc size=30 value="$form->{cc}"></td>
-	 </tr>
-	<tr>
-          <th align=right nowrap>| . $locale->text('Subject') . qq|</th>
-	  <td><input name=subject size=30 value="|
-      . $form->quote( $form->{subject} ) . qq|"></td>
-	  $bcc
-	</tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <table width=100%>
-        <tr>
-	  <th align=left nowrap>| . $locale->text('Message') . qq|</th>
-	</tr>
-	<tr>
-	  <td><textarea name=message rows=15 cols=60 wrap=soft>$form->{message}</textarea></td>
-	</tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td>
-|;
-
-    &print_options;
-
-    $nextsub = "send_email_$form->{type}";
-
-    for (qw(language_code email cc bcc subject message type sendmode format action nextsub)) {
-        delete $form->{$_};
-    }
-
-    $form->hide_form;
-
-    print qq|
-    </td>
-  </tr>
-  <tr>
-    <td><hr size=3 noshade></td>
-  </tr>
-</table>
-
-<input type=hidden name=nextsub value="$nextsub">
-<br>
-<input name=action class=submit type=submit value="|
-      . $locale->text('Continue') . qq|">
-</form>
-
-</body>
-</html>
-|;
-
-}
-
-sub send_email_statement {
-
-    $form->{OUT} = "$sendmail";
-
-    $form->isblank( "email", $locale->text('E-mail address missing!') );
-
-    $todate = $form->{todate} || $form->current_date( \%myconfig );
-    $form->{subject} = $locale->text('Statement') . qq| - $todate|
-      unless $form->{subject};
-
-    for $curr ( split / /, $form->{curr} ) {
-        for ( split / /, $form->{vc_ids} ) {
-            if ( $form->{"ndx_${curr}_$_"} ) {
-                $form->{"language_code_${curr}_$_"} = $form->{language_code};
-            }
-        }
-    }
-
-    &print_statement;
-
-    if ( $form->{callback} ) {
-        for $curr ( split / /, $form->{curr} ) {
-            for ( split / /, $form->{vc_ids} ) {
-                if ( $form->{"ndx_${curr}_$_"} ) {
-                    $form->{callback} .= qq|&ndx_${curr}_$_=1&language_code_${curr}_$_=| . $form->escape( $form->{language_code}, 1 );
-                }
-            }
-        }
-    }
-
-    $form->redirect( $locale->text('Statement sent to') . " $form->{$form->{vc}}" );
-
-}
-
-sub send_email_reminder {
-
-    $form->{OUT} = "$sendmail";
-
-    $form->isblank( "email", $locale->text('E-mail address missing!') );
-
-    RP->reminder( \%myconfig, \%$form );
-
-    $form->{subject} = $locale->text('Reminder') unless $form->{subject};
-
-    for ( split / /, $form->{ids} ) {
-        if ( $form->{"ndx_$_"} ) {
-            $form->{"language_code_$_"} = $form->{language_code};
-        }
-    }
-
-    &print_reminder;
-
-    if ( $form->{callback} ) {
-        for ( split / /, $form->{ids} ) {
-            if ( $form->{"ndx_$_"} ) {
-                $form->{callback} .= qq|&ndx_$_=1&level_$_=$form->{"level_$_"}&language_code_$_=| . $form->escape( $form->{language_code}, 1 );
-            }
-        }
-    }
-
-    $form->redirect( $locale->text('Reminder sent to') . " $form->{$form->{vc}}" );
-
-}
-
-sub print { &{"print_$form->{type}"} }
-
-sub print_statement {
-
-    $form->{customer} = "";
-
-    @vc_ids = split / /, $form->{vc_ids};
-    for $curr ( split / /, $form->{curr} ) {
-        last if $selected;
-        for (@vc_ids) {
-            if ( $form->{"ndx_${curr}_$_"} ) {
-                $selected = "ndx_${curr}_$_";
-                last;
-            }
-        }
-    }
-
-    $form->error( $locale->text('Nothing selected!') ) unless $selected;
-
-    if ( $form->{media} eq 'screen' ) {
-        for $curr ( split / /, $form->{curr} ) {
-            for (@vc_ids) {
-                $form->{"ndx_${curr}_$_"} = "";
-            }
-        }
-        $form->{$selected} = 1;
-    }
-
-    if ( $form->{media} !~ /(screen|email)/ ) {
-        $form->{"$form->{vc}_id"} = "";
-        $SIG{INT} = 'IGNORE';
-    }
-
-    RP->aging( \%myconfig, \%$form );
-
-    if ( $form->{media} !~ /(screen|email)/ ) {
-        $form->{OUT} = qq~| $printer{$form->{media}}~;
-    }
-
-    @c    = qw(c0 c15 c30 c45 c60 c75 c90);
-    $item = $c[0];
-    @{$ag} = ();
-
-    for (@c) {
-        if ( $form->{$_} ) {
-            $item = $_;
-        }
-        push @{ $ag{$item} }, $_;
-    }
-
-    for ( keys %ag ) {
-        shift @{ $ag{$_} };
-    }
-
-    for ( keys %ag ) {
-        for $item ( @{ $ag{$_} } ) {
-            $c{$_} += $c{$item};
-        }
-    }
-
-    &do_print_statement;
-
-    if ( $form->{callback} ) {
-        for $curr ( split / /, $form->{curr} ) {
-            for ( split / /, $form->{vc_ids} ) {
-                if ( $form->{"ndx_${curr}_$_"} ) {
-                    $form->{callback} .= qq|&ndx_${curr}_$_=1&language_code_${curr}_$_=| . $form->escape( $form->{"language_code_${curr}_$_"}, 1 );
-                }
-            }
-        }
-    }
-
-    $form->redirect( $locale->text('Statements sent to printer!') )
-      if ( $form->{media} !~ /(screen|email)/ );
 
 }
 
@@ -3031,6 +2665,376 @@ sub do_print_reminder {
     } else {
         unlink "$spool/$form->{login}_reminders.pdf";
     }
+}
+
+
+
+sub send_email_reminder {
+
+    $form->{OUT} = "$sendmail";
+
+    $form->isblank( "email", $locale->text('E-mail address missing!') );
+
+    RP->reminder( \%myconfig, \%$form );
+
+    $form->{subject} = $locale->text('Reminder') unless $form->{subject};
+
+    for ( split / /, $form->{ids} ) {
+        if ( $form->{"ndx_$_"} ) {
+            $form->{"language_code_$_"} = $form->{language_code};
+        }
+    }
+
+    &print_reminder;
+
+    if ( $form->{callback} ) {
+        for ( split / /, $form->{ids} ) {
+            if ( $form->{"ndx_$_"} ) {
+                $form->{callback} .= qq|&ndx_$_=1&level_$_=$form->{"level_$_"}&language_code_$_=| . $form->escape( $form->{language_code}, 1 );
+            }
+        }
+    }
+
+    $form->redirect( $locale->text('Reminder sent to') . " $form->{$form->{vc}}" );
+
+}
+
+sub prepare_e_mail {
+
+    $form->{media} = "email";
+
+    $form->header( 0, 0, $locale );
+
+    print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table width=100%>
+  <tr class=listtop>
+    <th>$form->{helpref}$title</a></th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr>
+	  <th align=right nowrap>| . $locale->text('E-mail') . qq|</th>
+	  <td><input name=email size=30 value="$form->{email}"></td>
+	  <th align=right nowrap>| . $locale->text('Cc') . qq|</th>
+	  <td><input name=cc size=30 value="$form->{cc}"></td>
+	 </tr>
+	<tr>
+          <th align=right nowrap>| . $locale->text('Subject') . qq|</th>
+	  <td><input name=subject size=30 value="|
+      . $form->quote( $form->{subject} ) . qq|"></td>
+	  $bcc
+	</tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table width=100%>
+        <tr>
+	  <th align=left nowrap>| . $locale->text('Message') . qq|</th>
+	</tr>
+	<tr>
+	  <td><textarea name=message rows=15 cols=60 wrap=soft>$form->{message}</textarea></td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+|;
+
+    &print_options;
+
+    $nextsub = "send_email_$form->{type}";
+
+    for (qw(language_code email cc bcc subject message type sendmode format action nextsub)) {
+        delete $form->{$_};
+    }
+
+    $form->hide_form;
+
+    print qq|
+    </td>
+  </tr>
+  <tr>
+    <td><hr size=3 noshade></td>
+  </tr>
+</table>
+
+<input type=hidden name=nextsub value="$nextsub">
+<br>
+<input name=action class=submit type=submit value="|
+      . $locale->text('Continue') . qq|">
+</form>
+
+</body>
+</html>
+|;
+
+}
+
+sub save_level {
+
+    if ( RP->save_level( \%myconfig, \%$form ) ) {
+        $form->redirect;
+    }
+
+    $form->error( $locale->text('Could not save reminder level!') );
+
+}
+
+sub e_mail_statement {
+
+    # get name and email addresses
+    @vc_ids = split / /, $form->{vc_ids};
+    $found  = 0;
+    for $curr ( split / /, $form->{curr} ) {
+        for (@vc_ids) {
+            if ( $form->{"ndx_${curr}_$_"} ) {
+                $form->{"$form->{vc}_id"} = $_;
+                $found++;
+            }
+        }
+    }
+
+    $form->error( $locale->text('Can only send one statement at a time!') )
+      if $found > 1;
+
+    for $curr ( split / /, $form->{curr} ) {
+        for (@vc_ids) {
+            if ( $form->{"ndx_${curr}_$_"} ) {
+                $form->{"$form->{vc}_id"} = $_;
+                $form->{language_code}    = $form->{"language_code_${curr}_$_"};
+                RP->get_customer( \%myconfig, \%$form );
+                $selected = 1;
+                last;
+            }
+        }
+    }
+
+    $form->error( $locale->text('Nothing selected!') ) unless $selected;
+
+    if ( $myconfig{role} =~ /(admin|manager)/ ) {
+        $bcc = qq|
+          <th align=right nowrap=true>| . $locale->text('Bcc') . qq|</th>
+	  <td><input name=bcc size=30 value="$form->{bcc}"></td>
+|;
+    }
+
+    $title = $locale->text('E-mail Statement to') . " $form->{$form->{vc}}";
+
+    &prepare_e_mail;
+
+}
+
+
+sub print_options {
+
+    $form->{copies} ||= 1;
+    $form->{PD}{ $form->{type} } = "selected";
+
+    if ( $myconfig{printer} ) {
+        $form->{format} ||= "postscript";
+    } else {
+        $form->{format} ||= "pdf";
+    }
+    $form->{media} ||= $myconfig{printer};
+
+    $form->{sendmode} = "attachment";
+    $form->{format}   = "pdf" if ( $latex && $form->{media} eq 'email' );
+
+    if ( $form->{media} eq 'email' ) {
+        $media = qq|<select name=sendmode>
+	    <option value=attachment>| . $locale->text('Attachment') . qq|
+	    <option value=inline>| . $locale->text('In-line') . qq|</select>|;
+
+        if ( $form->{selectlanguage} ) {
+            $lang = qq|<select name="language_code">| . $form->select_option( $form->{selectlanguage}, $form->{language_code}, undef, 1 ) . qq|</select>|;
+        }
+    } else {
+        $media = qq|<select name=media>
+	    <option value=screen>| . $locale->text('Screen');
+        $media .= qq|
+            <option value="queue">| . $locale->text('Queue');
+
+        if ( %printer && $latex ) {
+            for ( sort keys %printer ) {
+                $media .= qq|
+            <option value="$_">$_|;
+            }
+        }
+    }
+
+    $format = qq|<select name=format>
+            <option value="html">html|;
+
+    $formname{statement} = $locale->text('Statement');
+    $formname{reminder}  = $locale->text('Reminder');
+
+    $type = qq|<select name=type>
+	    <option value="$form->{type}" $form->{PD}{$form->{type}}>$formname{$form->{type}}
+	    </select>|;
+
+    $media .= qq|</select>|;
+    $media =~ s/(<option value="\Q$form->{media}\E")/$1 selected/;
+
+    if ($latex) {
+        $format .= qq|
+	    <option value="pdf">| . $locale->text('PDF');
+    }
+
+    $format .= qq|</select>|;
+    $format =~ s/(<option value="\Q$form->{format}\E")/$1 selected/;
+
+    print qq|
+<table>
+  <tr>
+    <td>$type</td>
+    <td>$lang</td>
+    <td>$format</td>
+    <td>$media</td>
+|;
+
+    if ( %printer && $latex && $form->{media} ne 'email' ) {
+        print qq|
+      <td nowrap>| . $locale->text('Copies') . qq|
+      <input name=copies size=2 value=$form->{copies}></td>
+|;
+    }
+
+    print qq|
+  <th><input type=checkbox name=create_single_pdf value=1> |
+      . $locale->text("Create single PDF") . qq|</th>
+|;
+
+    $form->{selectlanguage} = $form->escape( $form->{selectlanguage}, 1 );
+    $form->hide_form(qw(selectlanguage));
+
+    print qq|
+  </tr>
+</table>
+|;
+
+}
+
+sub e_mail { &{"e_mail_$form->{type}"} }
+
+
+sub send_email_statement {
+
+    $form->{OUT} = "$sendmail";
+
+    $form->isblank( "email", $locale->text('E-mail address missing!') );
+
+    $todate = $form->{todate} || $form->current_date( \%myconfig );
+    $form->{subject} = $locale->text('Statement') . qq| - $todate|
+      unless $form->{subject};
+
+    for $curr ( split / /, $form->{curr} ) {
+        for ( split / /, $form->{vc_ids} ) {
+            if ( $form->{"ndx_${curr}_$_"} ) {
+                $form->{"language_code_${curr}_$_"} = $form->{language_code};
+            }
+        }
+    }
+
+    &print_statement;
+
+    if ( $form->{callback} ) {
+        for $curr ( split / /, $form->{curr} ) {
+            for ( split / /, $form->{vc_ids} ) {
+                if ( $form->{"ndx_${curr}_$_"} ) {
+                    $form->{callback} .= qq|&ndx_${curr}_$_=1&language_code_${curr}_$_=| . $form->escape( $form->{language_code}, 1 );
+                }
+            }
+        }
+    }
+
+    $form->redirect( $locale->text('Statement sent to') . " $form->{$form->{vc}}" );
+
+}
+
+sub print { &{"print_$form->{type}"} }
+
+sub print_statement {
+
+    $form->{customer} = "";
+
+    @vc_ids = split / /, $form->{vc_ids};
+    for $curr ( split / /, $form->{curr} ) {
+        last if $selected;
+        for (@vc_ids) {
+            if ( $form->{"ndx_${curr}_$_"} ) {
+                $selected = "ndx_${curr}_$_";
+                last;
+            }
+        }
+    }
+
+    $form->error( $locale->text('Nothing selected!') ) unless $selected;
+
+    if ( $form->{media} eq 'screen' ) {
+        for $curr ( split / /, $form->{curr} ) {
+            for (@vc_ids) {
+                $form->{"ndx_${curr}_$_"} = "";
+            }
+        }
+        $form->{$selected} = 1;
+    }
+
+    if ( $form->{media} !~ /(screen|email)/ ) {
+        $form->{"$form->{vc}_id"} = "";
+        $SIG{INT} = 'IGNORE';
+    }
+
+    RP->aging( \%myconfig, \%$form );
+
+    if ( $form->{media} !~ /(screen|email)/ ) {
+        $form->{OUT} = qq~| $printer{$form->{media}}~;
+    }
+
+    @c    = qw(c0 c15 c30 c45 c60 c75 c90);
+    $item = $c[0];
+    @{$ag} = ();
+
+    for (@c) {
+        if ( $form->{$_} ) {
+            $item = $_;
+        }
+        push @{ $ag{$item} }, $_;
+    }
+
+    for ( keys %ag ) {
+        shift @{ $ag{$_} };
+    }
+
+    for ( keys %ag ) {
+        for $item ( @{ $ag{$_} } ) {
+            $c{$_} += $c{$item};
+        }
+    }
+
+    &do_print_statement;
+
+    if ( $form->{callback} ) {
+        for $curr ( split / /, $form->{curr} ) {
+            for ( split / /, $form->{vc_ids} ) {
+                if ( $form->{"ndx_${curr}_$_"} ) {
+                    $form->{callback} .= qq|&ndx_${curr}_$_=1&language_code_${curr}_$_=| . $form->escape( $form->{"language_code_${curr}_$_"}, 1 );
+                }
+            }
+        }
+    }
+
+    $form->redirect( $locale->text('Statements sent to printer!') )
+      if ( $form->{media} !~ /(screen|email)/ );
+
 }
 
 sub do_print_statement {
