@@ -1701,20 +1701,17 @@ sub aging {
 }
 
 sub reminder {
-    my ( $self, $myconfig, $form ) = @_;
+    my ($self, $myconfig, $form) = @_;
 
-    # connect to database
+    # Connect to database
     my $dbh = $form->dbconnect($myconfig);
 
-    my $query;
+    # Get company defaults (address, contact info, etc.)
+    my @a = qw(company companyemail companywebsite address address1 address2 city state zip country businessnumber tel fax precision);
+    my %defaults = $form->get_defaults($dbh, \@a);
+    for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
-    my $item;
-    my $curr;
-
-    my @a        = qw(company companyemail companywebsite address address1 address2 city state zip country businessnumber tel fax precision);
-    my %defaults = $form->get_defaults( $dbh, \@a );
-    for ( keys %defaults ) { $form->{$_} = $defaults{$_} }
-
+    # Map address fields to company fields for template use
     $form->{companyaddress1} = $defaults{address1};
     $form->{companyaddress2} = $defaults{address2};
     $form->{companycity}     = $defaults{city};
@@ -1722,279 +1719,315 @@ sub reminder {
     $form->{companyzip}      = $defaults{zip};
     $form->{companycountry}  = $defaults{country};
 
-    $form->{currencies} = $form->get_currencies( $dbh, $myconfig );
+    # Get available currencies
+    $form->{currencies} = $form->get_currencies($dbh, $myconfig);
 
+    # Build WHERE clause for query
     my $where = "a.approved = '1'";
     my $name;
     my $null;
     my $ref;
 
-    $form->{vc} = 'vendor' if $form->{vc} ne 'customer';    # SQLI protection
+    # Validate vendor/customer type (SQL injection protection)
+    $form->{vc} = 'vendor' if $form->{vc} ne 'customer';
 
-    if ( $form->{"$form->{vc}_id"} *= 1 ) {
+    # Add customer/vendor filter if specified
+    if ($form->{"$form->{vc}_id"} *= 1) {
         $where .= qq| AND vc.id = $form->{"$form->{vc}_id"}|;
     } else {
-        if ( $form->{ $form->{vc} } ne "" ) {
-            $name = $form->like( lc $form->{ $form->{vc} } );
+        if ($form->{$form->{vc}} ne "") {
+            $name = $form->like(lc $form->{$form->{vc}});
             $where .= qq| AND lower(vc.name) LIKE '$name'|;
         }
-        if ( $form->{"$form->{vc}number"} ne "" ) {
-            $name = $form->like( lc $form->{"$form->{vc}number"} );
+        if ($form->{"$form->{vc}number"} ne "") {
+            $name = $form->like(lc $form->{"$form->{vc}number"});
             $where .= qq| AND lower(vc.$form->{vc}number) LIKE '$name'|;
         }
     }
 
-    if ( $form->{department} ) {
-        ( $null, $department_id ) = split /--/, $form->{department};
+    # Add department filter if specified
+    if ($form->{department}) {
+        ($null, $department_id) = split /--/, $form->{department};
         $where .= qq| AND a.department_id = | . $form->dbclean($department_id) . qq||;
     }
 
+    # Clean and set sort order
     $form->{sort} =~ s/;//g;
-    $form->{sort} = $form->dbclean( $form->{sort} );
-    my $sortorder = ( $form->{sort} ) ? "vc.$form->{sort}" : "vc.name";
+    $form->{sort} = $form->dbclean($form->{sort});
+    my $sortorder = ($form->{sort}) ? "vc.$form->{sort}" : "vc.name";
 
-    # select outstanding customers
-    $query = qq|SELECT DISTINCT vc.id, vc.name, vc.$form->{vc}number,
-              vc.language_code
-              FROM $form->{vc} vc
-	      JOIN ar a ON (a.$form->{vc}_id = vc.id)
-	      WHERE $where
-              AND a.paid != a.amount
-              ORDER BY $sortorder|;
+    # Query to find customers with outstanding invoices
+    my $query = qq|
+        SELECT DISTINCT 
+            vc.id, 
+            vc.name, 
+            vc.$form->{vc}number,
+            vc.language_code
+        FROM $form->{vc} vc
+        JOIN ar a ON (a.customer_id = vc.id)
+        WHERE $where
+        AND a.paid != a.amount
+        ORDER BY $sortorder
+    |;
+    
     my $sth = $dbh->prepare($query);
-    $sth->execute || $form->dberror;
+    $sth->execute || $form->dberror($query);
 
+    # Store customer results
     my @ot = ();
-    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+    while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
         push @ot, $ref;
     }
     $sth->finish;
 
-    $query = qq|SELECT s.formname
-              FROM status s
-	      JOIN ar a ON (a.id = s.trans_id)
-	      WHERE s.formname LIKE 'reminder_'
-	      AND s.trans_id = ?
-	      AND a.curr = ?
-	      ORDER BY s.formname DESC|;
+    # Prepare query to check existing reminder levels
+    $query = qq|
+        SELECT s.formname
+        FROM status s
+        JOIN ar a ON (a.id = s.trans_id)
+        WHERE s.formname LIKE 'reminder_'
+        AND s.trans_id = ?
+        AND a.curr = ?
+        ORDER BY s.formname DESC
+    |;
     my $rth = $dbh->prepare($query);
 
-    # for each company that has some stuff outstanding
-    $form->{currencies} ||= ":";
-
+    # Build WHERE clause for invoice details
     $where = qq|
-	ROUND(a.paid::NUMERIC, $form->{precision}) != ROUND(a.amount::NUMERIC, $form->{precision})
-	AND a.approved = '1'
-	AND a.duedate < current_date
-	AND c.id = ?
-	AND a.curr = ?|;
+        ROUND(a.paid::NUMERIC, $form->{precision}) != ROUND(a.amount::NUMERIC, $form->{precision})
+        AND a.approved = '1'
+        AND a.duedate < current_date
+        AND c.id = ?
+        AND a.curr = ?
+    |;
 
+    # Add department filter if specified
     if ($department_id) {
         $where .= qq| AND a.department_id = | . $form->dbclean($department_id) . qq||;
     }
 
-    if ( $form->{overpaid} ne "on" ) {
+    # Handle overpaid invoices option
+    if ($form->{overpaid} ne "on") {
         $where .= qq| AND ((a.amount > 0 AND a.paid < a.amount) OR (a.amount < 0 AND a.paid > a.amount))|;
     }
 
-    $exclude_credits = 'AND a.amount > 0' if $form->{exclude_credits};
-    $query           = qq|SELECT c.id AS vc_id, c.$form->{vc}number, c.name, c.terms,
-              ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
-	      c.contact, c.email,
-	      c.phone as $form->{vc}phone, c.fax as $form->{vc}fax,
-	      c.$form->{vc}number, c.taxnumber as $form->{vc}taxnumber,
-	      a.description AS invdescription, a.shippingpoint, a.shipvia, a.waybill,
-	      a.invnumber, a.transdate, a.till, a.ordnumber, a.ponumber, a.notes,
-	      a.amount - a.paid AS due,
-	      a.duedate, a.invoice, a.id, a.curr,
-		(SELECT exchangerate FROM exchangerate e
-		 WHERE a.curr = e.curr
-		 AND e.transdate = a.transdate) AS exchangerate,
-	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
-	      current_date - a.duedate duedays,
-	      s.*,
-          bank.name bankname, bank.iban, bank.bic bankbic,
-          bank.dcn, bank.rvc, bank.membernumber,
-          bank.qriban, bank.strdbkginf, bank.invdescriptionqr,
-          ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
-          ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
-	      FROM ar a
-	      JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
-	      JOIN address ad ON (ad.trans_id = c.id)
-	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
-	      LEFT JOIN shipto s ON (a.id = s.trans_id)
-          LEFT JOIN bank ON (bank.id = a.bank_id)
-          LEFT JOIN address ad2 ON (ad2.trans_id = bank.id)
-	      WHERE a.duedate <= '$form->{duedateto}'
-	      AND $where
-	      $exclude_credits
-	      ORDER BY vc_id, transdate, invnumber|;
+    # Exclude credits if specified
+    my $exclude_credits = 'AND a.amount > 0' if $form->{exclude_credits};
+
+    # Main query to get invoice details for reminders
+    $query = qq|
+        SELECT 
+            c.id AS vc_id, 
+            c.$form->{vc}number, 
+            c.name, 
+            c.terms,
+            ad.address1, 
+            ad.address2, 
+            ad.city, 
+            ad.state, 
+            ad.zipcode, 
+            ad.country,
+            c.contact, 
+            c.email,
+            c.phone as $form->{vc}phone, 
+            c.fax as $form->{vc}fax,
+            c.$form->{vc}number, 
+            c.taxnumber as $form->{vc}taxnumber,
+            a.description AS invdescription, 
+            a.shippingpoint, 
+            a.shipvia, 
+            a.waybill,
+            a.invnumber, 
+            a.transdate, 
+            a.till, 
+            a.ordnumber, 
+            a.ponumber, 
+            a.notes,
+            a.amount - a.paid AS due,
+            a.duedate, 
+            a.invoice, 
+            a.id, 
+            a.curr,
+            (SELECT exchangerate FROM exchangerate e
+             WHERE a.curr = e.curr
+             AND e.transdate = a.transdate) AS exchangerate,
+            ct.firstname, 
+            ct.lastname, 
+            ct.salutation, 
+            ct.typeofcontact,
+            current_date - a.duedate duedays,
+            s.*,
+            bank.name bankname, 
+            bank.iban, 
+            bank.bic bankbic,
+            bank.dcn, 
+            bank.rvc, 
+            bank.membernumber,
+            bank.qriban, 
+            bank.strdbkginf, 
+            bank.invdescriptionqr,
+            ad2.address1 bankaddress1, 
+            ad2.address2 bankaddress2, 
+            ad2.city bankcity,
+            ad2.state bankstate, 
+            ad2.zipcode bankzipcode, 
+            ad2.country bankcountry
+        FROM ar a
+        JOIN $form->{vc} c ON (a.customer_id = c.id)
+        JOIN address ad ON (ad.trans_id = c.id)
+        LEFT JOIN contact ct ON (ct.trans_id = c.id)
+        LEFT JOIN shipto s ON (a.id = s.trans_id)
+        LEFT JOIN bank ON (bank.id = a.bank_id)
+        LEFT JOIN address ad2 ON (ad2.trans_id = bank.id)
+        WHERE a.duedate <= '$form->{duedateto}'
+        AND $where
+        $exclude_credits
+        ORDER BY vc_id, transdate, invnumber
+    |;
+    
     $sth = $dbh->prepare($query) || $form->dberror($query);
 
+    # Initialize array for reminder data
     $form->{AG} = ();
 
-    for $curr ( split /:/, $form->{currencies} ) {
+    # Process each currency and customer
+    for my $curr (split /:/, $form->{currencies}) {
+        for my $item (@ot) {
+            $sth->execute($item->{id}, $curr);
 
-        for $item (@ot) {
-
-            $sth->execute( $item->{id}, $curr );
-
-            while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
-                $ref->{module} = ( $ref->{invoice} ) ? 'is' : 'ar';
+            while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+                # Set module type (invoice, AR, or point of sale)
+                $ref->{module} = ($ref->{invoice}) ? 'is' : 'ar';
                 $ref->{module} = 'ps' if $ref->{till};
                 $ref->{exchangerate} ||= 1;
                 $ref->{language_code} = $item->{language_code};
-                $form->{terms}        = $ref->{terms};
+                $form->{terms} = $ref->{terms};
 
-                # conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
-                # taken from IS.pm / line 689 / method invoice_details() (to good someone made small and comprehensive sub methods and its not just one huge fucking piece of code!)
+                # Prepare QR code variables (removing problematic characters)
                 $form->{invnumber} = $ref->{invnumber};
-                $form->{invnumber} = substr( $form->{invnumber}, 0, 24 );
-                $form->{invnumber} = $form->string_replace( $form->{invnumber}, "%",      "" );
-                $form->{invnumber} = $form->string_replace( $form->{invnumber}, "/",      "" );    # QR Standard requires "/" to be escaped. We just remove it ("/" is rarely used) (See #112446)
-                $form->{invnumber} = $form->string_replace( $form->{invnumber}, "\Q\\\E", "" )
-                  ;    # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
+                $form->{invnumber} = substr($form->{invnumber}, 0, 24);
+                $form->{invnumber} = $form->string_replace($form->{invnumber}, "%", "");
+                $form->{invnumber} = $form->string_replace($form->{invnumber}, "/", "");
+                $form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", "");
                 $form->{invnumberqr} = $form->{invnumber};
 
-                # QR-Codes needs to be the same as in Debitoren-Modul (as it works in Debitoren-Modul). This variable is not filled in Debitoren-Modul, thats why commented out here.
-                #$form->{invdescription} = $ref->{invdescription};
-                #$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
-                #$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
-                #$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
-                #$form->{invdescriptionqr2} = $form->{invdescriptionqr};
-
-                $form->{qriban}   = $ref->{qriban};
+                # Bank/QR code details
+                $form->{qriban} = $ref->{qriban};
                 $form->{qribanqr} = $form->{qriban};
                 $form->{qribanqr} =~ s/\s//g;
-                $form->{qribanqr} = $form->string_replace( $form->{qribanqr}, "%", "" );
+                $form->{qribanqr} = $form->string_replace($form->{qribanqr}, "%", "");
 
-                $form->{companyqr} = substr( $form->{company}, 0, 70 );
-                $form->{companyqr} = $form->string_replace( $form->{companyqr}, "%", "" );
+                # Company details for QR
+                $form->{companyqr} = substr($form->{company}, 0, 70);
+                $form->{companyqr} = $form->string_replace($form->{companyqr}, "%", "");
 
-                $form->{companyaddress1qr} = substr( $form->{address1}, 0, 70 );
-                $form->{companyaddress1qr} = $form->string_replace( $form->{companyaddress1qr}, "%", "" );
+                $form->{companyaddress1qr} = substr($form->{address1}, 0, 70);
+                $form->{companyaddress1qr} = $form->string_replace($form->{companyaddress1qr}, "%", "");
 
-                $form->{companyzipqr} = substr( $form->{zip}, 0, 16 );
-                $form->{companyzipqr} = $form->string_replace( $form->{companyzipqr}, "%", "" );
+                $form->{companyzipqr} = substr($form->{zip}, 0, 16);
+                $form->{companyzipqr} = $form->string_replace($form->{companyzipqr}, "%", "");
 
-                $form->{companycityqr} = substr( $form->{city}, 0, 35 );
-                $form->{companycityqr} = $form->string_replace( $form->{companycityqr}, "%", "" );
+                $form->{companycityqr} = substr($form->{city}, 0, 35);
+                $form->{companycityqr} = $form->string_replace($form->{companycityqr}, "%", "");
 
-                $form->{nameqr} = substr( $ref->{name}, 0, 70 );
-                $form->{nameqr} = $form->string_replace( $form->{nameqr}, "%", "" );
+                # Customer details for QR
+                $form->{nameqr} = substr($ref->{name}, 0, 70);
+                $form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
 
-                $form->{address1qr} = substr( $ref->{address1}, 0, 70 );
-                $form->{address1qr} = $form->string_replace( $form->{address1qr}, "%", "" );
+                $form->{address1qr} = substr($ref->{address1}, 0, 70);
+                $form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
 
-                $form->{zipcodeqr} = substr( $ref->{zipcode}, 0, 16 );
-                $form->{zipcodeqr} = $form->string_replace( $form->{zipcodeqr}, "%", "" );
+                $form->{zipcodeqr} = substr($ref->{zipcode}, 0, 16);
+                $form->{zipcodeqr} = $form->string_replace($form->{zipcodeqr}, "%", "");
 
-                $form->{cityqr} = substr( $ref->{city}, 0, 35 );
-                $form->{cityqr} = $form->string_replace( $form->{cityqr}, "%", "" );
+                $form->{cityqr} = substr($ref->{city}, 0, 35);
+                $form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
 
+                # Business number formatting
                 my @nums = $form->{businessnumber} =~ /(\d+)/g;
                 for (@nums) { $form->{businessnumberqr} .= $_ }
 
+                # Tax information
                 $form->{swicotaxbaseqr} = $form->{swicotaxbase};
-                $form->{swicotaxbaseqr} = $form->string_replace( $form->{swicotaxbaseqr}, "%", "" );
+                $form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
 
                 $form->{swicotaxqr} = $form->{swicotax};
-                $form->{swicotaxqr} = $form->string_replace( $form->{swicotaxqr}, "%", "" );
+                $form->{swicotaxqr} = $form->string_replace($form->{swicotaxqr}, "%", "");
 
-                @taxaccounts = split( / /, $form->{taxaccounts} );
-
+                # Process tax accounts
+                my @taxaccounts = split(/ /, $form->{taxaccounts});
                 for (@taxaccounts) {
-                    if ( $form->{"${_}_rate"} ) {
-
-                        #$rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
-                        $rate    = $form->{"${_}_rate"};
-                        $taxbase = $form->parse_amount( $myconfig, $form->{"${_}_taxbase"} );
+                    if ($form->{"${_}_rate"}) {
+                        my $rate = $form->{"${_}_rate"};
+                        my $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
                         $taxbase *= 1;
-                        $tax = $form->round_amount( ( $rate * $taxbase ) / 100, 2 );
+                        my $tax = $form->round_amount(($rate * $taxbase) / 100, 2);
                         $rate *= 100;
                         if ($taxbase) {
                             $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
                         }
                     }
                 }
-
                 chop $form->{swicotaxbaseqr};
 
-                $form->{invdate}   = $ref->{transdate};
-                $form->{invdateqr} = substr( $form->datetonum( $myconfig, $form->{invdate} ), 2 );
-                $form->{invdateqr} = $form->string_replace( $form->{invdateqr}, "%", "" );
+                # Invoice date formatting
+                $form->{invdate} = $ref->{transdate};
+                $form->{invdateqr} = substr($form->datetonum($myconfig, $form->{invdate}), 2);
+                $form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 
-                $form->{strdbkginf}   = $form->format_line( $myconfig, $ref->{strdbkginf} );
-                $form->{strdbkginf}   = substr( $form->{strdbkginf}, 0, 85 );                    # abbrevate to maximum length allowed by the QR Standard.
-                $form->{strdbkginf}   = $form->string_replace( $form->{strdbkginf}, "%", "" );
+                # Bank reference information
+                $form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
+                $form->{strdbkginf} = substr($form->{strdbkginf}, 0, 85);
+                $form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
                 $form->{strdbkginfqr} = $form->{strdbkginf};
 
-                # split strdbkginfqr into 2 lines, since doing this in latex causes display issues for special characters such as "_" (See #112444)
-                $form->{strdbkginfline1qr} = substr( $form->{strdbkginfqr}, 0,  50 );
-                $form->{strdbkginfline2qr} = substr( $form->{strdbkginfqr}, 50, 85 );
+                # Split bank reference for display
+                $form->{strdbkginfline1qr} = substr($form->{strdbkginfqr}, 0, 50);
+                $form->{strdbkginfline2qr} = substr($form->{strdbkginfqr}, 50, 85);
 
-                # Here in the Mahnmodul, I'm not sure which variables are taken from $from and which from $ref so I just make all variables available in both. Seems to work...
-                $ref->{terms}             = $form->{terms};
-                $ref->{invnumber}         = $form->{invnumber};
-                $ref->{invnumberqr}       = $form->{invnumberqr};
-                $ref->{invdescription}    = $form->{invdescription};
-                $ref->{invdescriptionqr}  = $form->{invdescriptionqr};
-                $ref->{invdescriptionqr2} = $form->{invdescriptionqr2};
-                $ref->{qriban}            = $form->{qriban};
-                $ref->{qribanqr}          = $form->{qribanqr};
-                $ref->{companyqr}         = $form->{companyqr};
-                $ref->{companyaddress1qr} = $form->{companyaddress1qr};
-                $ref->{companyzipqr}      = $form->{companyzipqr};
-                $ref->{companycityqr}     = $form->{companycityqr};
-                $ref->{nameqr}            = $form->{nameqr};
-                $ref->{address1qr}        = $form->{address1qr};
-                $ref->{zipcodeqr}         = $form->{zipcodeqr};
-                $ref->{cityqr}            = $form->{cityqr};
-                $ref->{businessnumber}    = $form->{businessnumber};
-                $ref->{businessnumberqr}  = $form->{businessnumberqr};
-                $ref->{swicotaxbaseqr}    = $form->{swicotaxbaseqr};
-                $ref->{swicotaxqr}        = $form->{swicotaxqr};
-                $ref->{invdate}           = $form->{invdate};
-                $ref->{invdateqr}         = $form->{invdateqr};
-                $ref->{strdbkginf}        = $form->{strdbkginf};
-                $ref->{strdbkginfqr}      = $form->{strdbkginfqr};
-                $ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
-                $ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+                # Copy all QR variables to the result hash
+                for my $field (qw(
+                    terms invnumber invnumberqr invdescription invdescriptionqr invdescriptionqr2
+                    qriban qribanqr companyqr companyaddress1qr companyzipqr companycityqr
+                    nameqr address1qr zipcodeqr cityqr businessnumber businessnumberqr
+                    swicotaxbaseqr swicotaxqr invdate invdateqr strdbkginf strdbkginfqr
+                    strdbkginfline1qr strdbkginfline2qr
+                )) {
+                    $ref->{$field} = $form->{$field};
+                }
 
-                ( $whole, $decimal ) = split /\./, $ref->{due};
-                $ref->{out_decimal}        = substr( "${decimal}00", 0, 2 );
+                # Format due amount for display
+                my ($whole, $decimal) = split /\./, $ref->{due};
+                $ref->{out_decimal} = substr("${decimal}00", 0, 2);
                 $ref->{integer_out_amount} = $whole;
 
-                $rth->execute( $ref->{id}, $curr );
-                $found = 0;
-                while ( ($reminder) = $rth->fetchrow_array ) {
-                    $ref->{level} = substr( $reminder, -1 );
+                # Check for existing reminders and determine level
+                $rth->execute($ref->{id}, $curr);
+                my $found = 0;
+                while (my ($reminder) = $rth->fetchrow_array) {
+                    $ref->{level} = substr($reminder, -1);
                     $ref->{level}++;
-                    push @{ $form->{AG} }, $ref;
+                    push @{$form->{AG}}, $ref;
                     $found = 1;
                 }
                 $rth->finish;
 
-                if ( !$found ) {
+                if (!$found) {
                     $ref->{level}++;
-
-                    push @{ $form->{AG} }, $ref;
+                    push @{$form->{AG}}, $ref;
                 }
             }
             $sth->finish;
         }
-
     }
 
-    #$form->info("<pre>"); for my $row (@{$form->{AG}}){ for (qw(invnumber bankname qriban strdbkginf invoicedescriptionqr)) { print "$_: $row->{$_}\n" } print "\n\n" }
+    # Get all available languages for templates
+    $form->all_languages($myconfig, $dbh);
 
-    # get language
-    $form->all_languages( $myconfig, $dbh );
-
-    # disconnect
+    # Disconnect from database
     $dbh->disconnect;
-
 }
+
 
 sub save_level {
     my ( $self, $myconfig, $form ) = @_;
