@@ -1986,8 +1986,10 @@ function CheckAll() {
         %button = (
             'Select all'   => { ndx => 1, key => 'A', value => $locale->text('Select all') },
             'Deselect all' => { ndx => 2, key => 'A', value => $locale->text('Deselect all') },
-            'Print'        => { ndx => 3, key => 'P', value => $locale->text('Print') },
+            'Preview'      => { ndx => 3, key => 'V', value => $locale->text('Preview') },
+            'Print'        => { ndx => 4, key => 'P', value => $locale->text('Print') },
             'E-mail'       => { ndx => 5, key => 'E', value => $locale->text('E-mail') },
+            'E-mail All Statements' => { ndx => 6, key => 'M', value => $locale->text('E-mail All Statements') },
         );
 
         if ( $form->{deselect} ) {
@@ -2763,6 +2765,235 @@ sub e_mail_statement {
     &prepare_e_mail;
 
 }
+
+
+# Add this new subroutine for bulk emailing statements
+sub e_mail_all_statements {
+    
+    # Get all selected statements
+    @vc_ids = split / /, $form->{vc_ids};
+    $found = 0;
+    @selected_statements = ();
+    
+    for $curr ( split / /, $form->{curr} ) {
+        for (@vc_ids) {
+            if ( $form->{"ndx_${curr}_$_"} ) {
+                push @selected_statements, { 
+                    vc_id => $_, 
+                    curr => $curr,
+                    language_code => $form->{"language_code_${curr}_$_"}
+                };
+                $found++;
+            }
+        }
+    }
+
+    $form->error( $locale->text('Nothing selected!') ) unless $found;
+
+    # Store selected statements data
+    $form->{selected_statements_count} = $found;
+    
+    # Get first selected customer for the form display
+    $first_statement = $selected_statements[0];
+    $form->{"$form->{vc}_id"} = $first_statement->{vc_id};
+    $form->{language_code} = $first_statement->{language_code};
+    RP->get_customer( \%myconfig, \%$form );
+
+    if ( $form->{admin} ) {
+        $bcc = qq|
+          <th class='text-end pe-2' nowrap=true>| . $locale->text('Bcc') . qq|</th>
+	  <td><input name=bcc class='form-control form-control-sm'0 value="$form->{bcc}"></td>
+|;
+    }
+
+    $form->helpref( "e_mail_$form->{arap}_statement", $myconfig{countrycode} );
+
+    $title = $locale->text('E-mail All Statements') . " ($found " . $locale->text('statements selected') . ")";
+
+    # Prepare bulk email form
+    for (qw(media format)) { $form->{"old$_"} = $form->{$_} }
+
+    $form->{media}  = "email";
+    $form->{format} = "pdf";
+
+    $form->header;
+
+    print qq|
+<body>
+
+<form method=post action=$form->{script}>
+
+<table class='table table-striped'>
+  <tr class='h4'>
+    <th>$form->{helpref}$title</a></th>
+  </tr>
+  <tr height="5"></tr>
+  <tr>
+    <td>
+      <table class='table table-striped'>
+        <tr>
+          <th class='text-end pe-2' nowrap>| . $locale->text('Subject') . qq|</th>
+          <td><input name=subject class='form-control form-control-sm'0 value="| . $form->quote( $form->{subject} || $locale->text('Statement') . qq| - $form->{todate}| ) . qq|"></td>
+          $bcc
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <table class='table table-striped'>
+        <tr>
+	  <th align=left nowrap>| . $locale->text('Message') . qq|</th>
+	</tr>
+	<tr>
+	  <td><textarea class='form-control form-control-sm' name=message rows=15 cols=60 wrap=soft>$form->{message}</textarea></td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+|;
+
+    &print_options;
+
+    $nextsub = "send_email_all_statements";
+
+    # Store the selected statements data
+    for my $i (0..$#selected_statements) {
+        my $stmt = $selected_statements[$i];
+        print qq|<input type=hidden name="selected_vc_id_$i" value="$stmt->{vc_id}">|;
+        print qq|<input type=hidden name="selected_curr_$i" value="$stmt->{curr}">|;
+        print qq|<input type=hidden name="selected_language_code_$i" value="$stmt->{language_code}">|;
+    }
+
+    for (qw(language_code email cc bcc subject message type sendmode format action nextsub)) { delete $form->{$_} }
+
+    $form->hide_form;
+
+    print qq|
+    </td>
+  </tr>
+</table>
+
+<input type=hidden name=nextsub value="$nextsub">
+
+<br>
+<input name=action class='btn btn-primary' type=submit value="| . $locale->text('Continue') . qq|">
+</form>
+
+</body>
+</html>
+|;
+}
+
+# Add this new subroutine to send all selected statements
+sub send_email_all_statements {
+
+    $form->isblank( "subject", $locale->text('Subject missing!') );
+
+    my $sent_count = 0;
+    my $failed_count = 0;
+    my @failed_customers = ();
+    
+    # Store original form data
+    my %original_form = %$form;
+
+    # Process each selected statement
+    for my $i (0..$form->{selected_statements_count}-1) {
+        next unless $form->{"selected_vc_id_$i"};
+        
+        # Create a fresh copy of form for each statement
+        %$form = %original_form;
+        
+        # Set output to sendmail for email
+        $form->{OUT} = "$sendmail";
+        
+        # Set up current statement data
+        $form->{"$form->{vc}_id"} = $form->{"selected_vc_id_$i"};
+        $form->{currency} = $form->{"selected_curr_$i"};
+        $form->{language_code} = $form->{"selected_language_code_$i"};
+        
+        # Get customer details
+        RP->get_customer( \%myconfig, \%$form );
+        $form->{subject} .= $form->{customer};
+        
+        # Skip if no email address
+        if (!$form->{email}) {
+            $failed_count++;
+            push @failed_customers, $form->{name} . " (no email)";
+            next;
+        }
+        
+        # Clear all statement selections first
+        @vc_ids = split / /, $form->{vc_ids};
+        for $curr ( split / /, $form->{curr} ) {
+            for (@vc_ids) {
+                $form->{"ndx_${curr}_$_"} = "";
+                delete $form->{"language_code_${curr}_$_"};
+            }
+        }
+        
+        # Set only the current statement as selected
+        my $curr = $form->{"selected_curr_$i"};
+        my $vc_id = $form->{"selected_vc_id_$i"};
+        $form->{"ndx_${curr}_$vc_id"} = 1;
+        $form->{"language_code_${curr}_$vc_id"} = $form->{language_code};
+        
+        # Generate unique process ID for this statement
+        $form->{process_id} = time() . "_" . $$ . "_" . $i;
+        
+        # Generate and send the statement
+        eval {
+            # Get aging data for this specific customer
+            RP->aging( \%myconfig, \%$form );
+            
+            # Call the statement printing routine
+            &do_print_statement;
+            
+            $sent_count++;
+        };
+        
+        if ($@) {
+            $failed_count++;
+            push @failed_customers, $form->{name} . " (error: $@)";
+        }
+        
+        # Clean up any temporary files
+        if ($form->{process_id}) {
+            my $temp_file = "$userspath/$form->{process_id}_statement.tex";
+            unlink $temp_file if -f $temp_file;
+        }
+    }
+
+    # Restore original form
+    %$form = %original_form;
+
+    # Prepare success/failure message
+    my $message = $locale->text('Statements processed') . ": $sent_count " . $locale->text('sent');
+    
+    if ($failed_count > 0) {
+        $message .= ", $failed_count " . $locale->text('failed');
+        if (@failed_customers) {
+            $message .= " (" . join(", ", @failed_customers) . ")";
+        }
+    }
+
+    if ( $form->{callback} ) {
+        # Restore original selections in callback
+        for my $i (0..$form->{selected_statements_count}-1) {
+            next unless $form->{"selected_vc_id_$i"};
+            my $curr = $form->{"selected_curr_$i"};
+            my $vc_id = $form->{"selected_vc_id_$i"};
+            my $lang = $form->{"selected_language_code_$i"};
+            $form->{callback} .= qq|&ndx_${curr}_$vc_id=1&language_code_${curr}_$vc_id=| . $form->escape( $lang, 1 );
+        }
+    }
+
+    $form->redirect($message);
+}
+
+
 
 sub e_mail_reminder {
 
