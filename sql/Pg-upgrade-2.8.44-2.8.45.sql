@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS banking_export_event
     source_type          TEXT                             NOT NULL,
     exported_when        TIMESTAMP                        NOT NULL,
     is_manual            BOOLEAN                          NOT NULL,
-    export_submission_id TEXT                             NOT NULL,
-    export_message_id    TEXT                             NOT NULL
+    export_message_id    TEXT                             NOT NULL,
+    export_submission_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS exported_payment
