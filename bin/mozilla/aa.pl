@@ -2505,6 +2505,8 @@ qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=l
 
 sub transactions_to_csv {
 
+    delete %myconfig{numberformat};
+
     $filename = 'aa';
 
     my ($fh, $aaname) = tempfile();
