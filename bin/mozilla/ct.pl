@@ -2147,7 +2147,7 @@ sub form_header {
 
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
-  $form->hide_form(map { "select$_" } qw(currency arap discount payment business dispatch pricegroup language employee paymentmethod));
+  $form->hide_form(map { "select$_" } qw(currency arap discount payment business dispatch pricegroup language employee paymentmethod department));
   $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
 
 }

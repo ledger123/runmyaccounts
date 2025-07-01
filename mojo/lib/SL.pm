@@ -89,15 +89,31 @@ sub logged_in {
     my $ip_whitelist = "31.216.40.164";
 
     open(FILE, "sql-ledger.conf");
-    ($ip_whitelist) = grep{/ip_whitelist = /} <FILE>;
-    ($ip_whitelist) = $ip_whitelist =~ /"(.+?)"/;
-    print STDERR "IP:$ip_whitelist";
 
-    if ($ip_whitelist) {
-  	if ( $ENV{REMOTE_ADDR} =~ /$ip_whitelist/ ) {
-  		# ip is whitelisted
-	  	return 1;
-  	}
+    my @ip_whitelist = ();
+
+    # Read each line until you find the first non-commented ip_whitelist
+    while (my $line = <FILE>) {
+        if ($line =~ /^\s*\$\s*ip_whitelist\s*=\s*"(.+?)"/) {
+            print STDERR  $line;
+            @ip_whitelist = split /\s+/, $1;
+            last;
+        }
+    }
+
+    close(FILE);
+
+    foreach my $ip (@ip_whitelist) {
+        print STDERR "IP: $ip\n";
+    }
+    print STDERR $ENV{REMOTE_ADDR};
+
+    # Check if the REMOTE_ADDR matches any of the whitelisted IPs
+    if (@ip_whitelist) {
+        if (grep { $ENV{REMOTE_ADDR} eq $_ } @ip_whitelist) {
+            print STDERR 'IP is whitelisted';
+            return 1;
+        }
     }
 
     my $cookievalue = $controller->cookies->{"SL-$username"};

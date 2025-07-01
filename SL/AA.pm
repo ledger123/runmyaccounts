@@ -160,7 +160,7 @@ sub post_transaction {
 	fx_transaction => 0,
     tax => $form->{"tax_$i"},
     taxamount => $form->{"linetaxamount_$i"},
-    lineamount => $form->{"lineamount_$i"},
+    lineamount => $form->{"lineamount_$i"} * $ml,
     };
 
       if ($form->{currency} ne $form->{defaultcurrency}) {
@@ -245,8 +245,8 @@ sub post_transaction {
         $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
         $dbh->do($query) || $form->dberror($query);
         $query = qq|
-            INSERT INTO acc_trans_log 
-            SELECT acc_trans.*, ${table}.ts
+            INSERT INTO acc_trans_log (trans_id, chart_id, amount, transdate, source, approved, fx_transaction, project_id, memo, id, cleared, vr_id, entry_id, tax, taxamount, tax_chart_id, ts, lineamount)
+            SELECT acc_trans.trans_id, acc_trans.chart_id, acc_trans.amount, acc_trans.transdate, acc_trans.source, acc_trans.approved, acc_trans.fx_transaction, acc_trans.project_id, acc_trans.memo, acc_trans.id, acc_trans.cleared, acc_trans.vr_id, acc_trans.entry_id, acc_trans.tax, acc_trans.taxamount, acc_trans.tax_chart_id, ${table}.ts, acc_trans.lineamount
             FROM acc_trans
             JOIN $table ON (${table}.id = acc_trans.trans_id)
             WHERE trans_id = $form->{id}

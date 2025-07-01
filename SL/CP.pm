@@ -781,23 +781,26 @@ sub post_payment {
       $amount = $form->round_amount($form->{"paid_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
 
       # add AR/AP
+      my $imported_transaction_id = defined $form->{"imported_transaction_id_$i"} ? $form->{"imported_transaction_id_$i"} * 1 : 'NULL';
+
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
-                  amount, approved, vr_id)
+                  amount, approved, vr_id, imported_transaction_id)
                   VALUES (|.$form->dbclean($form->{"id_$i"}).qq|, |.$form->dbclean($arap).qq|, '|.$form->dbclean($form->{datepaid}).qq|',
 		  $amount * $ml, '$approved',
-		  $voucherid)|;
+		  $voucherid, $imported_transaction_id)|;
       $dbh->do($query) || $form->dberror($query);
 
       # add payment
       $query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
-                  amount, source, memo, approved, vr_id, id)
+                      amount, source, memo, imported_transaction_id, approved, vr_id, id)
                   VALUES (|.$form->dbclean($form->{"id_$i"}).qq|,
-		         (SELECT id FROM chart
-		          WHERE accno = |.$dbh->quote($paymentaccno).qq|),
-		  '$form->{datepaid}', $form->{"paid_$i"} * $ml * -1, |
-		  .$dbh->quote($form->{source}).qq|, |
-		  .$dbh->quote($form->{memo}).qq|, '$approved',
-		  $voucherid, $paymentid)|;
+                    (SELECT id FROM chart
+                      WHERE accno = |.$dbh->quote($paymentaccno).qq|),
+                 '$form->{datepaid}', $form->{"paid_$i"} * $ml * -1, |
+                 .$dbh->quote($form->{source}).qq|, |
+                 .$dbh->quote($form->{memo}).qq|, |
+                 .$imported_transaction_id.qq|, '$approved',
+                 $voucherid, $paymentid)|;
       $dbh->do($query) || $form->dberror($query);
 
       $query = qq|INSERT INTO payment (id, trans_id, exchangerate,
@@ -812,12 +815,12 @@ sub post_payment {
       if ($amount) {
         # exchangerate difference
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
-		    amount, fx_transaction, source, approved, vr_id)
+		    amount, fx_transaction, source, imported_transaction_id, approved, vr_id)
 		    VALUES ($form->{"id_$i"},
 		           (SELECT id FROM chart
 			    WHERE accno = '$paymentaccno'),
 		  '$form->{datepaid}', $amount, '1', |
-		  .$dbh->quote($form->{source}).qq|, '$approved',
+		  .$dbh->quote($form->{source}). qq|, $imported_transaction_id, '$approved',
 		  $voucherid)|;
 	$dbh->do($query) || $form->dberror($query);
       }
@@ -827,10 +830,10 @@ sub post_payment {
       if ($amount) {
 	my $accno_id = ($amount > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
 	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, transdate,
-		    amount, fx_transaction, approved, vr_id)
+		    amount, fx_transaction, approved, vr_id, imported_transaction_id)
 		    VALUES ($form->{"id_$i"}, $accno_id,
 		    '|.$form->dbclean($form->{datepaid}).qq|', $amount, '1', '$approved',
-		    $voucherid)|;
+		        $voucherid, $imported_transaction_id)|;
 	$dbh->do($query) || $form->dberror($query);
       }
       # deduct tax for cash discount
