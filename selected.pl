@@ -287,6 +287,7 @@ post '/book_selected' => sub ($c) {
 };
 
 # Final processing route
+# Final processing route - complete implementation
 post '/process_adjustment' => sub ($c) {
     my $trans_id = $c->param('trans_id');
     my $gl_account_id = $c->param('gl_account_id');
@@ -299,12 +300,17 @@ post '/process_adjustment' => sub ($c) {
         # Start transaction
         $dbs->begin;
         
+        # Get clearing and transition account IDs
+        my $clearing_accno_id = $dbs->query(
+            "SELECT id FROM chart WHERE accno = ?", $clearing_account
+        )->list;
+        
+        my $transition_accno_id = $dbs->query(
+            "SELECT id FROM chart WHERE accno = ?", $transition_account
+        )->list;
+        
+        # Simple GL account change (no AR/AP transactions selected)
         if ($gl_account_id && !$selected_ids) {
-            # Simple GL account change
-            my $clearing_accno_id = $dbs->query(
-                "SELECT id FROM chart WHERE accno = ?", $clearing_account
-            )->list;
-            
             $dbs->query(
                 "UPDATE acc_trans SET chart_id = ? WHERE chart_id = ? AND trans_id = ?",
                 $gl_account_id, $clearing_accno_id, $trans_id
@@ -315,18 +321,182 @@ post '/process_adjustment' => sub ($c) {
             return;
         }
         
+        # Complex adjustment with AR/AP transactions
         if ($selected_ids) {
-            # Complex adjustment with AR/AP transactions
-            # This would implement the full adjustment logic from the legacy code
-            # For brevity, showing the structure - full implementation would be extensive
-            
             # Get GL transaction details
             my ($gl_date, $curr, $fxrate) = $dbs->query(
-                "SELECT transdate, curr, exchangerate FROM gl WHERE id = ?", $trans_id
+                "SELECT transdate, curr, COALESCE(exchangerate, 1) FROM gl WHERE id = ?", 
+                $trans_id
             )->list;
             
-            # Process each selected transaction
-            # [Full implementation would handle all the complex adjustment logic]
+            $fxrate ||= 1;  # Default to 1 if null
+            
+            # Get the adjustment amount available from GL
+            my $adjustment_available = $dbs->query(
+                "SELECT 0 - amount FROM acc_trans WHERE chart_id = ? AND trans_id = ? AND NOT COALESCE(fx_transaction, false)",
+                $clearing_accno_id, $trans_id
+            )->list || 0;
+            
+            # Get AR/AP transactions to be adjusted
+            my $query = qq{
+                SELECT id, 'ar' as tbl, invnumber, transdate, fxamount - fxpaid as fxdue
+                FROM ar
+                WHERE id IN ($selected_ids)
+                
+                UNION ALL
+                
+                SELECT id, 'ap' as tbl, invnumber, transdate, amount - paid as fxdue
+                FROM ap
+                WHERE id IN ($selected_ids)
+                
+                ORDER BY id
+            };
+            
+            my @rows = $dbs->query($query)->hashes;
+            
+            my $adjustment_total = 0;
+            
+            # Process each selected AR/AP transaction
+            for my $row (@rows) {
+                my $arap = $row->{tbl};
+                my $ml = ($arap eq 'ap') ? 1 : -1;  # Multiplier for AP vs AR
+                my $ARAP = uc($arap);
+                
+                # Determine payment date (later of GL date or AR/AP date)
+                my $arap_date = $row->{transdate};
+                my $payment_date;
+                
+                # Compare dates - use the later one
+                if ($c->_date_compare($gl_date, $arap_date) > 0) {
+                    $payment_date = $arap_date;
+                } else {
+                    $payment_date = $gl_date;
+                }
+                
+                # Calculate amount to be adjusted
+                my $amount_to_be_adjusted;
+                if (abs($adjustment_available * $ml) < abs($row->{fxdue})) {
+                    $amount_to_be_adjusted = $adjustment_available;
+                    $adjustment_available = 0;
+                } else {
+                    $amount_to_be_adjusted = $row->{fxdue} * $ml;
+                    $adjustment_available -= ($row->{fxdue} * $ml);
+                }
+                
+                # Calculate FX adjustment if needed
+                my $fx_amount_to_be_adjusted = 0;
+                my $payment_id = undef;
+                
+                if ($fxrate != 1) {
+                    $fx_amount_to_be_adjusted = $amount_to_be_adjusted * $fxrate - $amount_to_be_adjusted;
+                    $payment_id = $dbs->query("SELECT COALESCE(MAX(id), 0) + 1 FROM payment")->list || 1;
+                }
+                
+                # Get the AR/AP account ID
+                my $arap_accno_id = $dbs->query(
+                    "SELECT chart_id FROM acc_trans WHERE trans_id = ? AND chart_id IN (SELECT id FROM chart WHERE link LIKE ?) LIMIT 1",
+                    $row->{id}, "%${ARAP}%"
+                )->list;
+                
+                if ($arap eq 'ap') {
+                    # AP adjustments
+                    $dbs->query(
+                        "INSERT INTO acc_trans(trans_id, chart_id, transdate, amount, id) VALUES (?, ?, ?, ?, ?)",
+                        $row->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted, $payment_id
+                    );
+                    
+                    if ($fx_amount_to_be_adjusted != 0) {
+                        $dbs->query(
+                            "INSERT INTO acc_trans(trans_id, chart_id, fx_transaction, transdate, amount) VALUES (?, ?, ?, ?, ?)",
+                            $row->{id}, $transition_accno_id, 't', $payment_date, $fx_amount_to_be_adjusted
+                        );
+                    }
+                    
+                    $dbs->query(
+                        "INSERT INTO acc_trans(trans_id, chart_id, transdate, amount) VALUES (?, ?, ?, ?)",
+                        $row->{id}, $arap_accno_id, $payment_date, 
+                        ($row->{fxdue} * -1) + (($row->{fxdue} * $fxrate - $row->{fxdue}) * -1)
+                    );
+                    
+                } else {
+                    # AR adjustments
+                    $dbs->query(
+                        "INSERT INTO acc_trans(trans_id, chart_id, transdate, amount, id) VALUES (?, ?, ?, ?, ?)",
+                        $row->{id}, $transition_accno_id, $payment_date, $amount_to_be_adjusted * -1, $payment_id
+                    );
+                    
+                    if ($fx_amount_to_be_adjusted != 0) {
+                        $dbs->query(
+                            "INSERT INTO acc_trans(trans_id, chart_id, fx_transaction, transdate, amount) VALUES (?, ?, ?, ?, ?)",
+                            $row->{id}, $transition_accno_id, 't', $payment_date, $fx_amount_to_be_adjusted * -1
+                        );
+                    }
+                    
+                    $dbs->query(
+                        "INSERT INTO acc_trans(trans_id, chart_id, transdate, amount) VALUES (?, ?, ?, ?)",
+                        $row->{id}, $arap_accno_id, $payment_date,
+                        $row->{fxdue} + ($row->{fxdue} * $fxrate - $row->{fxdue})
+                    );
+                }
+                
+                # Insert payment record if FX rate is not 1
+                if ($payment_id && $fxrate != 1) {
+                    $dbs->query(
+                        "INSERT INTO payment (id, trans_id, exchangerate) VALUES (?, ?, ?)",
+                        $payment_id, $row->{id}, $fxrate
+                    );
+                }
+                
+                # Update AR/AP paid amounts and payment date
+                $dbs->query(
+                    "UPDATE $arap SET paid = paid + ?, fxpaid = COALESCE(fxpaid, 0) + ?, datepaid = ? WHERE id = ?",
+                    $amount_to_be_adjusted + $fx_amount_to_be_adjusted,
+                    abs($amount_to_be_adjusted),
+                    $payment_date,
+                    $row->{id}
+                );
+                
+                $adjustment_total += $amount_to_be_adjusted;
+            }
+            
+            # Update GL transaction - replace clearing account with transition account
+            if ($adjustment_total != 0) {
+                # Add transition account entry
+                $dbs->query(
+                    "INSERT INTO acc_trans (trans_id, chart_id, amount, transdate) VALUES (?, ?, ?, ?)",
+                    $trans_id, $transition_accno_id, $adjustment_total, $gl_date
+                );
+                
+                # Add FX transaction if needed
+                if ($fxrate != 1) {
+                    my $fx_adjustment = $adjustment_total * $fxrate - $adjustment_total;
+                    if ($fx_adjustment != 0) {
+                        $dbs->query(
+                            "INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, fx_transaction) VALUES (?, ?, ?, ?, ?)",
+                            $trans_id, $transition_accno_id, $fx_adjustment, $gl_date, 't'
+                        );
+                    }
+                }
+                
+                # Reduce the clearing account amount
+                $dbs->query(
+                    "UPDATE acc_trans SET amount = amount - ? WHERE chart_id = ? AND trans_id = ? AND NOT COALESCE(fx_transaction, false)",
+                    $adjustment_total, $clearing_accno_id, $trans_id
+                );
+                
+                # Check if clearing account amount is now zero and delete if so
+                my $remaining_amount = $dbs->query(
+                    "SELECT amount FROM acc_trans WHERE chart_id = ? AND trans_id = ? AND NOT COALESCE(fx_transaction, false)",
+                    $clearing_accno_id, $trans_id
+                )->list;
+                
+                if (defined $remaining_amount && abs($remaining_amount) < 0.01) {  # Essentially zero
+                    $dbs->query(
+                        "DELETE FROM acc_trans WHERE chart_id = ? AND trans_id = ? AND NOT COALESCE(fx_transaction, false)",
+                        $clearing_accno_id, $trans_id
+                    );
+                }
+            }
             
             $dbs->commit;
             $c->redirect_to($c->build_url('/', success => 'adjustment_complete'));
@@ -335,9 +505,17 @@ post '/process_adjustment' => sub ($c) {
     
     if ($@) {
         $dbs->rollback;
-        $c->render(text => "Error: $@", status => 500);
+        $c->render(text => "Error processing adjustment: $@", status => 500);
     }
 };
+
+# Helper method for date comparison
+helper _date_compare => sub ($c, $date1, $date2) {
+    # Simple date comparison - assumes YYYY-MM-DD format
+    # Returns: -1 if date1 < date2, 0 if equal, 1 if date1 > date2
+    return $date1 cmp $date2;
+};
+
 
 app->start;
 
