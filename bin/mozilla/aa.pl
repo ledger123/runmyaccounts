@@ -2525,6 +2525,9 @@ sub transactions_to_csv {
 
     $form->sort_order();
 
+    my @numbers = qw(netamount tax amount paid due debit credit fx_amount fx_paid fx_tax fx_netamount);
+    my %is_number = map { $_ => 1 } @numbers;
+
     @columns = $form->sort_columns(
         qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department)
     );
@@ -2664,7 +2667,7 @@ sub transactions_to_csv {
 
         $column_data{runningnumber} = "$i";
 
-        for (qw(netamount amount paid debit credit)) { $column_data{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision}, " " ) }
+        for (qw(netamount amount paid debit credit)) { $column_data{$_} = $form->format_amount( \%myconfig, $ref->{$_}, $form->{precision}, '0' ) }
 
         $column_data{tax} = $form->format_amount( \%myconfig, $ref->{amount} - $ref->{netamount}, $form->{precision}, " " );
         $column_data{due} = $form->format_amount( \%myconfig, $ref->{amount} - $ref->{paid},      $form->{precision}, " " );
@@ -2710,7 +2713,14 @@ sub transactions_to_csv {
             $j %= 2;
         }
 
-        for (@column_index) { print $fh "\"$column_data{$_}\"," }
+        for (@column_index) { 
+            if ($is_number{$_}) {
+                print $fh $column_data{$_} . ',';
+            } else {
+                print $fh "\"$column_data{$_}\",";
+            }
+        }
+
         print $fh "\n";
         $sameid = $ref->{id};
     }
@@ -2738,9 +2748,15 @@ sub transactions_to_csv {
         $column_data{fx_due}       = $form->format_amount( \%myconfig, $totalfxamount - $totalfxpaid,      $form->{precision}, " " );
     }
 
-    for (@column_index) { print $fh "\"$column_data{$_}\"," }
-    print $fh "\n";
+    for (@column_index) { 
+        if ($is_number{$_}) {
+            print $fh $column_data{$_} . ',';
+        } else {
+            print $fh "\"$column_data{$_}\",";
+        }
+    }
 
+    print $fh "\n";
     # write csv end
     close($fh) || $form->error('Cannot close csv file');
 
