@@ -22,11 +22,11 @@ CREATE TABLE IF NOT EXISTS exported_payment
 CREATE TABLE blink_export_process
 (
     id               SERIAL PRIMARY KEY,
-    bank_account_id  BIGINT REFERENCES bank_account (id) NOT NULL,
-    process_type     TEXT                                NOT NULL,
-    status           TEXT                                NOT NULL,
+    bank_account_id  INT REFERENCES bank_account (id) NOT NULL,
+    process_type     TEXT                             NOT NULL,
+    status           TEXT                             NOT NULL,
     error            JSONB,
-    created_at       TIMESTAMP                           NOT NULL,
+    created_at       TIMESTAMP                        NOT NULL,
     last_modified_at TIMESTAMP
 );
 
