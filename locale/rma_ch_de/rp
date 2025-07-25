@@ -268,6 +268,8 @@ $self{subs} = {
   'mahnstufe_speichern'         => 'save_level',
   'zeitplan_speichern'          => 'save_schedule',
   'alle_auswählen'              => 'select_all',
+  'e_mail_all_reminders'        => 'e_mail_all_reminders',
+  'send_e_mail_all_reminders'   => 'send_e_mail_all_reminders',
 };
 
 1;
