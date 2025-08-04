@@ -92,8 +92,8 @@ sub new {
 
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-	$self->{version}   = "2.8.43";
-	$self->{dbversion} = "2.8.43";
+	$self->{version}   = "2.8.44";
+	$self->{dbversion} = "2.8.44";
     $self->{dateoffset} = 3652;
 
 	bless $self, $type;
@@ -5834,6 +5834,7 @@ sub create_links {
 		while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
 			$self->{printed} .= "$ref->{formname} " if $ref->{printed};
 			$self->{emailed} .= "$ref->{formname} " if $ref->{emailed};
+			$self->{mark_as_sent} .= "$ref->{formname} " if $ref->{emailed};
 			$self->{queued} .= "$ref->{formname} $ref->{spoolfile} "
 			  if $ref->{spoolfile};
 		}
@@ -6230,7 +6231,7 @@ sub update_status {
 	$dbh->do($query) || $self->dberror($query);
 
 	my $printed = ( $self->{printed} =~ /$self->{formname}/ ) ? "1" : "0";
-	my $emailed = ( $self->{emailed} =~ /$self->{formname}/ ) ? "1" : "0";
+	my $emailed = ( $self->{emailed} =~ /$self->{formname}/ ) ? "1" : ( $self->{mark_as_sent} =~ /$self->{formname}/ ) ? "1" : "0";
 
 	$query = qq|INSERT INTO status (trans_id, printed, emailed,
 	      spoolfile, formname) VALUES ($self->{id}, '$printed',
@@ -6255,7 +6256,7 @@ sub save_status {
 		 WHERE trans_id = $self->{id}|;
 	$dbh->do($query) || $self->dberror($query);
 
-	my %queued;
+       my %queued;
 	my $formname;
 
 	if ( $self->{queued} ) {
