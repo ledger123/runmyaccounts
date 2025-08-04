@@ -1813,6 +1813,16 @@ sub post_invoice {
 
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
+
+  my ($last_datepaid) = $dbh->selectrow_array("
+      SELECT MAX(ac.transdate)
+      FROM acc_trans ac
+      JOIN chart c ON c.id = ac.chart_id
+      WHERE trans_id = $form->{id}
+      AND c.link LIKE '%_paid%'
+  ");
+  $form->{datepaid} = $last_datepaid if $last_datepaid;
+
   # save AR record
   $query = qq|UPDATE ar set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
