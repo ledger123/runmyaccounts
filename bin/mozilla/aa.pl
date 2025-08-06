@@ -1614,17 +1614,21 @@ sub search {
 
     $vclabel          = $locale->text('Customer');
     $vcnumber         = $locale->text('Customer Number');
+    $vc_id            = $locale->text('Customer ID');
     $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y $form->{l_name}> $vclabel|;
     $l_customernumber = qq|<input name="l_customernumber" class=checkbox type=checkbox value=Y $form->{l_customernumber}> $vcnumber|;
+    $l_customer_id    = qq|<input name="l_customer_id" class=checkbox type=checkbox value=Y $form->{l_customer_id}> $vc_id|;
     $l_till           = qq|<input name="l_till" class=checkbox type=checkbox value=Y $form->{l_till}> | . $locale->text('Till');
 
     if ( $form->{vc} eq 'vendor' ) {
         $vclabel          = $locale->text('Vendor');
         $vcnumber         = $locale->text('Vendor Number');
+        $vc_id            = $locale->text('Vendor ID');
         $l_till           = "";
         $l_customernumber = "";
         $l_name           = qq|<input name="l_name" class=checkbox type=checkbox value=Y $form->{l_name}> $vclabel|;
         $l_vendornumber   = qq|<input name="l_vendornumber" class=checkbox type=checkbox value=Y $form->{vendornumber}> $vcnumber|;
+        $l_vendor_id      = qq|<input name="l_vendor_id" class=checkbox type=checkbox value=Y $form->{l_vendor_id}> $vc_id|;
     }
 
     if ( @{ $form->{"all_$form->{vc}"} } ) {
@@ -1832,6 +1836,8 @@ sub search {
     push @a, $l_name;
     push @a, $l_customernumber if $l_customernumber;
     push @a, $l_vendornumber if $l_vendornumber;
+    push @a, $l_customer_id if $form->{vc} eq 'customer';
+    push @a, $l_vendor_id if $form->{vc} eq 'vendor';
     push @a, qq|<input name="l_address" class=checkbox type=checkbox value=Y $form->{l_address}> | . $locale->text('Address');
     push @a, $l_employee if $l_employee;
     push @a, $l_manager if $l_employee;
@@ -2160,7 +2166,7 @@ sub transactions {
         $option   .= $locale->text('Paid Early');
     }
 
-    @columns = qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department email);
+    @columns = qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber customer_id vendor_id address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department email);
 
     @columns = $form->sort_columns(@columns);
 
@@ -2215,6 +2221,8 @@ sub transactions {
 
     $column_data{runningnumber} = qq|<th class=listheading>&nbsp;</th>|;
     $column_data{id}            = "<th><a class=listheading href=$href&sort=id>" . $locale->text('ID') . "</a></th>";
+    $column_data{customer_id}   = "<th><a class=listheading>" . $locale->text('Customer ID') . "</a></th>";
+    $column_data{vendor_id}     = "<th><a class=listheading>" . $locale->text('Vendor ID') . "</a></th>";
     $column_data{transdate}     = "<th><a class=listheading href=$href&sort=transdate>" . $locale->text('Date') . "</a></th>";
     $column_data{duedate}       = "<th><a class=listheading href=$href&sort=duedate>" . $locale->text('Due Date') . "</a></th>";
     $column_data{invnumber}     = "<th><a class=listheading href=$href&sort=invnumber>" . $locale->text('Invoice Number') . "</a></th>";
@@ -2369,7 +2377,7 @@ sub transactions {
 
         for (qw(notes intnotes description memo)) { $ref->{$_} =~ s/\r?\n/<br>/g }
         for (qw(transdate datepaid duedate)) { $column_data{$_} = "<td align=left nowrap>$ref->{$_}</td>" }
-        for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
+        for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod customer_id vendor_id)) {
             $column_data{$_} = "<td align=left>$ref->{$_}</td>";
         }
         $column_data{$namefld} = "<td align=left>$ref->{$namefld}</td>";
