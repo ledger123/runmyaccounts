@@ -550,14 +550,13 @@ sub mark_as_sent {
     for my $i (1 .. $form->{rowcount}){
         if ($form->{"ndx_$i"}){
             my $id = $form->{"id_$i"};
-            my $invnumber = $dbs->query("SELECT invnumber FROM ar WHERE id = ?", $id)->list;
-            my $statusexists = $dbs->query("SELECT 1 FROM status WHERE trans_id = ? AND formname='invoice'", $id)->list;
+            my $statusexists = $dbs->query("SELECT 1 FROM status WHERE trans_id = ? AND formname='".$form->{type}."'", $id)->list;
 
             # set status emailed
             if ($statusexists){
-                $dbs->update('status', {emailed => '1'}, {trans_id => $id, formname => 'invoice'});
+                $dbs->update('status', {emailed => '1'}, {trans_id => $id, formname => $form->{type}});
             } else {
-                $dbs->insert('status', {trans_id => $id, formname => 'invoice', emailed => '1'});
+                $dbs->insert('status', {trans_id => $id, formname => $form->{type}, emailed => '1'});
             }
 
             # set int note
@@ -579,8 +578,7 @@ sub mark_as_sent {
               "CASE WHEN nullif(btrim(intnotes), '') IS NULL THEN ? ELSE intnotes || E'\\n' || ? END", $int_note, $int_note
             ]}, { id => $id });
 
-
-            $form->info("Invoice $invnumber marked as emailed ...\n");
+            $form->info("$doc_type for " . $form->{"reference_$i"} . " marked as emailed ...\n");
         }
     }
 }
@@ -1112,6 +1110,11 @@ function CheckAll() {
   if ($form->{batch} eq 'email') {
     delete $button{'Print'};
   }
+
+  if ($form->{type} eq 'reminder') {
+	  delete $button{'Mark as sent'};
+  }
+
   if ($form->{batch} eq 'queue') {
     delete $button{'E-mail'} if $form->{batch2} ne 'email';
     delete $button{'Mark as sent'} if $form->{batch2} ne 'email';
