@@ -46,6 +46,24 @@ use SL::BP;
 # $locale->text('Dec')
 
 
+sub labels {
+  %label = ( invoice => { title => 'Invoices', name => ['Customer','Vendor'] },
+             remittance_voucher => { title => 'Remittance Vouchers', name => ['Customer'] },
+             packing_list => { title => 'Packing Lists', name => ['Customer', 'Vendor'] },
+             pick_list => { title => 'Pick Lists', name => ['Customer','Vendor'] },
+             sales_order => { title => 'Sales Orders', name => ['Customer'] },
+             work_order => { title => 'Work Orders', name => ['Customer'] },
+             purchase_order => { title => 'Purchase Orders', name => ['Vendor'] },
+             bin_list => { title => 'Bin Lists', name => ['Customer', 'Vendor'] },
+             sales_quotation => { title => 'Quotations', name => ['Customer'] },
+             request_quotation => { title => 'RFQs', name => ['Vendor'] },
+             timecard => { title => 'Time Cards', name => ['Employee'] },
+             reminder => { title => 'Reminders', name => ['Customer'] },
+	);
+
+  return %label;
+}
+
 sub search {
 
 # $locale->text('Invoices')
@@ -67,19 +85,7 @@ sub search {
 # $locale->text('Employee')
 # $locale->text('Employee Number')
 
-  %label = ( invoice => { title => 'Invoices', name => ['Customer','Vendor'] },
-             remittance_voucher => { title => 'Remittance Vouchers', name => ['Customer'] },
-             packing_list => { title => 'Packing Lists', name => ['Customer', 'Vendor'] },
-             pick_list => { title => 'Pick Lists', name => ['Customer','Vendor'] },
-             sales_order => { title => 'Sales Orders', name => ['Customer'] },
-             work_order => { title => 'Work Orders', name => ['Customer'] },
-             purchase_order => { title => 'Purchase Orders', name => ['Vendor'] },
-             bin_list => { title => 'Bin Lists', name => ['Customer', 'Vendor'] },
-             sales_quotation => { title => 'Quotations', name => ['Customer'] },
-             request_quotation => { title => 'RFQs', name => ['Vendor'] },
-             timecard => { title => 'Time Cards', name => ['Employee'] },
-             reminder => { title => 'Reminders', name => ['Customer'] },
-	   );
+  %label = labels();
 
   $label{invoice}{invnumber} = qq|
 	<tr>
@@ -335,7 +341,7 @@ sub search {
 <input class=submit type=submit name=action value="|.$locale->text('Continue').qq|">
 |;
   
-  $form->hide_form(qw(path login batch2));
+  $form->hide_form(qw(path login batch2 ibp_requester));
   
   print qq|
 
@@ -510,12 +516,12 @@ sub print {
       $myform->info(qq|, $myform->{description}|) if $myform->{description};
 
       if ($myform->{"module_$i"} ne 'jc') {
-	if ($form->{formname} =~ /_invoice/) {
-	  $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
-	} else {
-	  $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
-	}
-	$myform->info(qq|, $form->{"${inv}total"}, $form->{"$form->{vc}number"}, $form->{"$form->{vc}"} $form->{city}|);
+        if ($form->{formname} =~ /_invoice/) {
+          $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
+        } else {
+          $total += $form->parse_amount(\%myconfig, $form->{"${inv}total"});
+        }
+        $myform->info(qq|, $form->{"${inv}total"}, $form->{"$form->{vc}number"}, $form->{"$form->{vc}"} $form->{city}|);
       }
       $myform->info(" ... ".$locale->text('ok')."\n");
 
@@ -546,11 +552,34 @@ sub mark_as_sent {
             my $id = $form->{"id_$i"};
             my $invnumber = $dbs->query("SELECT invnumber FROM ar WHERE id = ?", $id)->list;
             my $statusexists = $dbs->query("SELECT 1 FROM status WHERE trans_id = ? AND formname='invoice'", $id)->list;
+
+            # set status emailed
             if ($statusexists){
                 $dbs->update('status', {emailed => '1'}, {trans_id => $id, formname => 'invoice'});
             } else {
                 $dbs->insert('status', {trans_id => $id, formname => 'invoice', emailed => '1'});
             }
+
+            # set int note
+            %label = labels();
+
+            my $requester = (!defined $form->{"ibp_requester"} || $form->{"ibp_requester"} !~ /\S/) ? $form->{"login"} : $form->{"ibp_requester"};
+            my $doc_type = $locale->text($label{$form->{type}}{title});
+
+            my $int_note .= "[flag]\n";
+
+            $int_note .= "Datum: " . scalar localtime . "\n";
+            $int_note .= "Benutzer: $requester\n";
+            $int_note .= "Vorgang: $doc_type\n";
+            $int_note .= "Aktion: mark_as_sent\n";
+
+
+            my $table_name = ($form->{"module_$i"} eq 'oe') ? 'oe' : (($form->{"vc_$i"} eq 'customer') ? "ar" : "ap");
+            $dbs->update($table_name, {intnotes => \[
+              "CASE WHEN nullif(btrim(intnotes), '') IS NULL THEN ? ELSE intnotes || E'\\n' || ? END", $int_note, $int_note
+            ]}, { id => $id });
+
+
             $form->info("Invoice $invnumber marked as emailed ...\n");
         }
     }
@@ -960,7 +989,7 @@ function CheckAll() {
 <br>
 |;
 
-  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed batch2 notprinted notemailed precision));
+  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed batch2 notprinted notemailed precision ibp_requester));
 
   $form->{copies} ||= 1;
 
