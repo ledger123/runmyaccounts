@@ -2114,6 +2114,8 @@ sub form_header {
     $form->hide_form(qw(id fxadj closedto locked oldtransdate oldcurrency recurring batch batchid batchnumber batchdescription defaultcurrency fxbuy fxsell precision));
     $form->hide_form( map { "select$_" } qw(accno department currency tax) );
 
+    my $closedto = $form->format_date($myconfig{dateformat}, $form->{closedto});
+
     print qq|
 <input type=hidden name=title value="| . $form->quote( $form->{title} ) . qq|">
 
@@ -2138,6 +2140,9 @@ sub form_header {
 	      </tr>
           </table>
       </td>
+	  <td><input name=reference size=20 value="| . $form->quote( $form->{reference} ) . qq|"></td>
+	  <th align=right>| . $locale->text('Closed') . qq|</th>
+      <td>$closedto</td>
 	</tr>
 	<tr>
 	  $department
