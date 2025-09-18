@@ -2140,8 +2140,7 @@ sub form_header {
 	      </tr>
           </table>
       </td>
-	  <td><input name=reference size=20 value="| . $form->quote( $form->{reference} ) . qq|"></td>
-	  <th align=right>| . $locale->text('Closed') . qq|</th>
+	  <th align=right style="padding-left:10px;">| . $locale->text('Closed') . qq|:&nbsp;</th>
       <td>$closedto</td>
 	</tr>
 	<tr>
