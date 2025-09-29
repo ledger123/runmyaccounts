@@ -628,6 +628,12 @@ sub e_mail {
 
 sub list_spool {
 
+  # $locale->text('Nothing selected!')
+  # $locale->text('selected items will be')
+  # $locale->text('Are you sure you want to continue?')
+  # $locale->text('sent via email')
+  # $locale->text('marked as sent')
+
   $form->isvaldate(\%myconfig, $form->{transdatefrom}, $locale->text('Invalid from date ...'));
   $form->isvaldate(\%myconfig, $form->{transdateto}, $locale->text('Invalid to date ...'));
 
@@ -812,7 +818,6 @@ $column_header{vcnumber} = "<th><a class=listheading href=$href&sort=vcnumber>".
 <!--
 
 function CheckAll() {
-
   var frm = document.forms[0]
   var el = frm.elements
   var re = /ndx_/;
@@ -822,8 +827,63 @@ function CheckAll() {
       el[i].checked = frm.allbox.checked
     }
   }
-
 }
+
+function countSelectedItems() {
+  var frm = document.forms[0];
+  var el = frm.elements;
+  var re = /ndx_/;
+  var count = 0;
+  
+  for (i = 0; i < el.length; i++) {
+    if (el[i].type == 'checkbox' && re.test(el[i].name) && el[i].checked) {
+      count++;
+    }
+  }
+  return count;
+}
+
+function confirmAndSubmit(actionValue, actionText) {
+  var selectedCount = countSelectedItems();
+  
+  if (selectedCount === 0) {
+    alert('|.$locale->text('Nothing selected!').qq|');
+    return false;
+  }
+  
+  var message = selectedCount + ' |.$locale->text('selected items will be').qq| ' + actionText;
+  
+  if (confirm(message + '\\n\\n|.$locale->text('Are you sure you want to continue?').qq|')) {
+    // Find or create the action input
+    var frm = document.forms[0];
+    var actionInput = null;
+    
+    // Look for existing action input
+    for (var i = 0; i < frm.elements.length; i++) {
+      if (frm.elements[i].name === 'action') {
+        actionInput = frm.elements[i];
+        break;
+      }
+    }
+    
+    // If not found, create it
+    if (!actionInput) {
+      actionInput = document.createElement('input');
+      actionInput.type = 'hidden';
+      actionInput.name = 'action';
+      frm.appendChild(actionInput);
+    }
+    
+    // Set the action value and submit
+    actionInput.value = actionValue;
+    frm.submit();
+    
+    return true;
+  }
+  
+  return false;
+}
+
 // -->
 </script>
 
@@ -960,7 +1020,7 @@ function CheckAll() {
 <br>
 |;
 
-  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed batch2 notprinted notemailed precision));
+  $form->hide_form(qw(callback title type sort path login printcustomer dispatch printvendor customer customernumber vendor vendornumber employee employeenumber batch invnumber ordnumber quonumber description transdatefrom transdateto open closed onhold printed emailed batch2 notprinted notemailed precision ibp_requester));
 
   $form->{copies} ||= 1;
 
@@ -1083,16 +1143,30 @@ function CheckAll() {
   if ($form->{batch} eq 'email') {
     delete $button{'Print'};
   }
+
+  if ($form->{type} eq 'reminder') {
+	  delete $button{'Mark as sent'};
+  }
+
   if ($form->{batch} eq 'queue') {
     delete $button{'E-mail'} if $form->{batch2} ne 'email';
     delete $button{'Mark as sent'} if $form->{batch2} ne 'email';
-    delete $button{'Print'} if ! %printer;x
+    delete $button{'Print'} if ! %printer;
   }
 
   print qq|<input type=checkbox name="attach_reminder_invoice" value="1">|;
   print $locale->text("Attach invoices from queue ...")."<br/><br/>" if $form->{type} eq 'reminder';
-  for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { $form->print_button(\%button, $_) }
-    
+  
+  for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { 
+  if ($_ eq 'E-mail') {
+    print qq|<input class="submit noprint" type=button name=action value="|.$locale->text('E-mail').qq|" accesskey="$button->{$_}{key}" title="$button->{$_}{value} [Alt-$button->{$_}{key}]" onclick="confirmAndSubmit('e_mail', '|.$locale->text('sent via email').qq|');">\n|;
+  } elsif ($_ eq 'Mark as sent') {
+    print qq|<input class="submit noprint" type=button name=action value="|.$locale->text('Mark as sent').qq|" accesskey="$button->{$_}{key}" title="$button->{$_}{value} [Alt-$button->{$_}{key}]" onclick="confirmAndSubmit('mark_as_sent', '|.$locale->text('marked as sent').qq|');">\n|;
+  } else {
+    $form->print_button(\%button, $_);
+  }
+  }  
+
 
   if ($form->{menubar}) {
     require "$form->{path}/menu.pl";
@@ -1107,7 +1181,6 @@ function CheckAll() {
 |;
 
 }
-
 
 sub select_all {
 
