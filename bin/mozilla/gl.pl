@@ -2114,6 +2114,8 @@ sub form_header {
     $form->hide_form(qw(id fxadj closedto locked oldtransdate oldcurrency recurring batch batchid batchnumber batchdescription defaultcurrency fxbuy fxsell precision));
     $form->hide_form( map { "select$_" } qw(accno department currency tax) );
 
+    my $closedto = $form->format_date($myconfig{dateformat}, $form->{closedto});
+
     print qq|
 <input type=hidden name=title value="| . $form->quote( $form->{title} ) . qq|">
 
@@ -2138,6 +2140,8 @@ sub form_header {
 	      </tr>
           </table>
       </td>
+	  <th align=right style="padding-left:10px;">| . $locale->text('Closed') . qq|:&nbsp;</th>
+      <td>$closedto</td>
 	</tr>
 	<tr>
 	  $department
@@ -2517,11 +2521,11 @@ sub post {
             for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) }
 
             if ( $form->{"debit_$i"} ) {
-                $form->{"debit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                $form->{"debit_$i"} -= $form->{"taxamount_$i"};
                 $form->{"debit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
             }
             else {
-                $form->{"credit_$i"} -= $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
+                $form->{"credit_$i"} -= $form->{"taxamount_$i"};
                 $form->{"credit_$j"} = $form->format_amount(\%myconfig, $form->{"taxamount_$i"}, $form->{precision});
             }
             for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = $form->format_amount( \%myconfig, $form->{"${_}_$i"}, 2 ) }
