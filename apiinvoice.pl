@@ -8,7 +8,9 @@ use DBIx::Simple;
 use Data::Dumper;
 use SL::Form;
 use SL::IS;
+use SL::PE;
 use SL::RP;
+use SL::AA;
 
 my $dbhost   = 'localhost';
 my $dbuser   = 'postgres';
@@ -17,12 +19,7 @@ my $dbpasswd = '';
 helper db => sub {
     my ( $c, $dbname ) = @_;
 
-    my $dbh = DBI->connect( 
-        "dbi:Pg:dbname=$dbname;host=$dbhost", 
-        $dbuser, 
-        $dbpasswd, 
-        { AutoCommit => 0, RaiseError => 1 } 
-    );
+    my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=$dbhost", $dbuser, $dbpasswd, { AutoCommit => 0, RaiseError => 1 } );
 
     return DBIx::Simple->connect($dbh);
 };
@@ -49,7 +46,7 @@ helper myconfig => sub {
 
 helper create_invoice => sub {
     my ( $c, $invoice_data ) = @_;
-    
+
     my $db = $c->db( $invoice_data->{clientName} );
 
     my $rc;
@@ -59,61 +56,61 @@ helper create_invoice => sub {
 
     # Get customer currency if not provided
     my $currency = $invoice_data->{currency};
-    if (!$currency && $invoice_data->{customer_id}) {
-        $currency = $db->query("SELECT curr FROM customer WHERE id = ?", $invoice_data->{customer_id})->list;
+    if ( !$currency && $invoice_data->{customer_id} ) {
+        $currency = $db->query( "SELECT curr FROM customer WHERE id = ?", $invoice_data->{customer_id} )->list;
     }
     $currency ||= 'GBP';
 
     # Build form hash
     my %hash = (
-        'type'           => 'invoice',
-        'vc'             => 'customer',
-        'ARAP'           => 'AR',
-        'formname'       => 'invoice',
-        'currency'       => $currency,
-        'customer_id'    => $invoice_data->{customer_id} * 1,
-        'transdate'      => $invoice_data->{transdate} || '',
-        'duedate'        => $invoice_data->{duedate} || '',
-        'invnumber'      => $invoice_data->{invnumber} || '',
-        'ordnumber'      => $invoice_data->{ordnumber} || '',
-        'ponumber'       => $invoice_data->{ponumber} || '',
-        'notes'          => $invoice_data->{notes} || '',
-        'intnotes'       => $invoice_data->{intnotes} || '',
-        'AR'             => $invoice_data->{AR} || '1100',
-        'exchangerate'   => $invoice_data->{exchangerate} || 1,
-        'department_id'  => $invoice_data->{department_id} || 0,
-        'warehouse_id'   => $invoice_data->{warehouse_id} || 0,
-        'employee_id'    => $invoice_data->{employee_id} || 0,
-        'taxincluded'    => $invoice_data->{taxincluded} || 0,
-        'paidaccounts'   => 0,
-        'rowcount'       => 0,
+        'type'          => 'invoice',
+        'vc'            => 'customer',
+        'ARAP'          => 'AR',
+        'formname'      => 'invoice',
+        'currency'      => $currency,
+        'customer_id'   => $invoice_data->{customer_id} * 1,
+        'transdate'     => $invoice_data->{transdate}     || '',
+        'duedate'       => $invoice_data->{duedate}       || '',
+        'invnumber'     => $invoice_data->{invnumber}     || '',
+        'ordnumber'     => $invoice_data->{ordnumber}     || '',
+        'ponumber'      => $invoice_data->{ponumber}      || '',
+        'notes'         => $invoice_data->{notes}         || '',
+        'intnotes'      => $invoice_data->{intnotes}      || '',
+        'AR'            => $invoice_data->{AR}            || '1100',
+        'exchangerate'  => $invoice_data->{exchangerate}  || 1,
+        'department_id' => $invoice_data->{department_id} || 0,
+        'warehouse_id'  => $invoice_data->{warehouse_id}  || 0,
+        'employee_id'   => $invoice_data->{employee_id}   || 0,
+        'taxincluded'   => $invoice_data->{taxincluded}   || 0,
+        'paidaccounts'  => 0,
+        'rowcount'      => 0,
     );
 
     # Add invoice items
     my $rowcount = 0;
     foreach my $item ( @{ $invoice_data->{items} } ) {
         $rowcount++;
-        
-        $hash{"id_$rowcount"}           = $item->{parts_id} * 1;
-        $hash{"partnumber_$rowcount"}   = $item->{partnumber} || '';
-        $hash{"description_$rowcount"}  = $item->{description} || '';
-        $hash{"qty_$rowcount"}          = $item->{qty} * 1;
-        $hash{"sellprice_$rowcount"}    = $item->{sellprice} * 1;
-        $hash{"unit_$rowcount"}         = $item->{unit} || 'ea';
-        $hash{"discount_$rowcount"}     = $item->{discount} || 0;
-        $hash{"taxaccounts_$rowcount"}  = $item->{taxaccounts} || '';
+
+        $hash{"id_$rowcount"}          = $item->{parts_id} * 1;
+        $hash{"partnumber_$rowcount"}  = $item->{partnumber}  || '';
+        $hash{"description_$rowcount"} = $item->{description} || '';
+        $hash{"qty_$rowcount"}         = $item->{qty} * 1;
+        $hash{"sellprice_$rowcount"}   = $item->{sellprice} * 1;
+        $hash{"unit_$rowcount"}        = $item->{unit}        || 'ea';
+        $hash{"discount_$rowcount"}    = $item->{discount}    || 0;
+        $hash{"taxaccounts_$rowcount"} = $item->{taxaccounts} || '';
     }
-    
+
     $hash{'rowcount'} = $rowcount;
 
     # Add payment information if provided
-    if ($invoice_data->{payment} && $invoice_data->{payment}{amount}) {
-        $hash{'paidaccounts'} = 1;
-        $hash{'paid_1'}       = $invoice_data->{payment}{amount} * 1;
-        $hash{'datepaid_1'}   = $invoice_data->{payment}{datepaid} || $invoice_data->{transdate};
-        $hash{'AR_paid_1'}    = $invoice_data->{payment}{account} || '1200';
-        $hash{'source_1'}     = $invoice_data->{payment}{source} || '';
-        $hash{'memo_1'}       = $invoice_data->{payment}{memo} || '';
+    if ( $invoice_data->{payment} && $invoice_data->{payment}{amount} ) {
+        $hash{'paidaccounts'}   = 1;
+        $hash{'paid_1'}         = $invoice_data->{payment}{amount} * 1;
+        $hash{'datepaid_1'}     = $invoice_data->{payment}{datepaid}     || $invoice_data->{transdate};
+        $hash{'AR_paid_1'}      = $invoice_data->{payment}{account}      || '1200';
+        $hash{'source_1'}       = $invoice_data->{payment}{source}       || '';
+        $hash{'memo_1'}         = $invoice_data->{payment}{memo}         || '';
         $hash{'exchangerate_1'} = $invoice_data->{payment}{exchangerate} || 1;
     }
 
@@ -125,23 +122,21 @@ helper create_invoice => sub {
     }
 
     # Post the invoice
-    eval {
-        $rc = IS->post_invoice( $c->myconfig( $invoice_data->{clientName} ), $form );
-    };
+    eval { $rc = IS->post_invoice( $c->myconfig( $invoice_data->{clientName} ), $form ); };
 
-    if ($@ || !$rc) {
+    if ( $@ || !$rc ) {
         $db->rollback;
-        return { 
-            error => $@ || 'Failed to create invoice',
+        return {
+            error   => $@ || 'Failed to create invoice',
             success => 0
         };
     } else {
         $db->commit;
-        return { 
-            message => "Invoice created successfully",
+        return {
+            message    => "Invoice created successfully",
             invoice_id => $form->{id},
-            invnumber => $form->{invnumber},
-            success => 1
+            invnumber  => $form->{invnumber},
+            success    => 1
         };
     }
 };
@@ -149,214 +144,213 @@ helper create_invoice => sub {
 # Main page - List invoices
 get '/' => sub {
     my $c = shift;
-    
+
     my $dbname = $c->param('dbname') || 'ledger28';
-    my $db = $c->db($dbname);
-    
-    my @invoices = $db->query(
-        'SELECT id, invnumber, transdate, amount, paid FROM ar ORDER BY invnumber DESC LIMIT 100'
-    )->hashes;
-    
+    my $db     = $c->db($dbname);
+
+    my @invoices = $db->query('SELECT id, invnumber, transdate, amount, paid FROM ar ORDER BY invnumber DESC LIMIT 100')->hashes;
+
     $c->stash(
         invoices => \@invoices,
-        dbname => $dbname
+        dbname   => $dbname
     );
-    $c->render(template => 'index');
+    $c->render( template => 'index' );
 };
 
 # Print invoice as PDF
 get '/print_invoice/:id' => sub {
     my $c = shift;
-    
+
     my $invoice_id = $c->param('id');
-    my $dbname = $c->param('dbname') || 'ledger28';
-    
+    my $dbname     = $c->param('dbname') || 'ledger28';
+
     # Get current working directory
     use Cwd 'abs_path';
     use File::Basename;
-    my $script_dir = dirname(abs_path($0));
-    
+    my $script_dir = dirname( abs_path($0) );
+
     # Create form object
-    my $form = new Form;
+    my $form     = new Form;
     my $myconfig = $c->myconfig($dbname);
-    
+
     # Override myconfig with correct absolute paths
-    $myconfig->{templates} = "$script_dir/templates/demo\@ledger28";
-    $myconfig->{tempdir} = "$script_dir/tmp";
-    $myconfig->{company} = 'SQL-Ledger';
-    $myconfig->{tel} = '';
-    $myconfig->{fax} = '';
+    $myconfig->{templates}      = "$script_dir/templates/demo\@ledger28";
+    $myconfig->{tempdir}        = "$script_dir/tmp";
+    $myconfig->{company}        = 'SQL-Ledger';
+    $myconfig->{tel}            = '';
+    $myconfig->{fax}            = '';
     $myconfig->{businessnumber} = '';
-    $myconfig->{address} = '';
-    
+    $myconfig->{address}        = '';
+
     # Create tmp directory if it doesn't exist
     mkdir $myconfig->{tempdir} unless -d $myconfig->{tempdir};
-    
+
     # Set form parameters
-    $form->{id} = $invoice_id;
-    $form->{type} = 'invoice';
+    $form->{id}       = $invoice_id;
+    $form->{type}     = 'invoice';
     $form->{formname} = 'invoice';
-    $form->{format} = 'pdf';
-    $form->{media} = 'screen';
-    $form->{vc} = 'customer';
-    $form->{ARAP} = 'AR';
-    
+    $form->{format}   = 'pdf';
+    $form->{media}    = 'screen';
+    $form->{vc}       = 'customer';
+    $form->{ARAP}     = 'AR';
+
     # Initialize database connection
-    $form->{dbh} = DBI->connect(
-        $myconfig->{dbconnect},
-        $myconfig->{dbuser},
-        $myconfig->{dbpasswd},
-        { AutoCommit => 1, RaiseError => 1, PrintError => 0 }
-    ) or die "Cannot connect to database: $DBI::errstr";
-    
+    $form->{dbh} = DBI->connect( $myconfig->{dbconnect}, $myconfig->{dbuser}, $myconfig->{dbpasswd}, { AutoCommit => 1, RaiseError => 1, PrintError => 0 } )
+      or die "Cannot connect to database: $DBI::errstr";
+
     eval {
         # Retrieve invoice
-        IS->retrieve_invoice($myconfig, $form);
-        
+        $form->{db} = 'customer';
+
+        $form->create_links( "AR", $myconfig, "customer", 1 );
+        AA->get_name( $myconfig, $form );
+
+        IS->retrieve_invoice( $myconfig, $form );
+
+        AA->company_details( $myconfig, $form );
+
         # Get invoice details
-        IS->invoice_details($myconfig, $form);
-        
+        IS->invoice_details( $myconfig, $form );
+
+        #my $txt = '<pre>'; $txt .= $c->dumper($form); die $txt;
         # Set additional form fields needed for template
         $form->{company} = $myconfig->{company};
         $form->{address} = $myconfig->{address};
-        $form->{tel} = $myconfig->{tel};
-        $form->{fax} = $myconfig->{fax};
-        
+        $form->{tel}     = $myconfig->{tel};
+        $form->{fax}     = $myconfig->{fax};
+
         # Set language
         $form->{language_code} ||= '';
-        
+
         # Set the input template file - just the filename, path is in templates
-        $form->{IN} = "invoice.tex";
+        $form->{IN}        = "invoice.tex";
         $form->{templates} = $myconfig->{templates};
-        
+
         # Verify template exists
         my $full_template_path = "$myconfig->{templates}/$form->{IN}";
-        unless (-f $full_template_path) {
-            die "<pre>Template file not found: $full_template_path\n" .
-                "Script dir: $script_dir\n" .
-                "Templates dir: $myconfig->{templates}\n" .
-                "Looking for: $form->{IN}";
-             }
-        
+        unless ( -f $full_template_path ) {
+            die "<pre>Template file not found: $full_template_path\n" . "Script dir: $script_dir\n" . "Templates dir: $myconfig->{templates}\n" . "Looking for: $form->{IN}";
+        }
+
         # Create unique temporary filename
-        my $timestamp = time;
+        my $timestamp      = time;
         my $safe_invnumber = $form->{invnumber};
         $safe_invnumber =~ s/[^a-zA-Z0-9_-]/_/g;
         $form->{tmpfile} = "${timestamp}_${safe_invnumber}";
-        
+
         # die "<pre>$form->{tmpfile}";
         # Set output file path - just the filename, path is in tempdir
         $form->{OUT} = "$form->{tmpfile}.tex";
-        
+
         # Process the template
-        $form->parse_template($myconfig, $myconfig->{tempdir});
-        
+        $form->parse_template( $myconfig, $myconfig->{tempdir} );
+
         # Close output file handle if open
         close(OUT) if defined fileno(OUT);
-        
+
         # Now compile the TeX file to PDF
         my $tex_file = "$myconfig->{tempdir}/$form->{tmpfile}.tex";
-        
-        if (!-e $tex_file) {
-            die "TeX file not created: $tex_file\n" .
-                "Expected at: $myconfig->{tempdir}/$form->{OUT}";
+
+        if ( !-e $tex_file ) {
+            die "TeX file not created: $tex_file\n" . "Expected at: $myconfig->{tempdir}/$form->{OUT}";
         }
-        
+
         # Change to temp directory for pdflatex
         my $orig_dir = Cwd::getcwd();
-        chdir($myconfig->{tempdir}) or die "Cannot chdir to $myconfig->{tempdir}: $!";
-        
+        chdir( $myconfig->{tempdir} ) or die "Cannot chdir to $myconfig->{tempdir}: $!";
+
         # Run pdflatex
         my $basename = $form->{tmpfile};
-        my $cmd = "pdflatex -interaction=nonstopmode -halt-on-error '$basename.tex' >/dev/null 2>&1";
+        my $cmd      = "pdflatex -interaction=nonstopmode -halt-on-error '$basename.tex' >/dev/null 2>&1";
         system($cmd);
-        
+
         # Run twice for proper page numbering and references
         system($cmd);
-        
+
         # Change back to original directory
         chdir($orig_dir);
-        
+
         my $pdf_file = "$myconfig->{tempdir}/$form->{tmpfile}.pdf";
-        
-        if (!-e $pdf_file || !-s $pdf_file) {
+
+        if ( !-e $pdf_file || !-s $pdf_file ) {
+
             # If PDF generation failed, read the log for debugging
-            my $log_file = "$myconfig->{tempdir}/$form->{tmpfile}.log";
+            my $log_file  = "$myconfig->{tempdir}/$form->{tmpfile}.log";
             my $error_msg = "PDF generation failed.\n\n";
             $error_msg .= "Expected PDF: $pdf_file\n\n";
-            
-            if (-e $log_file) {
+
+            if ( -e $log_file ) {
                 open my $log_fh, '<', $log_file;
                 my $log_content = do { local $/; <$log_fh> };
                 close $log_fh;
-                
+
                 # Extract relevant error lines from LaTeX log
                 my @errors = grep { /^!/ || /Error/ } split /\n/, $log_content;
                 if (@errors) {
-                    $error_msg .= "LaTeX Errors:\n" . join("\n", @errors) . "\n\n";
+                    $error_msg .= "LaTeX Errors:\n" . join( "\n", @errors ) . "\n\n";
                 }
                 $error_msg .= "Full LaTeX Log:\n$log_content\n";
             }
-            
-            if (-e $tex_file) {
+
+            if ( -e $tex_file ) {
                 open my $tex_fh, '<', $tex_file;
                 my $tex_content = do { local $/; <$tex_fh> };
                 close $tex_fh;
-                $error_msg .= "\nTeX Content (first 2000 chars):\n" . substr($tex_content, 0, 2000) . "\n";
+                $error_msg .= "\nTeX Content (first 2000 chars):\n" . substr( $tex_content, 0, 2000 ) . "\n";
             }
-            
+
             die $error_msg;
         }
-        
+
         # Read the PDF
         open my $pdf_fh, '<:raw', $pdf_file or die "Cannot open PDF: $!";
         my $pdf_content = do { local $/; <$pdf_fh> };
         close $pdf_fh;
-        
+
         # Clean up temporary files
         unlink $pdf_file;
         unlink $tex_file;
         unlink "$myconfig->{tempdir}/$form->{tmpfile}.aux";
         unlink "$myconfig->{tempdir}/$form->{tmpfile}.log";
         unlink "$myconfig->{tempdir}/$form->{tmpfile}.out";
-        
+
         # Disconnect database
         $form->{dbh}->disconnect if $form->{dbh};
-        
+
         # Send PDF to browser
         $c->res->headers->content_type('application/pdf');
         $c->res->headers->content_disposition("attachment; filename=\"$form->{invnumber}.pdf\"");
-        return $c->render(data => $pdf_content);
+        return $c->render( data => $pdf_content );
     };
-    
+
     if ($@) {
+
         # Disconnect database on error
         $form->{dbh}->disconnect if $form->{dbh};
-        
+
         return $c->render(
-            text => "Error generating PDF: $@",
+            text   => "Error generating PDF: $@",
             status => 500
         );
     }
 };
 
-
 # Test invoice creation pages
 get '/test_invoices' => sub {
     my $c = shift;
-    $c->render(template => 'test_invoices');
+    $c->render( template => 'test_invoices' );
 };
 
 # Usage notes page
 get '/usage_notes' => sub {
     my $c = shift;
-    $c->render(template => 'usage_notes');
+    $c->render( template => 'usage_notes' );
 };
 
 # Single item - Digger Hand Trencher
 get '/test_single_item' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
         clientName    => 'ledger28',
         customer_id   => 10118,
@@ -380,19 +374,19 @@ get '/test_single_item' => sub {
             }
         ]
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Single Item Invoice - Digger Hand Trencher'
+        title  => 'Single Item Invoice - Digger Hand Trencher'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Single item - The Claw Hand Rake
 get '/test_single_item_claw' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
         clientName    => 'ledger28',
         customer_id   => 10118,
@@ -416,19 +410,19 @@ get '/test_single_item_claw' => sub {
             }
         ]
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Single Item Invoice - The Claw Hand Rake'
+        title  => 'Single Item Invoice - The Claw Hand Rake'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Single item with full payment
 get '/test_single_with_payment' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
         clientName    => 'ledger28',
         customer_id   => 10118,
@@ -449,35 +443,35 @@ get '/test_single_with_payment' => sub {
             }
         ],
         payment => {
-            amount       => 37.98,
-            datepaid     => '2025-01-15',
-            account      => '1200--Bank Current Account',
-            source       => 'Cash',
-            memo         => 'Payment received'
+            amount   => 37.98,
+            datepaid => '2025-01-15',
+            account  => '1200--Bank Current Account',
+            source   => 'Cash',
+            memo     => 'Payment received'
         }
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Single Item with Full Payment'
+        title  => 'Single Item with Full Payment'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Single item with partial payment
 get '/test_single_partial_payment' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
-        clientName    => 'ledger28',
-        customer_id   => 10118,
-        transdate     => '2025-01-15',
-        AR            => '1100',
-        warehouse_id  => 10134,
-        currency      => 'GBP',
-        notes         => 'Single item with partial payment',
-        items         => [
+        clientName   => 'ledger28',
+        customer_id  => 10118,
+        transdate    => '2025-01-15',
+        AR           => '1100',
+        warehouse_id => 10134,
+        currency     => 'GBP',
+        notes        => 'Single item with partial payment',
+        items        => [
             {
                 parts_id    => 10116,
                 qty         => 3,
@@ -486,26 +480,26 @@ get '/test_single_partial_payment' => sub {
             }
         ],
         payment => {
-            amount       => 30.00,
-            datepaid     => '2025-01-15',
-            account      => '1200--Bank Current Account',
-            source       => 'Bank Transfer',
-            memo         => 'Partial payment'
+            amount   => 30.00,
+            datepaid => '2025-01-15',
+            account  => '1200--Bank Current Account',
+            source   => 'Bank Transfer',
+            memo     => 'Partial payment'
         }
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Single Item with Partial Payment'
+        title  => 'Single Item with Partial Payment'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Multiple items - Original invoice recreation
 get '/test_multi_items' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
         clientName    => 'ledger28',
         customer_id   => 10118,
@@ -537,28 +531,28 @@ get '/test_multi_items' => sub {
             }
         ]
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Multiple Items (Original AR-001)'
+        title  => 'Multiple Items (Original AR-001)'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Three items with payment
 get '/test_multi_items_three' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
-        clientName    => 'ledger28',
-        customer_id   => 10118,
-        transdate     => '2025-01-15',
-        AR            => '1100',
-        warehouse_id  => 10134,
-        currency      => 'GBP',
-        notes         => 'Three items with full payment',
-        items         => [
+        clientName   => 'ledger28',
+        customer_id  => 10118,
+        transdate    => '2025-01-15',
+        AR           => '1100',
+        warehouse_id => 10134,
+        currency     => 'GBP',
+        notes        => 'Three items with full payment',
+        items        => [
             {
                 parts_id    => 10116,
                 qty         => 2,
@@ -585,29 +579,29 @@ get '/test_multi_items_three' => sub {
             source   => 'Cash'
         }
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Three Items with Payment'
+        title  => 'Three Items with Payment'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Invoice without payment
 get '/test_no_payment' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
-        clientName    => 'ledger28',
-        customer_id   => 10118,
-        transdate     => '2025-01-15',
-        duedate       => '2025-02-15',
-        AR            => '1100',
-        warehouse_id  => 10134,
-        currency      => 'GBP',
-        notes         => 'Invoice on credit - 30 days',
-        items         => [
+        clientName   => 'ledger28',
+        customer_id  => 10118,
+        transdate    => '2025-01-15',
+        duedate      => '2025-02-15',
+        AR           => '1100',
+        warehouse_id => 10134,
+        currency     => 'GBP',
+        notes        => 'Invoice on credit - 30 days',
+        items        => [
             {
                 parts_id    => 10117,
                 qty         => 5,
@@ -616,28 +610,28 @@ get '/test_no_payment' => sub {
             }
         ]
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Invoice Without Payment (Credit)'
+        title  => 'Invoice Without Payment (Credit)'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Invoice with discount
 get '/test_with_discount' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
-        clientName    => 'ledger28',
-        customer_id   => 10118,
-        transdate     => '2025-01-15',
-        AR            => '1100',
-        warehouse_id  => 10134,
-        currency      => 'GBP',
-        notes         => 'Invoice with 10% discount',
-        items         => [
+        clientName   => 'ledger28',
+        customer_id  => 10118,
+        transdate    => '2025-01-15',
+        AR           => '1100',
+        warehouse_id => 10134,
+        currency     => 'GBP',
+        notes        => 'Invoice with 10% discount',
+        items        => [
             {
                 parts_id    => 10116,
                 qty         => 10,
@@ -647,31 +641,31 @@ get '/test_with_discount' => sub {
             }
         ]
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Invoice With 10% Discount'
+        title  => 'Invoice With 10% Discount'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Invoice with notes
 get '/test_with_notes' => sub {
     my $c = shift;
-    
+
     my $invoice_data = {
-        clientName    => 'ledger28',
-        customer_id   => 10118,
-        transdate     => '2025-01-15',
-        AR            => '1100',
-        warehouse_id  => 10134,
-        currency      => 'GBP',
-        notes         => 'Customer requested express delivery. Handle with care.',
-        intnotes      => 'Priority customer - check stock before confirming',
-        ordnumber     => 'ORD-2025-001',
-        ponumber      => 'PO-CUST-123',
-        items         => [
+        clientName   => 'ledger28',
+        customer_id  => 10118,
+        transdate    => '2025-01-15',
+        AR           => '1100',
+        warehouse_id => 10134,
+        currency     => 'GBP',
+        notes        => 'Customer requested express delivery. Handle with care.',
+        intnotes     => 'Priority customer - check stock before confirming',
+        ordnumber    => 'ORD-2025-001',
+        ponumber     => 'PO-CUST-123',
+        items        => [
             {
                 parts_id    => 10116,
                 qty         => 5,
@@ -680,31 +674,31 @@ get '/test_with_notes' => sub {
             }
         ]
     };
-    
+
     my $result = $c->create_invoice($invoice_data);
     $c->stash(
         result => $result,
-        title => 'Invoice With Notes and References'
+        title  => 'Invoice With Notes and References'
     );
-    $c->render(template => 'result');
+    $c->render( template => 'result' );
 };
 
 # Batch create invoices
 get '/test_batch_create' => sub {
     my $c = shift;
-    
+
     my @results;
-    
-    for my $i (1..5) {
+
+    for my $i ( 1 .. 5 ) {
         my $invoice_data = {
-            clientName    => 'ledger28',
-            customer_id   => 10118,
-            transdate     => '2025-01-15',
-            AR            => '1100',
-            warehouse_id  => 10134,
-            currency      => 'GBP',
-            notes         => "Batch invoice $i of 5",
-            items         => [
+            clientName   => 'ledger28',
+            customer_id  => 10118,
+            transdate    => '2025-01-15',
+            AR           => '1100',
+            warehouse_id => 10134,
+            currency     => 'GBP',
+            notes        => "Batch invoice $i of 5",
+            items        => [
                 {
                     parts_id    => 10116,
                     qty         => $i,
@@ -713,13 +707,13 @@ get '/test_batch_create' => sub {
                 }
             ]
         };
-        
+
         my $result = $c->create_invoice($invoice_data);
         push @results, $result;
     }
-    
-    $c->stash(results => \@results);
-    $c->render(template => 'batch_results');
+
+    $c->stash( results => \@results );
+    $c->render( template => 'batch_results' );
 };
 
 app->start;
