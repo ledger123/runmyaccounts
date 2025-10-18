@@ -8,6 +8,7 @@ use DBIx::Simple;
 use Data::Dumper;
 use SL::Form;
 use SL::IS;
+use SL::RP;
 
 my $dbhost   = 'localhost';
 my $dbuser   = 'postgres';
@@ -39,6 +40,8 @@ helper myconfig => sub {
         dbport       => '',
         dbuser       => $dbuser,
         numberformat => '1,000.00',
+        templates    => 'templates/demo@ledger28',
+        tempdir      => '/tmp',
     );
 
     return \%myconfig;
@@ -143,10 +146,188 @@ helper create_invoice => sub {
     }
 };
 
-# Main page with ordered lists
+# Main page - List invoices
 get '/' => sub {
     my $c = shift;
+    
+    my $dbname = $c->param('dbname') || 'ledger28';
+    my $db = $c->db($dbname);
+    
+    my @invoices = $db->query(
+        'SELECT id, invnumber, transdate, amount, paid FROM ar ORDER BY invnumber DESC LIMIT 100'
+    )->hashes;
+    
+    $c->stash(
+        invoices => \@invoices,
+        dbname => $dbname
+    );
     $c->render(template => 'index');
+};
+
+# Print invoice as PDF
+get '/print_invoice/:id' => sub {
+    my $c = shift;
+    
+    my $invoice_id = $c->param('id');
+    my $dbname = $c->param('dbname') || 'ledger28';
+    
+    # Create form object
+    my $form = new Form;
+    my $myconfig = $c->myconfig($dbname);
+    
+    # Override myconfig with correct paths
+    $myconfig->{templates} = 'templates/demo@ledger28';
+    $myconfig->{tempdir} = 'tmp';
+    $myconfig->{company} = 'SQL-Ledger';
+    $myconfig->{tel} = '';
+    $myconfig->{fax} = '';
+    $myconfig->{businessnumber} = '';
+    $myconfig->{address} = '';
+    
+    # Set form parameters
+    $form->{id} = $invoice_id;
+    $form->{type} = 'invoice';
+    $form->{formname} = 'invoice';
+    $form->{format} = 'pdf';
+    $form->{media} = 'screen';
+    $form->{vc} = 'customer';
+    $form->{ARAP} = 'AR';
+    
+    # Initialize database connection
+    $form->{dbh} = DBI->connect(
+        $myconfig->{dbconnect},
+        $myconfig->{dbuser},
+        $myconfig->{dbpasswd},
+        { AutoCommit => 1, RaiseError => 1, PrintError => 0 }
+    ) or die "Cannot connect to database: $DBI::errstr";
+    
+    eval {
+        # Retrieve invoice
+        IS->retrieve_invoice($myconfig, $form);
+        
+        # Get invoice details
+        IS->invoice_details($myconfig, $form);
+        
+        # Set additional form fields needed for template
+        $form->{company} = $myconfig->{company};
+        $form->{address} = $myconfig->{address};
+        $form->{tel} = $myconfig->{tel};
+        $form->{fax} = $myconfig->{fax};
+        
+        # Set language
+        $form->{language_code} ||= '';
+        
+        # Determine template directory
+        my $template_dir = $myconfig->{templates};
+        if ($form->{language_code}) {
+            $template_dir .= "/$form->{language_code}";
+        }
+        
+        # Check if invoice template exists in language dir, fallback to default
+        unless (-f "$template_dir/invoice.tex") {
+            $template_dir = $myconfig->{templates};
+        }
+        
+        # Set the input template file
+        $form->{IN} = "$template_dir/invoice.tex";
+        
+        # Create unique temporary filename
+        my $timestamp = time;
+        $form->{tmpfile} = "${timestamp}_" . $form->{invnumber};
+        $form->{tmpfile} =~ s/[^a-zA-Z0-9_-]/_/g;
+        
+        # Set output file path
+        my $tmpfile_path = "$myconfig->{tempdir}/$form->{tmpfile}";
+        $form->{OUT} = "> $tmpfile_path.tex";
+        
+        # Process the template
+        $form->parse_template($myconfig);
+        
+        # Close output file handle if open
+        close(OUT) if defined fileno(OUT);
+        
+        # Now compile the TeX file to PDF
+        my $tex_file = "$tmpfile_path.tex";
+        
+        if (!-e $tex_file) {
+            die "TeX file not created: $tex_file";
+        }
+        
+        # Change to temp directory for pdflatex
+        my $orig_dir = Cwd::getcwd();
+        chdir($myconfig->{tempdir});
+        
+        # Run pdflatex
+        my $basename = $form->{tmpfile};
+        my $cmd = "pdflatex -interaction=nonstopmode -halt-on-error $basename.tex >/dev/null 2>&1";
+        system($cmd);
+        
+        # Run twice for proper page numbering and references
+        system($cmd);
+        
+        # Change back to original directory
+        chdir($orig_dir);
+        
+        my $pdf_file = "$tmpfile_path.pdf";
+        
+        if (!-e $pdf_file || !-s $pdf_file) {
+            # If PDF generation failed, read the log for debugging
+            my $log_file = "$tmpfile_path.log";
+            my $error_msg = "PDF generation failed.\n\n";
+            
+            if (-e $log_file) {
+                open my $log_fh, '<', $log_file;
+                my $log_content = do { local $/; <$log_fh> };
+                close $log_fh;
+                $error_msg .= "LaTeX Log:\n$log_content\n";
+            }
+            
+            if (-e $tex_file) {
+                open my $tex_fh, '<', $tex_file;
+                my $tex_content = do { local $/; <$tex_fh> };
+                close $tex_fh;
+                $error_msg .= "\nTeX Content:\n$tex_content\n";
+            }
+            
+            die $error_msg;
+        }
+        
+        # Read the PDF
+        open my $pdf_fh, '<:raw', $pdf_file or die "Cannot open PDF: $!";
+        my $pdf_content = do { local $/; <$pdf_fh> };
+        close $pdf_fh;
+        
+        # Clean up temporary files
+        unlink $pdf_file;
+        unlink $tex_file;
+        unlink "$tmpfile_path.aux";
+        unlink "$tmpfile_path.log";
+        unlink "$tmpfile_path.out";
+        
+        # Disconnect database
+        $form->{dbh}->disconnect if $form->{dbh};
+        
+        # Send PDF to browser
+        $c->res->headers->content_type('application/pdf');
+        $c->res->headers->content_disposition("attachment; filename=\"$form->{invnumber}.pdf\"");
+        return $c->render(data => $pdf_content);
+    };
+    
+    if ($@) {
+        # Disconnect database on error
+        $form->{dbh}->disconnect if $form->{dbh};
+        
+        return $c->render(
+            text => "Error generating PDF: $@",
+            status => 500
+        );
+    }
+};
+
+# Test invoice creation pages
+get '/test_invoices' => sub {
+    my $c = shift;
+    $c->render(template => 'test_invoices');
 };
 
 # Usage notes page
@@ -547,7 +728,96 @@ __DATA__
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="<%= url_for '/' %>">Home</a>
+                        <a class="nav-link active" href="<%= url_for '/' %>">Invoices</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<%= url_for '/test_invoices' %>">Test Creation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<%= url_for '/usage_notes' %>">Usage Notes</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 fw-bold mb-0">Invoice List</h1>
+            <span class="badge bg-secondary"><%= scalar @$invoices %> invoices</span>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-bordered">
+                <thead>
+                    <tr class="table-secondary">
+                        <th>ID</th>
+                        <th>Invoice Number</th>
+                        <th>Date</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Balance</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for my $invoice (@$invoices) {
+                        % my $balance = $invoice->{amount} - $invoice->{paid};
+                        % my $status_class = $balance > 0 ? 'text-warning' : 'text-success';
+                        <tr>
+                            <td><%= $invoice->{id} %></td>
+                            <td><strong><%= $invoice->{invnumber} %></strong></td>
+                            <td><%= $invoice->{transdate} %></td>
+                            <td class="text-end"><%= sprintf("%.2f", $invoice->{amount}) %></td>
+                            <td class="text-end"><%= sprintf("%.2f", $invoice->{paid}) %></td>
+                            <td class="text-end <%= $status_class %>"><strong><%= sprintf("%.2f", $balance) %></strong></td>
+                            <td class="text-center">
+                                <a href="<%= url_for('/print_invoice/' . $invoice->{id})->query(dbname => $dbname) %>" 
+                                   class="btn btn-sm btn-outline-light"
+                                   target="_blank">
+                                    Print PDF
+                                </a>
+                            </td>
+                        </tr>
+                    % }
+                </tbody>
+            </table>
+        </div>
+        
+        % if (scalar @$invoices == 0) {
+            <div class="alert alert-secondary border-secondary text-center" role="alert">
+                No invoices found
+            </div>
+        % }
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+@@ test_invoices.html.ep
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Invoice Creation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="<%= url_for '/' %>">SQL-Ledger API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<%= url_for '/' %>">Invoices</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="<%= url_for '/test_invoices' %>">Test Creation</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<%= url_for '/usage_notes' %>">Usage Notes</a>
@@ -558,8 +828,8 @@ __DATA__
     </nav>
 
     <div class="container py-5" style="max-width: 900px;">
-        <h1 class="display-5 fw-bold mb-3">Invoice Creation API</h1>
-        <p class="lead text-secondary mb-4">Test SQL-Ledger invoice creation with Auto Exchange Express data</p>
+        <h1 class="display-5 fw-bold mb-3">Test Invoice Creation</h1>
+        <p class="lead text-secondary mb-4">Create test invoices with Auto Exchange Express data</p>
         
         <div class="alert alert-secondary border-secondary" role="alert">
             <strong>Note:</strong> All examples use real data from invoice AR-001 (Customer: Auto Exchange Express, Location: London GB)
@@ -600,7 +870,7 @@ __DATA__
                 <a href="<%= url_for '/test_no_payment' %>" class="text-decoration-none text-light stretched-link">Invoice Without Payment</a>
             </li>
             <li class="list-group-item list-group-item-dark border-secondary">
-                <a href="<%= url_for '/test_with_discount' %>" class="text-decoration-none text-light stretched-link">Invoice With Discount</a>
+<a href="<%= url_for '/test_with_discount' %>" class="text-decoration-none text-light stretched-link">Invoice With Discount</a>
             </li>
             <li class="list-group-item list-group-item-dark border-secondary">
                 <a href="<%= url_for '/test_with_notes' %>" class="text-decoration-none text-light stretched-link">Invoice With Notes</a>
@@ -639,7 +909,10 @@ __DATA__
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="<%= url_for '/' %>">Home</a>
+                        <a class="nav-link" href="<%= url_for '/' %>">Invoices</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<%= url_for '/test_invoices' %>">Test Creation</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<%= url_for '/usage_notes' %>">Usage Notes</a>
@@ -677,17 +950,26 @@ __DATA__
                     <p class="card-text"><%= $result->{message} %></p>
                 </div>
             </div>
+            
+            <div class="mt-4">
+                <a href="<%= url_for('/print_invoice/' . $result->{invoice_id})->query(dbname => 'ledger28') %>" 
+                   class="btn btn-success me-2"
+                   target="_blank">
+                    Download PDF
+                </a>
+                <a href="<%= url_for '/' %>" class="btn btn-outline-light">View All Invoices</a>
+            </div>
         % } else {
             <div class="alert alert-danger border-danger" role="alert">
                 <h4 class="alert-heading">Error Creating Invoice</h4>
                 <hr>
                 <p class="mb-0"><%= $result->{error} %></p>
             </div>
+            
+            <div class="mt-4">
+                <a href="<%= url_for '/test_invoices' %>" class="btn btn-outline-light">Back to Test Creation</a>
+            </div>
         % }
-        
-        <div class="mt-4">
-            <a href="<%= url_for '/' %>" class="btn btn-outline-light">Back to Main Page</a>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -713,7 +995,10 @@ __DATA__
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="<%= url_for '/' %>">Home</a>
+                        <a class="nav-link" href="<%= url_for '/' %>">Invoices</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<%= url_for '/test_invoices' %>">Test Creation</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<%= url_for '/usage_notes' %>">Usage Notes</a>
@@ -749,8 +1034,9 @@ __DATA__
                         <th style="width: 20%">Invoice Number</th>
                         <th style="width: 15%">Invoice ID</th>
                         <th>Message / Error</th>
+                        <th style="width: 10%">Action</th>
                     </tr>
-</thead>
+                </thead>
                 <tbody>
                     % for my $i (0 .. $#$results) {
                         % my $result = $results->[$i];
@@ -766,6 +1052,17 @@ __DATA__
                             <td><%= $inv_num %></td>
                             <td><%= $inv_id %></td>
                             <td><%= $message %></td>
+                            <td class="text-center">
+                                % if ($result->{success}) {
+                                    <a href="<%= url_for('/print_invoice/' . $result->{invoice_id})->query(dbname => 'ledger28') %>" 
+                                       class="btn btn-sm btn-outline-light"
+                                       target="_blank">
+                                        PDF
+                                    </a>
+                                % } else {
+                                    <span class="text-secondary">-</span>
+                                % }
+                            </td>
                         </tr>
                     % }
                 </tbody>
@@ -773,7 +1070,8 @@ __DATA__
         </div>
         
         <div class="mt-4">
-            <a href="<%= url_for '/' %>" class="btn btn-outline-light">Back to Main Page</a>
+            <a href="<%= url_for '/' %>" class="btn btn-outline-light me-2">View All Invoices</a>
+            <a href="<%= url_for '/test_invoices' %>" class="btn btn-outline-secondary">Back to Test Creation</a>
         </div>
     </div>
 
@@ -800,7 +1098,10 @@ __DATA__
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="<%= url_for '/' %>">Home</a>
+                        <a class="nav-link" href="<%= url_for '/' %>">Invoices</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<%= url_for '/test_invoices' %>">Test Creation</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="<%= url_for '/usage_notes' %>">Usage Notes</a>
@@ -858,26 +1159,15 @@ __DATA__
             <li class="list-group-item list-group-item-dark border-secondary">Tax Account: 2200 (VAT 10%)</li>
         </ul>
 
-        <h2 class="h4 fw-bold mt-5 mb-3 pb-2 border-bottom border-secondary">Warehouses</h2>
-        <ul class="list-group list-group-flush mb-4">
-            <li class="list-group-item list-group-item-dark border-secondary">W1: 10134</li>
-            <li class="list-group-item list-group-item-dark border-secondary">W2: 10135</li>
-        </ul>
-
-        <h2 class="h4 fw-bold mt-5 mb-3 pb-2 border-bottom border-secondary">Departments</h2>
-        <ul class="list-group list-group-flush mb-4">
-            <li class="list-group-item list-group-item-dark border-secondary">HARDWARE: 10136</li>
-            <li class="list-group-item list-group-item-dark border-secondary">SERVICES: 10137</li>
-        </ul>
-
-        <h2 class="h4 fw-bold mt-5 mb-3 pb-2 border-bottom border-secondary">Employee</h2>
-        <ul class="list-group list-group-flush mb-4">
-            <li class="list-group-item list-group-item-dark border-secondary">Armaghan Saqib: 10102</li>
-        </ul>
-
         <h2 class="h4 fw-bold mt-5 mb-3 pb-2 border-bottom border-secondary">How to Use</h2>
 
-        <h3 class="h5 fw-semibold mt-4 mb-3">1. As Daemon</h3>
+        <h3 class="h5 fw-semibold mt-4 mb-3">1. View Invoices</h3>
+        <p class="text-secondary">Navigate to the main page to see a list of all invoices. Click "Print PDF" button to download invoice as PDF.</p>
+
+        <h3 class="h5 fw-semibold mt-4 mb-3">2. Create Test Invoices</h3>
+        <p class="text-secondary">Use the "Test Creation" menu to create sample invoices with predefined data.</p>
+
+        <h3 class="h5 fw-semibold mt-4 mb-3">3. As Daemon</h3>
         <div class="card bg-black border-secondary mb-4">
             <div class="card-body">
                 <pre class="mb-0"><code>perl api.pl daemon
@@ -885,114 +1175,27 @@ __DATA__
             </div>
         </div>
 
-        <h3 class="h5 fw-semibold mt-4 mb-3">2. As CGI</h3>
+        <h3 class="h5 fw-semibold mt-4 mb-3">4. As CGI</h3>
         <div class="card bg-black border-secondary mb-4">
             <div class="card-body">
                 <pre class="mb-0"><code>chmod +x api.pl
 # Place in cgi-bin directory
-# Access via web server (Apache/Nginx)
-# url_for() ensures all links work in both modes</code></pre>
+# Access via web server (Apache/Nginx)</code></pre>
             </div>
         </div>
 
-        <h3 class="h5 fw-semibold mt-4 mb-3">3. From Within Your Application</h3>
+        <h3 class="h5 fw-semibold mt-4 mb-3">5. Print Invoice Programmatically</h3>
         <div class="card bg-black border-secondary mb-4">
             <div class="card-body">
-                <pre class="mb-0"><code>my $invoice_data = {
-    clientName    => 'ledger28',
-    customer_id   => 10118,
-    transdate     => '2025-01-15',
-    AR            => '1100',
-    warehouse_id  => 10134,
-    currency      => 'GBP',
-    items         => [
-        {
-            parts_id    => 10116,
-            qty         => 1,
-            sellprice   => 18.99,
-            taxaccounts => '2200'
-        }
-    ]
-};
-
-my $result = $c->create_invoice($invoice_data);
-
-if ($result->{success}) {
-    # Use $result->{invoice_id} and $result->{invnumber}
-    print "Invoice created: $result->{invnumber}\n";
-} else {
-    # Handle error
-    print "Error: $result->{error}\n";
-}</code></pre>
-            </div>
-        </div>
-
-        <h2 class="h4 fw-bold mt-5 mb-3 pb-2 border-bottom border-secondary">Invoice Data Structure</h2>
-        <div class="card bg-black border-secondary mb-4">
-            <div class="card-body">
-                <pre class="mb-0"><code>my $invoice_data = {
-    clientName    => 'database_name',      # Required
-    customer_id   => 12345,                # Required
-    transdate     => 'YYYY-MM-DD',         # Required
-    duedate       => 'YYYY-MM-DD',         # Optional
-    AR            => '1100',               # AR account
-    warehouse_id  => 10134,                # Optional
-    department_id => 10136,                # Optional
-    employee_id   => 10102,                # Optional
-    currency      => 'GBP',                # Optional
-    exchangerate  => 1,                    # Optional
-    taxincluded   => 0,                    # 0 or 1
-    notes         => 'Invoice notes',      # Optional
-    intnotes      => 'Internal notes',     # Optional
-    ordnumber     => 'ORD-123',            # Optional
-    ponumber      => 'PO-456',             # Optional
-    
-    items => [
-        {
-            parts_id    => 10116,          # Required
-            partnumber  => 'D009',         # Optional
-            description => 'Product',      # Optional
-            qty         => 1,              # Required
-            sellprice   => 18.99,          # Required
-            unit        => 'NOS',          # Optional
-            discount    => 0,              # Optional (percentage)
-            taxaccounts => '2200'          # Optional
-        }
-    ],
-    
-    payment => {                           # Optional
-        amount       => 100.00,            # Payment amount
-        datepaid     => 'YYYY-MM-DD',      # Payment date
-        account      => '1200--Bank',      # Payment account
-        source       => 'Cash',            # Payment source
-        memo         => 'Payment memo',    # Optional memo
-        exchangerate => 1                  # Optional
-    }
-};</code></pre>
-            </div>
-        </div>
-
-        <h2 class="h4 fw-bold mt-5 mb-3 pb-2 border-bottom border-secondary">Return Structure</h2>
-        <div class="card bg-black border-secondary mb-4">
-            <div class="card-body">
-                <pre class="mb-0"><code># On Success:
-{
-    success     => 1,
-    invoice_id  => 12345,
-    invnumber   => 'INV-001',
-    message     => 'Invoice created successfully'
-}
-
-# On Error:
-{
-    success => 0,
-    error   => 'Error message here'
-}</code></pre>
+                <pre class="mb-0"><code># Generate PDF for invoice ID 12345
+my $invoice_id = 12345;
+my $url = "/print_invoice/$invoice_id?dbname=ledger28";
+# Returns PDF file for download</code></pre>
             </div>
         </div>
 
         <div class="mt-5">
-            <a href="<%= url_for '/' %>" class="btn btn-outline-light">Back to Main Page</a>
+            <a href="<%= url_for '/' %>" class="btn btn-outline-light">Back to Invoices</a>
         </div>
     </div>
 
