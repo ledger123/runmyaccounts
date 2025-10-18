@@ -227,15 +227,16 @@ get '/print_invoice/:id' => sub {
         
         # Set the input template file - just the filename, path is in templates
         $form->{IN} = "invoice.tex";
+        $form->{templates} = $myconfig->{templates};
         
         # Verify template exists
         my $full_template_path = "$myconfig->{templates}/$form->{IN}";
         unless (-f $full_template_path) {
-            die "Template file not found: $full_template_path\n" .
+            die "<pre>Template file not found: $full_template_path\n" .
                 "Script dir: $script_dir\n" .
                 "Templates dir: $myconfig->{templates}\n" .
                 "Looking for: $form->{IN}";
-        }
+             }
         
         # Create unique temporary filename
         my $timestamp = time;
@@ -243,11 +244,12 @@ get '/print_invoice/:id' => sub {
         $safe_invnumber =~ s/[^a-zA-Z0-9_-]/_/g;
         $form->{tmpfile} = "${timestamp}_${safe_invnumber}";
         
+        # die "<pre>$form->{tmpfile}";
         # Set output file path - just the filename, path is in tempdir
         $form->{OUT} = "$form->{tmpfile}.tex";
         
         # Process the template
-        $form->parse_template($myconfig);
+        $form->parse_template($myconfig, $myconfig->{tempdir});
         
         # Close output file handle if open
         close(OUT) if defined fileno(OUT);
