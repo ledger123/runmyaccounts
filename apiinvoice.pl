@@ -171,18 +171,26 @@ get '/print_invoice/:id' => sub {
     my $invoice_id = $c->param('id');
     my $dbname = $c->param('dbname') || 'ledger28';
     
+    # Get current working directory
+    use Cwd 'abs_path';
+    use File::Basename;
+    my $script_dir = dirname(abs_path($0));
+    
     # Create form object
     my $form = new Form;
     my $myconfig = $c->myconfig($dbname);
     
-    # Override myconfig with correct paths
-    $myconfig->{templates} = 'templates/demo@ledger28';
-    $myconfig->{tempdir} = 'tmp';
+    # Override myconfig with correct absolute paths
+    $myconfig->{templates} = "$script_dir/templates/demo\@ledger28";
+    $myconfig->{tempdir} = "$script_dir/tmp";
     $myconfig->{company} = 'SQL-Ledger';
     $myconfig->{tel} = '';
     $myconfig->{fax} = '';
     $myconfig->{businessnumber} = '';
     $myconfig->{address} = '';
+    
+    # Create tmp directory if it doesn't exist
+    mkdir $myconfig->{tempdir} unless -d $myconfig->{tempdir};
     
     # Set form parameters
     $form->{id} = $invoice_id;
@@ -217,28 +225,26 @@ get '/print_invoice/:id' => sub {
         # Set language
         $form->{language_code} ||= '';
         
-        # Determine template directory
-        my $template_dir = $myconfig->{templates};
-        if ($form->{language_code}) {
-            $template_dir .= "/$form->{language_code}";
-        }
+        # Set the input template file - just the filename, path is in templates
+        $form->{IN} = "invoice.tex";
         
-        # Check if invoice template exists in language dir, fallback to default
-        unless (-f "$template_dir/invoice.tex") {
-            $template_dir = $myconfig->{templates};
+        # Verify template exists
+        my $full_template_path = "$myconfig->{templates}/$form->{IN}";
+        unless (-f $full_template_path) {
+            die "Template file not found: $full_template_path\n" .
+                "Script dir: $script_dir\n" .
+                "Templates dir: $myconfig->{templates}\n" .
+                "Looking for: $form->{IN}";
         }
-        
-        # Set the input template file
-        $form->{IN} = "$template_dir/invoice.tex";
         
         # Create unique temporary filename
         my $timestamp = time;
-        $form->{tmpfile} = "${timestamp}_" . $form->{invnumber};
-        $form->{tmpfile} =~ s/[^a-zA-Z0-9_-]/_/g;
+        my $safe_invnumber = $form->{invnumber};
+        $safe_invnumber =~ s/[^a-zA-Z0-9_-]/_/g;
+        $form->{tmpfile} = "${timestamp}_${safe_invnumber}";
         
-        # Set output file path
-        my $tmpfile_path = "$myconfig->{tempdir}/$form->{tmpfile}";
-        $form->{OUT} = "> $tmpfile_path.tex";
+        # Set output file path - just the filename, path is in tempdir
+        $form->{OUT} = "$form->{tmpfile}.tex";
         
         # Process the template
         $form->parse_template($myconfig);
@@ -247,19 +253,20 @@ get '/print_invoice/:id' => sub {
         close(OUT) if defined fileno(OUT);
         
         # Now compile the TeX file to PDF
-        my $tex_file = "$tmpfile_path.tex";
+        my $tex_file = "$myconfig->{tempdir}/$form->{tmpfile}.tex";
         
         if (!-e $tex_file) {
-            die "TeX file not created: $tex_file";
+            die "TeX file not created: $tex_file\n" .
+                "Expected at: $myconfig->{tempdir}/$form->{OUT}";
         }
         
         # Change to temp directory for pdflatex
         my $orig_dir = Cwd::getcwd();
-        chdir($myconfig->{tempdir});
+        chdir($myconfig->{tempdir}) or die "Cannot chdir to $myconfig->{tempdir}: $!";
         
         # Run pdflatex
         my $basename = $form->{tmpfile};
-        my $cmd = "pdflatex -interaction=nonstopmode -halt-on-error $basename.tex >/dev/null 2>&1";
+        my $cmd = "pdflatex -interaction=nonstopmode -halt-on-error '$basename.tex' >/dev/null 2>&1";
         system($cmd);
         
         # Run twice for proper page numbering and references
@@ -268,25 +275,32 @@ get '/print_invoice/:id' => sub {
         # Change back to original directory
         chdir($orig_dir);
         
-        my $pdf_file = "$tmpfile_path.pdf";
+        my $pdf_file = "$myconfig->{tempdir}/$form->{tmpfile}.pdf";
         
         if (!-e $pdf_file || !-s $pdf_file) {
             # If PDF generation failed, read the log for debugging
-            my $log_file = "$tmpfile_path.log";
+            my $log_file = "$myconfig->{tempdir}/$form->{tmpfile}.log";
             my $error_msg = "PDF generation failed.\n\n";
+            $error_msg .= "Expected PDF: $pdf_file\n\n";
             
             if (-e $log_file) {
                 open my $log_fh, '<', $log_file;
                 my $log_content = do { local $/; <$log_fh> };
                 close $log_fh;
-                $error_msg .= "LaTeX Log:\n$log_content\n";
+                
+                # Extract relevant error lines from LaTeX log
+                my @errors = grep { /^!/ || /Error/ } split /\n/, $log_content;
+                if (@errors) {
+                    $error_msg .= "LaTeX Errors:\n" . join("\n", @errors) . "\n\n";
+                }
+                $error_msg .= "Full LaTeX Log:\n$log_content\n";
             }
             
             if (-e $tex_file) {
                 open my $tex_fh, '<', $tex_file;
                 my $tex_content = do { local $/; <$tex_fh> };
                 close $tex_fh;
-                $error_msg .= "\nTeX Content:\n$tex_content\n";
+                $error_msg .= "\nTeX Content (first 2000 chars):\n" . substr($tex_content, 0, 2000) . "\n";
             }
             
             die $error_msg;
@@ -300,9 +314,9 @@ get '/print_invoice/:id' => sub {
         # Clean up temporary files
         unlink $pdf_file;
         unlink $tex_file;
-        unlink "$tmpfile_path.aux";
-        unlink "$tmpfile_path.log";
-        unlink "$tmpfile_path.out";
+        unlink "$myconfig->{tempdir}/$form->{tmpfile}.aux";
+        unlink "$myconfig->{tempdir}/$form->{tmpfile}.log";
+        unlink "$myconfig->{tempdir}/$form->{tmpfile}.out";
         
         # Disconnect database
         $form->{dbh}->disconnect if $form->{dbh};
@@ -323,6 +337,7 @@ get '/print_invoice/:id' => sub {
         );
     }
 };
+
 
 # Test invoice creation pages
 get '/test_invoices' => sub {
