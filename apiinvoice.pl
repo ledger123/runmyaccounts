@@ -161,6 +161,11 @@ get '/' => sub {
 get '/print_invoice/:id' => sub {
     my $c = shift;
 
+    # TODO: To be fixed
+    ## Line items don't print
+    ## Payment information is missing
+    ## Shipto/address/defaults need to be corrected
+
     my $invoice_id = $c->param('id');
     my $dbname     = $c->param('dbname') || 'ledger28';
 
