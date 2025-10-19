@@ -158,7 +158,6 @@ get '/' => sub {
 };
 
 # Print invoice as PDF
-# Print invoice as PDF
 get '/print_invoice/:id' => sub {
     my $c = shift;
 
@@ -265,74 +264,12 @@ get '/print_invoice/:id' => sub {
         # Process the template
         $form->parse_template( $myconfig, $myconfig->{tempdir} );
 
-        # Close output file handle if open
-        close(OUT) if defined fileno(OUT);
-
-        # Now compile the TeX file to PDF
-        my $tex_file = "$myconfig->{tempdir}/$form->{tmpfile}.tex";
-
-        if ( !-e $tex_file ) {
-            die "TeX file not created: $tex_file\n" . "Expected at: $myconfig->{tempdir}/$form->{OUT}";
-        }
-
-        # Change to temp directory for pdflatex
-        my $orig_dir = Cwd::getcwd();
-        chdir( $myconfig->{tempdir} ) or die "Cannot chdir to $myconfig->{tempdir}: $!";
-
-        # Run pdflatex
-        my $basename = $form->{tmpfile};
-        my $cmd      = "pdflatex -interaction=nonstopmode -halt-on-error '$basename.tex' >/dev/null 2>&1";
-        system($cmd);
-
-        # Run twice for proper page numbering and references
-        system($cmd);
-
-        # Change back to original directory
-        chdir($orig_dir);
-
         my $pdf_file = "$myconfig->{tempdir}/$form->{tmpfile}.pdf";
-
-        if ( !-e $pdf_file || !-s $pdf_file ) {
-
-            # If PDF generation failed, read the log for debugging
-            my $log_file  = "$myconfig->{tempdir}/$form->{tmpfile}.log";
-            my $error_msg = "PDF generation failed.\n\n";
-            $error_msg .= "Expected PDF: $pdf_file\n\n";
-
-            if ( -e $log_file ) {
-                open my $log_fh, '<', $log_file;
-                my $log_content = do { local $/; <$log_fh> };
-                close $log_fh;
-
-                # Extract relevant error lines from LaTeX log
-                my @errors = grep { /^!/ || /Error/ } split /\n/, $log_content;
-                if (@errors) {
-                    $error_msg .= "LaTeX Errors:\n" . join( "\n", @errors ) . "\n\n";
-                }
-                $error_msg .= "Full LaTeX Log:\n$log_content\n";
-            }
-
-            if ( -e $tex_file ) {
-                open my $tex_fh, '<', $tex_file;
-                my $tex_content = do { local $/; <$tex_fh> };
-                close $tex_fh;
-                $error_msg .= "\nTeX Content (first 2000 chars):\n" . substr( $tex_content, 0, 2000 ) . "\n";
-            }
-
-            die $error_msg;
-        }
 
         # Read the PDF
         open my $pdf_fh, '<:raw', $pdf_file or die "Cannot open PDF: $!";
         my $pdf_content = do { local $/; <$pdf_fh> };
         close $pdf_fh;
-
-        # Clean up temporary files
-        unlink $pdf_file;
-        unlink $tex_file;
-        unlink "$myconfig->{tempdir}/$form->{tmpfile}.aux";
-        unlink "$myconfig->{tempdir}/$form->{tmpfile}.log";
-        unlink "$myconfig->{tempdir}/$form->{tmpfile}.out";
 
         # Disconnect database
         $form->{dbh}->disconnect if $form->{dbh};
