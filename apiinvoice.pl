@@ -158,6 +158,7 @@ get '/' => sub {
 };
 
 # Print invoice as PDF
+# Print invoice as PDF
 get '/print_invoice/:id' => sub {
     my $c = shift;
 
@@ -212,7 +213,27 @@ get '/print_invoice/:id' => sub {
         # Get invoice details
         IS->invoice_details( $myconfig, $form );
 
-        #my $txt = '<pre>'; $txt .= $c->dumper($form); die $txt;
+        # CRITICAL FIX: Convert invoice_details array to line item format for template
+        my $i = 1;
+        foreach my $ref ( @{ $form->{invoice_details} } ) {
+            map { $form->{"${_}_$i"} = $ref->{$_} } keys %$ref;
+            $i++;
+        }
+        $form->{rowcount} = $i - 1;
+
+        # CRITICAL FIX: Format payment information for template
+        my $j = 1;
+        foreach my $ref ( @{ $form->{acc_trans}{AR_paid} } ) {
+            $form->{"paid_$j"}         = $ref->{amount} * -1;  # Reverse sign for display
+            $form->{"datepaid_$j"}     = $ref->{transdate};
+            $form->{"source_$j"}       = $ref->{source};
+            $form->{"memo_$j"}         = $ref->{memo};
+            $form->{"AR_paid_$j"}      = "$ref->{accno}--$ref->{description}";
+            $form->{"exchangerate_$j"} = $ref->{exchangerate};
+            $j++;
+        }
+        $form->{paidaccounts} = $j - 1;
+
         # Set additional form fields needed for template
         $form->{company} = $myconfig->{company};
         $form->{address} = $myconfig->{address};
@@ -238,7 +259,6 @@ get '/print_invoice/:id' => sub {
         $safe_invnumber =~ s/[^a-zA-Z0-9_-]/_/g;
         $form->{tmpfile} = "${timestamp}_${safe_invnumber}";
 
-        # die "<pre>$form->{tmpfile}";
         # Set output file path - just the filename, path is in tempdir
         $form->{OUT} = "$form->{tmpfile}.tex";
 
