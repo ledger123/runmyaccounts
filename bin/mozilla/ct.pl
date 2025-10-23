@@ -83,6 +83,15 @@ sub create_links {
       $form->{"select$item"} = $form->escape($form->{"select$item"},1);
     }
   }
+
+  my $payment_discount_link = ($form->{db} eq 'customer') ? 'AR_amount' : 'AP_amount';
+  if (@{ $form->{"${payment_discount_link}_accounts"} }) {
+      $form->{"select_payment_discount_accno"} = "\n";
+      for (@{ $form->{"${payment_discount_link}_accounts"} }) { 
+        $form->{"select_payment_discount_accno"} .= qq|$_->{accno}--$_->{description}\n| 
+      }
+      $form->{"select_payment_discount_accno"} = $form->escape($form->{"select_payment_discount_accno"},1);
+  }
   
   if (@{ $form->{all_business} }) {
     $form->{selectbusiness} = qq|\n|;
@@ -1725,6 +1734,25 @@ sub form_header {
 |;
   }
   
+  # $locale->text('Expense Account');
+  # $locale->text('Income Account');
+
+  my $payment_discount_account = "";
+  if ($form->{select_payment_discount_accno}) {
+      my $amount_label = ($form->{db} eq 'customer') ? $locale->text('Expense Account') : $locale->text('Income Account');
+      $payment_discount_account = qq|
+        <tr>
+          <th align=right>|.$locale->text($amount_label).qq|</th>
+          <td><select name="payment_discount_accno">|
+          .$form->select_option($form->{select_payment_discount_accno}, $form->{payment_discount_accno})
+          .qq|</select>
+          </td>
+          <th align=right>|.$locale->text('Early Payment Discount').qq|</th>
+          <td><input name=early_payment_discount size=3 value="$form->{early_payment_discount}"></td>
+        </tr>
+    |;
+  } 
+
   $typeofbusiness = qq|
           <th></th>
 	  <td></td>
@@ -2034,6 +2062,7 @@ sub form_header {
           $department
 	      $arapaccount
 	      $paymentaccount
+          $payment_discount_account
 	      $discountaccount
 	    </table>
 	  </td>
@@ -2147,7 +2176,7 @@ sub form_header {
 
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
-  $form->hide_form(map { "select$_" } qw(currency arap discount payment business dispatch pricegroup language employee paymentmethod department));
+  $form->hide_form(map { "select$_" } qw(currency arap discount payment payment_discount_accno business dispatch pricegroup language employee paymentmethod department));
   $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
 
 }
@@ -2814,7 +2843,7 @@ sub pricelist_footer {
 
 sub update {
 
-  for (qw(creditlimit threshold discount cashdiscount)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
+  for (qw(creditlimit threshold discount cashdiscount early_payment_discount)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
   
   if ($form->{update_contact}) {
 

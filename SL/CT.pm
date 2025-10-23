@@ -183,6 +183,34 @@ sub create_links {
   $sth->finish;
   chop $form->{taxaccounts};
 
+  my $payment_discount_link = ($form->{db} eq 'customer') ? 'AR_amount' : 'AP_amount';
+  $query = qq|SELECT c.accno, c.description,
+                l.description AS translation
+                FROM chart c
+                LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+                WHERE c.link LIKE '%|.$form->dbclean($payment_discount_link).qq|%'
+                ORDER BY c.accno|;
+  $sth = $dbh->prepare($query);
+  $sth->execute || $form->dberror($query);
+  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
+      $ref->{description} = $ref->{translation} if $ref->{translation};
+      push @{ $form->{"${payment_discount_link}_accounts"} }, $ref;
+  }
+  $sth->finish;
+
+  if ($form->{id}) {
+      $form->{"payment_discount_accno_id"} *= 1;
+      if ($form->{"payment_discount_accno_id"}) {
+        $query = qq|SELECT c.accno, c.description,
+                    l.description AS translation
+                    FROM chart c
+                    LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+                    WHERE id = |.$form->dbclean($form->{"payment_discount_accno_id"}).qq||;
+        ($accno, $description, $translation) = $dbh->selectrow_array($query);
+        $description = $translation if $translation;
+        $form->{"payment_discount_accno"} = "${accno}--$description";
+      }
+  }
     
   # get business types
   $query = qq|SELECT *
@@ -489,7 +517,7 @@ sub save {
     $rec{"${_}_id"} *= 1;
   }
   
-  for (qw(arap payment discount)) {
+  for (qw(arap payment discount payment_discount)) {
     ($rec{"${_}_accno"}) = split /--/, $form->{"${_}_accno"};
   }
 
@@ -531,6 +559,8 @@ sub save {
 	      arap_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{arap_accno}).qq|),
 	      payment_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_accno}).qq|),
 	      discount_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{discount_accno}).qq|),
+          payment_discount_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_discount_accno}).qq|),
+          early_payment_discount = $form->{early_payment_discount},
 	      cashdiscount = $form->{cashdiscount},
 	      threshold = $form->{threshold},
 	      discountterms = $form->{discountterms},
