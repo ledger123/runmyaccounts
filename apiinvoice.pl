@@ -380,9 +380,13 @@ post '/process_test_invoices' => sub {
 post '/process_test_ar_transactions' => sub {
     my $c = shift;
 
-    my $count        = $c->param('count')        || 1;
-    my $with_payment = $c->param('with_payment') || 0;
-    my $tax_included = $c->param('tax_included') || 0;
+    my $count           = $c->param('count')           || 1;
+    my $with_payment    = $c->param('with_payment')    || 0;
+    my $tax_included    = $c->param('tax_included')    || 0;
+    my $line_amount     = $c->param('line_amount')     || 1000.00;
+    my $line_account    = $c->param('line_account')    || '4000';
+    my $line_description = $c->param('line_description') || 'Sales room rental';
+    my $payment_account = $c->param('payment_account') || '1200';
 
     my @results;
 
@@ -397,16 +401,16 @@ post '/process_test_ar_transactions' => sub {
             ponumber      => "PO-AR-$i",
             notes         => "Test AR transaction $i created via API",
             intnotes      => "Internal notes for AR test $i",
-            description   => "Sales room rental transaction $i",
+            description   => "Transaction $i: $line_description",
             department_id => 10136,             # HARDWARE
             employee_id   => 10102,             # Armaghan Saqib
             terms         => '',
             taxincluded   => $tax_included,
             lines         => [
                 {
-                    amount      => 1000.00,
-                    account     => '4000',      # Sales
-                    description => 'Sales room rental',
+                    amount      => $line_amount * 1,
+                    account     => $line_account,
+                    description => $line_description,
                 }
             ],
             taxes => [
@@ -435,7 +439,7 @@ post '/process_test_ar_transactions' => sub {
             $transaction_data->{payment} = {
                 amount   => 500.00,
                 datepaid => '2025-10-26',
-                account  => '1200',
+                account  => $payment_account,
                 source   => "AR-CHQ-$i",
                 memo     => "Payment for AR transaction $i",
             };
@@ -646,7 +650,7 @@ __DATA__
         </div>
     </nav>
 
-    <div class="container py-5" style="max-width: 600px;">
+    <div class="container py-5" style="max-width: 700px;">
         <h1 class="h3 fw-bold mb-4">Test AR Transaction Creation</h1>
         
         <div class="card bg-black border-secondary">
@@ -658,6 +662,40 @@ __DATA__
                                id="count" name="count" value="1" min="1" max="50">
                         <div class="form-text text-secondary">Create 1-50 test AR transactions</div>
                     </div>
+
+                    <hr class="border-secondary my-4">
+                    <h5 class="mb-3">Line Item Details</h5>
+                    
+                    <div class="mb-3">
+                        <label for="line_amount" class="form-label">Amount</label>
+                        <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" 
+                               id="line_amount" name="line_amount" value="1000.00" required>
+                        <div class="form-text text-secondary">Transaction line amount</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="line_account" class="form-label">Account</label>
+                        <select class="form-select bg-dark text-light border-secondary" 
+                                id="line_account" name="line_account" required>
+                            <option value="4000" selected>4000 - Sales</option>
+                            <option value="4010">4010 - Export Sales</option>
+                            <option value="4900">4900 - Miscellaneous Income</option>
+                            <option value="4904">4904 - Rent Income</option>
+                            <option value="4906">4906 - Interest Received</option>
+                        </select>
+                        <div class="form-text text-secondary">Revenue account for this transaction</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="line_description" class="form-label">Description</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" 
+                               id="line_description" name="line_description" 
+                               value="Sales room rental" maxlength="100">
+                        <div class="form-text text-secondary">Description for the line item</div>
+                    </div>
+
+                    <hr class="border-secondary my-4">
+                    <h5 class="mb-3">Payment Details (Optional)</h5>
                     
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="with_payment" name="with_payment" value="1">
@@ -666,6 +704,20 @@ __DATA__
                         </label>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="payment_account" class="form-label">Payment Account</label>
+                        <select class="form-select bg-dark text-light border-secondary" 
+                                id="payment_account" name="payment_account">
+                            <option value="1200" selected>1200 - Bank Current Account</option>
+                            <option value="1230">1230 - Petty Cash</option>
+                            <option value="1230a">1230a - Selected Account</option>
+                        </select>
+                        <div class="form-text text-secondary">Account where payment will be recorded</div>
+                    </div>
+
+                    <hr class="border-secondary my-4">
+                    <h5 class="mb-3">Options</h5>
+
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="tax_included" name="tax_included" value="1">
                         <label class="form-check-label" for="tax_included">
@@ -673,7 +725,7 @@ __DATA__
                         </label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Create Test AR Transactions</button>
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Create Test AR Transactions</button>
                 </form>
             </div>
         </div>
