@@ -316,8 +316,9 @@ get '/test_ar_transactions' => sub {
 post '/process_test_invoices' => sub {
     my $c = shift;
 
-    my $count        = $c->param('count')        || 1;
-    my $with_payment = $c->param('with_payment') || 0;
+    my $count         = $c->param('count')         || 1;
+    my $with_payment  = $c->param('with_payment')  || 0;
+    my $tax_included  = $c->param('tax_included')  || 0;
 
     my @results;
 
@@ -334,6 +335,7 @@ post '/process_test_invoices' => sub {
             intnotes      => "Internal notes for test $i",
             department_id => 10136,
             employee_id   => 10102,
+            taxincluded   => $tax_included,
             items         => [
                 {
                     parts_id    => 10116,
@@ -380,6 +382,7 @@ post '/process_test_ar_transactions' => sub {
 
     my $count        = $c->param('count')        || 1;
     my $with_payment = $c->param('with_payment') || 0;
+    my $tax_included = $c->param('tax_included') || 0;
 
     my @results;
 
@@ -398,6 +401,7 @@ post '/process_test_ar_transactions' => sub {
             department_id => 10136,             # HARDWARE
             employee_id   => 10102,             # Armaghan Saqib
             terms         => '',
+            taxincluded   => $tax_included,
             lines         => [
                 {
                     amount      => 1000.00,
@@ -586,6 +590,13 @@ __DATA__
                         </label>
                     </div>
 
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="tax_included" name="tax_included" value="1">
+                        <label class="form-check-label" for="tax_included">
+                            Tax Included
+                        </label>
+                    </div>
+
                     <button type="submit" class="btn btn-primary w-100">Create Test Invoices</button>
                 </form>
             </div>
@@ -652,6 +663,13 @@ __DATA__
                         <input class="form-check-input" type="checkbox" id="with_payment" name="with_payment" value="1">
                         <label class="form-check-label" for="with_payment">
                             Include Payment
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="tax_included" name="tax_included" value="1">
+                        <label class="form-check-label" for="tax_included">
+                            Tax Included
                         </label>
                     </div>
 
