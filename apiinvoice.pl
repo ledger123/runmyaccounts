@@ -44,6 +44,27 @@ helper myconfig => sub {
     return \%myconfig;
 };
 
+helper get_ar_accounts => sub {
+    my ( $c, $dbname ) = @_;
+    
+    my $db = $c->db($dbname);
+    
+    # Get AR_amount accounts (revenue accounts)
+    my @ar_amount_accounts = $db->query(
+        "SELECT accno, description FROM chart WHERE link LIKE '%AR_amount%' ORDER BY accno"
+    )->hashes;
+    
+    # Get AR_paid accounts (payment accounts)
+    my @ar_paid_accounts = $db->query(
+        "SELECT accno, description FROM chart WHERE link LIKE '%AR_paid%' ORDER BY accno"
+    )->hashes;
+    
+    return {
+        ar_amount => \@ar_amount_accounts,
+        ar_paid   => \@ar_paid_accounts
+    };
+};
+
 helper create_invoice => sub {
     my ( $c, $invoice_data ) = @_;
 
@@ -221,8 +242,10 @@ helper create_ar_transaction => sub {
     }
 
     # Add payment information if provided
+    my $payment_count = 0;
     if ( $transaction_data->{payment} && $transaction_data->{payment}{amount} ) {
-        $hash{'paidaccounts'}   = 1;
+        # Single payment format (backward compatible)
+        $payment_count = 1;
         $hash{'paid_1'}         = $transaction_data->{payment}{amount} * 1;
         $hash{'datepaid_1'}     = $transaction_data->{payment}{datepaid}     || $transaction_data->{transdate};
         $hash{'AR_paid_1'}      = $transaction_data->{payment}{account}      || '1200';
@@ -232,6 +255,26 @@ helper create_ar_transaction => sub {
         $hash{'vr_id_1'}        = $transaction_data->{payment}{vr_id}        || '';
         $hash{'cleared_1'}      = $transaction_data->{payment}{cleared}      || '';
     }
+    elsif ( $transaction_data->{payments} && ref($transaction_data->{payments}) eq 'ARRAY' ) {
+        # Multiple payments format
+        my $pmt_num = 0;
+        foreach my $payment ( @{ $transaction_data->{payments} } ) {
+            next unless $payment->{amount};
+            $pmt_num++;
+            
+            $hash{"paid_$pmt_num"}         = $payment->{amount} * 1;
+            $hash{"datepaid_$pmt_num"}     = $payment->{datepaid}     || $transaction_data->{transdate};
+            $hash{"AR_paid_$pmt_num"}      = $payment->{account}      || '1200';
+            $hash{"source_$pmt_num"}       = $payment->{source}       || '';
+            $hash{"memo_$pmt_num"}         = $payment->{memo}         || '';
+            $hash{"exchangerate_$pmt_num"} = $payment->{exchangerate} || 1;
+            $hash{"vr_id_$pmt_num"}        = $payment->{vr_id}        || '';
+            $hash{"cleared_$pmt_num"}      = $payment->{cleared}      || '';
+        }
+        $payment_count = $pmt_num;
+    }
+    
+    $hash{'paidaccounts'} = $payment_count;
 
     # Create form object and populate
     my $form = new Form;
@@ -309,6 +352,15 @@ get '/test_invoices' => sub {
 # Test AR transaction creation page
 get '/test_ar_transactions' => sub {
     my $c = shift;
+    
+    my $dbname = 'ledger28';
+    my $accounts = $c->get_ar_accounts($dbname);
+    
+    $c->stash(
+        ar_amount_accounts => $accounts->{ar_amount},
+        ar_paid_accounts   => $accounts->{ar_paid}
+    );
+    
     $c->render( template => 'test_ar_transactions' );
 };
 
@@ -380,17 +432,40 @@ post '/process_test_invoices' => sub {
 post '/process_test_ar_transactions' => sub {
     my $c = shift;
 
-    my $count           = $c->param('count')           || 1;
-    my $with_payment    = $c->param('with_payment')    || 0;
-    my $tax_included    = $c->param('tax_included')    || 0;
-    my $line_amount     = $c->param('line_amount')     || 1000.00;
-    my $line_account    = $c->param('line_account')    || '4000';
-    my $line_description = $c->param('line_description') || 'Sales room rental';
-    my $payment_account = $c->param('payment_account') || '1200';
+    my $count        = $c->param('count')        || 1;
+    my $with_payment = $c->param('with_payment') || 0;
+    my $tax_included = $c->param('tax_included') || 0;
 
     my @results;
 
     for ( my $i = 1 ; $i <= $count ; $i++ ) {
+        
+        # Collect line items (up to 4 lines)
+        my @lines;
+        for my $line_num (1..4) {
+            my $amount = $c->param("amount_$line_num");
+            my $account = $c->param("AR_amount_$line_num");
+            my $description = $c->param("description_$line_num") || '';
+            
+            # Only add line if amount and account are provided
+            if ($amount && $account) {
+                push @lines, {
+                    amount      => $amount * 1,
+                    account     => $account,
+                    description => $description,
+                };
+            }
+        }
+        
+        # Skip if no lines
+        if (scalar(@lines) == 0) {
+            push @results, {
+                success => 0,
+                error   => "No line items provided"
+            };
+            next;
+        }
+        
         my $transaction_data = {
             clientName    => 'ledger28',
             customer_id   => 10125,             # InfoMed Ltd.
@@ -401,18 +476,12 @@ post '/process_test_ar_transactions' => sub {
             ponumber      => "PO-AR-$i",
             notes         => "Test AR transaction $i created via API",
             intnotes      => "Internal notes for AR test $i",
-            description   => "Transaction $i: $line_description",
+            description   => "Multi-line transaction $i",
             department_id => 10136,             # HARDWARE
             employee_id   => 10102,             # Armaghan Saqib
             terms         => '',
             taxincluded   => $tax_included,
-            lines         => [
-                {
-                    amount      => $line_amount * 1,
-                    account     => $line_account,
-                    description => $line_description,
-                }
-            ],
+            lines         => \@lines,
             taxes => [
                 {
                     tax_id      => '2200',
@@ -435,14 +504,31 @@ post '/process_test_ar_transactions' => sub {
             ],
         };
 
+        # Collect payment lines (up to 2 payments)
         if ($with_payment) {
-            $transaction_data->{payment} = {
-                amount   => 500.00,
-                datepaid => '2025-10-26',
-                account  => $payment_account,
-                source   => "AR-CHQ-$i",
-                memo     => "Payment for AR transaction $i",
-            };
+            my @payments;
+            for my $payment_num (1..2) {
+                my $paid_amount = $c->param("paid_$payment_num");
+                my $paid_account = $c->param("AR_paid_$payment_num");
+                my $source = $c->param("source_$payment_num") || '';
+                my $memo = $c->param("memo_$payment_num") || '';
+                
+                # Only add payment if amount and account are provided
+                if ($paid_amount && $paid_account) {
+                    push @payments, {
+                        amount   => $paid_amount * 1,
+                        account  => $paid_account,
+                        source   => $source,
+                        memo     => $memo,
+                        datepaid => '2025-10-26',
+                    };
+                }
+            }
+            
+            # Add payments in the correct format
+            if (scalar(@payments) > 0) {
+                $transaction_data->{payments} = \@payments;
+            }
         }
 
         my $result = $c->create_ar_transaction($transaction_data);
@@ -623,6 +709,18 @@ __DATA__
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test AR Transaction Creation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .line-row {
+            border-bottom: 1px solid #495057;
+            padding: 0.75rem 0;
+        }
+        .line-row:last-child {
+            border-bottom: none;
+        }
+        .table-dark-custom {
+            background-color: #1a1d20;
+        }
+    </style>
 </head>
 <body class="bg-dark text-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-secondary">
@@ -650,7 +748,7 @@ __DATA__
         </div>
     </nav>
 
-    <div class="container py-5" style="max-width: 700px;">
+    <div class="container py-5" style="max-width: 900px;">
         <h1 class="h3 fw-bold mb-4">Test AR Transaction Creation</h1>
         
         <div class="card bg-black border-secondary">
@@ -664,38 +762,56 @@ __DATA__
                     </div>
 
                     <hr class="border-secondary my-4">
-                    <h5 class="mb-3">Line Item Details</h5>
+                    <h5 class="mb-3">Line Items</h5>
                     
-                    <div class="mb-3">
-                        <label for="line_amount" class="form-label">Amount</label>
-                        <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary" 
-                               id="line_amount" name="line_amount" value="1000.00" required>
-                        <div class="form-text text-secondary">Transaction line amount</div>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th style="width: 20%;">Amount</th>
+                                    <th style="width: 35%;">Account</th>
+                                    <th style="width: 45%;">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                % for my $line_num (1..4) {
+                                    <tr>
+                                        <td>
+                                            <input type="number" step="0.01" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                                   name="amount_<%= $line_num %>" 
+                                                   value="<%= $line_num == 1 ? '1000.00' : '' %>"
+                                                   placeholder="0.00">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm bg-dark text-light border-secondary" 
+                                                    name="AR_amount_<%= $line_num %>">
+                                                <option value="">-- Select Account --</option>
+                                                % for my $account (@$ar_amount_accounts) {
+                                                    <option value="<%= $account->{accno} %>" 
+                                                            <%= $line_num == 1 && $account->{accno} eq '4000' ? 'selected' : '' %>>
+                                                        <%= $account->{accno} %> - <%= $account->{description} %>
+                                                    </option>
+                                                % }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                                   name="description_<%= $line_num %>" 
+                                                   value="<%= $line_num == 1 ? 'Sales room rental' : '' %>"
+                                                   placeholder="Line description"
+                                                   maxlength="100">
+                                        </td>
+                                    </tr>
+                                % }
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="line_account" class="form-label">Account</label>
-                        <select class="form-select bg-dark text-light border-secondary" 
-                                id="line_account" name="line_account" required>
-                            <option value="4000" selected>4000 - Sales</option>
-                            <option value="4010">4010 - Export Sales</option>
-                            <option value="4900">4900 - Miscellaneous Income</option>
-                            <option value="4904">4904 - Rent Income</option>
-                            <option value="4906">4906 - Interest Received</option>
-                        </select>
-                        <div class="form-text text-secondary">Revenue account for this transaction</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="line_description" class="form-label">Description</label>
-                        <input type="text" class="form-control bg-dark text-light border-secondary" 
-                               id="line_description" name="line_description" 
-                               value="Sales room rental" maxlength="100">
-                        <div class="form-text text-secondary">Description for the line item</div>
-                    </div>
+                    <div class="form-text text-secondary mb-3">Fill in up to 4 line items. Empty lines will be ignored.</div>
 
                     <hr class="border-secondary my-4">
-                    <h5 class="mb-3">Payment Details (Optional)</h5>
+                    <h5 class="mb-3">Payment Details</h5>
                     
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="with_payment" name="with_payment" value="1">
@@ -704,16 +820,59 @@ __DATA__
                         </label>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="payment_account" class="form-label">Payment Account</label>
-                        <select class="form-select bg-dark text-light border-secondary" 
-                                id="payment_account" name="payment_account">
-                            <option value="1200" selected>1200 - Bank Current Account</option>
-                            <option value="1230">1230 - Petty Cash</option>
-                            <option value="1230a">1230a - Selected Account</option>
-                        </select>
-                        <div class="form-text text-secondary">Account where payment will be recorded</div>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th style="width: 20%;">Amount</th>
+                                    <th style="width: 35%;">Account</th>
+                                    <th style="width: 25%;">Source</th>
+                                    <th style="width: 20%;">Memo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                % for my $payment_num (1..2) {
+                                    <tr>
+                                        <td>
+                                            <input type="number" step="0.01" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                                   name="paid_<%= $payment_num %>" 
+                                                   value="<%= $payment_num == 1 ? '500.00' : '' %>"
+                                                   placeholder="0.00">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm bg-dark text-light border-secondary" 
+                                                    name="AR_paid_<%= $payment_num %>">
+                                                <option value="">-- Select Account --</option>
+                                                % for my $account (@$ar_paid_accounts) {
+                                                    <option value="<%= $account->{accno} %>" 
+                                                            <%= $payment_num == 1 && $account->{accno} eq '1200' ? 'selected' : '' %>>
+                                                        <%= $account->{accno} %> - <%= $account->{description} %>
+                                                    </option>
+                                                % }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                                   name="source_<%= $payment_num %>" 
+                                                   value="<%= $payment_num == 1 ? 'CHQ-001' : '' %>"
+                                                   placeholder="Source"
+                                                   maxlength="50">
+                                        </td>
+                                        <td>
+                                            <input type="text" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                                   name="memo_<%= $payment_num %>" 
+                                                   placeholder="Memo"
+                                                   maxlength="50">
+                                        </td>
+                                    </tr>
+                                % }
+                            </tbody>
+                        </table>
                     </div>
+                    <div class="form-text text-secondary mb-3">Fill in up to 2 payment lines. Only used if "Include Payment" is checked.</div>
 
                     <hr class="border-secondary my-4">
                     <h5 class="mb-3">Options</h5>
@@ -731,12 +890,13 @@ __DATA__
         </div>
 
         <div class="alert alert-info border-secondary bg-dark mt-4" role="alert">
-            <h6 class="fw-bold">What is an AR Transaction?</h6>
-            <p class="mb-0 small">
-                AR Transactions are simpler than invoices - they record revenue without linking to specific products/inventory. 
-                Perfect for services, fees, or simple income entries. Each transaction includes line items with amounts and accounts, 
-                plus optional tax calculations.
-            </p>
+            <h6 class="fw-bold">Tips:</h6>
+            <ul class="mb-0 small">
+                <li>Use multiple line items to split revenue across different accounts</li>
+                <li>Use multiple payment lines to record split payments or partial payments</li>
+                <li>Empty line items and payment lines will be automatically ignored</li>
+                <li>Accounts are loaded dynamically from your SQL-Ledger chart of accounts</li>
+            </ul>
         </div>
 
         <div class="mt-4">
