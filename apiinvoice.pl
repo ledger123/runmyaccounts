@@ -440,9 +440,9 @@ post '/process_test_ar_transactions' => sub {
 
     for ( my $i = 1 ; $i <= $count ; $i++ ) {
         
-        # Collect line items (up to 4 lines)
+        # Collect line items (up to 5 lines)
         my @lines;
-        for my $line_num (1..4) {
+        for my $line_num (1..5) {
             my $amount = $c->param("amount_$line_num");
             my $account = $c->param("AR_amount_$line_num");
             my $description = $c->param("description_$line_num") || '';
@@ -504,10 +504,10 @@ post '/process_test_ar_transactions' => sub {
             ],
         };
 
-        # Collect payment lines (up to 2 payments)
+        # Collect payment lines (up to 3 payments)
         if ($with_payment) {
             my @payments;
-            for my $payment_num (1..2) {
+            for my $payment_num (1..3) {
                 my $paid_amount = $c->param("paid_$payment_num");
                 my $paid_account = $c->param("AR_paid_$payment_num");
                 my $source = $c->param("source_$payment_num") || '';
@@ -720,6 +720,42 @@ __DATA__
         .table-dark-custom {
             background-color: #1a1d20;
         }
+        .totals-section {
+            background-color: #2c3034;
+            border: 2px solid #495057;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        .total-row.grand-total {
+            border-top: 2px solid #6c757d;
+            padding-top: 0.75rem;
+            margin-top: 0.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .total-label {
+            font-weight: 600;
+        }
+        .total-amount {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+        .total-amount.positive {
+            color: #198754;
+        }
+        .total-amount.negative {
+            color: #dc3545;
+        }
+        .total-amount.zero {
+            color: #6c757d;
+        }
     </style>
 </head>
 <body class="bg-dark text-light">
@@ -774,14 +810,15 @@ __DATA__
                                 </tr>
                             </thead>
                             <tbody>
-                                % for my $line_num (1..4) {
+                                % for my $line_num (1..5) {
                                     <tr>
                                         <td>
                                             <input type="number" step="0.01" 
-                                                   class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary line-amount" 
                                                    name="amount_<%= $line_num %>" 
                                                    value="<%= $line_num == 1 ? '1000.00' : '' %>"
-                                                   placeholder="0.00">
+                                                   placeholder="0.00"
+                                                   onchange="calculateTotals()">
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm bg-dark text-light border-secondary" 
@@ -808,7 +845,7 @@ __DATA__
                             </tbody>
                         </table>
                     </div>
-                    <div class="form-text text-secondary mb-3">Fill in up to 4 line items. Empty lines will be ignored.</div>
+                    <div class="form-text text-secondary mb-3">Fill in up to 5 line items. Empty lines will be ignored.</div>
 
                     <hr class="border-secondary my-4">
                     <h5 class="mb-3">Payment Details</h5>
@@ -831,14 +868,15 @@ __DATA__
                                 </tr>
                             </thead>
                             <tbody>
-                                % for my $payment_num (1..2) {
+                                % for my $payment_num (1..3) {
                                     <tr>
                                         <td>
                                             <input type="number" step="0.01" 
-                                                   class="form-control form-control-sm bg-dark text-light border-secondary" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary payment-amount" 
                                                    name="paid_<%= $payment_num %>" 
                                                    value="<%= $payment_num == 1 ? '500.00' : '' %>"
-                                                   placeholder="0.00">
+                                                   placeholder="0.00"
+                                                   onchange="calculateTotals()">
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm bg-dark text-light border-secondary" 
@@ -872,7 +910,28 @@ __DATA__
                             </tbody>
                         </table>
                     </div>
-                    <div class="form-text text-secondary mb-3">Fill in up to 2 payment lines. Only used if "Include Payment" is checked.</div>
+                    <div class="form-text text-secondary mb-3">Fill in up to 3 payment lines. Only used if "Include Payment" is checked.</div>
+
+                    <!-- Totals Section -->
+                    <div class="totals-section">
+                        <div class="total-row">
+                            <span class="total-label">Line Items Total:</span>
+                            <span class="total-amount" id="lineItemsTotal">£0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Payments Total:</span>
+                            <span class="total-amount" id="paymentsTotal">£0.00</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span class="total-label">Difference (Outstanding):</span>
+                            <span class="total-amount" id="difference">£0.00</span>
+                        </div>
+                        <small class="text-secondary mt-2 d-block">
+                            <i class="bi bi-info-circle"></i> 
+                            Positive difference means payment is less than charges (amount due). 
+                            Negative means overpayment.
+                        </small>
+                    </div>
 
                     <hr class="border-secondary my-4">
                     <h5 class="mb-3">Options</h5>
@@ -896,6 +955,7 @@ __DATA__
                 <li>Use multiple payment lines to record split payments or partial payments</li>
                 <li>Empty line items and payment lines will be automatically ignored</li>
                 <li>Accounts are loaded dynamically from your SQL-Ledger chart of accounts</li>
+                <li>Totals update automatically as you enter amounts</li>
             </ul>
         </div>
 
@@ -905,6 +965,60 @@ __DATA__
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to format currency
+        function formatCurrency(amount) {
+            return '£' + Math.abs(amount).toFixed(2);
+        }
+
+        // Function to calculate and display totals
+        function calculateTotals() {
+            // Calculate line items total
+            let lineItemsTotal = 0;
+            document.querySelectorAll('.line-amount').forEach(function(input) {
+                const value = parseFloat(input.value) || 0;
+                lineItemsTotal += value;
+            });
+
+            // Calculate payments total
+            let paymentsTotal = 0;
+            document.querySelectorAll('.payment-amount').forEach(function(input) {
+                const value = parseFloat(input.value) || 0;
+                paymentsTotal += value;
+            });
+
+            // Calculate difference (outstanding amount)
+            const difference = lineItemsTotal - paymentsTotal;
+
+            // Update display
+            document.getElementById('lineItemsTotal').textContent = formatCurrency(lineItemsTotal);
+            document.getElementById('paymentsTotal').textContent = formatCurrency(paymentsTotal);
+            
+            const differenceElement = document.getElementById('difference');
+            differenceElement.textContent = formatCurrency(difference);
+            
+            // Apply color classes based on difference
+            differenceElement.classList.remove('positive', 'negative', 'zero');
+            if (difference > 0.01) {
+                differenceElement.classList.add('positive');
+            } else if (difference < -0.01) {
+                differenceElement.classList.add('negative');
+            } else {
+                differenceElement.classList.add('zero');
+            }
+        }
+
+        // Calculate totals on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateTotals();
+        });
+
+        // Add keyboard event listeners for real-time updates
+        document.querySelectorAll('.line-amount, .payment-amount').forEach(function(input) {
+            input.addEventListener('input', calculateTotals);
+            input.addEventListener('keyup', calculateTotals);
+        });
+    </script>
 </body>
 </html>
 
