@@ -59,10 +59,34 @@ helper get_ar_accounts => sub {
         "SELECT accno, description FROM chart WHERE link LIKE '%AR_paid%' ORDER BY accno"
     )->hashes;
     
+    # Get AR_tax accounts (tax accounts) with their rates
+    my @ar_tax_accounts = $db->query(
+        "SELECT c.id, c.accno, c.description, t.rate
+         FROM chart c
+         LEFT JOIN tax t ON c.id = t.chart_id AND t.validto IS NULL
+         WHERE c.link LIKE '%AR_tax%' 
+         ORDER BY c.accno"
+    )->hashes;
+    
     return {
         ar_amount => \@ar_amount_accounts,
-        ar_paid   => \@ar_paid_accounts
+        ar_paid   => \@ar_paid_accounts,
+        ar_tax    => \@ar_tax_accounts
     };
+};
+
+helper get_customer_tax_accounts => sub {
+    my ( $c, $dbname, $customer_id ) = @_;
+    
+    my $db = $c->db($dbname);
+    
+    # Get customer's tax chart_ids from customertax table
+    my @customer_tax_ids = $db->query(
+        "SELECT chart_id FROM customertax WHERE customer_id = ?", 
+        $customer_id
+    )->flat;
+    
+    return \@customer_tax_ids;
 };
 
 helper create_invoice => sub {
@@ -354,11 +378,16 @@ get '/test_ar_transactions' => sub {
     my $c = shift;
     
     my $dbname = 'ledger28';
+    my $customer_id = 10125;  # InfoMed Ltd. - default customer
+    
     my $accounts = $c->get_ar_accounts($dbname);
+    my $customer_taxes = $c->get_customer_tax_accounts($dbname, $customer_id);
     
     $c->stash(
         ar_amount_accounts => $accounts->{ar_amount},
-        ar_paid_accounts   => $accounts->{ar_paid}
+        ar_paid_accounts   => $accounts->{ar_paid},
+        ar_tax_accounts    => $accounts->{ar_tax},
+        customer_taxes     => $customer_taxes
     );
     
     $c->render( template => 'test_ar_transactions' );
@@ -482,27 +511,39 @@ post '/process_test_ar_transactions' => sub {
             terms         => '',
             taxincluded   => $tax_included,
             lines         => \@lines,
-            taxes => [
-                {
-                    tax_id      => '2200',
-                    amount      => 88.00,
-                    calctax     => 1,
-                    account     => '2200',
-                    rate        => 0.088,
-                    description => 'VAT (10%)',
-                    taxnumber   => '',
-                },
-                {
-                    tax_id      => '2205',
-                    amount      => 50.00,
-                    calctax     => 1,
-                    account     => '2205',
-                    rate        => 0.05,
-                    description => 'VAT (5%)',
-                    taxnumber   => '',
-                }
-            ],
         };
+        
+        # Collect tax information dynamically from form
+        my @taxes;
+        my @all_params = $c->req->params->names;
+        
+        foreach my $param_name (@all_params) {
+            # Look for tax checkboxes (tax_XXXX where XXXX is chart_id)
+            if ($param_name =~ /^tax_(\d+)$/ && $c->param($param_name)) {
+                my $chart_id = $1;
+                my $tax_amount = $c->param("tax_amount_$chart_id") || 0;
+                my $tax_rate = $c->param("tax_rate_$chart_id") || 0;
+                my $tax_account = $c->param("tax_account_$chart_id") || '';
+                
+                # Only add tax if checkbox is checked and amount > 0
+                if ($tax_amount > 0 && $tax_account) {
+                    push @taxes, {
+                        tax_id      => $tax_account,  # Use account number as tax_id
+                        amount      => $tax_amount * 1,
+                        calctax     => 1,
+                        account     => $tax_account,
+                        rate        => ($tax_rate / 100) * 1,  # Convert percentage to decimal (10 -> 0.10)
+                        description => '',
+                        taxnumber   => '',
+                    };
+                }
+            }
+        }
+        
+        # Add taxes to transaction data if any were collected
+        if (scalar(@taxes) > 0) {
+            $transaction_data->{taxes} = \@taxes;
+        }
 
         # Collect payment lines (up to 3 payments)
         if ($with_payment) {
@@ -848,6 +889,77 @@ __DATA__
                     <div class="form-text text-secondary mb-3">Fill in up to 5 line items. Empty lines will be ignored.</div>
 
                     <hr class="border-secondary my-4">
+                    <h5 class="mb-3">Tax</h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-dark table-bordered table-sm">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th style="width: 10%;">Apply</th>
+                                    <th style="width: 30%;">Tax Account</th>
+                                    <th style="width: 15%;">Rate (%)</th>
+                                    <th style="width: 20%;">Amount</th>
+                                    <th style="width: 25%;">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                % my $tax_num = 0;
+                                % for my $tax_account (@$ar_tax_accounts) {
+                                    % $tax_num++;
+                                    % my $chart_id = $tax_account->{id};
+                                    % my $tax_id = $tax_account->{accno};
+                                    % my $is_checked = grep { $_ == $chart_id } @$customer_taxes;
+                                    % my $tax_rate = ($tax_account->{rate} || 0) * 100;  # Convert 0.1 to 10
+                                    <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" 
+                                                   class="form-check-input tax-checkbox" 
+                                                   name="tax_<%= $chart_id %>" 
+                                                   value="1"
+                                                   data-chart-id="<%= $chart_id %>"
+                                                   data-tax-id="<%= $tax_id %>"
+                                                   data-tax-rate="<%= $tax_rate %>"
+                                                   <%= $is_checked ? 'checked' : '' %>
+                                                   onchange="calculateTaxes()">
+                                        </td>
+                                        <td>
+                                            <strong><%= $tax_account->{accno} %></strong> - <%= $tax_account->{description} %>
+                                            <input type="hidden" name="tax_account_<%= $chart_id %>" value="<%= $tax_account->{accno} %>">
+                                            <input type="hidden" name="tax_chart_id_<%= $chart_id %>" value="<%= $chart_id %>">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.001" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary tax-rate" 
+                                                   name="tax_rate_<%= $chart_id %>" 
+                                                   id="tax_rate_<%= $chart_id %>"
+                                                   data-chart-id="<%= $chart_id %>"
+                                                   value="<%= $tax_rate %>"
+                                                   onchange="calculateTaxes()"
+                                                   style="text-align: right;">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" 
+                                                   class="form-control form-control-sm bg-dark text-light border-secondary tax-amount" 
+                                                   name="tax_amount_<%= $chart_id %>" 
+                                                   id="tax_amount_<%= $chart_id %>"
+                                                   value="0.00"
+                                                   readonly
+                                                   style="text-align: right; background-color: #16181b !important;">
+                                        </td>
+                                        <td>
+                                            <small class="text-secondary"><%= $tax_account->{description} %></small>
+                                        </td>
+                                    </tr>
+                                % }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-text text-secondary mb-3">
+                        Check applicable taxes. Amounts calculated automatically based on line items total and tax rate.
+                        Pre-checked taxes are defaults for the selected customer.
+                    </div>
+
+                    <hr class="border-secondary my-4">
                     <h5 class="mb-3">Payment Details</h5>
                     
                     <div class="form-check mb-3">
@@ -915,8 +1027,16 @@ __DATA__
                     <!-- Totals Section -->
                     <div class="totals-section">
                         <div class="total-row">
-                            <span class="total-label">Line Items Total:</span>
+                            <span class="total-label">Line Items Subtotal:</span>
                             <span class="total-amount" id="lineItemsTotal">£0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Tax Total:</span>
+                            <span class="total-amount" id="taxTotal">£0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-label">Invoice Total (Items + Tax):</span>
+                            <span class="total-amount" id="invoiceTotal">£0.00</span>
                         </div>
                         <div class="total-row">
                             <span class="total-label">Payments Total:</span>
@@ -928,7 +1048,7 @@ __DATA__
                         </div>
                         <small class="text-secondary mt-2 d-block">
                             <i class="bi bi-info-circle"></i> 
-                            Positive difference means payment is less than charges (amount due). 
+                            Positive difference means payment is less than invoice total (amount due). 
                             Negative means overpayment.
                         </small>
                     </div>
@@ -971,6 +1091,39 @@ __DATA__
             return '£' + Math.abs(amount).toFixed(2);
         }
 
+        // Function to calculate taxes based on line items total and tax rates
+        function calculateTaxes() {
+            // Get line items total first
+            let lineItemsTotal = 0;
+            document.querySelectorAll('.line-amount').forEach(function(input) {
+                const value = parseFloat(input.value) || 0;
+                lineItemsTotal += value;
+            });
+
+            // Calculate each tax amount if checkbox is checked
+            let taxTotal = 0;
+            document.querySelectorAll('.tax-checkbox').forEach(function(checkbox) {
+                const chartId = checkbox.getAttribute('data-chart-id');
+                const taxRateInput = document.getElementById('tax_rate_' + chartId);
+                const taxAmountInput = document.getElementById('tax_amount_' + chartId);
+                
+                if (checkbox.checked && taxRateInput) {
+                    const taxRate = parseFloat(taxRateInput.value) || 0;
+                    const taxAmount = lineItemsTotal * (taxRate / 100);
+                    taxAmountInput.value = taxAmount.toFixed(2);
+                    taxTotal += taxAmount;
+                } else {
+                    taxAmountInput.value = '0.00';
+                }
+            });
+
+            // Update tax total display
+            document.getElementById('taxTotal').textContent = formatCurrency(taxTotal);
+
+            // Recalculate all totals
+            calculateTotals();
+        }
+
         // Function to calculate and display totals
         function calculateTotals() {
             // Calculate line items total
@@ -980,6 +1133,16 @@ __DATA__
                 lineItemsTotal += value;
             });
 
+            // Calculate tax total
+            let taxTotal = 0;
+            document.querySelectorAll('.tax-amount').forEach(function(input) {
+                const value = parseFloat(input.value) || 0;
+                taxTotal += value;
+            });
+
+            // Calculate invoice total (line items + tax)
+            const invoiceTotal = lineItemsTotal + taxTotal;
+
             // Calculate payments total
             let paymentsTotal = 0;
             document.querySelectorAll('.payment-amount').forEach(function(input) {
@@ -988,10 +1151,12 @@ __DATA__
             });
 
             // Calculate difference (outstanding amount)
-            const difference = lineItemsTotal - paymentsTotal;
+            const difference = invoiceTotal - paymentsTotal;
 
             // Update display
             document.getElementById('lineItemsTotal').textContent = formatCurrency(lineItemsTotal);
+            document.getElementById('taxTotal').textContent = formatCurrency(taxTotal);
+            document.getElementById('invoiceTotal').textContent = formatCurrency(invoiceTotal);
             document.getElementById('paymentsTotal').textContent = formatCurrency(paymentsTotal);
             
             const differenceElement = document.getElementById('difference');
@@ -1010,11 +1175,18 @@ __DATA__
 
         // Calculate totals on page load
         document.addEventListener('DOMContentLoaded', function() {
-            calculateTotals();
+            calculateTaxes();
         });
 
-        // Add keyboard event listeners for real-time updates
-        document.querySelectorAll('.line-amount, .payment-amount').forEach(function(input) {
+        // Add event listeners for line amounts to trigger tax calculation
+        document.querySelectorAll('.line-amount').forEach(function(input) {
+            input.addEventListener('input', calculateTaxes);
+            input.addEventListener('keyup', calculateTaxes);
+            input.addEventListener('change', calculateTaxes);
+        });
+
+        // Add event listeners for payment amounts
+        document.querySelectorAll('.payment-amount').forEach(function(input) {
             input.addEventListener('input', calculateTotals);
             input.addEventListener('keyup', calculateTotals);
         });
