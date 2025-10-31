@@ -953,7 +953,7 @@ sub post_payment {
 		  WHERE id = |.$form->dbclean($form->{"id_$i"}).qq||;
       $dbh->do($query) || $form->dberror($query);
 
-      my ($amount,$paid,$fxamount,$fxpaid) = $dbh->selectrow_array(qq|SELECT amount, paid, fxamount, fxpaid FROM ar WHERE id = $form->{"id_$i"}|);
+      my ($amount,$paid,$fxamount,$fxpaid) = $dbh->selectrow_array(qq|SELECT amount, paid, fxamount, fxpaid FROM $form->{arap} WHERE id = $form->{"id_$i"}|);
 
       if (($fxamount eq $fxpaid) and ($amount ne $paid) and ($form->{exchangerate} ne 1) ){
         $correction = $form->round_amount($amount - $paid, $form->{precision});
