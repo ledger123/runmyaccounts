@@ -996,6 +996,16 @@ sub post_payment {
         }
       }
       
+      if (($fxamount eq $fxpaid) and ($amount eq $paid) and ($form->{exchangerate} ne 1) ){
+          my ($correction2) = $dbh->selectrow_array(qq|SELECT SUM(amount) FROM acc_trans WHERE trans_id = $form->{"id_$i"}|);
+          $correction2 = (-1)*$correction2;
+          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+		            transdate, fx_transaction, approved, vr_id)
+		            VALUES ($form->{"id_$i"}, $defaults{fxloss_accno_id},
+			    $correction2, '|.$form->dbclean($form->{datepaid}).qq|', '1', '$approved', $voucherid)|;
+		  $dbh->do($query) || $form->dberror($query);
+      }
+
       %audittrail = ( tablename  => $form->{arap},
                       reference  => $form->{source},
 		      formname   => $form->{formname},
