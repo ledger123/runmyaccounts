@@ -179,6 +179,7 @@ $self{texts} = {
   'Select items'                => 'Bitte wählen Sie aus',
   'Select postscript or PDF!'   => 'Postscript oder PDF auswählen!',
   'Select txt, postscript or PDF!' => 'Textformat, Postscript oder PDF auswählen!',
+  'Sent to'                     => 'An',
   'Sep'                         => 'Sep',
   'September'                   => 'September',
   'Serial No.'                  => 'Seriennr.',
