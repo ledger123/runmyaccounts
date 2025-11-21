@@ -2351,7 +2351,7 @@ sub transactions {
                 # Use database values
                 $ref->{fx_amount} = $ref->{fxamount};
                 $ref->{fx_paid} = $ref->{fxpaid};
-                $ref->{fx_netamount} = $ref->{netamount} / $ref->{exchangerate};
+                $ref->{fx_netamount} = $ref->{fxamount} - $ref->{fxpaid};
             } else {
                 # Calculate the old way
                 for (qw(netamount amount paid)) { 
