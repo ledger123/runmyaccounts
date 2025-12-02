@@ -60,6 +60,8 @@ sub create_links {
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
   for (qw(discount cashdiscount)) { $form->{$_} *= 100 }
+
+  $form->{early_payment_discount} *= 100 if defined $form->{early_payment_discount}; 
   
   $form->{contactid} = $form->{all_contact}->[0]->{id};
   if ($form->{all_contact}->[0]->{typeofcontact}) {
@@ -1739,7 +1741,22 @@ sub form_header {
 
   my $payment_discount_account = "";
   if ($form->{select_payment_discount_accno}) {
-      my $amount_label = ($form->{db} eq 'customer') ? $locale->text('Expense Account') : $locale->text('Income Account');
+      my $amount_label = ($form->{db} eq 'customer') ? $locale->text('Income Account') : $locale->text('Expense Account');
+      my $early_discount_field = '';
+      
+      # Only show early payment discount for vendors
+      if ($form->{db} eq 'vendor') {
+          $early_discount_field = qq|
+          <th align=right>|.$locale->text('Early Payment Discount').qq|</th>
+          <td><input name=early_payment_discount size=3 value="$form->{early_payment_discount}"> <b>%</b></td>
+          |;
+      } else {
+          $early_discount_field = qq|
+          <th></th>
+          <td></td>
+          |;
+      }
+      
       $payment_discount_account = qq|
         <tr>
           <th align=right>|.$locale->text($amount_label).qq|</th>
@@ -1747,11 +1764,10 @@ sub form_header {
           .$form->select_option($form->{select_payment_discount_accno}, $form->{payment_discount_accno})
           .qq|</select>
           </td>
-          <th align=right>|.$locale->text('Early Payment Discount').qq|</th>
-          <td><input name=early_payment_discount size=3 value="$form->{early_payment_discount}"></td>
+          $early_discount_field
         </tr>
     |;
-  } 
+  }
 
   $typeofbusiness = qq|
           <th></th>
@@ -3235,6 +3251,14 @@ sub save {
   $form->{db} = 'vendor' if $form->{db} ne 'customer';
   $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
   $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
+
+  # Validate early_payment_discount for vendors
+  if ($form->{db} eq 'vendor' && $form->{early_payment_discount} ne '') {
+      my $discount = $form->parse_amount(\%myconfig, $form->{early_payment_discount});
+      if ($discount <= 0 || $discount > 100) {
+          $form->error($locale->text('Early Payment Discount must be greater than 0 and not greater than 100'));
+      }
+  }
 
   use Email::Valid;
   if ($form->{email}){

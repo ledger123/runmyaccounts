@@ -139,6 +139,25 @@ sub create_links {
 
   }
 
+  # Handle payment_discount_accno based on customer/vendor type
+  my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno_id' : 'expense_accno_id';
+  
+  if ($form->{id}) {
+      $form->{payment_discount_accno_id} = $form->{$payment_discount_column} || 0;
+      $form->{payment_discount_accno_id} *= 1;
+      
+      if ($form->{payment_discount_accno_id}) {
+          $query = qq|SELECT c.accno, c.description,
+                      l.description AS translation
+                      FROM chart c
+                      LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+                      WHERE id = |.$form->dbclean($form->{payment_discount_accno_id}).qq||;
+          ($accno, $description, $translation) = $dbh->selectrow_array($query);
+          $description = $translation if $translation;
+          $form->{payment_discount_accno} = "${accno}--$description";
+      }
+  }
+
   # ARAP, payment and discount account
   $query = qq|SELECT c.accno, c.description, c.link,
               l.description AS translation
@@ -198,20 +217,6 @@ sub create_links {
   }
   $sth->finish;
 
-  if ($form->{id}) {
-      $form->{"payment_discount_accno_id"} *= 1;
-      if ($form->{"payment_discount_accno_id"}) {
-        $query = qq|SELECT c.accno, c.description,
-                    l.description AS translation
-                    FROM chart c
-                    LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-                    WHERE id = |.$form->dbclean($form->{"payment_discount_accno_id"}).qq||;
-        ($accno, $description, $translation) = $dbh->selectrow_array($query);
-        $description = $translation if $translation;
-        $form->{"payment_discount_accno"} = "${accno}--$description";
-      }
-  }
-    
   # get business types
   $query = qq|SELECT *
               FROM business
@@ -357,6 +362,14 @@ sub save {
   for (qw(discount cashdiscount)) {
     $form->{$_} = $form->parse_amount($myconfig, $form->{$_});
     $form->{$_} /= 100;
+  }
+
+  # Parse early_payment_discount only if it has a value
+  if ($form->{early_payment_discount} ne '') {
+      $form->{early_payment_discount} = $form->parse_amount($myconfig, $form->{early_payment_discount});
+      $form->{early_payment_discount} /= 100;
+  } else {
+      $form->{early_payment_discount} = undef;
   }
 
   for (qw(id terms discountterms taxincluded addressid contactid remittancevoucher)) { $form->{$_} *= 1 }
@@ -517,11 +530,26 @@ sub save {
     $rec{"${_}_id"} *= 1;
   }
   
-  for (qw(arap payment discount payment_discount)) {
+  for (qw(arap payment discount)) {
     ($rec{"${_}_accno"}) = split /--/, $form->{"${_}_accno"};
   }
 
+  # Handle payment_discount_accno based on customer/vendor type
+  ($rec{payment_discount_accno}) = split /--/, $form->{payment_discount_accno};
     
+  # Define the column name based on customer or vendor
+  my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno_id' : 'expense_accno_id';
+  
+  # Build early_payment_discount part of query
+  my $early_payment_discount_sql = '';
+  if ($form->{db} eq 'vendor') {
+      if (defined $form->{early_payment_discount}) {
+          $early_payment_discount_sql = qq|early_payment_discount = $form->{early_payment_discount},|;
+      } else {
+          $early_payment_discount_sql = qq|early_payment_discount = NULL,|;
+      }
+  }
+  
   my $gifi;
   $gifi = qq|
 	      gifi_accno = |.$dbh->quote($form->{gifi_accno}).qq|,| if $form->{db} eq 'vendor';
@@ -559,8 +587,8 @@ sub save {
 	      arap_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{arap_accno}).qq|),
 	      payment_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_accno}).qq|),
 	      discount_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{discount_accno}).qq|),
-          payment_discount_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_discount_accno}).qq|),
-          early_payment_discount = $form->{early_payment_discount},
+          $payment_discount_column = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_discount_accno}).qq|),
+          $early_payment_discount_sql
 	      cashdiscount = $form->{cashdiscount},
 	      threshold = $form->{threshold},
 	      discountterms = $form->{discountterms},
