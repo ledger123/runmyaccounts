@@ -1762,7 +1762,7 @@ sub form_header {
       # Only show early payment discount for vendors
       if ($form->{db} eq 'vendor') {
           $early_discount_field = qq|
-          <td><input name=early_payment_discount size=3 value="|
+          <th>|.$locale->text('Early Payment Discount').qq|</th><td><input name=early_payment_discount size=3 value="|
           .$form->format_amount(\%myconfig, $form->{early_payment_discount}).qq|"> <b>%</b></td>
           |;
       } else {
