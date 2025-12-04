@@ -5,6 +5,7 @@ $self{texts} = {
   'Customer Number'             => 'Debtor Number',
   'Customer missing!'           => 'Debtor missing!',
   'Customer not on file!'       => 'Debtor not on file!',
+  'Sent to'                     => 'To',
   'Vendor'                      => 'Creditor',
   'Vendor Number'               => 'Creditor Number',
   'Vendor not on file!'         => 'Creditor not on file!',
