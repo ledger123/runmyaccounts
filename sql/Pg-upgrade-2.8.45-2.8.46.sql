@@ -1,27 +1,37 @@
-ALTER TABLE public.customer
-    ADD COLUMN IF NOT EXISTS last_modified TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+-- last_modified column on customer
+alter table public.customer
+    add column if not exists last_modified timestamptz default current_timestamp;
 
-ALTER TABLE public.vendor
-    ADD COLUMN IF NOT EXISTS last_modified TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+-- last_modified column on vendor
+alter table public.vendor
+    add column if not exists last_modified timestamptz default current_timestamp;
 
-CREATE OR REPLACE FUNCTION public.update_last_modified_column()
-    RETURNS TRIGGER AS $$
-BEGIN
-    NEW.last_modified := NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- function to maintain last_modified
+create or replace function public.update_last_modified_column()
+returns trigger as '
+begin
+    new.last_modified := now();
+    return new;
+end;
+' language 'plpgsql';
+-- end function
 
-DROP TRIGGER IF EXISTS trg_set_last_modified_customer ON public.customer;
+-- drop old customer trigger if exists
+drop trigger if exists trg_set_last_modified_customer on public.customer;
 
-CREATE TRIGGER trg_set_last_modified_customer
-    BEFORE UPDATE ON public.customer
-    FOR EACH ROW
-EXECUTE FUNCTION public.update_last_modified_column();
+-- create customer trigger
+create trigger trg_set_last_modified_customer
+    before update on public.customer
+    for each row
+    execute function public.update_last_modified_column();
+-- end trigger
 
-DROP TRIGGER IF EXISTS trg_set_last_modified_vendor ON public.vendor;
+-- drop old vendor trigger if exists
+drop trigger if exists trg_set_last_modified_vendor on public.vendor;
 
-CREATE TRIGGER trg_set_last_modified_vendor
-    BEFORE UPDATE ON public.vendor
-    FOR EACH ROW
-EXECUTE FUNCTION public.update_last_modified_column();
+-- create vendor trigger
+create trigger trg_set_last_modified_vendor
+    before update on public.vendor
+    for each row
+    execute function public.update_last_modified_column();
+-- end trigger
