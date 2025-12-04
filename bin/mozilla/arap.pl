@@ -1033,7 +1033,7 @@ sub reprint {
     $form->{intnotes} .= qq|\n\n| if $form->{intnotes};
     $form->{intnotes} .= qq|[email]\n|
     .$locale->text('Date').qq|: $now\n|
-    .$locale->text('To').qq|: $form->{email}\n${cc}${bcc}|
+    .$locale->text('Sent to').qq|: $form->{email}\n${cc}${bcc}|
     .$locale->text('Subject').qq|: $form->{subject}\n\n|
     .$locale->text('Message').qq|: |;
 
