@@ -139,22 +139,24 @@ sub create_links {
 
   }
 
-  # Handle payment_discount_accno based on customer/vendor type
-  my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno_id' : 'expense_accno_id';
-  
+  # Define column names based on customer/vendor
+  my $payment_discount_link = ($form->{db} eq 'customer') ? 'AR_amount' : 'AP_amount';
+  my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno' : 'expense_accno';
+  my $payment_discount_column_id = "${payment_discount_column}_id";
+
   if ($form->{id}) {
-      $form->{payment_discount_accno_id} = $form->{$payment_discount_column} || 0;
-      $form->{payment_discount_accno_id} *= 1;
-      
-      if ($form->{payment_discount_accno_id}) {
+      $form->{"${payment_discount_column}_id"} = $form->{$payment_discount_column_id} || 0;
+      $form->{"${payment_discount_column}_id"} *= 1;
+
+      if ($form->{"${payment_discount_column}_id"}) {
           $query = qq|SELECT c.accno, c.description,
                       l.description AS translation
                       FROM chart c
                       LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
-                      WHERE id = |.$form->dbclean($form->{payment_discount_accno_id}).qq||;
+                      WHERE id = |.$form->dbclean($form->{"${payment_discount_column}_id"}).qq||;
           ($accno, $description, $translation) = $dbh->selectrow_array($query);
           $description = $translation if $translation;
-          $form->{payment_discount_accno} = "${accno}--$description";
+          $form->{$payment_discount_column} = "${accno}--$description";
       }
   }
 
@@ -202,7 +204,6 @@ sub create_links {
   $sth->finish;
   chop $form->{taxaccounts};
 
-  my $payment_discount_link = ($form->{db} eq 'customer') ? 'AR_amount' : 'AP_amount';
   $query = qq|SELECT c.accno, c.description,
                 l.description AS translation
                 FROM chart c
@@ -534,11 +535,12 @@ sub save {
     ($rec{"${_}_accno"}) = split /--/, $form->{"${_}_accno"};
   }
 
-  # Handle payment_discount_accno based on customer/vendor type
-  ($rec{payment_discount_accno}) = split /--/, $form->{payment_discount_accno};
-    
+  # Handle payment discount account based on customer/vendor type
+  my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno' : 'expense_accno';
+  ($rec{$payment_discount_column}) = split /--/, $form->{$payment_discount_column};
+ 
   # Define the column name based on customer or vendor
-  my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno_id' : 'expense_accno_id';
+  my $payment_discount_column_id = "${payment_discount_column}_id";
   
   # Build early_payment_discount part of query
   my $early_payment_discount_sql = '';
@@ -587,7 +589,7 @@ sub save {
 	      arap_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{arap_accno}).qq|),
 	      payment_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_accno}).qq|),
 	      discount_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{discount_accno}).qq|),
-          $payment_discount_column = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_discount_accno}).qq|),
+          $payment_discount_column_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{$payment_discount_column}).qq|),
           $early_payment_discount_sql
 	      cashdiscount = $form->{cashdiscount},
 	      threshold = $form->{threshold},
@@ -1026,6 +1028,14 @@ sub search {
 	      WHERE t.$form->{db}_id = ?|;
   $tth = $dbh->prepare($query) || $form->dberror($query);
 
+  # payment discount account query
+  my $payment_discount_column_id = ($form->{db} eq 'customer') ? 'income_accno_id' : 'expense_accno_id';
+  my $pdquery = qq|SELECT c.accno
+                   FROM chart c
+                   JOIN $form->{db} ct ON (ct.$payment_discount_column_id = c.id)
+                   WHERE ct.id = ?|;
+  my $pdth = $dbh->prepare($pdquery) || $form->dberror($pdquery);
+
   # bank
   my $bref;
   $query = qq|SELECT b.*, a.*
@@ -1041,6 +1051,13 @@ sub search {
       $ref->{"bank$_"} = $bref->{$_};
     }
     $bth->finish;
+
+    # get payment discount account
+    $pdth->execute($ref->{id});
+    if (my ($pd_accno) = $pdth->fetchrow_array) {
+      $ref->{payment_discount_accno} = $pd_accno;
+    }
+    $pdth->finish;
 
     $tth->execute($ref->{id});
     while (($item) = $tth->fetchrow_array) {
