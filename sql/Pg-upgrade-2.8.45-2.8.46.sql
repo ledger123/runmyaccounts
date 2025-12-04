@@ -35,3 +35,6 @@ create trigger trg_set_last_modified_vendor
     for each row
     execute function public.update_last_modified_column();
 -- end trigger
+
+
+UPDATE defaults SET fldvalue = '2.8.46' WHERE fldname = 'version';
