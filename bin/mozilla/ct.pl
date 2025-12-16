@@ -60,6 +60,8 @@ sub create_links {
   for (keys %$form) { $form->{$_} = $form->quote($form->{$_}) }
 
   for (qw(discount cashdiscount)) { $form->{$_} *= 100 }
+
+  $form->{early_payment_discount} *= 100 if defined $form->{early_payment_discount}; 
   
   $form->{contactid} = $form->{all_contact}->[0]->{id};
   if ($form->{all_contact}->[0]->{typeofcontact}) {
@@ -83,7 +85,21 @@ sub create_links {
       $form->{"select$item"} = $form->escape($form->{"select$item"},1);
     }
   }
+
+  my $payment_discount_link = ($form->{db} eq 'customer') ? 'AR_amount' : 'AP_amount';
+  my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno' : 'expense_accno';
+  if (@{ $form->{"${payment_discount_link}_accounts"} }) {
+      $form->{"select_${payment_discount_column}"} = "\n";
+      for (@{ $form->{"${payment_discount_link}_accounts"} }) { 
+        $form->{"select_${payment_discount_column}"} .= qq|$_->{accno}--$_->{description}\n| 
+      }
+      $form->{"select_${payment_discount_column}"} = $form->escape($form->{"select_${payment_discount_column}"},1);
+  }
   
+  # Set the appropriate column name for forms
+  $form->{payment_discount_column} = $payment_discount_column;
+  $form->{payment_discount_column_id} = "${payment_discount_column}_id";
+
   if (@{ $form->{all_business} }) {
     $form->{selectbusiness} = qq|\n|;
     for (@{ $form->{all_business} }) { $form->{selectbusiness} .= qq|$_->{description}--$_->{id}\n| }
@@ -390,6 +406,8 @@ sub include_in_report {
   push @a, qq|<input name="l_accounts" type=checkbox class=checkbox value=Y $form->{l_accounts}> |.$locale->text('Accounts');
   push @a, qq|<input name="l_paymentmethod" type=checkbox class=checkbox value=Y $form->{l_paymentmethod}> |.$locale->text('Payment Method');
   push @a, qq|<input name="l_taxnumber" type=checkbox class=checkbox value=Y $form->{l_taxnumber}> |.$locale->text('Tax Number');
+  my $payment_disc_label = ($form->{db} eq 'customer') ? $locale->text('Income Account') : $locale->text('Expense Account');
+  push @a, qq|<input name="l_payment_discount_accno" type=checkbox class=checkbox value=Y $form->{l_payment_discount_accno}> $payment_disc_label|;
   
   if ($form->{db} eq 'customer') {
     push @a, qq|<input name="l_employee" type=checkbox class=checkbox value=Y $form->{l_employee}> |.$locale->text('Salesperson');
@@ -716,7 +734,9 @@ sub list_names {
 
   push @columns, (paymentmethod, threshold, taxnumber, gifi_accno, sic_code,
              business, dispatch, pricegroup, language, curr, bankname);
-  
+
+  push @columns, qw(payment_discount_accno); 
+
   if ($form->{l_bankaddress}) {
     for (bankaddress1, bankaddress2, bankcity, bankstate, bankzipcode, bankcountry) {
       $form->{"l_$_"} = "Y";
@@ -962,6 +982,9 @@ sub list_names {
   $column_header{startdate} = qq|<th><a class=listheading href=$href&sort=startdate>|.$locale->text('Startdate').qq|</a></th>|;
   $column_header{enddate} = qq|<th><a class=listheading href=$href&sort=enddate>|.$locale->text('Enddate').qq|</a></th>|;
   
+  my $payment_disc_label = ($form->{db} eq 'customer') ? $locale->text('Income Account') : $locale->text('Expense Account');
+  $column_header{payment_discount_accno} = qq|<th class=listheading>$payment_disc_label</th>|;
+
   $column_header{invnumber} = qq|<th><a class=listheading href=$href&sort=invnumber>|.$locale->text('Invoice').qq|</a></th>|;
   $column_header{ordnumber} = qq|<th><a class=listheading href=$href&sort=ordnumber>|.$locale->text('Order').qq|</a></th>|;
   $column_header{quonumber} = qq|<th><a class=listheading href=$href&sort=quonumber>|.$locale->text('Quotation').qq|</a></th>|;
@@ -1725,6 +1748,42 @@ sub form_header {
 |;
   }
   
+  # $locale->text('Expense Account');
+  # $locale->text('Income Account');
+
+  my $payment_discount_account = "";
+   
+  my $payment_discount_column = $form->{payment_discount_column} || (($form->{db} eq 'customer') ? 'income_accno' : 'expense_accno');
+  
+  if ($form->{"select_${payment_discount_column}"}) {
+      my $amount_label = ($form->{db} eq 'customer') ? $locale->text('Income Account') : $locale->text('Expense Account');
+      my $early_discount_field = '';
+      
+      # Only show early payment discount for vendors
+      if ($form->{db} eq 'vendor') {
+          $early_discount_field = qq|
+          <th>|.$locale->text('Early Payment Discount').qq|</th><td><input name=early_payment_discount size=3 value="|
+          .$form->format_amount(\%myconfig, $form->{early_payment_discount}).qq|"> <b>%</b></td>
+          |;
+      } else {
+          $early_discount_field = qq|
+          <th></th>
+          <td></td>
+          |;
+      }
+      
+      $payment_discount_account = qq|
+        <tr>
+          <th align=right>$amount_label</th>
+          <td><select name="${payment_discount_column}">|
+          .$form->select_option($form->{"select_${payment_discount_column}"}, $form->{$payment_discount_column})
+          .qq|</select>
+          </td>
+          $early_discount_field
+        </tr>
+    |;
+  }
+
   $typeofbusiness = qq|
           <th></th>
 	  <td></td>
@@ -2034,6 +2093,7 @@ sub form_header {
           $department
 	      $arapaccount
 	      $paymentaccount
+          $payment_discount_account
 	      $discountaccount
 	    </table>
 	  </td>
@@ -2147,7 +2207,7 @@ sub form_header {
 
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
-  $form->hide_form(map { "select$_" } qw(currency arap discount payment business dispatch pricegroup language employee paymentmethod department));
+  $form->hide_form(map { "select$_" } qw(currency arap discount payment payment_discount_accno business dispatch pricegroup language employee paymentmethod department));
   $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
 
 }
@@ -2269,7 +2329,7 @@ sub form_footer {
   }
 
   $form->{update_contact} = 1;
-  $form->hide_form(qw(id ARAP update_contact addressid contactid taxaccounts path login callback db status previousform addvc));
+  $form->hide_form(qw(id ARAP update_contact addressid contactid taxaccounts path login callback db status previousform addvc payment_discount_column payment_discount_column_id));
   
   for (keys %button) { delete $button{$_} if ! $a{$_} }
   for (sort { $button{$a}->{ndx} <=> $button{$b}->{ndx} } keys %button) { $form->print_button(\%button, $_) }
@@ -2814,7 +2874,7 @@ sub pricelist_footer {
 
 sub update {
 
-  for (qw(creditlimit threshold discount cashdiscount)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
+  for (qw(creditlimit threshold discount cashdiscount early_payment_discount)) { $form->{$_} = $form->parse_amount(\%myconfig, $form->{$_}) }
   
   if ($form->{update_contact}) {
 
@@ -3206,6 +3266,14 @@ sub save {
   $form->{db} = 'vendor' if $form->{db} ne 'customer';
   $form->isvaldate(\%myconfig, $form->{startdate}, $locale->text('Invalid start date ...'));
   $form->isvaldate(\%myconfig, $form->{enddate}, $locale->text('Invalid end date ...'));
+
+  # Validate early_payment_discount for vendors
+  if ($form->{db} eq 'vendor' && $form->{early_payment_discount} ne '') {
+      my $discount = $form->parse_amount(\%myconfig, $form->{early_payment_discount});
+      if ($discount <= 0 || $discount > 100) {
+          $form->error($locale->text('Early Payment Discount must be greater than 0 and not greater than 100'));
+      }
+  }
 
   use Email::Valid;
   if ($form->{email}){
