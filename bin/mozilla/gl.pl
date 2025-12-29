@@ -1917,58 +1917,35 @@ sub display_rows {
                 $fx_transaction2 = qq|<td>&nbsp;</td>|;
             }
 
-
         } else {
 
             $form->{totaldebit}     += $form->{"debit_$i"};
             $form->{totalcredit}    += $form->{"credit_$i"};
             $form->{totaltaxamount} += $form->{"taxamount_$i"};
 
-            for (qw(debit credit taxamount)) { $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" }
-
-            if ( $i < $form->{rowcount} ) {
-
-                $accno = qq|$form->{"accno_$i"}|;
-
-                if ( $form->{selectprojectnumber} ) {
-                    $project = $form->{"projectnumber_$i"};
-                    $project =~ s/--.*//;
-                    $project = qq|$project|;
-                }
-
-                if ( $form->{selecttax} ) {
-                    $tax = $form->{"tax_$i"};
-                    $tax = qq|$tax|;
-                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="$form->{"taxamount_$i"}">|;
-                }
-
-                if ( $form->{fxadj} ) {
-                    $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
-                    $x = ($checked) ? "x" : "";
-                    $fx_transaction = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>|;
-                    $fx_transaction2 = qq|<td>&nbsp;</td>|;
-                }
-
-                $form->hide_form( map { "${_}_$i" } qw(accno projectnumber tax) );
-
+            for (qw(debit credit taxamount)) { 
+                $form->{"${_}_$i"} = ( $form->{"${_}_$i"} ) ? $form->format_amount( \%myconfig, $form->{"${_}_$i"}, $form->{precision} ) : "" 
             }
-            else {
 
-                $accno = qq|<select name="accno_$i">| . $form->select_option( $form->{selectaccno} ) . qq|</select>|;
+            # Always show Account as editable dropdown
+            $accno = qq|<select name="accno_$i">| . $form->select_option( $form->{selectaccno}, $form->{"accno_$i"} ) . qq|</select>|;
 
-                if ( $form->{selectprojectnumber} ) {
-                    $project = qq|<select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, undef, 1 ) . qq|</select>|;
-                }
+            # Always show Project as editable dropdown if available
+            if ( $form->{selectprojectnumber} ) {
+                $project = qq|<select name="projectnumber_$i">| . $form->select_option( $form->{selectprojectnumber}, $form->{"projectnumber_$i"}, 1 ) . qq|</select>|;
+            }
 
-                if ( $form->{selecttax} ) {
-                    $tax = qq|<select name="tax_$i">| . $form->select_option( $form->{selecttax} ) . qq|</select>|;
-                    $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="| . $form->format_amount( \%myconfig, $form->{"taxamount_$i"}, $form->{precision} ) . qq|">|;
-                }
+            # Always show Tax as editable dropdown if available
+            if ( $form->{selecttax} ) {
+                $tax = qq|<select name="tax_$i">| . $form->select_option( $form->{selecttax}, $form->{"tax_$i"} ) . qq|</select>|;
+                $taxamount = qq|<input name="taxamount_$i" class="inputright" type=text size=12 value="$form->{"taxamount_$i"}">|;
+            }
 
-                if ( $form->{fxadj} ) {
-                    $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1></td>|;
-                    $fx_transaction2 = qq|<td>&nbsp;</td>|;
-                }
+            if ( $form->{fxadj} ) {
+                $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
+                $x = ($checked) ? "x" : "";
+                $fx_transaction = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>|;
+                $fx_transaction2 = qq|<td>&nbsp;</td>|;
             }
         }
 
