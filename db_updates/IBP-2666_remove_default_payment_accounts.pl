@@ -31,7 +31,7 @@ sub backup_customer_vendor {
     };
     print $fh "# id,payment_accno_id\n";
     for my $table (qw(customer vendor)) {
-        my $sth = $dbh->prepare("SELECT id, payment_accno_id FROM $table WHERE payment_accno_id IS NOT NULL AND payment_accno_id <> ''");
+        my $sth = $dbh->prepare("SELECT id, payment_accno_id FROM $table WHERE payment_accno_id IS NOT NULL");
         $sth->execute();
         while (my $row = $sth->fetchrow_hashref) {
             print $fh "$table,$row->{id},$row->{payment_accno_id}\n";
