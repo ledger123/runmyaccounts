@@ -422,6 +422,8 @@ sub post_transaction {
             ( $tax_accno, $null ) = split /--/, $ref->{tax};
             ($tax_chart_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$tax_accno'");
             $tax_chart_id *= 1;
+            $ref->{amount} = $form->round_amount($ref->{amount}, 5);
+            $ref->{taxamount} = $form->round_amount($ref->{taxamount}, 5);
             $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
 		  project_id, memo, fx_transaction, cleared, approved, tax, tax_chart_id, taxamount, lineamount)
 		  VALUES ($form->{id}, (SELECT id FROM chart
@@ -455,6 +457,8 @@ sub post_transaction {
     # record ar/ap
     if ( ( $arap = $invamount ) ) {
         ($accno) = split /--/, $form->{$ARAP};
+
+        $invamount = $form->round_amount($invamount, 5);
 
         $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
                 approved)
@@ -541,6 +545,7 @@ sub post_transaction {
 
             if ($amount) {
 
+                $amount = $form->round_amount($amount, 5);
                 # add payment
                 $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		    transdate, source, memo, cleared, approved, vr_id, id)
