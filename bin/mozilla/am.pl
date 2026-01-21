@@ -2336,6 +2336,10 @@ sub defaults {
 	  <td><input name=businessnumber size=25 value="|.$form->quote($form->{businessnumber}).qq|"></td>
 	</tr>
 	<tr>
+	  <th align=right>|.$locale->text('Tax Number').qq|</th>
+	  <td><input name=taxnumber size=25 value="|.$form->quote($form->{taxnumber}).qq|"></td>
+	</tr>
+	<tr>
 	  <th align=right>|.$locale->text('Reporting Method').qq|</th>
 	  <td><input name=method value="cash" type=radio $checked{cash}>
 	  <b>|.$locale->text('Cash').qq|</b>
@@ -2493,7 +2497,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail utf8templates showtaxper namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber taxnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail utf8templates showtaxper namesbynumber typeofcontact";
 
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 
