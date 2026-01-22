@@ -28,6 +28,7 @@ sub get_part {
 		 c2.accno AS income_accno, c2.description AS income_description,
 		 c3.accno AS expense_accno, c3.description AS expense_description,
 		 pg.partsgroup,
+         project.projectnumber,
 		 l1.description AS inventory_translation,
 		 l2.description AS income_translation,
 		 l3.description AS expense_translation
@@ -39,6 +40,7 @@ sub get_part {
 		 LEFT JOIN chart c3 ON (p.expense_accno_id = c3.id)
 		 LEFT JOIN translation l3 ON (l3.trans_id = c3.id AND l3.language_code = '$myconfig->{countrycode}')
 		 LEFT JOIN partsgroup pg ON (p.partsgroup_id = pg.id)
+		 LEFT JOIN project ON (p.project_id = project.id)
                  WHERE p.id = $form->{id}|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror($query);
@@ -347,6 +349,11 @@ sub save {
 
   $form->{partnumber} = $form->update_defaults($myconfig, "partnumber", $dbh) if ! $form->{partnumber};
 
+  if ($form->{projectnumber}){
+    ($null, $project_id) = split /--/, $form->{projectnumber};
+  }
+  $project_id *= 1;
+
   # SQLI protection: All text/varchar columns need to be quoted.
   $query = qq|UPDATE parts SET
 	      partnumber = |.$dbh->quote($form->{partnumber}).qq|,
@@ -374,6 +381,7 @@ sub save {
 	      drawing = |.$dbh->quote($form->{drawing}).qq|,
 	      microfiche = |.$dbh->quote($form->{microfiche}).qq|,
 	      partsgroup_id = $partsgroup_id,
+          project_id = $project_id,
 	      toolnumber = |.$dbh->quote($form->{toolnumber}).qq|,
 	      countryorigin = |.$dbh->quote($form->{countryorigin}).qq|,
 	      tariff_hscode = |.$dbh->quote($form->{tariff_hscode}).qq|,
