@@ -92,8 +92,8 @@ sub new {
 
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-	$self->{version}   = "2.8.47";
-	$self->{dbversion} = "2.8.47";
+	$self->{version}   = "2.8.48";
+	$self->{dbversion} = "2.8.48";
     $self->{dateoffset} = 3652;
 
 	bless $self, $type;

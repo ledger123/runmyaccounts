@@ -30,7 +30,7 @@ sub create_links {
 
   if ($form->{id} *= 1) {
     $query = qq/SELECT ct.*,
-                ad.id AS addressid, ad.address1, ad.address2, ad.city,
+                ad.id AS addressid, ad.address1, ad.address2, ad.address1_no, ad.address2_no, ad.city,
 		ad.state, ad.zipcode, ad.country,
         ad.post_office,
         ad.is_migrated,
@@ -277,7 +277,6 @@ sub create_links {
   $dbh->disconnect;
 
 }
-
 
 sub save {
   my ($self, $myconfig, $form) = @_;
@@ -637,11 +636,13 @@ sub save {
   #  }
   #}
 
-  $query = qq|INSERT INTO address ($id trans_id, address1, address2,
+  $query = qq|INSERT INTO address ($id trans_id, address1, address2, address1_no, address2_no,
               city, state, zipcode, country, post_office, is_migrated) VALUES ($var
 	      $form->{id},
 	      |.$dbh->quote($form->{address1}).qq|,
 	      |.$dbh->quote($form->{address2}).qq|,
+	      |.$dbh->quote($form->{address1_no}).qq|,
+	      |.$dbh->quote($form->{address2_no}).qq|,
 	      |.$dbh->quote($form->{city}).qq|,
 	      |.$dbh->quote($form->{state}).qq|,
 	      |.$dbh->quote($form->{zipcode}).qq|,
@@ -683,7 +684,6 @@ sub save {
   $dbh->disconnect;
 
 }
-
 
 
 sub delete {
