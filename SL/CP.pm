@@ -1006,6 +1006,9 @@ sub post_payment {
 		  $dbh->do($query) || $form->dberror($query);
       }
 
+      $query = qq|UPDATE acc_trans SET amount = ROUND(amount::numeric, 5) WHERE trans_id = $form->{"id_$i"}|;
+      $dbh->do($query) || $form->dberror($query);
+
       %audittrail = ( tablename  => $form->{arap},
                       reference  => $form->{source},
 		      formname   => $form->{formname},
