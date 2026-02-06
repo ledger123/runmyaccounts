@@ -4,27 +4,31 @@ use strict;
 use warnings;
 use DBI;
 use POSIX qw(strftime);
+use Getopt::Long;
 
 # Integration
-my $dbHost   = "192.168.8.17";
+my $dbHost = "192.168.8.17";
 # Production
-#my $dbHost   = "192.168.9.20";
-my $dbHost   = 5432;
+#my $dbHost = "192.168.9.20";
+my $dbPort = 5432;
+
 my $driver   = "Pg";
 my $database = "einzelfirma";
-my $dsn      = "DBI:$driver:dbname=$database;host=$dbHost";
 my $userid   = "sql-ledger";
 my $password = "";
 
 my $log_file = '/home/change_me/xpayment_report_removal.log';
 
+my $only_db;
+GetOptions(
+  'db=s' => \$only_db,
+);
 
 my %skip_db = map { $_ => 1 } qw(
   template0
   template1
   postgres
 );
-
 
 sub log_line {
   my ($fh, $msg) = @_;
@@ -58,12 +62,12 @@ $db_list_sth->execute();
 my @dbs;
 while (my ($dbname) = $db_list_sth->fetchrow_array) {
   next if $skip_db{$dbname};
+  next if $only_db && $dbname ne $only_db;
   push @dbs, $dbname;
 }
 
 log_line($LOG, "Starting xpayment_report cleanup");
 log_line($LOG, "Databases: " . join(', ', @dbs));
-
 
 for my $dbname (@dbs) {
 
