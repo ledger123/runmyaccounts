@@ -9,6 +9,7 @@ use POSIX qw(strftime);
 my $dbHost   = "192.168.8.17";
 # Production
 #my $dbHost   = "192.168.9.20";
+my $dbHost   = 5432;
 my $driver   = "Pg";
 my $database = "einzelfirma";
 my $dsn      = "DBI:$driver:dbname=$database;host=$dbHost";
