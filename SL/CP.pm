@@ -1006,6 +1006,24 @@ sub post_payment {
 		  $dbh->do($query) || $form->dberror($query);
       }
 
+      # Check if transaction is balanced and correct minor differences
+      my ($balance) = $dbh->selectrow_array(qq|
+        SELECT ABS(SUM(amount)) 
+        FROM acc_trans 
+        WHERE trans_id = $form->{"id_$i"}
+      |);
+      
+      if ($balance && $balance <= 1 && $balance > 0) {
+        my $correction = (-1) * $balance;
+        my $accno_id = ($correction > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
+        
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+                    transdate, fx_transaction, approved, vr_id)
+                    VALUES ($form->{"id_$i"}, $accno_id,
+                    $correction, '|.$form->dbclean($form->{datepaid}).qq|', '1', '$approved', $voucherid)|;
+        $dbh->do($query) || $form->dberror($query);
+      }
+
       $query = qq|UPDATE acc_trans SET amount = ROUND(amount::numeric, 5) WHERE trans_id = $form->{"id_$i"}|;
       $dbh->do($query) || $form->dberror($query);
 
