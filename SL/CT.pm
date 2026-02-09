@@ -131,6 +131,18 @@ sub create_links {
       $form->{"${_}_accno"} = "${accno}--$description";
     }
 
+    $form->{payment_clearing_accno_id} *= 1;
+    if ($form->{payment_clearing_accno_id}) {
+      $query = qq|SELECT c.accno, c.description,
+                  l.description AS translation
+		  FROM chart c
+		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
+		  WHERE id = |.$form->dbclean($form->{payment_clearing_accno_id}).qq||;
+      ($accno, $description, $translation) = $dbh->selectrow_array($query);
+      $description = $translation if $translation;
+      $form->{payment_clearing_accno} = "${accno}--$description";
+    }
+
   } else {
 
     ($form->{employee}, $form->{employee_id}) = $form->get_employee($dbh);
@@ -535,6 +547,8 @@ sub save {
     ($rec{"${_}_accno"}) = split /--/, $form->{"${_}_accno"};
   }
 
+  ($rec{payment_clearing_accno}) = split /--/, $form->{payment_clearing_accno};
+
   # Handle payment discount account based on customer/vendor type
   my $payment_discount_column = ($form->{db} eq 'customer') ? 'income_accno' : 'expense_accno';
   ($rec{$payment_discount_column}) = split /--/, $form->{$payment_discount_column};
@@ -589,6 +603,7 @@ sub save {
 	      arap_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{arap_accno}).qq|),
 	      payment_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_accno}).qq|),
 	      discount_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{discount_accno}).qq|),
+          payment_clearing_accno_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{payment_clearing_accno}).qq|),
           $payment_discount_column_id = (SELECT id FROM chart WHERE accno = |.$dbh->quote($rec{$payment_discount_column}).qq|),
           $early_payment_discount_sql
 	      cashdiscount = $form->{cashdiscount},
@@ -683,7 +698,6 @@ sub save {
   $dbh->disconnect;
 
 }
-
 
 
 sub delete {
