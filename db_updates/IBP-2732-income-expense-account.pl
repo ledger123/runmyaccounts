@@ -58,12 +58,12 @@ sub update_db {
 update_db(
     q{
 ALTER TABLE customer
-ADD payment_clearing_account integer
+ADD payment_clearing_accno_id integer
 },
 
     q{
 ALTER TABLE vendor
-ADD payment_clearing_account integer
+ADD payment_clearing_accno_id integer
 },
 );
 
