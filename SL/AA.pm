@@ -14,246 +14,251 @@
 
 package AA;
 
-
 sub post_transaction {
-  my ($self, $myconfig, $form, $dbh) = @_;
-  
-  my $disconnect = ($dbh) ? 0 : 1;
-  
-  # connect to database
-  $dbh = $form->dbconnect_noauto($myconfig) unless $dbh;
+    my ( $self, $myconfig, $form, $dbh ) = @_;
 
-  my $query;
-  my $sth;
+    my $disconnect = ($dbh) ? 0 : 1;
 
-  my $null;
-  ($null, $form->{department_id}) = split(/--/, $form->{department});
-  $form->{department_id} *= 1;
-  
+    # connect to database
+    $dbh = $form->dbconnect_noauto($myconfig) unless $dbh;
 
-  my %defaults = $form->get_defaults($dbh, \@{['fx%accno_id', 'cdt', 'precision', 'extendedlog']});
-  $form->{precision} = $defaults{precision};
+    my $query;
+    my $sth;
 
-  my $ml = 1;
-  my $arapml = ($form->{type} =~ /_note/) ? -1 : 1;
-  my $table = 'ar';
-  my $buysell = 'buy';
-  my $ARAP = 'AR';
-  my $invnumber = "sinumber";
-  my $keepcleared = ($form->{id}) ? 1 : 0;
-  
-  my $approved = ($form->{pending}) ? '0' : '1';
-  my $action = ($approved) ? 'posted' : 'saved';
+    my $null;
+    ( $null, $form->{department_id} ) = split( /--/, $form->{department} );
+    $form->{department_id} *= 1;
 
-  if ($form->{vc} eq 'vendor') {
-    $table = 'ap';
-    $buysell = 'sell';
-    $ARAP = 'AP';
-    $ml = -1;
-    $invnumber = "vinumber";
-  }
+    my %defaults = $form->get_defaults( $dbh, \@{ [ 'fx%accno_id', 'cdt', 'precision', 'extendedlog' ] } );
+    $form->{precision} = $defaults{precision};
 
-  $form->{exchangerate} = $form->parse_amount($myconfig, $form->{exchangerate});
-  $form->{exchangerate} ||= 1;
+    my $ml          = 1;
+    my $arapml      = ( $form->{type} =~ /_note/ ) ? -1 : 1;
+    my $table       = 'ar';
+    my $buysell     = 'buy';
+    my $ARAP        = 'AR';
+    my $invnumber   = "sinumber";
+    my $keepcleared = ( $form->{id} ) ? 1 : 0;
 
-  my @taxaccounts = split / /, $form->{taxaccounts};
-  my $tax = 0;
-  my $fxtax = 0;
-  my $amount;
-  my $fxamount;
-  my $diff;
-  
-  my %tax = ();
-  my $accno;
+    my $approved = ( $form->{pending} ) ? '0'      : '1';
+    my $action   = ($approved)          ? 'posted' : 'saved';
 
-  my %zerotax; # Taxes checked or selected in this transaction to decide 0 tax posting.
-  for (1 .. $form->{rowcount}){
-     ($accno, $null) = split /--/, $form->{"tax_$_"};
-     $zerotax{$accno} = 1 if $form->{"tax_$_"};
-  }
-
-  # add taxes
-  foreach $accno (@taxaccounts) {
-    $zerotax{$accno} = 1 if $form->{"calctax_$accno"};
-
-    $fxtax += $tax{fxamount}{$accno} = $form->parse_amount($myconfig, $form->{"tax_$accno"});
-    $tax += $tax{fxamount}{$accno};
-    
-    if ($zerotax{$accno} or $tax{fxamount}{$accno}){
-    push @{ $form->{acc_trans}{taxes} }, {
-      accno => $accno,
-      amount => $tax{fxamount}{$accno},
-      transdate => $form->{transdate},
-      fx_transaction => 0 };
+    if ( $form->{vc} eq 'vendor' ) {
+        $table     = 'ap';
+        $buysell   = 'sell';
+        $ARAP      = 'AP';
+        $ml        = -1;
+        $invnumber = "vinumber";
     }
 
-    $amount = $tax{fxamount}{$accno} * $form->{exchangerate};
-    $tax{amount}{$accno} = $form->round_amount($amount - $diff, $form->{precision});
-    $diff = $tax{amount}{$accno} - ($amount - $diff);
-    $amount = $tax{amount}{$accno} - $tax{fxamount}{$accno};
-    $tax += $amount;
+    $form->{exchangerate} = $form->parse_amount( $myconfig, $form->{exchangerate} );
+    $form->{exchangerate} ||= 1;
 
-    if ($form->{currency} ne $form->{defaultcurrency}) {
-    if ($zerotax{$accno} or $amount){
-      push @{ $form->{acc_trans}{taxes} }, {
-	accno => $accno,
-	amount => $amount,
-	transdate => $form->{transdate},
-	fx_transaction => 1 };
+    my @taxaccounts = split / /, $form->{taxaccounts};
+    my $tax         = 0;
+    my $fxtax       = 0;
+    my $amount;
+    my $fxamount;
+    my $diff;
+
+    my %tax = ();
+    my $accno;
+
+    my %zerotax;    # Taxes checked or selected in this transaction to decide 0 tax posting.
+    for ( 1 .. $form->{rowcount} ) {
+        ( $accno, $null ) = split /--/, $form->{"tax_$_"};
+        $zerotax{$accno} = 1 if $form->{"tax_$_"};
     }
+
+    # add taxes
+    foreach $accno (@taxaccounts) {
+        $zerotax{$accno} = 1 if $form->{"calctax_$accno"};
+
+        $fxtax += $tax{fxamount}{$accno} = $form->parse_amount( $myconfig, $form->{"tax_$accno"} );
+        $tax   += $tax{fxamount}{$accno};
+
+        if ( $zerotax{$accno} or $tax{fxamount}{$accno} ) {
+            push @{ $form->{acc_trans}{taxes} },
+              {
+                accno          => $accno,
+                amount         => $tax{fxamount}{$accno},
+                transdate      => $form->{transdate},
+                fx_transaction => 0
+              };
+        }
+
+        $amount              = $tax{fxamount}{$accno} * $form->{exchangerate};
+        $tax{amount}{$accno} = $form->round_amount( $amount - $diff, $form->{precision} );
+        $diff                = $tax{amount}{$accno} - ( $amount - $diff );
+        $amount              = $tax{amount}{$accno} - $tax{fxamount}{$accno};
+        $tax += $amount;
+
+        if ( $form->{currency} ne $form->{defaultcurrency} ) {
+            if ( $zerotax{$accno} or $amount ) {
+                push @{ $form->{acc_trans}{taxes} },
+                  {
+                    accno          => $accno,
+                    amount         => $amount,
+                    transdate      => $form->{transdate},
+                    fx_transaction => 1
+                  };
+            }
+        }
+
     }
 
-  }
-
-  my %amount = ();
-  my $fxinvamount = 0;
-  my $linetax = '0';
-  for (1 .. $form->{rowcount}) {
-    $fxinvamount += $amount{fxamount}{$_} = $form->parse_amount($myconfig, $form->{"amount_$_"});
-    $form->{"linetaxamount_$_"} = $form->parse_amount($myconfig, $form->{"linetaxamount_$_"});
-    $form->{"lineamount_$_"} = $form->parse_amount($myconfig, $form->{"amount_$_"});
-    $linetax = '1' if $form->{"tax_$_"};
-  }
-
-  for (qw(taxincluded onhold)) { $form->{$_} *= 1 }
-  
-  my $i;
-  my $project_id;
-  my $cleared = 'NULL';
-  
-  $diff = 0;
-  $fxdiff = 0;
-  $invnetamount = 0;
-  $fxinvnetamount = 0;
-  
-  # deduct tax from amounts if tax included
-  for $i (1 .. $form->{rowcount}) {
-
-    if ($amount{fxamount}{$i} or $form->{"tax_$i"}) {
-      
-      if ($form->{taxincluded}) {
-	$amount = ($fxinvamount) ? $fxtax * $amount{fxamount}{$i} / $fxinvamount : 0;
-	$taxamount = $form->round_amount($amount - $fxdiff, $form->{precision});
-	$amount{fxamount}{$i} -= $taxamount;
-	$fxdiff = $form->round_amount($taxamount - ($amount - $fxdiff), 10);
-      }
-	
-      # multiply by exchangerate
-      $amount = $amount{fxamount}{$i} * $form->{exchangerate};
-      $amount{amount}{$i} = $form->round_amount($amount - $diff, $form->{precision});
-      $diff = $amount{amount}{$i} - ($amount - $diff);
-      
-      ($null, $project_id) = split /--/, $form->{"projectnumber_$i"};
-      $project_id ||= 'NULL';
-      ($accno) = split /--/, $form->{"${ARAP}_amount_$i"};
-
-      if ($keepcleared) {
-	$cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
-      }
-
-      push @{ $form->{acc_trans}{lineitems} }, {
-	accno => $accno,
-	amount => $amount{fxamount}{$i},
-	project_id => $project_id,
-	description => $form->{"description_$i"},
-	cleared => $cleared,
-	fx_transaction => 0,
-    tax => $form->{"tax_$i"},
-    taxamount => $form->{"linetaxamount_$i"},
-    lineamount => $form->{"lineamount_$i"} * $ml,
-    };
-
-      if ($form->{currency} ne $form->{defaultcurrency}) {
-	$amount = $amount{amount}{$i} - $amount{fxamount}{$i};
-
-    $fxlinetaxamount = $form->{"linetaxamount_$i"} * $form->{exchangerate};
-    $form->{"linetaxamount_$i"} = $fxlinetaxamount - $form->{"linetaxamount_$i"};
-
-    push @{ $form->{acc_trans}{lineitems} }, {
-	  accno => $accno,
-	  amount => $amount,
-	  project_id => $project_id,
-	  description => $form->{"description_$i"},
-	  cleared => $cleared,
-	  fx_transaction => 1, 
-      tax => $form->{"tax_$i"},
-      taxamount => $form->{"linetaxamount_$i"},
-      lineamount => $form->{"lineamount_$i"},
-        };
-      }
-
-      $invnetamount += $amount{amount}{$i};
-      $fxinvnetamount += $amount{fxamount}{$i};
-      
+    my %amount      = ();
+    my $fxinvamount = 0;
+    my $linetax     = '0';
+    for ( 1 .. $form->{rowcount} ) {
+        $fxinvamount += $amount{fxamount}{$_} = $form->parse_amount( $myconfig, $form->{"amount_$_"} );
+        $form->{"linetaxamount_$_"} = $form->parse_amount( $myconfig, $form->{"linetaxamount_$_"} );
+        $form->{"lineamount_$_"}    = $form->parse_amount( $myconfig, $form->{"amount_$_"} );
+        $linetax                    = '1' if $form->{"tax_$_"};
     }
-  }
 
-  my $invamount = $invnetamount + $tax;
-  
-  my $paymentaccno;
-  my $paymentmethod_id;
+    for (qw(taxincluded onhold)) { $form->{$_} *= 1 }
 
-  my $paid = 0;
+    my $i;
+    my $project_id;
+    my $cleared = 'NULL';
 
-  $diff = 0;
-  # add payments
-  my $fxpaid = 0;
-  for $i (1 .. $form->{paidaccounts}) {
-    $fxamount = $form->parse_amount($myconfig, $form->{"paid_$i"});
-    $fxpaid += $fxamount;
+    $diff           = 0;
+    $fxdiff         = 0;
+    $invnetamount   = 0;
+    $fxinvnetamount = 0;
 
-    if ($fxamount) {
-      $paid += $fxamount;
+    # deduct tax from amounts if tax included
+    for $i ( 1 .. $form->{rowcount} ) {
 
-      $paidamount = $fxamount * $form->{exchangerate};
-      
-      $amount = $form->round_amount($paidamount - $diff, $form->{precision});
-      $diff = $amount - ($paidamount - $diff);
-      
-      $form->{datepaid} = $form->{"datepaid_$i"};
-      
-      $paid{fxamount}{$i} = $fxamount;
-      $paid{amount}{$i} = $amount;
+        if ( $amount{fxamount}{$i} or $form->{"tax_$i"} ) {
+
+            if ( $form->{taxincluded} ) {
+                $amount    = ($fxinvamount) ? $fxtax * $amount{fxamount}{$i} / $fxinvamount : 0;
+                $taxamount = $form->round_amount( $amount - $fxdiff, $form->{precision} );
+                $amount{fxamount}{$i} -= $taxamount;
+                $fxdiff = $form->round_amount( $taxamount - ( $amount - $fxdiff ), 10 );
+            }
+
+            # multiply by exchangerate
+            $amount             = $amount{fxamount}{$i} * $form->{exchangerate};
+            $amount{amount}{$i} = $form->round_amount( $amount - $diff, $form->{precision} );
+            $diff               = $amount{amount}{$i} - ( $amount - $diff );
+
+            ( $null, $project_id ) = split /--/, $form->{"projectnumber_$i"};
+            $project_id ||= 'NULL';
+            ($accno) = split /--/, $form->{"${ARAP}_amount_$i"};
+
+            if ($keepcleared) {
+                $cleared = $form->dbquote( $form->dbclean( $form->{"cleared_$i"} ), SQL_DATE );
+            }
+
+            push @{ $form->{acc_trans}{lineitems} },
+              {
+                accno          => $accno,
+                amount         => $amount{fxamount}{$i},
+                project_id     => $project_id,
+                description    => $form->{"description_$i"},
+                cleared        => $cleared,
+                fx_transaction => 0,
+                tax            => $form->{"tax_$i"},
+                taxamount      => $form->{"linetaxamount_$i"},
+                lineamount     => $form->{"lineamount_$i"} * $ml,
+              };
+
+            if ( $form->{currency} ne $form->{defaultcurrency} ) {
+                $amount = $amount{amount}{$i} - $amount{fxamount}{$i};
+
+                $fxlinetaxamount = $form->{"linetaxamount_$i"} * $form->{exchangerate};
+                $form->{"linetaxamount_$i"} = $fxlinetaxamount - $form->{"linetaxamount_$i"};
+
+                push @{ $form->{acc_trans}{lineitems} },
+                  {
+                    accno          => $accno,
+                    amount         => $amount,
+                    project_id     => $project_id,
+                    description    => $form->{"description_$i"},
+                    cleared        => $cleared,
+                    fx_transaction => 1,
+                    tax            => $form->{"tax_$i"},
+                    taxamount      => $form->{"linetaxamount_$i"},
+                    lineamount     => $form->{"lineamount_$i"},
+                  };
+            }
+
+            $invnetamount   += $amount{amount}{$i};
+            $fxinvnetamount += $amount{fxamount}{$i};
+
+        }
     }
-  }
-  
-  $fxinvamount += $fxtax unless $form->{taxincluded};
-  $fxinvamount = $form->round_amount($fxinvamount, $form->{precision});
-  $invamount = $form->round_amount($invamount, $form->{precision});
-  $paid = $form->round_amount($paid, $form->{precision});
-  
-  $paid = ($fxinvamount == $paid) ? $invamount : $form->round_amount($paid * $form->{exchangerate}, $form->{precision});
-  
-  ($null, $form->{employee_id}) = split /--/, $form->{employee};
-  unless ($form->{employee_id}) {
-    ($form->{employee}, $form->{employee_id}) = $form->get_employee($dbh); 
-  }
-  
-  my $vth;
-  
-  # check if id really exists
-  if ($form->{id} *= 1) {
-    $query = qq|SELECT id
+
+    my $invamount = $invnetamount + $tax;
+
+    my $paymentaccno;
+    my $paymentmethod_id;
+
+    my $paid = 0;
+
+    $diff = 0;
+
+    # add payments
+    my $fxpaid = 0;
+    for $i ( 1 .. $form->{paidaccounts} ) {
+        $fxamount = $form->parse_amount( $myconfig, $form->{"paid_$i"} );
+        $fxpaid += $fxamount;
+
+        if ($fxamount) {
+            $paid += $fxamount;
+
+            $paidamount = $fxamount * $form->{exchangerate};
+
+            $amount = $form->round_amount( $paidamount - $diff, $form->{precision} );
+            $diff   = $amount - ( $paidamount - $diff );
+
+            $form->{datepaid} = $form->{"datepaid_$i"};
+
+            $paid{fxamount}{$i} = $fxamount;
+            $paid{amount}{$i}   = $amount;
+        }
+    }
+
+    $fxinvamount += $fxtax unless $form->{taxincluded};
+    $fxinvamount = $form->round_amount( $fxinvamount, $form->{precision} );
+    $invamount   = $form->round_amount( $invamount,   $form->{precision} );
+    $paid        = $form->round_amount( $paid,        $form->{precision} );
+
+    $paid = ( $fxinvamount == $paid ) ? $invamount : $form->round_amount( $paid * $form->{exchangerate}, $form->{precision} );
+
+    ( $null, $form->{employee_id} ) = split /--/, $form->{employee};
+    unless ( $form->{employee_id} ) {
+        ( $form->{employee}, $form->{employee_id} ) = $form->get_employee($dbh);
+    }
+
+    my $vth;
+
+    # check if id really exists
+    if ( $form->{id} *= 1 ) {
+        $query = qq|SELECT id
                 FROM $table
  	        WHERE id = $form->{id}|;
-    ($form->{id}) = $dbh->selectrow_array($query);
+        ( $form->{id} ) = $dbh->selectrow_array($query);
 
-    &reverse_vouchers($dbh, $form);
+        &reverse_vouchers( $dbh, $form );
 
-    if ($form->{id}){
-        if ($defaults{extendedlog}) {
-        $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
-        $dbh->do($query) || $form->dberror($query);
-        $query = qq|
+        if ( $form->{id} ) {
+            if ( $defaults{extendedlog} ) {
+                $query = qq|INSERT INTO ${table}_log SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
+                $dbh->do($query) || $form->dberror($query);
+                $query = qq|
             INSERT INTO acc_trans_log (trans_id, chart_id, amount, transdate, source, approved, fx_transaction, project_id, memo, id, cleared, vr_id, entry_id, tax, taxamount, tax_chart_id, ts, lineamount)
             SELECT acc_trans.trans_id, acc_trans.chart_id, acc_trans.amount, acc_trans.transdate, acc_trans.source, acc_trans.approved, acc_trans.fx_transaction, acc_trans.project_id, acc_trans.memo, acc_trans.id, acc_trans.cleared, acc_trans.vr_id, acc_trans.entry_id, acc_trans.tax, acc_trans.taxamount, acc_trans.tax_chart_id, ${table}.ts, acc_trans.lineamount
             FROM acc_trans
             JOIN $table ON (${table}.id = acc_trans.trans_id)
             WHERE trans_id = $form->{id}
         |;
-        $dbh->do($query) || $form->dberror($query);
+                $dbh->do($query) || $form->dberror($query);
 
-        $query = qq|
+                $query = qq|
             INSERT INTO acc_trans_log (
                 trans_id, chart_id, 
                 amount, transdate, source,
@@ -274,349 +279,343 @@ sub post_transaction {
             FROM acc_trans ac
             JOIN $table ON (${table}.id = ac.trans_id)
             WHERE trans_id = $form->{id}|;
-        $dbh->do($query) || $form->dberror($query);
+                $dbh->do($query) || $form->dberror($query);
 
-        $query = qq|UPDATE ${table} SET ts = NOW() + TIME '00:00:01' WHERE id = $form->{id}|;
-        $dbh->do($query) || $form->dberror($query);
+                $query = qq|UPDATE ${table} SET ts = NOW() + TIME '00:00:01' WHERE id = $form->{id}|;
+                $dbh->do($query) || $form->dberror($query);
 
-        } # if ($defaults{extendedlog})
-        # delete detail records
-      for (qw(acc_trans dpt_trans payment)) {
-	$query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
-	$dbh->do($query) || $form->dberror($query);
-      }
+            }    # if ($defaults{extendedlog})
+                 # delete detail records
+            for (qw(acc_trans dpt_trans payment)) {
+                $query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
+                $dbh->do($query) || $form->dberror($query);
+            }
+        }
     }
-  }
-  
-  if (! $form->{id}) {
-  
-    my $uid = localtime;
-    $uid .= $$;
 
-    $query = qq|INSERT INTO $table (invnumber, approved)
+    if ( !$form->{id} ) {
+
+        my $uid = localtime;
+        $uid .= $$;
+
+        $query = qq|INSERT INTO $table (invnumber, approved)
                 VALUES ('$uid', '$approved')|;
-    $dbh->do($query) || $form->dberror($query);
-    
-    $query = qq|SELECT id FROM $table
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|SELECT id FROM $table
                 WHERE invnumber = '$uid'|;
-    ($form->{id}) = $dbh->selectrow_array($query);
-  }
+        ( $form->{id} ) = $dbh->selectrow_array($query);
+    }
 
-  if ($form->{department_id}) {
-    $query = qq|INSERT INTO dpt_trans (trans_id, department_id)
+    if ( $form->{department_id} ) {
+        $query = qq|INSERT INTO dpt_trans (trans_id, department_id)
                 VALUES ($form->{id}, $form->{department_id})|;
-    $dbh->do($query) || $form->dberror($query);
-  }
-  
-  # record last payment date in ar/ap table
-  $form->{datepaid} ||= $form->{transdate};
-  my $datepaid = ($paid) ? qq|'$form->{datepaid}'| : 'NULL';
+        $dbh->do($query) || $form->dberror($query);
+    }
 
-  $form->{invnumber} = $form->update_defaults($myconfig, $invnumber) unless $form->{invnumber};
-  $form->{duedate} ||= $form->{transdate};
+    # record last payment date in ar/ap table
+    $form->{datepaid} ||= $form->{transdate};
+    my $datepaid = ($paid) ? qq|'$form->{datepaid}'| : 'NULL';
 
-  for (qw(terms discountterms)) { $form->{$_} *= 1 }
+    $form->{invnumber} = $form->update_defaults( $myconfig, $invnumber ) unless $form->{invnumber};
+    $form->{duedate} ||= $form->{transdate};
 
-  $form->{cashdiscount} = $form->parse_amount($myconfig, $form->{cashdiscount}) / 100;
+    for (qw(terms discountterms)) { $form->{$_} *= 1 }
 
+    $form->{cashdiscount} = $form->parse_amount( $myconfig, $form->{cashdiscount} ) / 100;
 
-  $form->{amount} = $invamount;          # need for vr batch
-  
-  ($paymentaccno) = split /--/, $form->{"$form->{ARAP}_paid_$form->{paidaccounts}"};
-  ($null, $paymentmethod_id) = split /--/, $form->{"paymentmethod_$form->{paidaccounts}"};
-  $paymentmethod_id *= 1;
+    $form->{amount} = $invamount;    # need for vr batch
 
-  if ($form->{vc} eq 'customer') {
-    # dcn
-    ($form->{integer_amount}, $form->{decimal}) = split /\./, $fxinvamount;
-    $form->{decimal} = substr("$form->{decimal}00", 0, 2);
+    ($paymentaccno) = split /--/, $form->{"$form->{ARAP}_paid_$form->{paidaccounts}"};
+    ( $null, $paymentmethod_id ) = split /--/, $form->{"paymentmethod_$form->{paidaccounts}"};
+    $paymentmethod_id *= 1;
 
-    $query = qq|SELECT bk.membernumber, bk.dcn, bk.rvc
+    if ( $form->{vc} eq 'customer' ) {
+
+        # dcn
+        ( $form->{integer_amount}, $form->{decimal} ) = split /\./, $fxinvamount;
+        $form->{decimal} = substr( "$form->{decimal}00", 0, 2 );
+
+        $query = qq|SELECT bk.membernumber, bk.dcn, bk.rvc
 		FROM bank bk
 		JOIN chart c ON (c.id = bk.id)
-		WHERE c.accno = |.$dbh->quote($paymentaccno);
-    ($form->{membernumber}, $form->{dcn}, $form->{rvc}) = $dbh->selectrow_array($query);
-    
-    for my $dcn (qw(dcn rvc)) { 
-    	# Nils Samuelsson $form->{$dcn} = $form->format_dcn($form->{$dcn})
-    	$form->{dcn} = ($form->{dcn} == '<%external%>') ? '' : $form->format_dcn($form->{dcn});
+		WHERE c.accno = | . $dbh->quote($paymentaccno);
+        ( $form->{membernumber}, $form->{dcn}, $form->{rvc} ) = $dbh->selectrow_array($query);
+
+        for my $dcn (qw(dcn rvc)) {
+
+            # Nils Samuelsson $form->{$dcn} = $form->format_dcn($form->{$dcn})
+            $form->{dcn} = ( $form->{dcn} == '<%external%>' ) ? '' : $form->format_dcn( $form->{dcn} );
+        }
     }
-  }
 
-  #print qq|<pre>|; $form->info; print qq|FXAMOUNT: $fxinvamount\n|; $form->debug; $form->error;
+    #print qq|<pre>|; $form->info; print qq|FXAMOUNT: $fxinvamount\n|; $form->debug; $form->error;
 
-  $fxinvamount *= 1;
-  $fxinvpaid *= 1;
+    $fxinvamount *= 1;
+    $fxinvpaid   *= 1;
 
-  $query = qq|UPDATE $table SET
-	      invnumber = |.$dbh->quote($form->{invnumber}).qq|,
-	      description = |.$dbh->quote($form->{description}).qq|,
-	      ordnumber = |.$dbh->quote($form->{ordnumber}).qq|,
-	      transdate = |.$dbh->quote($form->{transdate}).qq|,
+    $query = qq|UPDATE $table SET
+	      invnumber = | . $dbh->quote( $form->{invnumber} ) . qq|,
+	      description = | . $dbh->quote( $form->{description} ) . qq|,
+	      ordnumber = | . $dbh->quote( $form->{ordnumber} ) . qq|,
+	      transdate = | . $dbh->quote( $form->{transdate} ) . qq|,
 	      $form->{vc}_id = $form->{"$form->{vc}_id"},
 	      taxincluded = '$form->{taxincluded}',
 	      amount = $invamount * $arapml,
-	      duedate = '|.$form->dbclean($form->{duedate}).qq|',
+	      duedate = '| . $form->dbclean( $form->{duedate} ) . qq|',
 	      paid = $paid * $arapml,
 	      datepaid = $datepaid,
 	      netamount = $invnetamount * $arapml,
 	      fxamount = $fxinvamount * $arapml,
 	      fxpaid = $fxpaid,
           linetax = '$linetax',
-	      terms = |.$form->dbclean($form->{terms}).qq|,
-	      curr = |.$dbh->quote($form->{currency}).qq|,
-	      notes = |.$dbh->quote($form->{notes}).qq|,
-	      intnotes = |.$dbh->quote($form->{intnotes}).qq|,
-	      department_id = |.$form->dbclean($form->{department_id}).qq|,
-	      employee_id = |.$form->dbclean($form->{employee_id}).qq|,
-	      language_code = |.$dbh->quote($form->{language_code}).qq|,
-	      ponumber = |.$dbh->quote($form->{ponumber}).qq|,
-	      cashdiscount = |.$form->dbclean($form->{cashdiscount}).qq|,
-	      discountterms = |.$form->dbclean($form->{discountterms}).qq|,
-	      onhold = |.$dbh->quote($form->{onhold}).qq|,
-	      exchangerate = |.$form->dbclean($form->{exchangerate}).qq|
-	      | . (($form->{dcn}=='') ? '' : qq|,dcn = |.$dbh->quote($form->{dcn}).qq|| ) . qq|,
+	      terms = | . $form->dbclean( $form->{terms} ) . qq|,
+	      curr = | . $dbh->quote( $form->{currency} ) . qq|,
+	      notes = | . $dbh->quote( $form->{notes} ) . qq|,
+	      intnotes = | . $dbh->quote( $form->{intnotes} ) . qq|,
+	      department_id = | . $form->dbclean( $form->{department_id} ) . qq|,
+	      employee_id = | . $form->dbclean( $form->{employee_id} ) . qq|,
+	      language_code = | . $dbh->quote( $form->{language_code} ) . qq|,
+	      ponumber = | . $dbh->quote( $form->{ponumber} ) . qq|,
+	      cashdiscount = | . $form->dbclean( $form->{cashdiscount} ) . qq|,
+	      discountterms = | . $form->dbclean( $form->{discountterms} ) . qq|,
+	      onhold = | . $dbh->quote( $form->{onhold} ) . qq|,
+	      exchangerate = | . $form->dbclean( $form->{exchangerate} ) . qq|
+	      | . ( ( $form->{dcn} == '' ) ? '' : qq|,dcn = | . $dbh->quote( $form->{dcn} ) . qq|| ) . qq|,
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
-	      paymentmethod_id = |.$form->dbclean($paymentmethod_id).qq|
+	      paymentmethod_id = | . $form->dbclean($paymentmethod_id) . qq|
 	      WHERE id = $form->{id}|;
-  $dbh->do($query) || $form->dberror($query);
-
-  # add voucher
-  if ($form->{batchid}) {
-    $form->{voucher}{transaction}{vouchernumber} = $form->update_defaults($myconfig, 'vouchernumber', $dbh) unless $form->{voucher}{transaction}{vouchernumber};
-
-    $query = qq|INSERT INTO vr (br_id, trans_id, id, vouchernumber)
-                VALUES ($form->{batchid}, $form->{id}, $form->{id}, |
-		.$dbh->quote($form->{voucher}{transaction}{vouchernumber}).qq|)|;
     $dbh->do($query) || $form->dberror($query);
 
-    # update batch
-    $form->update_balance($dbh,
-                          'br',
-			  'amount',
-			  qq|id = $form->{batchid}|,
-			  $invamount * $arapml);
-  }
+    # add voucher
+    if ( $form->{batchid} ) {
+        $form->{voucher}{transaction}{vouchernumber} = $form->update_defaults( $myconfig, 'vouchernumber', $dbh ) unless $form->{voucher}{transaction}{vouchernumber};
 
-  # update exchangerate
-  my $buy = $form->{exchangerate};
-  my $sell = 0;
-  if ($form->{vc} eq 'vendor') {
-    $buy = 0;
-    $sell = $form->{exchangerate};
-  }
-  
-  $form->update_exchangerate($dbh, $form->{currency}, $form->{transdate}, $buy, $sell);
+        $query = qq|INSERT INTO vr (br_id, trans_id, id, vouchernumber)
+                VALUES ($form->{batchid}, $form->{id}, $form->{id}, |
+          . $dbh->quote( $form->{voucher}{transaction}{vouchernumber} ) . qq|)|;
+        $dbh->do($query) || $form->dberror($query);
 
-  my $ref;
-  
-  # add individual transactions
-  foreach $ref (@{ $form->{acc_trans}{lineitems} }) {
+        # update batch
+        $form->update_balance( $dbh, 'br', 'amount', qq|id = $form->{batchid}|, $invamount * $arapml );
+    }
 
-    # insert detail records in acc_trans
-    $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
-    if ($ref->{amount} or $ref->{taxamount}) {
-      $ref->{taxamount} *= 1;
-      ($tax_accno, $null) = split /--/, $ref->{tax};
-      ($tax_chart_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$tax_accno'");
-      $tax_chart_id *= 1;
-      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
+    # update exchangerate
+    my $buy  = $form->{exchangerate};
+    my $sell = 0;
+    if ( $form->{vc} eq 'vendor' ) {
+        $buy  = 0;
+        $sell = $form->{exchangerate};
+    }
+
+    $form->update_exchangerate( $dbh, $form->{currency}, $form->{transdate}, $buy, $sell );
+
+    my $ref;
+
+    # add individual transactions
+    foreach $ref ( @{ $form->{acc_trans}{lineitems} } ) {
+
+        # insert detail records in acc_trans
+        $ref->{amount} = $form->round_amount( $ref->{amount}, $form->{precision} );
+        if ( $ref->{amount} or $ref->{taxamount} ) {
+            $ref->{taxamount} *= 1;
+            ( $tax_accno, $null ) = split /--/, $ref->{tax};
+            ($tax_chart_id) = $dbh->selectrow_array("SELECT id FROM chart WHERE accno = '$tax_accno'");
+            $tax_chart_id *= 1;
+            $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
 		  project_id, memo, fx_transaction, cleared, approved, tax, tax_chart_id, taxamount, lineamount)
 		  VALUES ($form->{id}, (SELECT id FROM chart
 					WHERE accno = '$ref->{accno}'),
 		  $ref->{amount} * $ml * $arapml, '$form->{transdate}',
-		  $ref->{project_id}, |.$dbh->quote($ref->{description}).qq|,
+		  $ref->{project_id}, | . $dbh->quote( $ref->{description} ) . qq|,
 		  '$ref->{fx_transaction}', $ref->{cleared}, '$approved', '$ref->{tax}', $tax_chart_id, $ref->{taxamount} * $ml * $arapml, $ref->{lineamount})|;
-      $dbh->do($query) || $form->dberror($query);
+            $dbh->do($query) || $form->dberror($query);
+        }
     }
-  }
 
-  # save taxes
-  foreach $ref (@{ $form->{acc_trans}{taxes} }) {
-    $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
-    #if ($ref->{amount}) {
-      $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+    # save taxes
+    foreach $ref ( @{ $form->{acc_trans}{taxes} } ) {
+        $ref->{amount} = $form->round_amount( $ref->{amount}, $form->{precision} );
+
+        #if ($ref->{amount}) {
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		  transdate, fx_transaction, approved)
 		  VALUES ($form->{id},
 			 (SELECT id FROM chart
 			  WHERE accno = '$ref->{accno}'),
 		  $ref->{amount} * $ml * $arapml, '$ref->{transdate}',
 		  '$ref->{fx_transaction}', '$approved')|;
-      $dbh->do($query) || $form->dberror($query);
-      #}
-  }
+        $dbh->do($query) || $form->dberror($query);
 
+        #}
+    }
 
-  my $arap;
-  
-  # record ar/ap
-  if (($arap = $invamount)) {
-    ($accno) = split /--/, $form->{$ARAP};
-    
-    $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
+    my $arap;
+
+    # record ar/ap
+    if ( ( $arap = $invamount ) ) {
+        ($accno) = split /--/, $form->{$ARAP};
+
+        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate,
                 approved)
 		VALUES ($form->{id},
 		       (SELECT id FROM chart
 			WHERE accno = '$accno'),
 		$invamount * -1 * $ml * $arapml, '$form->{transdate}', '$approved')|;
-    $dbh->do($query) || $form->dberror($query);
-  }
+        $dbh->do($query) || $form->dberror($query);
+    }
 
-  # if there is no amount force ar/ap
-  if ($fxinvamount == 0) {
-    $arap = 1;
-  }
+    # if there is no amount force ar/ap
+    if ( $fxinvamount == 0 ) {
+        $arap = 1;
+    }
 
-  my $voucherid;
-  my $apprpaid = $approved;
-  my $paymentid = 1;
+    my $voucherid;
+    my $apprpaid  = $approved;
+    my $paymentid = 1;
 
- 
-  # add paid transactions
-  for $i (1 .. $form->{paidaccounts}) {
-    
-    $approved = $apprpaid;
-    
-    if ($paid{fxamount}{$i}) {
-      
-      ($accno) = split(/--/, $form->{"${ARAP}_paid_$i"});
-      $form->{"datepaid_$i"} = $form->{transdate} unless ($form->{"datepaid_$i"});
-      $form->{"exchangerate_$i"} = $form->parse_amount($myconfig, $form->{"exchangerate_$i"});
-      $form->{"exchangerate_$i"} ||= 1;
-     
-      # if there is no amount
-      if ($fxinvamount == 0) {
-	$form->{exchangerate} = $form->{"exchangerate_$i"};
-      }
+    # add paid transactions
+    for $i ( 1 .. $form->{paidaccounts} ) {
 
-      
-      $voucherid = 'NULL';
-      
-      # add voucher for payment
-      if ($form->{voucher}{payment}{$voucherid}{br_id}) {
-	if ($form->{"vr_id_$i"}) {
+        $approved = $apprpaid;
 
-	  $voucherid = $form->{"vr_id_$i"};
-	  $approved = $form->{voucher}{payment}{$voucherid}{approved} * 1;
-	  
-	  $query = qq|INSERT INTO vr (br_id, trans_id, id, vouchernumber)
+        if ( $paid{fxamount}{$i} ) {
+
+            ($accno) = split( /--/, $form->{"${ARAP}_paid_$i"} );
+            $form->{"datepaid_$i"}     = $form->{transdate} unless ( $form->{"datepaid_$i"} );
+            $form->{"exchangerate_$i"} = $form->parse_amount( $myconfig, $form->{"exchangerate_$i"} );
+            $form->{"exchangerate_$i"} ||= 1;
+
+            # if there is no amount
+            if ( $fxinvamount == 0 ) {
+                $form->{exchangerate} = $form->{"exchangerate_$i"};
+            }
+
+            $voucherid = 'NULL';
+
+            # add voucher for payment
+            if ( $form->{voucher}{payment}{$voucherid}{br_id} ) {
+                if ( $form->{"vr_id_$i"} ) {
+
+                    $voucherid = $form->{"vr_id_$i"};
+                    $approved  = $form->{voucher}{payment}{$voucherid}{approved} * 1;
+
+                    $query = qq|INSERT INTO vr (br_id, trans_id, id, vouchernumber)
 		      VALUES ($form->{voucher}{payment}{$voucherid}{br_id},
-		      $form->{id}, $voucherid, |.
-		      $dbh->quote($form->{voucher}{payment}{$voucherid}{vouchernumber}).qq|)|;
-	  $dbh->do($query) || $form->dberror($query);
+		      $form->{id}, $voucherid, | . $dbh->quote( $form->{voucher}{payment}{$voucherid}{vouchernumber} ) . qq|)|;
+                    $dbh->do($query) || $form->dberror($query);
 
-	  # update batch
-	  $form->update_balance($dbh,
-				'br',
-				'amount',
-				qq|id = $form->{voucher}{payment}{$voucherid}{br_id}|,
-				$paid{amount}{$i} * $arapml);
-	}
-      }
+                    # update batch
+                    $form->update_balance( $dbh, 'br', 'amount', qq|id = $form->{voucher}{payment}{$voucherid}{br_id}|, $paid{amount}{$i} * $arapml );
+                }
+            }
 
+            # ar/ap amount
+            if ($arap) {
+                ($accno) = split /--/, $form->{$ARAP};
 
-      # ar/ap amount
-      if ($arap) {
-        ($accno) = split /--/, $form->{$ARAP};
-
-	# add ar/ap
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+                # add ar/ap
+                $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		    transdate, approved, vr_id)
 		    VALUES ($form->{id},
 		           (SELECT id FROM chart
 			    WHERE accno = '$accno'),
 		    $paid{amount}{$i} * $ml * $arapml, '$form->{"datepaid_$i"}',
 		    '$approved', $voucherid)|;
-	$dbh->do($query) || $form->dberror($query);
+                $dbh->do($query) || $form->dberror($query);
 
-      }
-      $arap = $paid{amount}{$i};
-      
-      
-      # add payment
-      ($accno) = split /--/, $form->{"${ARAP}_paid_$i"};
-      
-      ($null, $paymentmethod_id) = split /--/, $form->{"paymentmethod_$i"};
-      $paymentmethod_id *= 1;
-     
-      if ($keepcleared) {
-	$cleared = $form->dbquote($form->dbclean($form->{"cleared_$i"}), SQL_DATE);
-      }
-      
-      $amount = $paid{fxamount}{$i};
-      
-      if ($amount) {
-	# add payment
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+            }
+            $arap = $paid{amount}{$i};
+
+            # add payment
+            ($accno) = split /--/, $form->{"${ARAP}_paid_$i"};
+
+            ( $null, $paymentmethod_id ) = split /--/, $form->{"paymentmethod_$i"};
+            $paymentmethod_id *= 1;
+
+            if ($keepcleared) {
+                $cleared = $form->dbquote( $form->dbclean( $form->{"cleared_$i"} ), SQL_DATE );
+            }
+
+            $amount = $paid{fxamount}{$i};
+
+            if ($amount) {
+
+                # add payment
+                $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		    transdate, source, memo, cleared, approved, vr_id, id)
 		    VALUES ($form->{id},
 			   (SELECT id FROM chart
 			    WHERE accno = '$accno'),
 		    $amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', |
-		    .$dbh->quote($form->{"source_$i"}).qq|, |
-		    .$dbh->quote($form->{"memo_$i"}).qq|,
+                  . $dbh->quote( $form->{"source_$i"} ) . qq|, | . $dbh->quote( $form->{"memo_$i"} ) . qq|,
 		    $cleared, '$approved', $voucherid, $paymentid)|;
-	$dbh->do($query) || $form->dberror($query);
+                $dbh->do($query) || $form->dberror($query);
 
-	$query = qq|INSERT INTO payment (id, trans_id, exchangerate,
+                $query = qq|INSERT INTO payment (id, trans_id, exchangerate,
 	            paymentmethod_id)
 		    VALUES ($paymentid, $form->{id}, $form->{"exchangerate_$i"},
 		    $paymentmethod_id)|;
-	$dbh->do($query) || $form->dberror($query);
+                $dbh->do($query) || $form->dberror($query);
 
-	$paymentid++;
+                $paymentid++;
 
+                if ( $form->{currency} ne $form->{defaultcurrency} ) {
 
-	if ($form->{currency} ne $form->{defaultcurrency}) {
-	  
-	  # exchangerate gain/loss
-	  $amount = $form->round_amount(($form->round_amount($paid{fxamount}{$i} * $form->{exchangerate}, $form->{precision}) - $form->round_amount($paid{fxamount}{$i} * $form->{"exchangerate_$i"}, $form->{precision})) * -1, $form->{precision});
-	  
-	  if ($amount) {
-	    my $accno_id = (($amount * $ml * $arapml) > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
-	    $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+                    # exchangerate gain/loss
+                    $amount = $form->round_amount(
+                        (
+                            $form->round_amount( $paid{fxamount}{$i} * $form->{exchangerate}, $form->{precision} ) -
+                              $form->round_amount( $paid{fxamount}{$i} * $form->{"exchangerate_$i"}, $form->{precision} )
+                        ) * -1,
+                        $form->{precision}
+                    );
+
+                    if ($amount) {
+                        my $accno_id = ( ( $amount * $ml * $arapml ) > 0 ) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
+                        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 			transdate, fx_transaction, cleared, approved, vr_id)
 			VALUES ($form->{id}, $accno_id,
 			$amount * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
 			$cleared, '$approved', $voucherid)|;
-	    $dbh->do($query) || $form->dberror($query);
-	  }
+                        $dbh->do($query) || $form->dberror($query);
+                    }
 
-	  # exchangerate difference
-	  $amount = $form->round_amount($paid{amount}{$i} - $paid{fxamount}{$i} + $amount, $form->{precision});
-	  $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+                    # exchangerate difference
+                    $amount = $form->round_amount( $paid{amount}{$i} - $paid{fxamount}{$i} + $amount, $form->{precision} );
+                    $query  = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		      transdate, fx_transaction, cleared, source, approved, vr_id)
 		      VALUES ($form->{id},
 			     (SELECT id FROM chart
 			      WHERE accno = '$accno'),
 		      $amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
 		      $cleared, |
-		      .$dbh->quote($form->{"source_$i"}).qq|, '$approved',
+                      . $dbh->quote( $form->{"source_$i"} ) . qq|, '$approved',
 		      $voucherid)|;
-	  $dbh->do($query) || $form->dberror($query);
+                    $dbh->do($query) || $form->dberror($query);
 
-	}
-      }
+                }
+            }
+        }
     }
-  }
 
-  # save taxes for discount
-  if (@cdt) {
-    $i = $form->{discount_index};
-    $voucherid = 'NULL';
-    $approved = $apprpaid;
-    
-    if ($form->{voucher}{payment}{$voucherid}{br_id}) {
-      if ($form->{"vr_id_$i"}) {
-	$voucherid = $form->{"vr_id_$i"};
-	$approved = $form->{voucher}{payment}{$voucherid}{approved} * 1;
-      }
-    }
-	
-    foreach $ref (@cdt) {
-      $ref->{amount} = $form->round_amount($ref->{amount}, $form->{precision});
-      if ($ref->{amount}) {
-	$query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+    # save taxes for discount
+    if (@cdt) {
+        $i         = $form->{discount_index};
+        $voucherid = 'NULL';
+        $approved  = $apprpaid;
+
+        if ( $form->{voucher}{payment}{$voucherid}{br_id} ) {
+            if ( $form->{"vr_id_$i"} ) {
+                $voucherid = $form->{"vr_id_$i"};
+                $approved  = $form->{voucher}{payment}{$voucherid}{approved} * 1;
+            }
+        }
+
+        foreach $ref (@cdt) {
+            $ref->{amount} = $form->round_amount( $ref->{amount}, $form->{precision} );
+            if ( $ref->{amount} ) {
+                $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 		    transdate, fx_transaction, approved, vr_id, id)
 		    VALUES ($form->{id},
 			   (SELECT id FROM chart
@@ -624,108 +623,107 @@ sub post_transaction {
 		    $ref->{amount} * $ml * $arapml, '$ref->{transdate}',
 		    '$ref->{fx_transaction}', '$approved', $voucherid,
 		    $paymentid)|;
-	$dbh->do($query) || $form->dberror($query);
-      }
+                $dbh->do($query) || $form->dberror($query);
+            }
+        }
     }
-  }
 
-  # armaghan 13/05/2015 Fix for rounding issue
-  # philipp_kroll overworked rounding issue fix 2018-09-26 ignoring credit, debit, credit_note, debit_note in calculation of amount.
-  if ($invamount eq $paid){
-          my $invamount2 = $dbh->selectrow_array("
+    # armaghan 13/05/2015 Fix for rounding issue
+    # philipp_kroll overworked rounding issue fix 2018-09-26 ignoring credit, debit, credit_note, debit_note in calculation of amount.
+    if ( $invamount eq $paid ) {
+        my $invamount2 = $dbh->selectrow_array( "
               SELECT round(sum(amount)::numeric,2)
               FROM acc_trans ac
               JOIN chart c ON ac.chart_id = c.id
               WHERE trans_id=$form->{id}
               AND c.link LIKE '$ARAP'
-          ");
-          $invamount2 *= 1; # IMO this line is obsolete but I leave it anyway.
-          if ($invamount2){
-              my ($transdate) = $dbh->selectrow_array("select max(transdate) from acc_trans where trans_id = $form->{id}");
-              ($accno) = split /--/, $form->{$ARAP};
-              # this acc_trans entry shall always be the opposite of the follow up query, so we multiply by -1 no matter if creadit, debit, credit_note, debit_note.
-              $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
+          " );
+        $invamount2 *= 1;    # IMO this line is obsolete but I leave it anyway.
+        if ($invamount2) {
+            my ($transdate) = $dbh->selectrow_array("select max(transdate) from acc_trans where trans_id = $form->{id}");
+            ($accno) = split /--/, $form->{$ARAP};
+
+            # this acc_trans entry shall always be the opposite of the follow up query, so we multiply by -1 no matter if creadit, debit, credit_note, debit_note.
+            $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
                     VALUES ($form->{id}, (SELECT id FROM chart WHERE accno = '$accno'),
                     $invamount2 * -1, '$transdate', '$approved')|;
-              $dbh->do($query) || $form->dberror($query);
-              # no matter if ar - or ar + or ap - or ap +, amount > 0 means it's a win, while amount < 0 means it's a loss
-              # that implies, amount > 0 go to fx gain while amount < 0 go to fx loss, if credit, debit, credit_note or debit_note doesn't matter.
-              if ($invamount2 > 0) {
+            $dbh->do($query) || $form->dberror($query);
+
+            # no matter if ar - or ar + or ap - or ap +, amount > 0 means it's a win, while amount < 0 means it's a loss
+            # that implies, amount > 0 go to fx gain while amount < 0 go to fx loss, if credit, debit, credit_note or debit_note doesn't matter.
+            if ( $invamount2 > 0 ) {
                 $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
                 VALUES ($form->{id}, $defaults{fxgain_accno_id}, $invamount2, '$transdate', '$approved')|;
-              } else {
+            } else {
                 $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount, transdate, approved)
                 VALUES ($form->{id}, $defaults{fxloss_accno_id}, $invamount2, '$transdate', '$approved')|;
-              }
-              $dbh->do($query) || $form->dberror($query);
-          }
-  };
+            }
+            $dbh->do($query) || $form->dberror($query);
+        }
+    }
 
-  # save printed and queued
-  $form->save_status($dbh);
-  
-  my %audittrail = ( tablename  => $table,
-                     reference  => $form->{invnumber},
-		     formname   => 'transaction',
-		     action     => $action,
-		     id         => $form->{id} );
-  
-  $form->audittrail($dbh, "", \%audittrail);
+    # save printed and queued
+    $form->save_status($dbh);
 
-  $form->save_recurring($dbh, $myconfig);
+    my %audittrail = (
+        tablename => $table,
+        reference => $form->{invnumber},
+        formname  => 'transaction',
+        action    => $action,
+        id        => $form->{id}
+    );
 
-  $form->remove_locks($myconfig, $dbh, $table);
-  
-  my $rc;
-  
-  if ($disconnect) {
-    $rc = $dbh->commit;
-    $dbh->disconnect;
-  }
+    $form->audittrail( $dbh, "", \%audittrail );
 
-  $rc;
-  
+    $form->save_recurring( $dbh, $myconfig );
+
+    $form->remove_locks( $myconfig, $dbh, $table );
+
+    my $rc;
+
+    if ($disconnect) {
+        $rc = $dbh->commit;
+        $dbh->disconnect;
+    }
+
+    $rc;
+
 }
 
-
 sub reverse_vouchers {
-  my ($dbh, $form) = @_;
+    my ( $dbh, $form ) = @_;
 
-  my $amount;
-  my $table = 'ap';
-  my $ARAP = 'AP';
-  my $ml = 1;
-  
-  if ($form->{vc} eq 'customer') {
-    $table = 'ar';
-    $ARAP = 'AR';
-    $ml = -1;
-  }
-  
-  my $query = qq|SELECT vr.*, a.amount
+    my $amount;
+    my $table = 'ap';
+    my $ARAP  = 'AP';
+    my $ml    = 1;
+
+    if ( $form->{vc} eq 'customer' ) {
+        $table = 'ar';
+        $ARAP  = 'AR';
+        $ml    = -1;
+    }
+
+    my $query = qq|SELECT vr.*, a.amount
                  FROM $table a
 		 JOIN vr ON (vr.trans_id = a.id)
  	         WHERE vr.id = $form->{id}|;
-  my $sth = $dbh->prepare($query) || $form->dberror($query);
-  $sth->execute || $form->dberror($query);
-  my $ref = $sth->fetchrow_hashref(NAME_lc);
-  $form->{voucher}{transaction} = $ref;
-  $sth->finish;
+    my $sth = $dbh->prepare($query) || $form->dberror($query);
+    $sth->execute                   || $form->dberror($query);
+    my $ref = $sth->fetchrow_hashref(NAME_lc);
+    $form->{voucher}{transaction} = $ref;
+    $sth->finish;
 
-  if ($form->{batchid} *= 1) {
-    $form->update_balance($dbh,
-			  'br',
-			  'amount',
-			  qq|id = $form->{batchid}|,
-			  $form->{voucher}{transaction}{amount} * -1);
-    
-    # get batchid's and vouchers for payments
-    $query = qq|SELECT * FROM vr
+    if ( $form->{batchid} *= 1 ) {
+        $form->update_balance( $dbh, 'br', 'amount', qq|id = $form->{batchid}|, $form->{voucher}{transaction}{amount} * -1 );
+
+        # get batchid's and vouchers for payments
+        $query = qq|SELECT * FROM vr
 		WHERE trans_id = $form->{id}
 		AND NOT br_id = $form->{batchid}|;
-    $sth = $dbh->prepare($query) || $form->dberror($query);
+        $sth = $dbh->prepare($query) || $form->dberror($query);
 
-    $query = qq|SELECT SUM(ac.amount), ac.approved
+        $query = qq|SELECT SUM(ac.amount), ac.approved
 		FROM acc_trans ac
 		JOIN vr ON (vr.id = ac.vr_id)
 		JOIN chart c ON (c.id = ac.chart_id)
@@ -734,55 +732,50 @@ sub reverse_vouchers {
 		AND (c.link LIKE '%${ARAP}_paid%'
 		     OR c.link LIKE '%${ARAP}_discount%')
 		GROUP BY ac.approved|;
-    my $ath = $dbh->prepare($query) || $form->dberror($query);
-		
-    $sth->execute || $form->dberror($query);
-    
-    while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-      
-      $form->{voucher}{payment}{$ref->{id}} = $ref;
+        my $ath = $dbh->prepare($query) || $form->dberror($query);
 
-      # get amount
-      $ath->execute($ref->{id});
-      ($amount) = $ath->fetchrow_array;
-      $ath->finish;
+        $sth->execute || $form->dberror($query);
 
-      $amount = $form->round_amount($amount, $form->{precision});
-      # update batch
-      $form->update_balance($dbh,
-			    'br',
-			    'amount',
-			    qq|id = $ref->{br_id}|,
-			    $amount * $ml * -1);
+        while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+
+            $form->{voucher}{payment}{ $ref->{id} } = $ref;
+
+            # get amount
+            $ath->execute( $ref->{id} );
+            ($amount) = $ath->fetchrow_array;
+            $ath->finish;
+
+            $amount = $form->round_amount( $amount, $form->{precision} );
+
+            # update batch
+            $form->update_balance( $dbh, 'br', 'amount', qq|id = $ref->{br_id}|, $amount * $ml * -1 );
+        }
+        $sth->finish;
     }
-    $sth->finish;
-  }
 
-  $query = qq|DELETE FROM vr
+    $query = qq|DELETE FROM vr
 	      WHERE trans_id = $form->{id}|;
-  $dbh->do($query) || $form->dberror($query);
+    $dbh->do($query) || $form->dberror($query);
 
 }
 
-
-
 sub delete_transaction {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database, turn AutoCommit off
-  my $dbh = $form->dbconnect_noauto($myconfig);
-  
-  my $table = ($form->{vc} eq 'customer') ? 'ar' : 'ap';
-  
-  $form->{id} *= 1;
+    # connect to database, turn AutoCommit off
+    my $dbh = $form->dbconnect_noauto($myconfig);
 
-  my %defaults = $form->get_defaults($dbh, \@{['precision', 'extendedlog']});
+    my $table = ( $form->{vc} eq 'customer' ) ? 'ar' : 'ap';
 
-  if ($form->{id} and $defaults{extendedlog}) {
-     $query = qq|INSERT INTO ${table}_log_deleted SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
-     $dbh->do($query) || $form->dberror($query);
+    $form->{id} *= 1;
 
-     $query = qq|
+    my %defaults = $form->get_defaults( $dbh, \@{ [ 'precision', 'extendedlog' ] } );
+
+    if ( $form->{id} and $defaults{extendedlog} ) {
+        $query = qq|INSERT INTO ${table}_log_deleted SELECT ${table}.* FROM $table WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+
+        $query = qq|
         INSERT INTO acc_trans_log_deleted (
             trans_id, chart_id, 
             amount, transdate, source,
@@ -803,9 +796,9 @@ sub delete_transaction {
         FROM acc_trans ac
         JOIN $table aa ON (aa.id = ac.trans_id)
         WHERE trans_id = $form->{id}|;
-     $dbh->do($query) || $form->dberror($query);
+        $dbh->do($query) || $form->dberror($query);
 
-     $query = qq|
+        $query = qq|
         INSERT INTO acc_trans_log_deleted (
             trans_id, chart_id, 
             amount, transdate, source,
@@ -826,142 +819,142 @@ sub delete_transaction {
         FROM acc_trans ac
         JOIN $table aa ON (aa.id = ac.trans_id)
         WHERE trans_id = $form->{id}|;
-     $dbh->do($query) || $form->dberror($query);
-  }
+        $dbh->do($query) || $form->dberror($query);
+    }
 
-  my %audittrail = ( tablename  => $table,
-                     reference  => $form->{invnumber},
-		     formname   => 'transaction',
-		     action     => 'deleted',
-		     id         => $form->{id} );
+    my %audittrail = (
+        tablename => $table,
+        reference => $form->{invnumber},
+        formname  => 'transaction',
+        action    => 'deleted',
+        id        => $form->{id}
+    );
 
-  $form->audittrail($dbh, "", \%audittrail);
-  
-  &reverse_vouchers($dbh, $form);
-  
-  $query = qq|DELETE FROM $table WHERE id = $form->{id}|;
-  $dbh->do($query) || $form->dberror($query);
+    $form->audittrail( $dbh, "", \%audittrail );
 
-  for (qw(recurring recurringemail recurringprint)) {
-    $query = qq|DELETE FROM $_ WHERE id = $form->{id}|;
+    &reverse_vouchers( $dbh, $form );
+
+    $query = qq|DELETE FROM $table WHERE id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
-  }
-  
-  for (qw(acc_trans dpt_trans payment)) {
-    $query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
-    $dbh->do($query) || $form->dberror($query);
-  }
-  
-  # get spool files
-  $query = qq|SELECT spoolfile FROM status
+
+    for (qw(recurring recurringemail recurringprint)) {
+        $query = qq|DELETE FROM $_ WHERE id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+    }
+
+    for (qw(acc_trans dpt_trans payment)) {
+        $query = qq|DELETE FROM $_ WHERE trans_id = $form->{id}|;
+        $dbh->do($query) || $form->dberror($query);
+    }
+
+    # get spool files
+    $query = qq|SELECT spoolfile FROM status
               WHERE trans_id = $form->{id}
 	      AND spoolfile IS NOT NULL|;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my $spoolfile;
-  my @spoolfiles = ();
+    my $spoolfile;
+    my @spoolfiles = ();
 
-  while (($spoolfile) = $sth->fetchrow_array) {
-    push @spoolfiles, $spoolfile;
-  } 
-  $sth->finish;
-  
-  $query = qq|DELETE FROM status WHERE trans_id = $form->{id}|;
-  $dbh->do($query) || $form->dberror($query);
-  
-  $form->remove_locks($myconfig, $dbh, $table);
-  
-  # commit
-  my $rc = $dbh->commit;
-  $dbh->disconnect;
-
-  if ($rc) {
-    foreach $spoolfile (@spoolfiles) {
-      unlink "$spool/$spoolfile" if $spoolfile;
+    while ( ($spoolfile) = $sth->fetchrow_array ) {
+        push @spoolfiles, $spoolfile;
     }
-  }
-  
-  $rc;
+    $sth->finish;
+
+    $query = qq|DELETE FROM status WHERE trans_id = $form->{id}|;
+    $dbh->do($query) || $form->dberror($query);
+
+    $form->remove_locks( $myconfig, $dbh, $table );
+
+    # commit
+    my $rc = $dbh->commit;
+    $dbh->disconnect;
+
+    if ($rc) {
+        foreach $spoolfile (@spoolfiles) {
+            unlink "$spool/$spoolfile" if $spoolfile;
+        }
+    }
+
+    $rc;
 
 }
 
-
-
 sub transactions {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
-  my $null;
-  my $var;
-  my $paid = "a.paid";
-  my $ml = 1;
-  my $ARAP = 'AR';
-  my $table = 'ar';
-  my $acc_trans_join;
-  my $acc_trans_flds;
-  
-  my %defaults = $form->get_defaults($dbh, \@{['precision', 'company']});
-  for (keys %defaults) { $form->{$_} = $defaults{$_} }
-  
-  $form->{vc} = 'vendor' if $form->{vc} ne 'customer'; # SQLI protection
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
+    my $null;
+    my $var;
+    my $paid  = "a.paid";
+    my $ml    = 1;
+    my $ARAP  = 'AR';
+    my $table = 'ar';
+    my $acc_trans_join;
+    my $acc_trans_flds;
 
-  if ($form->{vc} eq 'vendor') {
-    $ml = -1;
-    $ARAP = 'AP';
-    $table = 'ap';
-  }
-  
-  ($form->{transdatefrom}, $form->{transdateto}) = $form->from_to($form->{year}, $form->{month}, $form->{interval}) if $form->{year} && $form->{month};
- 
-  if ($form->{outstanding}) {
-    $paid = qq|CASE WHEN ROUND(a.fxamount::numeric, $form->{precision}) = ROUND(a.fxpaid::numeric, $form->{precision}) AND a.fxpaid != 0 AND a.paid != 0 |;
-    $paid .= qq|
+    my %defaults = $form->get_defaults( $dbh, \@{ [ 'precision', 'company' ] } );
+    for ( keys %defaults ) { $form->{$_} = $defaults{$_} }
+
+    $form->{vc} = 'vendor' if $form->{vc} ne 'customer';    # SQLI protection
+
+    if ( $form->{vc} eq 'vendor' ) {
+        $ml    = -1;
+        $ARAP  = 'AP';
+        $table = 'ap';
+    }
+
+    ( $form->{transdatefrom}, $form->{transdateto} ) = $form->from_to( $form->{year}, $form->{month}, $form->{interval} ) if $form->{year} && $form->{month};
+
+    if ( $form->{outstanding} ) {
+        $paid = qq|CASE WHEN ROUND(a.fxamount::numeric, $form->{precision}) = ROUND(a.fxpaid::numeric, $form->{precision}) AND a.fxpaid != 0 AND a.paid != 0 |;
+        $paid .= qq|
             AND a.datepaid <= '$form->{transdateto}'| if $form->{transdateto};
-    $paid .= qq|THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
+        $paid .= qq|THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
                FROM acc_trans ac
 	       JOIN chart c ON (c.id = ac.chart_id)
 	       WHERE ac.trans_id = a.id
 	       AND ac.approved = '1'|;
-    $paid .= qq|
+        $paid .= qq|
             AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
-	$paid .= qq|       
+        $paid .= qq|       
 			AND (c.link LIKE '%${ARAP}_paid%'
 	            OR c.link LIKE '%${ARAP}_discount%'
 		    OR c.link = ''|;
-	$paid .= qq|)) END|;
-    $form->{summary} = 1;
-    $form->{l_memo} = "";
-  }
+        $paid .= qq|)) END|;
+        $form->{summary} = 1;
+        $form->{l_memo}  = "";
+    }
 
-  my $taxfld = qq|SELECT sum(ac.amount)
+    my $taxfld = qq|SELECT sum(ac.amount)
 		  FROM acc_trans ac
 		  JOIN chart c ON (c.id = ac.chart_id)
 		  WHERE ac.trans_id = a.id
 		  AND ac.approved = '1'
 		  AND c.link LIKE '%_tax%'|;
-  $taxfld .= qq|
+    $taxfld .= qq|
                AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
-  
-  if (!$form->{summary} || $form->{l_memo}) {
-    $acc_trans_flds = qq|, c.accno, ac.source,
+
+    if ( !$form->{summary} || $form->{l_memo} ) {
+        $acc_trans_flds = qq|, c.accno, ac.source,
 			 pr.projectnumber, ac.memo,
 			 ac.amount AS linetotal,
 			 i.description AS linedescription, ac.fx_transaction|;
 
-    $acc_trans_join = qq|
+        $acc_trans_join = qq|
 	    JOIN acc_trans ac ON (a.id = ac.trans_id)
 	    JOIN chart c ON (c.id = ac.chart_id)
 	    LEFT JOIN project pr ON (pr.id = ac.project_id)
 	    LEFT JOIN invoice i ON (i.id = ac.id|;
-    $acc_trans_join .= qq| AND i.trans_id = a.id| if $form->{summary};
-    $acc_trans_join .= qq|)|;
-  }
-    
-  my $query = qq|SELECT a.id, a.invnumber, a.ordnumber, a.transdate,
+        $acc_trans_join .= qq| AND i.trans_id = a.id| if $form->{summary};
+        $acc_trans_join .= qq|)|;
+    }
+
+    my $query = qq|SELECT a.id, a.invnumber, a.ordnumber, a.transdate,
                  a.duedate, ($taxfld) * $ml AS tax,
-		 a.amount, ($paid) AS paid,
+		 a.amount, ($paid) AS paid, a.fxamount, a.fxpaid,
 		 a.invoice, a.datepaid, a.terms, a.notes, a.intnotes,
 		 a.shipvia, a.waybill, a.shippingpoint,
 		 e.name AS employee, vc.name, vc.$form->{vc}number,
@@ -983,270 +976,341 @@ sub transactions {
 	      $acc_trans_join
 	      |;
 
-  my %ordinal = ( id => 1,
-                  invnumber => 2,
-		  ordnumber => 3,
-		  transdate => 4,
-		  duedate => 5,
-		  paid => 8,
-		  datepaid => 10,
-		  shipvia => 14,
-		  waybill => 15,
-		  shippingpoint => 16,
-		  employee => 17,
-		  name => 18,
-		  customernumber => 19,
-		  vendornumber => 19,
-		  manager => 22,
-		  curr => 23,
-		  department => 25,
-		  ponumber => 26,
-		  warehouse => 28,
-		  description => 29,
-		  dcn => 30,
-		  paymentmethod => 31,
-		  paymentdiff => 32,
-		  accno => 38,
-		  source => 39,
-		  project => 40
-		);
+    my %ordinal = (
+        id             => 1,
+        invnumber      => 2,
+        ordnumber      => 3,
+        transdate      => 4,
+        duedate        => 5,
+        paid           => 8,
+        datepaid       => 10,
+        shipvia        => 14,
+        waybill        => 15,
+        shippingpoint  => 16,
+        employee       => 17,
+        name           => 18,
+        customernumber => 19,
+        vendornumber   => 19,
+        manager        => 22,
+        curr           => 23,
+        department     => 25,
+        ponumber       => 26,
+        warehouse      => 28,
+        description    => 29,
+        dcn            => 30,
+        paymentmethod  => 31,
+        paymentdiff    => 32,
+        accno          => 38,
+        source         => 39,
+        project        => 40
+    );
 
-  
-  my @a = (transdate, invnumber, name);
-  push @a, "employee" if $form->{l_employee};
-  push @a, "manager" if $form->{l_manager};
-  my $sortorder = $form->sort_order(\@a, \%ordinal);
+    my @a = ( transdate, invnumber, name );
+    push @a, "employee" if $form->{l_employee};
+    push @a, "manager"  if $form->{l_manager};
+    my $sortorder = $form->sort_order( \@a, \%ordinal );
 
-  my $where = "a.approved = '1'";
-  if ($form->{"$form->{vc}_id"}) {
-    $where .= qq| AND a.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
-  } else {
-    if ($form->{$form->{vc}}) {
-      $var = $form->like(lc $form->{$form->{vc}});
-      $where .= " AND lower(vc.name) LIKE ".$dbh->quote($var)."";
-    }
-    if ($form->{"$form->{vc}number"}) {
-      $var = $form->like(lc $form->{"$form->{vc}number"});
-      $where .= " AND lower(vc.$form->{vc}number) LIKE ".$dbh->quote($var)."";
-    }
-  }
-  for (qw(warehouse department employee)) {
-  	$form->{$_} = $form->dbclean($form->{$_});
-    if ($form->{$_}) {
-      ($null, $var) = split /--/, $form->{$_};
-      $where .= " AND a.${_}_id = ".$form->dbclean($var);
-    }
-  }
-
-  for (qw(invnumber ordnumber)) {
-    if ($form->{$_}) {
-      $var = $form->like(lc $form->{$_});
-      $where .= " AND lower(a.$_) LIKE ".$dbh->quote($var)."";
-    }
-  }
-  for (qw(ponumber shipvia shippingpoint waybill notes description)) {
-    if ($form->{$_}) {
-      $var = $form->like(lc $form->{$_});
-      $where .= " AND lower(a.$_) LIKE ".$dbh->quote($var)."";
-    }
-  }
-  if ($form->{memo}) {
-    if ($acc_trans_flds) {
-      $var = $form->like(lc $form->{memo});
-      $where .= " AND lower(ac.memo) LIKE ".$dbh->quote($var)."
-		  OR lower(i.description) LIKE ".$dbh->quote($var)."";
+    my $where = "a.approved = '1'";
+    if ( $form->{"$form->{vc}_id"} ) {
+        $where .= qq| AND a.$form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
     } else {
-      $where .= " AND a.id = 0";
+        if ( $form->{ $form->{vc} } ) {
+            $var = $form->like( lc $form->{ $form->{vc} } );
+            $where .= " AND lower(vc.name) LIKE " . $dbh->quote($var) . "";
+        }
+        if ( $form->{"$form->{vc}number"} ) {
+            $var = $form->like( lc $form->{"$form->{vc}number"} );
+            $where .= " AND lower(vc.$form->{vc}number) LIKE " . $dbh->quote($var) . "";
+        }
     }
-  }
-  if ($form->{source}) {
-    if ($acc_trans_flds) {
-      $var = $form->like(lc $form->{source});
-      $where .= " AND lower(ac.source) LIKE ".$dbh->quote($var)."";
-    } else {
-      $where .= " AND a.id = 0";
+    for (qw(warehouse department employee)) {
+        $form->{$_} = $form->dbclean( $form->{$_} );
+        if ( $form->{$_} ) {
+            ( $null, $var ) = split /--/, $form->{$_};
+            $where .= " AND a.${_}_id = " . $form->dbclean($var);
+        }
     }
-  }
 
-  if ($form->{currency}) {
-     $where .= " AND a.curr = ".$dbh->quote($form->{currency})."";
-  }
-
-
-  $form->{transdatefrom} = $form->dbclean($form->{transdatefrom});
-  $form->{transdateto} = $form->dbclean($form->{transdateto});
-  $where .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
-  $where .= " AND a.transdate <= '$form->{transdateto}'" if $form->{transdateto};
-
-  if ($form->{paidlate} || $form->{paidearly}) {
-    $form->{open} = 0;
-    $form->{closed} = 1;
-    if ($form->{paidlate}) {
-      $where .= " AND a.datepaid > a.duedate" unless $form->{paidearly};
+    for (qw(invnumber ordnumber)) {
+        if ( $form->{$_} ) {
+            $var = $form->like( lc $form->{$_} );
+            $where .= " AND lower(a.$_) LIKE " . $dbh->quote($var) . "";
+        }
     }
-    if ($form->{paidearly}) {
-      $where .= " AND a.datepaid <= a.duedate" unless $form->{paidlate};
+    for (qw(ponumber shipvia shippingpoint waybill notes description)) {
+        if ( $form->{$_} ) {
+            $var = $form->like( lc $form->{$_} );
+            $where .= " AND lower(a.$_) LIKE " . $dbh->quote($var) . "";
+        }
     }
-  }
-
-  if ($form->{onhold}) {
-    $where .= " AND a.onhold = '1'";
-  }
-
-  if ($form->{open} || $form->{closed}) {
-    if ($form->{open}) {
-      $where .= " AND a.amount != a.paid" unless $form->{closed};
+    if ( $form->{memo} ) {
+        if ($acc_trans_flds) {
+            $var = $form->like( lc $form->{memo} );
+            $where .= " AND lower(ac.memo) LIKE " . $dbh->quote($var) . "
+		  OR lower(i.description) LIKE " . $dbh->quote($var) . "";
+        } else {
+            $where .= " AND a.id = 0";
+        }
     }
-    if ($form->{closed}) {
-      $where .= " AND a.amount = a.paid" unless $form->{open};
+    if ( $form->{source} ) {
+        if ($acc_trans_flds) {
+            $var = $form->like( lc $form->{source} );
+            $where .= " AND lower(ac.source) LIKE " . $dbh->quote($var) . "";
+        } else {
+            $where .= " AND a.id = 0";
+        }
     }
-  }
 
-  if ($form->{till} ne "") {
-    $where .= " AND a.invoice = '1'
+    if ( $form->{currency} ) {
+        $where .= " AND a.curr = " . $dbh->quote( $form->{currency} ) . "";
+    }
+
+    $form->{transdatefrom} = $form->dbclean( $form->{transdatefrom} );
+    $form->{transdateto}   = $form->dbclean( $form->{transdateto} );
+    $where .= " AND a.transdate >= '$form->{transdatefrom}'" if $form->{transdatefrom};
+    $where .= " AND a.transdate <= '$form->{transdateto}'"   if $form->{transdateto};
+
+    if ( $form->{paidlate} || $form->{paidearly} ) {
+        $form->{open}   = 0;
+        $form->{closed} = 1;
+        if ( $form->{paidlate} ) {
+            $where .= " AND a.datepaid > a.duedate" unless $form->{paidearly};
+        }
+        if ( $form->{paidearly} ) {
+            $where .= " AND a.datepaid <= a.duedate" unless $form->{paidlate};
+        }
+    }
+
+    if ( $form->{onhold} ) {
+        $where .= " AND a.onhold = '1'";
+    }
+
+    if ( $form->{open} || $form->{closed} ) {
+        if ( $form->{open} ) {
+            $where .= " AND a.amount != a.paid" unless $form->{closed};
+        }
+        if ( $form->{closed} ) {
+            $where .= " AND a.amount = a.paid" unless $form->{open};
+        }
+    }
+
+    if ( $form->{till} ne "" ) {
+        $where .= " AND a.invoice = '1'
                 AND a.till IS NOT NULL";
-    if ($myconfig->{role} eq 'user') {
-      my $user = $form->{login};
-      $user =~ s/@.*//;
-      $where .= " AND e.login = ".$dbh->quote($user);
+        if ( $myconfig->{role} eq 'user' ) {
+            my $user = $form->{login};
+            $user =~ s/@.*//;
+            $where .= " AND e.login = " . $dbh->quote($user);
+        }
     }
-  }
 
-  if ($form->{$ARAP}) {
-    my ($accno) = split /--/, $form->{$ARAP};
-    $where .= qq|
+    if ( $form->{$ARAP} ) {
+        my ($accno) = split /--/, $form->{$ARAP};
+        $where .= qq|
                 AND a.id IN (SELECT ac.trans_id
 		             FROM acc_trans ac
 			     JOIN chart c ON (c.id = ac.chart_id)
 			     WHERE a.id = ac.trans_id
-			     AND c.accno = |.$dbh->quote($accno).qq|)
+			     AND c.accno = | . $dbh->quote($accno) . qq|)
 		|;
-  }
-  
-  if ($form->{memo}) {
-    $var = $form->like(lc $form->{memo});
-    $where .= qq| AND (a.id IN (SELECT DISTINCT trans_id
+    }
+
+    if ( $form->{memo} ) {
+        $var = $form->like( lc $form->{memo} );
+        $where .= qq| AND (a.id IN (SELECT DISTINCT trans_id
                                 FROM acc_trans
 				WHERE lower(memo) LIKE '$var')
 		       OR a.id IN (SELECT DISTINCT trans_id
 		                FROM invoice
 				WHERE lower(description) LIKE '$var'))|;
-  }
+    }
 
-  $query .= "
+    $query .= "
              WHERE $where
              ORDER by $sortorder";
-  $form->{query} = $query;  
+    $form->{query} = $query;
 
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my $i = -1;
-  my $sameid;
-    
-    
- 
-  while (my $ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $ref->{exchangerate} ||= 1;
-    if ($ref->{linetotal} <= 0) {
-      $ref->{debit} = $ref->{linetotal} * -1;
-      $ref->{credit} = 0;
-    } else {
-      $ref->{debit} = 0;
-      $ref->{credit} = $ref->{linetotal};
+    my $i = -1;
+    my $sameid;
+
+    while ( my $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $ref->{exchangerate} ||= 1;
+        if ( $ref->{linetotal} <= 0 ) {
+            $ref->{debit}  = $ref->{linetotal} * -1;
+            $ref->{credit} = 0;
+        } else {
+            $ref->{debit}  = 0;
+            $ref->{credit} = $ref->{linetotal};
+        }
+
+        if ( $ref->{invoice} ) {
+            $ref->{memo} ||= $ref->{linedescription};
+        }
+
+        $ref->{netamount} = $ref->{amount} - $ref->{tax};
+
+        if ( $form->{outstanding} ) {
+            next if $form->round_amount( $ref->{amount}, $form->{precision} ) == $form->round_amount( $ref->{paid}, $form->{precision} );
+        }
+
+        for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
+
+        if ( $form->{summary} ) {
+            if ( $sameid != $ref->{id} ) {
+                $i++;
+                push @{ $form->{transactions} }, $ref;
+            } else {
+                if ( $ref->{memo} && !$ref->{fx_transaction} ) {
+                    if ( $form->{transactions}[$i]->{memo} ) {
+                        $form->{transactions}[$i]->{memo} .= "\n";
+                    }
+                    $form->{transactions}[$i]->{memo} .= $ref->{memo};
+                }
+            }
+        } else {
+            push @{ $form->{transactions} }, $ref;
+        }
+        $sameid = $ref->{id};
     }
 
-    if ($ref->{invoice}) {
-      $ref->{memo} ||= $ref->{linedescription};
+    $sth->finish;
+
+    # Capture the date used in the query
+    if ( $query =~ /a\.transdate <= '(\d{2}-\d{2}-\d{4})'/ ) {
+        my $date = $1;
+
+        # Replace 'a.transdate' with 'ac.transdate' in the first line and elsewhere as necessary
+        $query =~ s/\ba\.transdate\b/ac.transdate/;
+
+        # Modify the query to change the FROM clause
+        $query =~ s/FROM ar a/FROM acc_trans ac\nJOIN ar a ON a.id = ac.trans_id/;
+
+        # Modify the query to replace the amount calculation with a subquery
+        $query =~
+s/a\.amount, / (SELECT sum(ac.amount)\nFROM acc_trans ac\nJOIN chart c ON \(c.id = ac.chart_id\)\nWHERE ac.trans_id = a.id\nAND ac.approved = '1'\nAND c.link = '$ARAP'\nAND ac.transdate <= '$date'\nAND amount * $ml < 0) * $ml AS amount,/;
+
+        # Modify the WHERE clause to add new conditions
+        $query =~
+s/WHERE a.approved = '1'/WHERE a.approved = '1'\nAND ac.transdate < a.transdate\nAND ac.chart_id IN \(SELECT id FROM chart WHERE link LIKE '%_paid%'\) AND ac.transdate <= '$date'\nAND a.id NOT IN \(SELECT id FROM ar WHERE transdate <= '$date' AND amount - paid <> 0\)/;
+
+        # Replace 'a.transdate' with 'ac.transdate' in the final comparison
+        $query =~ s/AND a.transdate <= '$date'/AND ac.transdate <= '$date'/g;
+
+        #### repeated code block starts
+        my $sth = $dbh->prepare($query);
+        $sth->execute || $form->dberror($query);
+
+        my $i = -1;
+        my $sameid;
+
+        while ( my $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+            $ref->{exchangerate} ||= 1;
+            if ( $ref->{linetotal} <= 0 ) {
+                $ref->{debit}  = $ref->{linetotal} * -1;
+                $ref->{credit} = 0;
+            } else {
+                $ref->{debit}  = 0;
+                $ref->{credit} = $ref->{linetotal};
+            }
+
+            if ( $ref->{invoice} ) {
+                $ref->{memo} ||= $ref->{linedescription};
+            }
+
+            $ref->{netamount} = $ref->{amount} - $ref->{tax};
+
+            if ( $form->{outstanding} ) {
+                next if $form->round_amount( $ref->{amount}, $form->{precision} ) == $form->round_amount( $ref->{paid}, $form->{precision} );
+            }
+
+            for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
+
+            if ( $form->{summary} ) {
+                if ( $sameid != $ref->{id} ) {
+                    $i++;
+                    push @{ $form->{transactions} }, $ref;
+                } else {
+                    if ( $ref->{memo} && !$ref->{fx_transaction} ) {
+                        if ( $form->{transactions}[$i]->{memo} ) {
+                            $form->{transactions}[$i]->{memo} .= "\n";
+                        }
+                        $form->{transactions}[$i]->{memo} .= $ref->{memo};
+                    }
+                }
+            } else {
+                push @{ $form->{transactions} }, $ref;
+            }
+            $sameid = $ref->{id};
+        }
+
+        $sth->finish;
+        #### repeated code block ends
     }
 
-    $ref->{netamount} = $ref->{amount} - $ref->{tax};
-
-    if ($form->{outstanding}) {
-      next if $form->round_amount($ref->{amount}, $form->{precision}) == $form->round_amount($ref->{paid}, $form->{precision});
-    }
-
-    for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
-    
-    if ($form->{summary}) {
-      if ($sameid != $ref->{id}) {
-	$i++;
-	push @{ $form->{transactions} }, $ref;
-      } else {
-        if ($ref->{memo} && ! $ref->{fx_transaction}) {
-	  if ($form->{transactions}[$i]->{memo}) {
-	    $form->{transactions}[$i]->{memo} .= "\n";
-	  }
-	  $form->{transactions}[$i]->{memo} .= $ref->{memo};
-	}
-      }
-    } else {
-      push @{ $form->{transactions} }, $ref;
-    }
-    $sameid = $ref->{id};
-  }
-  
-  $sth->finish;
-  $dbh->disconnect;
+    $dbh->disconnect;
 
 }
 
-
 # this is also used in IS, IR to retrieve the name
 sub get_name {
-  my ($self, $myconfig, $form, $dbh) = @_;
-  
-  my $disconnect = ($dbh) ? 0 : 1;
+    my ( $self, $myconfig, $form, $dbh ) = @_;
 
-  # connect to database
-  $dbh = $form->dbconnect($myconfig) unless $dbh;
-  
-  my $dateformat = $myconfig->{dateformat};
-  if ($myconfig->{dateformat} !~ /^y/) {
-    my @a = split /\W/, $form->{transdate};
-    $dateformat .= "yy" if (length $a[2] > 2);
-  }
-  
-  if ($form->{transdate} !~ /\W/) {
-    $dateformat = 'yyyymmdd';
-  }
-  
-  my $duedate;
-  
-  if ($myconfig->{dbdriver} eq 'DB2') {
-    $duedate = ($form->{transdate}) ? "date('$form->{transdate}') + c.terms DAYS" : "current_date + c.terms DAYS";
-  } elsif ($myconfig->{dbdriver} eq 'mssql') {
-    if ($form->{transdate}) {
-      my $transdate = $form->datetonum($myconfig, $form->{transdate});
-      $duedate = "date_add('$transdate', interval c.terms DAY)";
-    } else {
-      $duedate = "date_add(current_date, interval c.terms DAY)";
+    my $disconnect = ($dbh) ? 0 : 1;
+
+    # connect to database
+    $dbh = $form->dbconnect($myconfig) unless $dbh;
+
+    my $dateformat = $myconfig->{dateformat};
+    if ( $myconfig->{dateformat} !~ /^y/ ) {
+        my @a = split /\W/, $form->{transdate};
+        $dateformat .= "yy" if ( length $a[2] > 2 );
     }
-  } else {
-    $duedate = ($form->{transdate}) ? "to_date('$form->{transdate}', '$dateformat') + c.terms" : "current_date + c.terms";
-  }
 
-  $form->{"$form->{vc}_id"} *= 1;
+    if ( $form->{transdate} !~ /\W/ ) {
+        $dateformat = 'yyyymmdd';
+    }
 
-  my $arap = "ar";
-  my $buysell = "buy";
-  $form->{vc} = 'customer' if $form->{vc} ne 'vendor';
+    my $duedate;
 
-  if ($form->{vc} eq 'vendor') {
-    $arap = "ap";
-    $buysell = "sell";
-  }
-  my $ARAP = uc $arap;
-  # ISNA: 00022 tekki
-  $form->{ARAP} = $ARAP;
-  # ISNA_end
-  
-  # get customer/vendor
-  # also get shipto if we did not convert an order or invoice
-  my $shipto = ", s.*" if ! $form->{shipto};
-  my $shiptojoin = qq|LEFT JOIN shipto s ON (s.trans_id = c.id)|;
- 
-  my $query = qq|SELECT c.name AS $form->{vc}, c.$form->{vc}number,
+    if ( $myconfig->{dbdriver} eq 'DB2' ) {
+        $duedate = ( $form->{transdate} ) ? "date('$form->{transdate}') + c.terms DAYS" : "current_date + c.terms DAYS";
+    } elsif ( $myconfig->{dbdriver} eq 'mssql' ) {
+        if ( $form->{transdate} ) {
+            my $transdate = $form->datetonum( $myconfig, $form->{transdate} );
+            $duedate = "date_add('$transdate', interval c.terms DAY)";
+        } else {
+            $duedate = "date_add(current_date, interval c.terms DAY)";
+        }
+    } else {
+        $duedate = ( $form->{transdate} ) ? "to_date('$form->{transdate}', '$dateformat') + c.terms" : "current_date + c.terms";
+    }
+
+    $form->{"$form->{vc}_id"} *= 1;
+
+    my $arap    = "ar";
+    my $buysell = "buy";
+    $form->{vc} = 'customer' if $form->{vc} ne 'vendor';
+
+    if ( $form->{vc} eq 'vendor' ) {
+        $arap    = "ap";
+        $buysell = "sell";
+    }
+    my $ARAP = uc $arap;
+
+    # ISNA: 00022 tekki
+    $form->{ARAP} = $ARAP;
+
+    # ISNA_end
+
+    # get customer/vendor
+    # also get shipto if we did not convert an order or invoice
+    my $shipto     = ", s.*" if !$form->{shipto};
+    my $shiptojoin = qq|LEFT JOIN shipto s ON (s.trans_id = c.id)|;
+
+    my $query = qq|SELECT c.name AS $form->{vc}, c.$form->{vc}number,
                  c.discount, c.creditlimit, c.terms,
                  c.email, c.cc, c.bcc, c.taxincluded,
 		 ad.address1, ad.address2, ad.city, ad.state,
@@ -1273,85 +1337,85 @@ sub get_name {
 		 LEFT JOIN translation t3 ON (t3.trans_id = c3.id AND t3.language_code = '$myconfig->{countrycode}')
 		 LEFT JOIN paymentmethod pm ON (pm.id = c.paymentmethod_id)
 		 $shiptojoin
-	         WHERE c.id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+	         WHERE c.id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  $ref = $sth->fetchrow_hashref(NAME_lc);
-  
-  $ref->{arap_accno} .= qq|--|;
-  $ref->{arap_accno} .= ($ref->{arap_accno_translation}) ? $ref->{arap_accno_translation} : $ref->{arap_accno_description};
-  $ref->{payment_accno} .= qq|--|;
-  $ref->{payment_accno} .= ($ref->{payment_accno_translation}) ? $ref->{payment_accno_translation} : $ref->{payment_accno_description};
-  $ref->{discount_accno} .= qq|--|;
-  $ref->{discount_accno} .= ($ref->{discount_accno_translation}) ? $ref->{discount_accno_translation} : $ref->{discount_accno_description};
-  $ref->{payment_method} .= qq|--$ref->{paymentmethod_id}|;
-  
-  $form->{$ARAP} = $ref->{arap_accno} if $ref->{arap_accno} ne '--';
+    $ref = $sth->fetchrow_hashref(NAME_lc);
 
-  for (qw(trans_id arap_accno)) { delete $ref->{$_} }
+    $ref->{arap_accno}     .= qq|--|;
+    $ref->{arap_accno}     .= ( $ref->{arap_accno_translation} ) ? $ref->{arap_accno_translation} : $ref->{arap_accno_description};
+    $ref->{payment_accno}  .= qq|--|;
+    $ref->{payment_accno}  .= ( $ref->{payment_accno_translation} ) ? $ref->{payment_accno_translation} : $ref->{payment_accno_description};
+    $ref->{discount_accno} .= qq|--|;
+    $ref->{discount_accno} .= ( $ref->{discount_accno_translation} ) ? $ref->{discount_accno_translation} : $ref->{discount_accno_description};
+    $ref->{payment_method} .= qq|--$ref->{paymentmethod_id}|;
 
-  if ($form->{id}) {
-    for (qw(currency employee employee_id)) { delete $ref->{$_} }
-  }
- 
-  $ref->{language_code} = $form->{language_code} if $form->{id}; # Use language_code saved with transaction
-  delete $ref->{intnotes} if $form->{intnotes};
-  for (keys %$ref) { $form->{$_} = $ref->{$_} }
-  $sth->finish;
-  
-  # if no currency use defaultcurrency
-  $form->{currency} = ($form->{currency}) ? $form->{currency} : $form->{defaultcurrency};
-  delete $form->{exchangerate};
-  if ($form->{transdate} && ($form->{currency} ne $form->{defaultcurrency})) {
-    $form->{exchangerate} = $form->get_exchangerate($myconfig, $dbh, $form->{currency}, $form->{transdate}, $buysell);
-  }
-  
-  # if no employee, default to login
-  ($form->{employee}, $form->{employee_id}) = $form->get_employee($dbh) unless $form->{employee_id};
-  
-  # credit remaining calculation; this should go into a field
-  # to speed up db access
-  $form->{creditremaining} = $form->{creditlimit};
+    $form->{$ARAP} = $ref->{arap_accno} if $ref->{arap_accno} ne '--';
 
-  $query = qq|SELECT SUM(a.amount - a.paid)
+    for (qw(trans_id arap_accno)) { delete $ref->{$_} }
+
+    if ( $form->{id} ) {
+        for (qw(currency employee employee_id)) { delete $ref->{$_} }
+    }
+
+    $ref->{language_code} = $form->{language_code} if $form->{id};         # Use language_code saved with transaction
+    delete $ref->{intnotes}                        if $form->{intnotes};
+    for ( keys %$ref ) { $form->{$_} = $ref->{$_} }
+    $sth->finish;
+
+    # if no currency use defaultcurrency
+    $form->{currency} = ( $form->{currency} ) ? $form->{currency} : $form->{defaultcurrency};
+    delete $form->{exchangerate};
+    if ( $form->{transdate} && ( $form->{currency} ne $form->{defaultcurrency} ) ) {
+        $form->{exchangerate} = $form->get_exchangerate( $myconfig, $dbh, $form->{currency}, $form->{transdate}, $buysell );
+    }
+
+    # if no employee, default to login
+    ( $form->{employee}, $form->{employee_id} ) = $form->get_employee($dbh) unless $form->{employee_id};
+
+    # credit remaining calculation; this should go into a field
+    # to speed up db access
+    $form->{creditremaining} = $form->{creditlimit};
+
+    $query = qq|SELECT SUM(a.amount - a.paid)
 	      FROM $arap a
 	      WHERE a.amount != a.paid
-	      AND $form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
-  my ($amount) = $dbh->selectrow_array($query);
-  $form->{creditremaining} -= $amount;
-	      
-  $query = qq|SELECT SUM(a.amount)
+	      AND $form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
+    my ($amount) = $dbh->selectrow_array($query);
+    $form->{creditremaining} -= $amount;
+
+    $query = qq|SELECT SUM(a.amount)
 	      FROM oe a
 	      WHERE a.quotation = '0'
 	      AND a.closed = '0'
-	      AND a.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
-  ($amount) = $dbh->selectrow_array($query);
-  $form->{creditremaining} -= $amount;
+	      AND a.$form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
+    ($amount) = $dbh->selectrow_array($query);
+    $form->{creditremaining} -= $amount;
 
-  # get taxes
-  $query = qq|SELECT c.accno
+    # get taxes
+    $query = qq|SELECT c.accno
               FROM chart c
 	      JOIN $form->{vc}tax ct ON (ct.chart_id = c.id)
-	      WHERE ct.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
-  $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+	      WHERE ct.$form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  my %tax;
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    $tax{$ref->{accno}} = 1;
-  }
-  $sth->finish;
+    my %tax;
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        $tax{ $ref->{accno} } = 1;
+    }
+    $sth->finish;
 
-  my $where;
-  if ($form->{transdate}) {
-    $where = qq|AND (t.validto >= '$form->{transdate}' OR t.validto IS NULL)|;
-  } else {
-    $where = qq|AND t.validto IS NULL|; 
-  }
-	      
-  # get tax rates and description
-  $query = qq|SELECT c.accno, c.description, t.rate, t.taxnumber,
+    my $where;
+    if ( $form->{transdate} ) {
+        $where = qq|AND (t.validto >= '$form->{transdate}' OR t.validto IS NULL)|;
+    } else {
+        $where = qq|AND t.validto IS NULL|;
+    }
+
+    # get tax rates and description
+    $query = qq|SELECT c.accno, c.description, t.rate, t.taxnumber,
               l.description AS translation
 	      FROM chart c
 	      JOIN tax t ON (c.id = t.chart_id)
@@ -1359,41 +1423,41 @@ sub get_name {
 	      WHERE c.link LIKE '%${ARAP}_tax%'
 	      $where
 	      ORDER BY accno, validto|;
-  $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  $form->{taxaccounts} = "";
-  my %a = ();
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    if ($tax{$ref->{accno}}) {
-      if (not exists $a{$ref->{accno}}) {
-	$ref->{description} = $ref->{translation} if $ref->{translation};
-	for (qw(rate description taxnumber)) { $form->{"$ref->{accno}_$_"} = $ref->{$_} }
-	$form->{taxaccounts} .= "$ref->{accno} ";
-	$a{$ref->{accno}} = 1;
-      }
+    $form->{taxaccounts} = "";
+    my %a = ();
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        if ( $tax{ $ref->{accno} } ) {
+            if ( not exists $a{ $ref->{accno} } ) {
+                $ref->{description} = $ref->{translation} if $ref->{translation};
+                for (qw(rate description taxnumber)) { $form->{"$ref->{accno}_$_"} = $ref->{$_} }
+                $form->{taxaccounts} .= "$ref->{accno} ";
+                $a{ $ref->{accno} } = 1;
+            }
+        }
     }
-  }
-  $sth->finish;
-  chop $form->{taxaccounts};
+    $sth->finish;
+    chop $form->{taxaccounts};
 
-  # setup last accounts used for this customer/vendor
-  if (!$form->{id}) {
-    for (qw(department_id department)) { delete $form->{$_} }
-    
-    if ($form->{type} =~ /_(order|quotation)/) {
-      $query = qq|SELECT MAX(o.id),
+    # setup last accounts used for this customer/vendor
+    if ( !$form->{id} ) {
+        for (qw(department_id department)) { delete $form->{$_} }
+
+        if ( $form->{type} =~ /_(order|quotation)/ ) {
+            $query = qq|SELECT MAX(o.id),
                   o.department_id, d.description AS department,
 		  o.warehouse_id, d.description AS warehouse
 		  FROM oe o
 		  LEFT JOIN department d ON (d.id = o.department_id)
 		  LEFT JOIN warehouse w ON (w.id = o.warehouse_id)
-		  WHERE o.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
+		  WHERE o.$form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq|
 		  GROUP BY o.department_id, department,
 		  o.warehouse_id, warehouse
 |;
-    } elsif ($form->{type} =~ /invoice/) {
-      $query = qq|SELECT c.accno, c.description,
+        } elsif ( $form->{type} =~ /invoice/ ) {
+            $query = qq|SELECT c.accno, c.description,
 		  a.department_id, d.description AS department,
 		  a.warehouse_id, d.description AS warehouse,
 		  l.description AS translation
@@ -1405,9 +1469,9 @@ sub get_name {
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		  WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
 		  AND a.id IN (SELECT max(id) FROM $arap
-			       WHERE $form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|)|;
-    } else {
-      $query = qq|SELECT c.accno, c.description, c.link, c.category,
+			       WHERE $form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq|)|;
+        } else {
+            $query = qq|SELECT c.accno, c.description, c.link, c.category,
 		  ac.project_id, p.projectnumber, a.department_id,
 		  d.description AS department,
 		  l.description AS translation
@@ -1419,59 +1483,59 @@ sub get_name {
 		  LEFT JOIN translation l ON (l.trans_id = c.id AND l.language_code = '$myconfig->{countrycode}')
 		  WHERE a.$form->{vc}_id = $form->{"$form->{vc}_id"}
 		  AND a.id IN (SELECT max(id) FROM $arap
-			       WHERE $form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|)|;
-    }
+			       WHERE $form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq|)|;
+        }
 
-    $sth = $dbh->prepare($query);
-    $sth->execute || $form->dberror($query);
+        $sth = $dbh->prepare($query);
+        $sth->execute || $form->dberror($query);
 
-    my $i = 0;
-    while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-      $form->{department} = $ref->{department};
-      $form->{department_id} = $ref->{department_id};
+        my $i = 0;
+        while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+            $form->{department}    = $ref->{department};
+            $form->{department_id} = $ref->{department_id};
 
-      $form->{warehouse} = $ref->{warehouse};
-      $form->{warehouse_id} = $ref->{warehouse_id};
-      
-      $ref->{description} = $ref->{translation} if $ref->{translation};
-      if ($ref->{link} =~ /_amount/) {
-	$i++;
-	next if $form->{"amount_$i"};
-	$form->{"${ARAP}_amount_$i"} = "$ref->{accno}--$ref->{description}" if $ref->{accno};
-	$form->{"projectnumber_$i"} = "$ref->{projectnumber}--$ref->{project_id}" if $ref->{project_id};
-      }
-    }
-    $sth->finish;
-    $form->{rowcount} = $i if ($i && !$form->{type});
+            $form->{warehouse}    = $ref->{warehouse};
+            $form->{warehouse_id} = $ref->{warehouse_id};
 
-    # armaghan 26/06/15 override department with the one specified for the customer
-    my ($department_id, $department) = $dbh->selectrow_array(qq|
+            $ref->{description} = $ref->{translation} if $ref->{translation};
+            if ( $ref->{link} =~ /_amount/ ) {
+                $i++;
+                next if $form->{"amount_$i"};
+                $form->{"${ARAP}_amount_$i"} = "$ref->{accno}--$ref->{description}"        if $ref->{accno};
+                $form->{"projectnumber_$i"}  = "$ref->{projectnumber}--$ref->{project_id}" if $ref->{project_id};
+            }
+        }
+        $sth->finish;
+        $form->{rowcount} = $i if ( $i && !$form->{type} );
+
+        # armaghan 26/06/15 override department with the one specified for the customer
+        my ( $department_id, $department ) = $dbh->selectrow_array(
+            qq|
         SELECT id, description FROM department WHERE id IN (
             SELECT department_id FROM dpt_trans WHERE trans_id = $form->{"$form->{vc}_id"}
         )|
-    );
-    if ($department_id){
-       $form->{department} = "$department--$department_id";
-       $form->{department_id} = $department_id;
+        );
+        if ($department_id) {
+            $form->{department}    = "$department--$department_id";
+            $form->{department_id} = $department_id;
+        }
     }
-  }
-  $dbh->disconnect if $disconnect;
-  
-}
+    $dbh->disconnect if $disconnect;
 
+}
 
 ############# add addressid, contactid for multiple addresses and contacts
 sub company_details {
-  my ($self, $myconfig, $form, $dbh) = @_;
+    my ( $self, $myconfig, $form, $dbh ) = @_;
 
-  my $disconnect = ($dbh) ? 0 : 1;
-  
-  # connect to database
-  $dbh = $form->dbconnect($myconfig) unless $dbh;
-  
-  # get rest for the customer/vendor
-  $form->{"$form->{vc}_id"} *= 1;
-  my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2, ad.post_office,
+    my $disconnect = ($dbh) ? 0 : 1;
+
+    # connect to database
+    $dbh = $form->dbconnect($myconfig) unless $dbh;
+
+    # get rest for the customer/vendor
+    $form->{"$form->{vc}_id"} *= 1;
+    my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2, ad.post_office,
                  ad.city, ad.state, ad.zipcode, ad.country,
 	         ct.contact, ct.phone as $form->{vc}phone,
 		 ct.fax as $form->{vc}fax,
@@ -1481,89 +1545,88 @@ sub company_details {
 	         FROM $form->{vc} ct
 		 JOIN address ad ON (ad.trans_id = ct.id)
 		 LEFT JOIN paymentmethod pm ON (pm.id = ct.paymentmethod_id)
-	         WHERE ct.id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
+	         WHERE ct.id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  $ref = $sth->fetchrow_hashref(NAME_lc);
-  for (keys %$ref) { $form->{$_} = $ref->{$_} }
-  $sth->finish;
-
-  $query = qq|SELECT * FROM contact
-              WHERE trans_id = $form->{"$form->{vc}_id"}|;
-  $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
-  $ref = $sth->fetchrow_hashref(NAME_lc);
-  for (qw(firstname lastname salutation contacttitle occupation typeofcontact gender)) { $form->{$_} = $ref->{$_} }
-  $form->{contact} = "$form->{firstname} $form->{lastname}";
-  for (qw(phone fax mobile)) { $form->{"$form->{vc}$_"} ||= $ref->{$_} }
-  $sth->finish;
-  
-  my ($null, $id) = split /--/, $form->{employee};
-  $id *= 1;
-  $query = qq|SELECT workphone, workfax, workmobile
-              FROM employee
-              WHERE id = |.$form->dbclean($id).qq||;
-  ($form->{workphone}, $form->{workfax}, $form->{workmobile}) = $dbh->selectrow_array($query);
-
-  my @a = qw(weightunit cdt company companyemail companywebsite address tel fax businessnumber);
-  my %defaults = $form->get_defaults($dbh, \@a);
-  for (@a) { $form->{$_} = $defaults{$_} }
-
-  if ($form->{warehouse_id} *= 1) {
-    $query = qq|SELECT address1, address2, city, state, zipcode, country
-		FROM address
-		WHERE trans_id = |.$form->dbclean($form->{warehouse_id}).qq||;
-    $sth = $dbh->prepare($query) || $form->dberror($query);
-    $sth->execute;
     $ref = $sth->fetchrow_hashref(NAME_lc);
-
-    for (keys %$ref) { $form->{"warehouse$_"} = $ref->{$_} }
+    for ( keys %$ref ) { $form->{$_} = $ref->{$_} }
     $sth->finish;
-  }
-   
-  # banking details
-  if ($form->{vc} eq 'customer') {
-    my ($paymentaccno) = split /--/, $form->{"AR_paid_$form->{paidaccounts}"};
-    $query = qq|SELECT bk.*, ad.*
+
+    $query = qq|SELECT * FROM contact
+              WHERE trans_id = $form->{"$form->{vc}_id"}|;
+    $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
+    $ref = $sth->fetchrow_hashref(NAME_lc);
+    for (qw(firstname lastname salutation contacttitle occupation typeofcontact gender)) { $form->{$_} = $ref->{$_} }
+    $form->{contact} = "$form->{firstname} $form->{lastname}";
+    for (qw(phone fax mobile)) { $form->{"$form->{vc}$_"} ||= $ref->{$_} }
+    $sth->finish;
+
+    my ( $null, $id ) = split /--/, $form->{employee};
+    $id *= 1;
+    $query = qq|SELECT workphone, workfax, workmobile
+              FROM employee
+              WHERE id = | . $form->dbclean($id) . qq||;
+    ( $form->{workphone}, $form->{workfax}, $form->{workmobile} ) = $dbh->selectrow_array($query);
+
+    my @a        = qw(weightunit cdt company companyemail companywebsite address tel fax businessnumber);
+    my %defaults = $form->get_defaults( $dbh, \@a );
+    for (@a) { $form->{$_} = $defaults{$_} }
+
+    if ( $form->{warehouse_id} *= 1 ) {
+        $query = qq|SELECT address1, address2, city, state, zipcode, country
+		FROM address
+		WHERE trans_id = | . $form->dbclean( $form->{warehouse_id} ) . qq||;
+        $sth = $dbh->prepare($query) || $form->dberror($query);
+        $sth->execute;
+        $ref = $sth->fetchrow_hashref(NAME_lc);
+
+        for ( keys %$ref ) { $form->{"warehouse$_"} = $ref->{$_} }
+        $sth->finish;
+    }
+
+    # banking details
+    if ( $form->{vc} eq 'customer' ) {
+        my ($paymentaccno) = split /--/, $form->{"AR_paid_$form->{paidaccounts}"};
+        $query = qq|SELECT bk.*, ad.*
 		FROM chart c
 		JOIN bank bk ON (c.id = bk.id)
 		JOIN address ad ON (c.id = ad.trans_id)
-		WHERE c.accno = |.$dbh->quote($paymentaccno).qq||;
-    $sth = $dbh->prepare($query) || $form->dberror($query);
-    $sth->execute;
-    $ref = $sth->fetchrow_hashref(NAME_lc);
+		WHERE c.accno = | . $dbh->quote($paymentaccno) . qq||;
+        $sth = $dbh->prepare($query) || $form->dberror($query);
+        $sth->execute;
+        $ref = $sth->fetchrow_hashref(NAME_lc);
 
-    for (keys %$ref) { $form->{"bank$_"} = $ref->{$_} }
-    $sth->finish;
-      
-    for (qw(iban bic membernumber rvc dcn)) { $form->{$_} = $form->{"bank$_"} };
-  }
+        for ( keys %$ref ) { $form->{"bank$_"} = $ref->{$_} }
+        $sth->finish;
 
-  $dbh->disconnect if $disconnect;
+        for (qw(iban bic membernumber rvc dcn)) { $form->{$_} = $form->{"bank$_"} }
+    }
+
+    $dbh->disconnect if $disconnect;
 
 }
 
-
 sub ship_to {
-  my ($self, $myconfig, $form) = @_;
+    my ( $self, $myconfig, $form ) = @_;
 
-  # connect to database
-  my $dbh = $form->dbconnect($myconfig);
+    # connect to database
+    my $dbh = $form->dbconnect($myconfig);
 
-  $form->{"$form->{vc}_id"} *= 1;
+    $form->{"$form->{vc}_id"} *= 1;
 
-  AA->company_details($myconfig, $form, $dbh);
+    AA->company_details( $myconfig, $form, $dbh );
 
-  my $table = ($form->{vc} eq 'customer') ? 'ar' : 'ap';
+    my $table = ( $form->{vc} eq 'customer' ) ? 'ar' : 'ap';
 
-  my $query = qq|SELECT
+    my $query = qq|SELECT
                  s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
 		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
-		 WHERE trans_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
+		 WHERE trans_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq|
 		 UNION
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
@@ -1572,7 +1635,7 @@ sub ship_to {
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
 		 JOIN oe o ON (o.id = s.trans_id)
-		 WHERE o.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq|
+		 WHERE o.$form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq|
 		 UNION
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
@@ -1581,10 +1644,10 @@ sub ship_to {
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
 		 JOIN $table a ON (a.id = s.trans_id)
-		 WHERE a.$form->{vc}_id = |.$form->dbclean($form->{"$form->{vc}_id"}).qq||;
+		 WHERE a.$form->{vc}_id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
 
-  if ($form->{id} *= 1) {
-    $query .= qq|
+    if ( $form->{id} *= 1 ) {
+        $query .= qq|
                  EXCEPT
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
@@ -1592,22 +1655,21 @@ sub ship_to {
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
 		 FROM shipto s
-		 WHERE s.trans_id = |.$form->dbclean($form->{id}).qq||;
-  }
+		 WHERE s.trans_id = | . $form->dbclean( $form->{id} ) . qq||;
+    }
 
-  my $sth = $dbh->prepare($query);
-  $sth->execute || $form->dberror($query);
-  
-  my $ref;
-  while ($ref = $sth->fetchrow_hashref(NAME_lc)) {
-    push @{ $form->{all_shipto} }, $ref;
-  }
-  $sth->finish;
+    my $sth = $dbh->prepare($query);
+    $sth->execute || $form->dberror($query);
 
-  $dbh->disconnect;
+    my $ref;
+    while ( $ref = $sth->fetchrow_hashref(NAME_lc) ) {
+        push @{ $form->{all_shipto} }, $ref;
+    }
+    $sth->finish;
+
+    $dbh->disconnect;
 
 }
-
 
 1;
 
