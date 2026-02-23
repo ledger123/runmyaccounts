@@ -995,33 +995,69 @@ sub post_payment {
 		  $dbh->do($query) || $form->dberror($query);
         }
       }
-      
-      if (($fxamount eq $fxpaid) and ($amount eq $paid) and ($form->{exchangerate} ne 1) ){
-          my ($correction2) = $dbh->selectrow_array(qq|SELECT SUM(amount) FROM acc_trans WHERE trans_id = $form->{"id_$i"}|);
-          $correction2 = (-1)*$correction2;
-          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-		            transdate, fx_transaction, approved, vr_id)
-		            VALUES ($form->{"id_$i"}, $defaults{fxloss_accno_id},
-			    $correction2, '|.$form->dbclean($form->{datepaid}).qq|', '1', '$approved', $voucherid)|;
-		  $dbh->do($query) || $form->dberror($query);
-      }
 
-      # Check if transaction is balanced and correct minor differences
-      my ($balance) = $dbh->selectrow_array(qq|
-        SELECT ABS(SUM(amount)) 
-        FROM acc_trans 
-        WHERE trans_id = $form->{"id_$i"}
+        # ROUNDING FIX
+        my ($arap) = $dbh->selectrow_array("SELECT id FROM chart WHERE link = 'AP' LIMIT 1");
+        my ($ap_credit) = $dbh->selectrow_array(qq|
+            SELECT COALESCE(SUM(amount), 0)
+            FROM acc_trans
+            WHERE trans_id = $form->{"id_$i"}
+            AND chart_id = $arap
+            AND amount > 0
+        |);
+        my ($ap_debit) = $dbh->selectrow_array(qq|
+            SELECT COALESCE(SUM(amount), 0)
+            FROM acc_trans
+            WHERE trans_id = $form->{"id_$i"}
+            AND chart_id = $arap
+            AND amount < 0
+        |);
+        my $ap_mismatch = $form->round_amount($ap_credit + $ap_debit, $form->{precision});
+
+        if ($ap_mismatch != 0) {
+          my $increase = $form->round_amount(-$ap_mismatch, $form->{precision});
+          $query = qq|
+              UPDATE acc_trans
+              SET    amount = amount + $increase
+              WHERE  trans_id  = $form->{"id_$i"}
+              AND    chart_id  = $arap
+              AND    amount    > 0
+              AND    entry_id  = (
+                  SELECT entry_id
+                  FROM   acc_trans
+                  WHERE  trans_id = $form->{"id_$i"}
+                  AND    chart_id = $arap
+                  AND    amount   > 0
+                  LIMIT  1
+              )
+          |;
+          $dbh->do($query) || $form->dberror($query);
+        }
+
+      my ($correction2) = $dbh->selectrow_array(qq|SELECT SUM(amount) FROM acc_trans WHERE trans_id = $form->{"id_$i"}|);
+      $correction2 = (-1)*$correction2;
+
+      my ($existing_gl_entry_id) = $dbh->selectrow_array(qq|
+          SELECT entry_id
+          FROM   acc_trans
+          WHERE  trans_id = $form->{"id_$i"}
+          AND    chart_id IN ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+          LIMIT  1
       |);
-      
-      if ($balance && $balance <= 1 && $balance > 0) {
-        my $correction = (-1) * $balance;
-        my $accno_id = ($correction > 0) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
-        
-        $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
-                    transdate, fx_transaction, approved, vr_id)
-                    VALUES ($form->{"id_$i"}, $accno_id,
-                    $correction, '|.$form->dbclean($form->{datepaid}).qq|', '1', '$approved', $voucherid)|;
-        $dbh->do($query) || $form->dberror($query);
+
+      if ($existing_gl_entry_id) {
+          $query = qq|
+              UPDATE acc_trans
+              SET    amount = amount + $correction2
+              WHERE  entry_id = $existing_gl_entry_id
+          |;
+          $dbh->do($query) || $form->dberror($query);
+      } else {
+          $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+                      transdate, fx_transaction, approved, vr_id)
+                      VALUES ($form->{"id_$i"}, $defaults{fxloss_accno_id},
+                      $correction2, '|.$form->dbclean($form->{datepaid}).qq|', '1', '$approved', $voucherid)|;
+          $dbh->do($query) || $form->dberror($query);
       }
 
       $query = qq|UPDATE acc_trans SET amount = ROUND(amount::numeric, 5) WHERE trans_id = $form->{"id_$i"}|;
