@@ -3122,11 +3122,14 @@ sub hide_form {
 sub error {
 	my ( $self, $msg, $dbmsg ) = @_;
 
-	# Standardized error log line for Apache / system logs
-	my $logtext = $dbmsg // $msg;
-	if (defined $logtext && $logtext ne '') {
-		print STDERR "Ledger DB Error: $logtext\n";
-	}
+    # Standardized error log line for Apache / system logs
+    my $logtext = $dbmsg // $msg;
+    if (defined $logtext && $logtext ne '') {
+        my $login  = $self->{login}  // '';
+        my $dbname = $self->{dbname} // $self->{db} // '';
+        print STDERR "Ledger DB Error: user=$login db=$dbname: $logtext\n";
+    }
+
 
 	if ( $ENV{HTTP_USER_AGENT} ) {
 		$self->{msg}    = $msg;
