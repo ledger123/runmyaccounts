@@ -86,9 +86,9 @@ if ($form->{path} ne "bin/mozilla" && $form->{path} ne "bin/lynx") {
 }
 
 # did sysadmin lock us out
-if (-f "$userspath/nologin") {
-  $form->error($locale->text('System currently down for maintenance!'));
-}
+#if (-f "$userspath/nologin") {
+#  $form->error($locale->text('System currently down for maintenance!'));
+#}
 
 # pull in the main code
 require "$form->{path}/$form->{script}";
@@ -224,5 +224,7 @@ sub check_password {
     }
   }
 }
+
+
 
 

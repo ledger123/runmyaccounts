@@ -87,26 +87,26 @@ if ($form->{path} ne "bin/mozilla" && $form->{path} ne "bin/lynx") {
 }
 
 # global lock out
-if (-f "$userspath/nologin") {
-  if (-s "$userspath/nologin") {
-    open(FH, "$userspath/nologin");
-    $message = <FH>;
-    close(FH);
-    $form->error($message);
-  }
-  $form->error($locale->text('System currently down for maintenance!'));
-}
+#if (-f "$userspath/nologin") {
+#  if (-s "$userspath/nologin") {
+#    open(FH, "$userspath/nologin");
+#    $message = <FH>;
+#    close(FH);
+#    $form->error($message);
+#  }
+#  $form->error($locale->text('System currently down for maintenance!'));
+#}
 
 # dataset lock out
-if (-f "$userspath/$myconfig{dbname}.nologin") {
-  if (-s "$userspath/$myconfig{dbname}.nologin") {
-    open(FH, "$userspath/$myconfig{dbname}.nologin");
-    $message = <FH>;
-    close(FH);
-    $form->error($message);
-  }
-  $form->error($locale->text('System currently down for maintenance!'));
-}
+#if (-f "$userspath/$myconfig{dbname}.nologin") {
+#  if (-s "$userspath/$myconfig{dbname}.nologin") {
+#    open(FH, "$userspath/$myconfig{dbname}.nologin");
+#    $message = <FH>;
+#    close(FH);
+#    $form->error($message);
+#  }
+#  $form->error($locale->text('System currently down for maintenance!'));
+#}
 
 # pull in the main code
 require "$form->{path}/$form->{script}";
