@@ -830,6 +830,14 @@ sub script_version {
 sub create_config {
   my ($self, $filename) = @_;
 
+  # DEBUG: log every attempt to create/update a user config file
+  my $logfile = 'spool/users_config_debug.log';
+  if (open(my $LOG, '>>', $logfile)) {
+    my $keys = scalar(keys %{$self // {}});
+    print $LOG scalar(localtime), " create_config BEGIN login=[$self->{login}] file=[$filename] keys=$keys script=$0\n";
+    close $LOG;
+  }
+
   @config = &config_vars;
   
   my $password = $self->{password};
