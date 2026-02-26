@@ -833,8 +833,13 @@ sub create_config {
   # DEBUG: log every attempt to create/update a user config file
   my $logfile = 'spool/users_config_debug.log';
   if (open(my $LOG, '>>', $logfile)) {
-    my $keys = scalar(keys %{$self // {}});
-    print $LOG scalar(localtime), " create_config BEGIN login=[$self->{login}] file=[$filename] keys=$keys script=$0\n";
+    my $non_empty_keys = 0;
+    if (ref $self eq 'HASH') {
+      while (my ($k, $v) = each %{$self}) {
+        $non_empty_keys++ if defined $v && $v ne '';
+      }
+    }
+    print $LOG scalar(localtime), " create_config BEGIN login=[$self->{login}] file=[$filename] keys=$non_empty_keys script=$0\n";
     close $LOG;
   }
 
