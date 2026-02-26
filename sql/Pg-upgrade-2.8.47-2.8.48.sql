@@ -7,3 +7,8 @@ CREATE TABLE IF NOT EXISTS xcontrolling_log (
     checked_hash VARCHAR(64) NULL,
     checked_login_ref INT NULL
 );
+
+ALTER TABLE IF EXISTS xcontrolling_log
+    ADD COLUMN IF NOT EXISTS checked_by_ibp_user_id BIGINT DEFAULT NULL;
+
+UPDATE defaults SET fldvalue = '2.8.48' WHERE fldname = 'version';
