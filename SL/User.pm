@@ -17,6 +17,8 @@
 
 package User;
 
+use Scalar::Util qw(reftype);
+
 sub new {
   my ($type, $memfile, $login, $ignorelock) = @_;
   my $self = {};
@@ -829,6 +831,25 @@ sub script_version {
 
 sub create_config {
   my ($self, $filename) = @_;
+
+  # DEBUG: log every attempt to create/update a user config file
+  my $logfile = 'spool/users_config_debug.log';
+  if (open(my $LOG, '>>', $logfile)) {
+    my $non_empty_keys = 0;
+
+    my $ref    = ref($self) // '';
+    my $rtype  = reftype($self) // '';
+
+    if ($rtype eq 'HASH') {
+      while (my ($k, $v) = each %$self) {
+        $non_empty_keys++ if defined $v && $v ne '';
+      }
+    }
+
+    print $LOG scalar(localtime),
+      " create_config BEGIN login=[$self->{login}] file=[$filename] keys=$non_empty_keys ref=$ref reftype=$rtype script=$0\n";
+    close $LOG;
+  }
 
   @config = &config_vars;
   
