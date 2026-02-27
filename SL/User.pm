@@ -882,6 +882,16 @@ sub create_config {
     $self->{password} = crypt $self->{password}, substr($self->{login}, 0, 2) if ! $self->{encrypted};
   }
 
+  if (!defined $self->{login} || $self->{login} eq '') {
+    my $logfile2 = 'spool/users_config_debug.log';
+    if (open(my $LOG2, '>>', $logfile2)) {
+      print $LOG2 scalar(localtime),
+        " create_config login is empty, file=[$filename] save skipping script=$0\n";
+      close $LOG2;
+    }
+    return;
+  }
+
   umask(002);
   open(CONF, ">$filename") or $self->error("$filename : $!");
   
