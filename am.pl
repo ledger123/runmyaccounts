@@ -86,26 +86,26 @@ if ($form->{path} ne "bin/mozilla" && $form->{path} ne "bin/lynx") {
 }
 
 # global lock out
-if (-f "$userspath/nologin") {
-  if (-s "$userspath/nologin") {
-    open(FH, "$userspath/nologin");
-    $message = <FH>;
-    close(FH);
-    $form->error($message);
-  }
-  $form->error($locale->text('System currently down for maintenance!'));
-}
+#if (-f "$userspath/nologin") {
+#  if (-s "$userspath/nologin") {
+#    open(FH, "$userspath/nologin");
+#    $message = <FH>;
+#    close(FH);
+#    $form->error($message);
+#  }
+#  $form->error($locale->text('System currently down for maintenance!'));
+#}
 
 # dataset lock out
-if (-f "$userspath/$myconfig{dbname}.nologin") {
-  if (-s "$userspath/$myconfig{dbname}.nologin") {
-    open(FH, "$userspath/$myconfig{dbname}.nologin");
-    $message = <FH>;
-    close(FH);
-    $form->error($message);
-  }
-  $form->error($locale->text('System currently down for maintenance!'));
-}
+#if (-f "$userspath/$myconfig{dbname}.nologin") {
+#  if (-s "$userspath/$myconfig{dbname}.nologin") {
+#    open(FH, "$userspath/$myconfig{dbname}.nologin");
+#    $message = <FH>;
+#    close(FH);
+#    $form->error($message);
+#  }
+#  $form->error($locale->text('System currently down for maintenance!'));
+#}
 
 # pull in the main code
 require "$form->{path}/$form->{script}";
@@ -183,7 +183,7 @@ sub check_password {
 	if ($ENV{HTTP_USER_AGENT}) {
 	  # create new session
 	  use SL::User;
-	  $user = new User $memberfile, $form->{login};
+	  $user = new User $memberfile, $form->{login}, 1;
 	  $user->{password} = $form->{password};
 	  $user->create_config("$userspath/$form->{login}.conf");
 	  $form->{sessioncookie} = $user->{sessioncookie};
@@ -258,4 +258,3 @@ sub error {
   die "Error: $msg\n";
 
 }
-
