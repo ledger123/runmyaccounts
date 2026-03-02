@@ -18,41 +18,157 @@
 package User;
 
 use Scalar::Util qw(reftype);
+use DBI;
+
+my $SQLITE_INIT_DONE = {};  # track which db files we've initialized
+
+
+sub _members_dbh {
+  my ($memfile) = @_;
+
+  # memfile is the path to the old members file e.g. "users/members"
+  # SQLite db will be at same location with .db extension: "users/members.db"
+  my $dbfile = "${memfile}.db";
+
+  my $need_init = !-f $dbfile;
+
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 0,
+    PrintError => 0,
+    AutoCommit => 1,
+    sqlite_unicode => 1,
+  }) or die "Cannot open members database $dbfile: $DBI::errstr\n";
+
+  $dbh->do("PRAGMA journal_mode=WAL");
+  $dbh->do("PRAGMA foreign_keys=ON");
+
+  if ($need_init || !$SQLITE_INIT_DONE->{$dbfile}) {
+    _init_members_db($dbh);
+    $SQLITE_INIT_DONE->{$dbfile} = 1;
+  }
+
+  # If we just created the db and old members file exists, import it
+  if ($need_init && -f $memfile) {
+    _import_members_file($dbh, $memfile);
+  }
+
+  return $dbh;
+}
+
+
+sub _init_members_db {
+  my ($dbh) = @_;
+
+  my @fields = &config_vars;
+  my $cols = join(",\n      ", map { "$_ TEXT DEFAULT ''" } @fields);
+
+  $dbh->do(qq|
+    CREATE TABLE IF NOT EXISTS members (
+      login TEXT PRIMARY KEY,
+      $cols
+    )
+  |);
+
+  return 1;
+}
+
+
+sub _import_members_file {
+  my ($dbh, $memfile) = @_;
+
+  return unless -f $memfile;
+
+  open(my $fh, '<', $memfile) or return;
+
+  my $login = '';
+  my %data = ();
+
+  $dbh->do("BEGIN");
+
+  while (my $line = <$fh>) {
+    chomp $line;
+
+    # new section
+    if ($line =~ /^\[(.+)\]/) {
+      # save previous entry
+      if ($login ne '') {
+        _insert_member($dbh, $login, \%data);
+      }
+      $login = $1;
+      %data = ();
+      next;
+    }
+
+    next if $line =~ /^(#|\s*$)/;
+
+    # remove comments and whitespace
+    $line =~ s/^\s*#.*//;
+    $line =~ s/^\s*(.*?)\s*$/$1/;
+
+    if ($line =~ /^([^=]+)=(.*)$/) {
+      $data{$1} = $2;
+    }
+  }
+
+  # save last entry
+  if ($login ne '') {
+    _insert_member($dbh, $login, \%data);
+  }
+
+  $dbh->do("COMMIT");
+  close($fh);
+
+  # Rename old file as backup
+  rename $memfile, "${memfile}.bak" if -f $memfile;
+
+  return 1;
+}
+
+
+sub _insert_member {
+  my ($dbh, $login, $data) = @_;
+
+  my @fields = &config_vars;
+
+  my @cols = ('login');
+  my @vals = ($login);
+  my @placeholders = ('?');
+
+  for my $f (@fields) {
+    push @cols, $f;
+    push @vals, ($data->{$f} // '');
+    push @placeholders, '?';
+  }
+
+  my $cols_str = join(',', @cols);
+  my $ph_str = join(',', @placeholders);
+
+  my $query = qq|INSERT OR REPLACE INTO members ($cols_str) VALUES ($ph_str)|;
+  $dbh->do($query, undef, @vals);
+}
+
 
 sub new {
   my ($type, $memfile, $login, $ignorelock) = @_;
   my $self = {};
 
   if ($login ne "") {
-    if (!$ignorelock){
-    &error("", "$memfile locked!") if (-f "${memfile}.LCK");
-    }
-    
-    open(MEMBER, "$memfile") or &error("", "$memfile : $!");
-    
-    while (<MEMBER>) {
-      if (/^\[$login\]/) {
-	while (<MEMBER>) {
-	  last if /^\[/;
-	  next if /^(#|\s)/;
-	  
-	  # remove comments
-	  s/^\s*#.*//g;
+    my $dbh = _members_dbh($memfile);
 
-	  # remove any trailing whitespace
-	  s/^\s*(.*?)\s*$/$1/;
+    my $query = qq|SELECT * FROM members WHERE login = ?|;
+    my $sth = $dbh->prepare($query);
+    $sth->execute($login);
 
-	  ($key, $value) = split /=/, $_, 2;
-	  
-	  $self->{$key} = $value;
-	}
-	
-	$self->{login} = $login;
-
-	last;
+    if (my $row = $sth->fetchrow_hashref) {
+      for my $key (keys %$row) {
+        next if $key eq 'login';
+        $self->{$key} = $row->{$key};
       }
+      $self->{login} = $login;
     }
-    close MEMBER;
+
+    $sth->finish;
+    $dbh->disconnect;
   }
   
   bless $self, $type;
@@ -519,19 +635,15 @@ sub dbsources_unused {
   my @dbexcl = ();
   my @dbsources = ();
   
-  $form->error("$memfile locked!") if (-f "${memfile}.LCK");
-  
-  # open members file
-  open(FH, "$memfile") or $form->error("$memfile : $!");
-
-  while (<FH>) {
-    if (/^dbname=/) {
-      my ($null,$item) = split /=/;
-      push @dbexcl, $item;
-    }
+  # Read all dbname values from SQLite members database
+  my $mdbh = _members_dbh($memfile);
+  my $sth = $mdbh->prepare(qq|SELECT DISTINCT dbname FROM members WHERE dbname != ''|);
+  $sth->execute;
+  while (my ($item) = $sth->fetchrow_array) {
+    push @dbexcl, $item;
   }
-
-  close FH;
+  $sth->finish;
+  $mdbh->disconnect;
 
   $form->{only_acc_db} = 1;
   my @db = &dbsources("", $form);
@@ -927,16 +1039,7 @@ sub save_member {
 
   # format dbconnect and dboptions string
   &dbconnect_vars($self, $self->{dbname});
-  
-  $self->error("$memberfile locked!") if (-f "${memberfile}.LCK");
-  open(FH, ">${memberfile}.LCK") or $self->error("${memberfile}.LCK : $!");
-  close(FH);
-  
-  if (! open(CONF, "+<$memberfile")) {
-    unlink "${memberfile}.LCK";
-    $self->error("$memberfile : $!");
-  }
-  
+
   $self->{department_id} = '';
   if ($self->{department}){
      $department = lc $self->{department};
@@ -952,30 +1055,9 @@ sub save_member {
      $dbh->disconnect;
   }
 
-  @config = <CONF>;
-  
-  seek(CONF, 0, 0);
-  truncate(CONF, 0);
-  
-  while ($line = shift @config) {
-    last if ($line =~ /^\[$self->{login}\]/);
-    print CONF $line;
-  }
+  # Save to SQLite members database
+  my $mdbh = _members_dbh($memberfile);
 
-  # remove everything up to next login or EOF
-  while ($line = shift @config) {
-    last if ($line =~ /^\[/);
-  }
-
-  # this one is either the next login or EOF
-  print CONF $line;
-
-  while ($line = shift @config) {
-    print CONF $line;
-  }
-
-  print CONF qq|[$self->{login}]\n|;
-  
   if ($self->{packpw}) {
     $self->{dbpasswd} = pack 'u', $self->{dbpasswd};
     chop $self->{dbpasswd};
@@ -986,21 +1068,44 @@ sub save_member {
     $self->{password} = crypt $self->{password}, substr($self->{login}, 0, 2) if $self->{password};
   }
 
-  if ($self->{'root login'}) {
-    @config = qw(password);
-  } else {
-    @config = &config_vars;
-    @config = grep !/^session/, @config;
-  }
- 
   # replace \r\n with \n
   $self->{signature} =~ s/\r?\n/\\n/g;
 
-  for (sort @config) { print CONF qq|$_=$self->{$_}\n| }
+  if ($self->{'root login'}) {
+    # Root login only stores password
+    my $sth = $mdbh->prepare(qq|SELECT login FROM members WHERE login = ?|);
+    $sth->execute('root login');
+    if ($sth->fetchrow_array) {
+      $mdbh->do(qq|UPDATE members SET password = ? WHERE login = ?|, undef, $self->{password}, 'root login');
+    } else {
+      $mdbh->do(qq|INSERT INTO members (login, password) VALUES (?, ?)|, undef, 'root login', $self->{password});
+    }
+    $sth->finish;
+  } else {
+    my @fields = &config_vars;
+    @fields = grep !/^session/, @fields;
 
-  print CONF "\n";
-  close CONF;
-  unlink "${memberfile}.LCK";
+    my $sth = $mdbh->prepare(qq|SELECT login FROM members WHERE login = ?|);
+    $sth->execute($self->{login});
+    my $exists = $sth->fetchrow_array;
+    $sth->finish;
+
+    if ($exists) {
+      my @set_parts = map { "$_ = ?" } @fields;
+      my $set_str = join(', ', @set_parts);
+      my @vals = map { $self->{$_} // '' } @fields;
+      push @vals, $self->{login};
+      $mdbh->do(qq|UPDATE members SET $set_str WHERE login = ?|, undef, @vals);
+    } else {
+      my @cols = ('login', @fields);
+      my $cols_str = join(',', @cols);
+      my $ph_str = join(',', map { '?' } @cols);
+      my @vals = ($self->{login}, map { $self->{$_} // '' } @fields);
+      $mdbh->do(qq|INSERT INTO members ($cols_str) VALUES ($ph_str)|, undef, @vals);
+    }
+  }
+
+  $mdbh->disconnect;
 
   # create conf file
   if (! $self->{'root login'}) {
@@ -1064,6 +1169,33 @@ sub delete_login {
   $dbh->commit;
   $dbh->disconnect;
 
+}
+
+
+sub delete_member {
+  my ($self, $memberfile) = @_;
+
+  my $dbh = _members_dbh($memberfile);
+  $dbh->do(qq|DELETE FROM members WHERE login = ?|, undef, $self->{login});
+  $dbh->disconnect;
+}
+
+
+sub get_all_logins {
+  my ($class, $memfile) = @_;
+
+  my $dbh = _members_dbh($memfile);
+  my $sth = $dbh->prepare(qq|SELECT login FROM members WHERE login != 'root login' ORDER BY login|);
+  $sth->execute;
+
+  my @logins;
+  while (my ($login) = $sth->fetchrow_array) {
+    push @logins, $login;
+  }
+  $sth->finish;
+  $dbh->disconnect;
+
+  return @logins;
 }
 
 
