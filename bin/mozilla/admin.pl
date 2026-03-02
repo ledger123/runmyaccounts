@@ -52,16 +52,22 @@ if ($form->{action}) {
   # if there are no drivers bail out
   $form->error($locale->text('No Database Drivers available!')) unless (User->dbdrivers);
 
-  # create memberfile
-  if (! -f $memberfile) {
-    open(FH, ">$memberfile") or $form->error("$memberfile : $!");
-    print FH qq|# Run my Accounts Accounting members
+  # create members database if it does not exist
+  if (! -f "${memberfile}.db") {
+    my $mdbh = DBI->connect("dbi:SQLite:dbname=${memberfile}.db", "", "", {
+      RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1,
+    }) or $form->error("${memberfile}.db : $DBI::errstr");
 
-[root login]
-password=
-
-|;
-    close FH;
+    my @fields = User->config_vars;
+    my $cols = join(",\n      ", map { "$_ TEXT DEFAULT ''" } @fields);
+    $mdbh->do(qq|
+      CREATE TABLE IF NOT EXISTS members (
+        login TEXT PRIMARY KEY,
+        $cols
+      )
+    |);
+    $mdbh->do(qq|INSERT OR IGNORE INTO members (login, password) VALUES ('root login', '')|);
+    $mdbh->disconnect;
   }
 
   &adminlogin;
@@ -233,7 +239,25 @@ $delete
 
 sub list_users {
 
-  open(FH, "$memberfile") or $form->error("$memberfile : $!");
+  my $mdbh = DBI->connect("dbi:SQLite:dbname=${memberfile}.db", "", "", {
+    RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1,
+  }) or $form->error("${memberfile}.db : $DBI::errstr");
+
+  my $sth = $mdbh->prepare(qq|SELECT login, name, company, templates, dbuser, dbdriver, dbname, dbhost FROM members WHERE login != 'root login' ORDER BY login|);
+  $sth->execute;
+  while (my $row = $sth->fetchrow_hashref) {
+    $member{$row->{login}} = {
+      name     => $row->{name},
+      company  => $row->{company},
+      templates => $row->{templates},
+      dbuser   => $row->{dbuser},
+      dbdriver => $row->{dbdriver},
+      dbname   => $row->{dbname},
+      dbhost   => $row->{dbhost},
+    };
+  }
+  $sth->finish;
+  $mdbh->disconnect;
 
   $nologin = qq|
 <input type=submit class=submit name=action value="|.$locale->text('Lock System').qq|">|;
@@ -245,22 +269,6 @@ sub list_users {
 
   $software = qq|
 <input type=submit class=submit name=action value="|.$locale->text('Software Administration').qq|">|;
-
-  while (<FH>) {
-    chop;
-    
-    if (/^\[.*\]/) {
-      $login = $_;
-      $login =~ s/(\[|\])//g;
-    }
-
-    if (/^(name=|company=|templates=|dbuser=|dbdriver=|dbname=|dbhost=)/) {
-      chop ($var = $&);
-      ($null, $member{$login}{$var}) = split /=/, $_, 2;
-    }
-  }
-  
-  close(FH);
 
 # type=submit $locale->text('Pg Database Administration')
 # type=submit $locale->text('PgPP Database Administration')
@@ -873,79 +881,30 @@ sub delete {
 
   $form->{templates} = ($form->{templates}) ? "$templates/$form->{templates}" : "$templates/$form->{login}";
   
-  $form->error("$memberfile ".$locale->text('locked!')) if (-f ${memberfile}.LCK);
+  my $mdbh = DBI->connect("dbi:SQLite:dbname=${memberfile}.db", "", "", {
+    RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1,
+  }) or $form->error("${memberfile}.db : $DBI::errstr");
 
-  open(FH, ">${memberfile}.LCK") or $form->error("${memberfile}.LCK : $!");
-  close(FH);
-  
-  if (! open(CONF, "+<$memberfile")) {
-    unlink "${memberfile}.LCK";
-    $form->error("$memberfile : $!");
+  # get the user's config before deleting
+  my $sth = $mdbh->prepare(qq|SELECT * FROM members WHERE login = ?|);
+  $sth->execute($form->{login});
+  my $row = $sth->fetchrow_hashref;
+  if ($row) {
+    for (keys %$row) { $myconfig{$_} = $row->{$_} }
   }
+  $sth->finish;
 
-  @config = <CONF>;
+  # check if any other user shares the same templates directory
+  $sth = $mdbh->prepare(qq|SELECT COUNT(*) FROM members WHERE templates = ? AND login != ? AND login != 'root login'|);
+  $sth->execute($form->{templates}, $form->{login});
+  my ($found) = $sth->fetchrow_array;
+  $sth->finish;
 
-  seek(CONF, 0, 0);
-  truncate(CONF, 0);
-  
-  while ($line = shift @config) {
+  # delete the member from SQLite
+  $mdbh->do(qq|DELETE FROM members WHERE login = ?|, undef, $form->{login});
+  $mdbh->disconnect;
 
-    chop $line;
-
-    if ($line =~ /^\[/) {
-      last if ($line eq "[$form->{login}]");
-      $login = &login_name($line);
-    }
-    
-    if ($line =~ /^templates=/) {
-      ($null, $user{$login}) = split /=/, $line, 2;
-    }
-
-    print CONF "$line\n";
-  }
-
-  # remove everything up to next login or EOF
-  # and save template variable
-  while ($line = shift @config) {
-
-    chop $line;
-    
-    ($key, $value) = split /=/, $line, 2;
-    $myconfig{$key} = $value;
-    
-    last if ($line =~ /^\[/);
-  }
-
-  # this one is either the next login or EOF
-  print CONF "$line\n";
-
-  $login = &login_name($line);
-  
-
-  while ($line = shift @config) {
-
-    chop $line;
-
-    if ($line =~ /^\[/) {
-      $login = &login_name($line);
-    }
-    
-    if ($line =~ /^templates=/) {
-      ($null, $user{$login}) = split /=/, $line, 2;
-    }
-    
-    print CONF "$line\n";
-  }
-
-  close(CONF);
-  unlink "${memberfile}.LCK";
-
-  # scan %user for $templatedir
-  foreach $login (keys %user) {
-    last if ($found = ($form->{templates} eq $user{$login}));
-  }
-
-  # if found keep directory otherwise delete
+  # if no other user shares the template directory, delete it
   if (!$found) {
     # delete it if there is a template directory
     $dir = "$form->{templates}";
@@ -1763,3 +1722,4 @@ sub update_software {
 </html>
 |;
 }
+
