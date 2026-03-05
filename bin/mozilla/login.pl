@@ -129,7 +129,7 @@ $sf
   </tr>
 </table>
   
-  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgel¿st!</div>
+  <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelï¿½st!</div>
   
 </body>
 </html>
@@ -259,6 +259,7 @@ sub login {
 
   # if we get an error back, bale out
   if (($errno = $user->login(\%$form, $userspath)) <= -1) {
+    print STDERR "\n LOGIN FAILED \n";
 
     $errno *= -1;
     $err[1] = $locale->text('Access Denied!');
@@ -296,6 +297,7 @@ sub login {
     
     $form->error($err[$errno]);
   } else {
+    print STDERR "\n LOGIN SUCCESS \n";
 
     # remove stale locks
     for (qw(dbconnect dbuser dbpasswd)) { $myconfig{$_} = $user->{$_} }

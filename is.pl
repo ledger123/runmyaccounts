@@ -141,8 +141,9 @@ if ($form->{action}) {
 
 
 sub check_password {
-
+    print STDERR "\n  \n";
   if ($ip_whitelist) {
+      print STDERR "\n  \n";
         print STDERR " HOST IP: $ENV{REMOTE_ADDR}";
         for my $ip (split /,/, $ip_whitelist) {
                 # print STDERR " listed IP: $ip";
@@ -154,6 +155,7 @@ sub check_password {
   }
 
   if ($myconfig{password}) {
+      print STDERR "\n  \n";
 
     require "$form->{path}/pw.pl";
 
