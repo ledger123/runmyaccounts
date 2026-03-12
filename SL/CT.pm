@@ -385,7 +385,7 @@ sub save {
       $form->{early_payment_discount} = undef;
   }
 
-  for (qw(id terms discountterms taxincluded addressid contactid remittancevoucher)) { $form->{$_} *= 1 }
+  for (qw(id terms discountterms taxincluded addressid contactid remittancevoucher reminderstop)) { $form->{$_} *= 1 }
   
   for (qw(creditlimit threshold)) { $form->{$_} = $form->parse_amount($myconfig, $form->{$_}) }
  
@@ -610,7 +610,8 @@ sub save {
 	      threshold = $form->{threshold},
 	      discountterms = $form->{discountterms},
 	      paymentmethod_id = $rec{paymentmethod_id},
-	      remittancevoucher = '$form->{remittancevoucher}'
+	      remittancevoucher = '$form->{remittancevoucher}',
+	      reminderstop = '$form->{reminderstop}'
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
