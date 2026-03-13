@@ -31,6 +31,13 @@ sub _members_dbh {
 
   my $need_init = !-f $dbfile;
 
+  # Clean up stale journal files if DB does not exist
+  if ($need_init) {
+    unlink "${dbfile}-wal"     if -f "${dbfile}-wal";
+    unlink "${dbfile}-shm"     if -f "${dbfile}-shm";
+    unlink "${dbfile}-journal" if -f "${dbfile}-journal";
+  }
+
   my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
     RaiseError => 0,
     PrintError => 0,
@@ -38,18 +45,17 @@ sub _members_dbh {
     sqlite_unicode => 1,
   }) or die "Cannot open members database $dbfile: $DBI::errstr\n";
 
-  $dbh->do("PRAGMA journal_mode=WAL");
+  # Use DELETE journal mode to avoid WAL file permission issues in CGI
+  $dbh->do("PRAGMA journal_mode=DELETE");
   $dbh->do("PRAGMA foreign_keys=ON");
+  # Wait up to 5 seconds if another process is writing to the database
+  $dbh->do("PRAGMA busy_timeout=5000");
 
   if ($need_init || !$SQLITE_INIT_DONE->{$dbfile}) {
     _init_members_db($dbh);
     $SQLITE_INIT_DONE->{$dbfile} = 1;
   }
 
-  # If we just created the db and old members file exists, import it
-  if ($need_init && -f $memfile) {
-    _import_members_file($dbh, $memfile);
-  }
 
   return $dbh;
 }
@@ -63,7 +69,8 @@ sub _init_members_db {
 
   $dbh->do(qq|
     CREATE TABLE IF NOT EXISTS members (
-      login TEXT PRIMARY KEY,
+      id    INTEGER PRIMARY KEY AUTOINCREMENT,
+      login TEXT    NOT NULL UNIQUE,
       $cols
     )
   |);
@@ -72,79 +79,6 @@ sub _init_members_db {
 }
 
 
-sub _import_members_file {
-  my ($dbh, $memfile) = @_;
-
-  return unless -f $memfile;
-
-  open(my $fh, '<', $memfile) or return;
-
-  my $login = '';
-  my %data = ();
-
-  $dbh->do("BEGIN");
-
-  while (my $line = <$fh>) {
-    chomp $line;
-
-    # new section
-    if ($line =~ /^\[(.+)\]/) {
-      # save previous entry
-      if ($login ne '') {
-        _insert_member($dbh, $login, \%data);
-      }
-      $login = $1;
-      %data = ();
-      next;
-    }
-
-    next if $line =~ /^(#|\s*$)/;
-
-    # remove comments and whitespace
-    $line =~ s/^\s*#.*//;
-    $line =~ s/^\s*(.*?)\s*$/$1/;
-
-    if ($line =~ /^([^=]+)=(.*)$/) {
-      $data{$1} = $2;
-    }
-  }
-
-  # save last entry
-  if ($login ne '') {
-    _insert_member($dbh, $login, \%data);
-  }
-
-  $dbh->do("COMMIT");
-  close($fh);
-
-  # Rename old file as backup
-  rename $memfile, "${memfile}.bak" if -f $memfile;
-
-  return 1;
-}
-
-
-sub _insert_member {
-  my ($dbh, $login, $data) = @_;
-
-  my @fields = &config_vars;
-
-  my @cols = ('login');
-  my @vals = ($login);
-  my @placeholders = ('?');
-
-  for my $f (@fields) {
-    push @cols, $f;
-    push @vals, ($data->{$f} // '');
-    push @placeholders, '?';
-  }
-
-  my $cols_str = join(',', @cols);
-  my $ph_str = join(',', @placeholders);
-
-  my $query = qq|INSERT OR REPLACE INTO members ($cols_str) VALUES ($ph_str)|;
-  $dbh->do($query, undef, @vals);
-}
 
 
 sub new {
@@ -156,6 +90,14 @@ sub new {
 
     my $query = qq|SELECT * FROM members WHERE login = ?|;
     my $sth = $dbh->prepare($query);
+
+    if (!$sth) {
+      warn "User::new - prepare failed for login '$login': " . ($dbh->errstr // 'unknown error') . "\n";
+      $dbh->disconnect;
+      bless $self, $type;
+      return $self;
+    }
+
     $sth->execute($login);
 
     if (my $row = $sth->fetchrow_hashref) {
@@ -1042,37 +984,28 @@ sub save_member {
   $self->{signature} =~ s/\r?\n/\\n/g;
 
   if ($self->{'root login'}) {
-    # Root login only stores password
-    my $sth = $mdbh->prepare(qq|SELECT login FROM members WHERE login = ?|);
-    $sth->execute('root login');
-    if ($sth->fetchrow_array) {
-      $mdbh->do(qq|UPDATE members SET password = ? WHERE login = ?|, undef, $self->{password}, 'root login');
-    } else {
-      $mdbh->do(qq|INSERT INTO members (login, password) VALUES (?, ?)|, undef, 'root login', $self->{password});
-    }
-    $sth->finish;
+    # Root login only stores password — atomic upsert
+    $mdbh->do(
+      qq|INSERT INTO members (login, password) VALUES (?, ?)
+         ON CONFLICT(login) DO UPDATE SET password = excluded.password|,
+      undef, 'root login', $self->{password}
+    );
   } else {
     my @fields = &config_vars;
     @fields = grep !/^session/, @fields;
 
-    my $sth = $mdbh->prepare(qq|SELECT login FROM members WHERE login = ?|);
-    $sth->execute($self->{login});
-    my $exists = $sth->fetchrow_array;
-    $sth->finish;
+    # Atomic upsert — no race condition between SELECT and INSERT/UPDATE
+    my @cols = ('login', @fields);
+    my $cols_str = join(', ', @cols);
+    my $ph_str   = join(', ', map { '?' } @cols);
+    my $update_str = join(', ', map { "$_ = excluded.$_" } @fields);
+    my @vals = ($self->{login}, map { $self->{$_} // '' } @fields);
 
-    if ($exists) {
-      my @set_parts = map { "$_ = ?" } @fields;
-      my $set_str = join(', ', @set_parts);
-      my @vals = map { $self->{$_} // '' } @fields;
-      push @vals, $self->{login};
-      $mdbh->do(qq|UPDATE members SET $set_str WHERE login = ?|, undef, @vals);
-    } else {
-      my @cols = ('login', @fields);
-      my $cols_str = join(',', @cols);
-      my $ph_str = join(',', map { '?' } @cols);
-      my @vals = ($self->{login}, map { $self->{$_} // '' } @fields);
-      $mdbh->do(qq|INSERT INTO members ($cols_str) VALUES ($ph_str)|, undef, @vals);
-    }
+    $mdbh->do(
+      qq|INSERT INTO members ($cols_str) VALUES ($ph_str)
+         ON CONFLICT(login) DO UPDATE SET $update_str|,
+      undef, @vals
+    );
   }
 
   $mdbh->disconnect;
