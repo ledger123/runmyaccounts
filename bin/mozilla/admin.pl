@@ -62,7 +62,8 @@ if ($form->{action}) {
     my $cols = join(",\n      ", map { "$_ TEXT DEFAULT ''" } @fields);
     $mdbh->do(qq|
       CREATE TABLE IF NOT EXISTS members (
-        login TEXT PRIMARY KEY,
+        id    INTEGER PRIMARY KEY AUTOINCREMENT,
+        login TEXT    NOT NULL UNIQUE,
         $cols
       )
     |);
@@ -242,6 +243,7 @@ sub list_users {
   my $mdbh = DBI->connect("dbi:SQLite:dbname=${memberfile}.db", "", "", {
     RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1,
   }) or $form->error("${memberfile}.db : $DBI::errstr");
+  $mdbh->do("PRAGMA busy_timeout=5000");
 
   my $sth = $mdbh->prepare(qq|SELECT login, name, company, templates, dbuser, dbdriver, dbname, dbhost FROM members WHERE login != 'root login' ORDER BY login|);
   $sth->execute;
@@ -884,6 +886,7 @@ sub delete {
   my $mdbh = DBI->connect("dbi:SQLite:dbname=${memberfile}.db", "", "", {
     RaiseError => 1, AutoCommit => 1, sqlite_unicode => 1,
   }) or $form->error("${memberfile}.db : $DBI::errstr");
+  $mdbh->do("PRAGMA busy_timeout=5000");
 
   # get the user's config before deleting
   my $sth = $mdbh->prepare(qq|SELECT * FROM members WHERE login = ?|);
@@ -1074,6 +1077,21 @@ sub check_password {
 	&getpassword;
 	exit;
       }
+    }
+  } else {
+    # No admin password set — if user submitted a password via the login form,
+    # set it as the new admin password and save it
+    if ($form->{password}) {
+      $root->{password} = crypt $form->{password}, 'ro';
+      $root->{'root login'} = 1;
+      $root->{login} = 'root login';
+      $root->{encrypted} = 1;
+      $root->save_member($memberfile);
+      &create_config;
+    } else {
+      # No password submitted and no password set — show password form
+      &adminlogin;
+      exit;
     }
   }
 
