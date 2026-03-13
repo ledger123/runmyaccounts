@@ -301,8 +301,26 @@ if (-f $members_file) {
 }
 
 # ---------------------------------------------------------------------------
-# Done
+# Done — fix file permissions for web server access
 # ---------------------------------------------------------------------------
+# Set permissions to rw-rw-rw- (666) so Apache/CGI can read and write
+# regardless of which user ran this migration script
+chmod 0666, $db_file;
+log_msg("Set file permissions on '$db_file' to 0666 (rw-rw-rw-).");
+
+# Try to detect web server user and chown the db file
+for my $webuser ('apache', 'www-data', 'httpd', 'www') {
+  my ($uid, $gid) = (getpwnam($webuser))[2,3];
+  if (defined $uid) {
+    if (chown($uid, $gid, $db_file)) {
+      log_msg("Changed ownership of '$db_file' to $webuser.");
+    } else {
+      log_msg("WARNING: Could not chown '$db_file' to $webuser: $!. Run: sudo chown $webuser '$db_file'");
+    }
+    last;
+  }
+}
+
 log_msg("Migration completed. Migrated $migrated user(s), skipped $skipped.");
 log_msg("=== Migration finished ===");
 
