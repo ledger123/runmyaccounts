@@ -92,8 +92,8 @@ sub new {
 
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-	$self->{version}   = "2.8.47";
-	$self->{dbversion} = "2.8.47";
+	$self->{version}   = "2.8.49";
+	$self->{dbversion} = "2.8.49";
     $self->{dateoffset} = 3652;
 
 	bless $self, $type;
@@ -3122,6 +3122,17 @@ sub hide_form {
 sub error {
 	my ( $self, $msg, $dbmsg ) = @_;
 
+    if (defined $dbmsg && $dbmsg ne '') {
+        my $login  = $self->{login}  // '';
+        my $dbname = $self->{dbname} // $self->{db} // '';
+        print STDERR "Ledger DB Error: user=$login db=$dbname: $dbmsg\n";
+    } elsif (defined $msg && $msg ne '') {
+        my $login  = $self->{login}  // '';
+        my $dbname = $self->{dbname} // $self->{db} // '';
+        print STDERR "SQL-Ledger Error: user=$login db=$dbname: $msg\n";
+    }
+
+
 	if ( $ENV{HTTP_USER_AGENT} ) {
 		$self->{msg}    = $msg;
 		$self->{dbmsg}  = $dbmsg;
@@ -3137,15 +3148,15 @@ sub error {
 
 		if ( $dbmsg && !$errormessages ) {
 			print qq|<body><h2 class=error>Error!</h2>;
-       <p><b id=errorMessage class=dberror>$self->{dbmsg}</b>|;
+	   <p><b id=errorMessage class=dberror>$self->{dbmsg}</b>|;
 		}
 		else {
 			print qq|<body><h2 class=error>Error!</h2>
-	   <p><b id=errorMessage>$self->{msg}</b>|;
+   <p><b id=errorMessage>$self->{msg}</b>|;
 
 			print qq|<h2 class=dberror>DB Error!</h2>
 
-       <p><b class=dberror>$self->{dbmsg}</b>|;
+	   <p><b class=dberror>$self->{dbmsg}</b>|;
 
 		}
 		print STDERR "Error ($errormessages): $msg\n$dbmsg\n";

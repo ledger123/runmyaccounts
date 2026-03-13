@@ -1751,6 +1751,22 @@ sub form_header {
   # $locale->text('Expense Account');
   # $locale->text('Income Account');
 
+  my $payment_clearing_account = "";
+  
+  if ($form->{selectpayment}) {
+      $payment_clearing_account = qq|
+        <tr>
+          <th align=right>|.$locale->text('Payment/Clearing Account').qq|</th>
+          <td><select name="payment_clearing_accno">|
+          .$form->select_option($form->{selectpayment}, $form->{payment_clearing_accno})
+          .qq|</select>
+          </td>
+          <th></th>
+          <td></td>
+        </tr>
+    |;
+  }
+
   my $payment_discount_account = "";
    
   my $payment_discount_column = $form->{payment_discount_column} || (($form->{db} eq 'customer') ? 'income_accno' : 'expense_accno');
@@ -2093,6 +2109,7 @@ sub form_header {
           $department
 	      $arapaccount
 	      $paymentaccount
+          $payment_clearing_account
           $payment_discount_account
 	      $discountaccount
 	    </table>
@@ -2207,11 +2224,10 @@ sub form_header {
 
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
-  $form->hide_form(map { "select$_" } qw(currency arap discount payment payment_discount_accno business dispatch pricegroup language employee paymentmethod department));
+  $form->hide_form(map { "select$_" } qw(currency arap discount payment payment_clearing_accno payment_discount_accno business dispatch pricegroup language employee paymentmethod department));
   $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
 
 }
-
 
 
 sub form_footer {
