@@ -230,23 +230,26 @@ sub login {
 
 
   if (! $form->{beenthere}) {
-    my $dbfile = "${memberfile}.db";
-    my $mdbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
-      RaiseError => 0,
-      PrintError => 0,
-      AutoCommit => 1,
-      sqlite_unicode => 1,
-    }) or $form->error("$dbfile : $DBI::errstr");
+    open(FH, "$memberfile") or $form->error("$memberfile : $!");
+    @a = <FH>;
+    close(FH);
+    
+    foreach $item (@a) {
 
-    my $sth = $mdbh->prepare(qq|SELECT login, company FROM members WHERE login LIKE ?|);
-    $sth->execute("$form->{login}\%");
-    while (my ($l, $c) = $sth->fetchrow_array) {
-      if ($l =~ /^$form->{login}(@|$)/) {
-        $login{$l} = $c;
+      if ($item =~ /^\[(.*?)\]/) {
+	$login = $1;
+	$found = 1;
+      }
+
+      if ($item =~ /^company=/) {
+	if ($login =~ /^$form->{login}(@|$)/ && $found) {
+	  ($null, $name) = split /=/, $item, 2;
+	  $login{$login} = $name;
+	  $found = 0;
+	}
+
       }
     }
-    $sth->finish;
-    $mdbh->disconnect;
 
     if (keys %login > 1) {
       &selectdataset(\%login);
@@ -340,4 +343,5 @@ sub logout {
   $form->redirect;
 
 }
+
 
