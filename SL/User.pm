@@ -18,6 +18,7 @@
 package User;
 
 use DBI;
+use Scalar::Util qw(reftype);
 
 my $SQLITE_INIT_DONE = {};  # track which db files we've initialized
 
@@ -885,6 +886,25 @@ sub script_version {
 sub create_config {
   my ($self, $filename) = @_;
 
+  # DEBUG: log every attempt to create/update a user config file
+  my $logfile = 'spool/users_config_debug.log';
+  if (open(my $LOG, '>>', $logfile)) {
+    my $non_empty_keys = 0;
+
+    my $ref    = ref($self) // '';
+    my $rtype  = reftype($self) // '';
+
+    if ($rtype eq 'HASH') {
+      while (my ($k, $v) = each %$self) {
+        $non_empty_keys++ if defined $v && $v ne '';
+      }
+    }
+
+    print $LOG scalar(localtime),
+      " create_config BEGIN login=[$self->{login}] file=[$filename] keys=$non_empty_keys ref=$ref reftype=$rtype script=$0\n";
+    close $LOG;
+  }
+
   @config = &config_vars;
   
   my $password = $self->{password};
@@ -914,6 +934,16 @@ sub create_config {
     }
     
     $self->{password} = crypt $self->{password}, substr($self->{login}, 0, 2) if ! $self->{encrypted};
+  }
+
+  if (!defined $self->{login} || $self->{login} eq '') {
+    my $logfile2 = 'spool/users_config_debug.log';
+    if (open(my $LOG2, '>>', $logfile2)) {
+      print $LOG2 scalar(localtime),
+        " create_config login is empty, file=[$filename] save skipping script=$0\n";
+      close $LOG2;
+    }
+    return;
   }
 
   umask(002);
