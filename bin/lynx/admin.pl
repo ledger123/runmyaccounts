@@ -144,14 +144,21 @@ sub create_config {
     }
   }
 
-  open(CONF, ">$userspath/root login.conf") or $form->error("root login.conf : $!");
-  print CONF qq|# configuration file for root login
 
-\%rootconfig = (
-sessionkey => '$form->{sessionkey}'
-);\n\n|;
-
-  close CONF;
+  # Save root session to SQLite DB
+  eval {
+    my $mdbh = DBI->connect("dbi:SQLite:dbname=${memberfile}.db", "", "", {
+      RaiseError => 0, PrintError => 0, AutoCommit => 1, sqlite_unicode => 1,
+    });
+    if ($mdbh) {
+      $mdbh->do("PRAGMA busy_timeout=5000");
+      $mdbh->do(
+        qq|UPDATE members SET sessionkey = ?, sessioncookie = ? WHERE login = 'root login'|,
+        undef, $form->{sessionkey}, $form->{sessioncookie}
+      );
+      $mdbh->disconnect;
+    }
+  };
 
 }
 
@@ -1046,9 +1053,24 @@ sub check_password {
 
   $root = new User "$memberfile", "root login";
 
-  $rootname = "root login";
-  eval { require "$userspath/${rootname}.conf"; };
-  
+  # Load root session data from SQLite DB
+  %rootconfig = ();
+  eval {
+    my $mdbh = DBI->connect("dbi:SQLite:dbname=${memberfile}.db", "", "", {
+      RaiseError => 0, PrintError => 0, AutoCommit => 1, sqlite_unicode => 1,
+    });
+    if ($mdbh) {
+      $mdbh->do("PRAGMA busy_timeout=5000");
+      my $sth = $mdbh->prepare(qq|SELECT sessionkey FROM members WHERE login = 'root login'|);
+      $sth->execute;
+      if (my $row = $sth->fetchrow_hashref) {
+        $rootconfig{sessionkey} = $row->{sessionkey} // '';
+      }
+      $sth->finish;
+      $mdbh->disconnect;
+    }
+  };
+
   if ($root->{password}) {
       
     if ($form->{password}) {

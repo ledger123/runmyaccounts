@@ -30,7 +30,7 @@ my @config_fields = qw(
   acs company countrycode dateformat
   dbconnect dbdriver dbhost dbname dboptions dbpasswd
   dbport dbuser email fax menuwidth name numberformat password
-  outputformat printer role sessionkey sid signature
+  outputformat printer role sessionkey sessioncookie sid signature
   stylesheet tel templates timeout vclimit
   department department_id warehouse warehouse_id
 );
@@ -261,6 +261,86 @@ if (!$root_found) {
 } else {
   log_msg("Root login was successfully migrated from the members file.");
 }
+
+# ---------------------------------------------------------------------------
+# Step 5b: Migrate sessionkey/sessioncookie from .conf files
+# ---------------------------------------------------------------------------
+log_msg("Checking .conf files for session data to migrate...");
+
+my $userspath = 'users';
+my $conf_bak_dir = "$userspath/user_conf_bak";
+my $sessions_migrated = 0;
+my $confs_backed_up = 0;
+
+# Create backup directory for .conf files
+if (! -d $conf_bak_dir) {
+  mkdir $conf_bak_dir or log_msg("WARNING: Could not create directory '$conf_bak_dir': $!");
+}
+
+# Get all logins from the DB
+my $sth_logins = $dbh->prepare(qq|SELECT login FROM members|);
+$sth_logins->execute;
+
+my @logins_to_process;
+while (my ($login) = $sth_logins->fetchrow_array) {
+  push @logins_to_process, $login;
+}
+$sth_logins->finish;
+
+for my $login (@logins_to_process) {
+  my $conf_file;
+  my $conf_basename;
+  if ($login eq 'root login') {
+    $conf_file = "$userspath/root login.conf";
+    $conf_basename = "root login.conf";
+  } else {
+    $conf_file = "$userspath/$login.conf";
+    $conf_basename = "$login.conf";
+  }
+
+  next unless -f $conf_file;
+
+  # Parse the .conf file to extract session data
+  my %conf_data;
+  eval {
+    open(my $cfh, '<', $conf_file) or die "Cannot open $conf_file: $!";
+    while (my $cline = <$cfh>) {
+      # Match lines like:  sessionkey => 'value',
+      if ($cline =~ /^\s*(\w+)\s*=>\s*'(.*?)'\s*,?\s*$/) {
+        $conf_data{$1} = $2;
+      }
+    }
+    close($cfh);
+  };
+
+  if ($@) {
+    log_msg("WARNING: Could not parse '$conf_file': $@");
+    next;
+  }
+
+  my $sk = $conf_data{sessionkey}    // '';
+  my $sc = $conf_data{sessioncookie} // '';
+
+  if ($sk ne '' || $sc ne '') {
+    $dbh->do(
+      qq|UPDATE members SET sessionkey = ?, sessioncookie = ? WHERE login = ?|,
+      undef, $sk, $sc, $login
+    );
+    $sessions_migrated++;
+    log_msg("Migrated session data from '$conf_file' for user '$login' (sessionkey length=" . length($sk) . ")");
+  }
+
+  # Move .conf file to backup directory
+  my $bak_path = "$conf_bak_dir/$conf_basename";
+  if (rename $conf_file, $bak_path) {
+    $confs_backed_up++;
+    log_msg("Moved '$conf_file' -> '$bak_path'");
+  } else {
+    log_msg("WARNING: Could not move '$conf_file' to '$bak_path': $!");
+  }
+}
+
+log_msg("Session data migration complete. Updated $sessions_migrated user(s), backed up $confs_backed_up .conf file(s) to '$conf_bak_dir/'.");
 
 # ---------------------------------------------------------------------------
 # Step 6: Verify migration

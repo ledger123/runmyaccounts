@@ -33,6 +33,7 @@ BEGIN {
 $| = 1;
 
 use SL::Form;
+use SL::User;
 
 eval { require "sql-ledger.conf"; };
 
@@ -54,10 +55,10 @@ use DBI qw(:sql_types);
 
 $form->{login} =~ s/(\.\.|\/|\\|\x00)//g;
 
-# check for user config file, could be missing or ???
-eval { require("$userspath/$form->{login}.conf"); };
+# load user config from SQLite members database
+%myconfig = User::load_myconfig($memberfile, $form->{login});
 
-if ($@) {
+if (!%myconfig) {
   $locale = new Locale "$language", "$script";
   
   $form->{callback} = "";
@@ -185,7 +186,7 @@ sub check_password {
 	  use SL::User;
 	  $user = new User $memberfile, $form->{login}, 1;
 	  $user->{password} = $form->{password};
-	  $user->create_config("$userspath/$form->{login}.conf");
+	  $user->create_config($memberfile);
 	  $form->{sessioncookie} = $user->{sessioncookie};
 	}
       }
