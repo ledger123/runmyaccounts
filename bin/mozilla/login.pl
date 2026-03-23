@@ -130,7 +130,7 @@ $sf
 </table>
   
   <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelöst!</div>
-  
+
 </body>
 </html>
 |;
@@ -331,7 +331,7 @@ sub login {
 
 sub logout {
 
-  require "$userspath/$form->{login}.conf";
+  %myconfig = User::load_myconfig($memberfile, $form->{login});
   $myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
 
   $form->{callback} = "$form->{script}?path=$form->{path}&login=$form->{login}&endsession=1";

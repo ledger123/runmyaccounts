@@ -76,6 +76,21 @@ sub _init_members_db {
     )
   |);
 
+  # Add any missing columns to an existing table (e.g. sessioncookie)
+  my %existing_cols;
+  my $sth = $dbh->prepare("PRAGMA table_info(members)");
+  $sth->execute;
+  while (my $row = $sth->fetchrow_hashref) {
+    $existing_cols{ lc $row->{name} } = 1;
+  }
+  $sth->finish;
+
+  for my $col (@fields) {
+    unless ($existing_cols{ lc $col }) {
+      $dbh->do(qq|ALTER TABLE members ADD COLUMN $col TEXT DEFAULT ''|);
+    }
+  }
+
   return 1;
 }
 
@@ -163,11 +178,15 @@ sub login {
     }
 
     $self->{password} = $form->{password};
-    $self->create_config("$userspath/$self->{login}.conf");
+    $self->create_config("$userspath/members");
 
     $self->{password} = $form->{password};
-      
-    do "$userspath/$self->{login}.conf";
+
+    # Load config from SQLite DB instead of .conf file
+    my $memfile = $userspath;
+    $memfile =~ s|/+$||;
+    $memfile .= "/members";
+    my %myconfig = User::load_myconfig($memfile, $self->{login});
     $myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
   
     # check if database is down
@@ -884,9 +903,9 @@ sub script_version {
 
 
 sub create_config {
-  my ($self, $filename) = @_;
+  my ($self, $memberfile_or_confpath) = @_;
 
-  # DEBUG: log every attempt to create/update a user config file
+  # DEBUG: log every attempt to create/update a user session
   my $logfile = 'spool/users_config_debug.log';
   if (open(my $LOG, '>>', $logfile)) {
     my $non_empty_keys = 0;
@@ -901,7 +920,7 @@ sub create_config {
     }
 
     print $LOG scalar(localtime),
-      " create_config BEGIN login=[$self->{login}] file=[$filename] keys=$non_empty_keys ref=$ref reftype=$rtype script=$0\n";
+      " create_config BEGIN login=[$self->{login}] memberfile=[$memberfile_or_confpath] keys=$non_empty_keys ref=$ref reftype=$rtype script=$0\n";
     close $LOG;
   }
 
@@ -940,36 +959,29 @@ sub create_config {
     my $logfile2 = 'spool/users_config_debug.log';
     if (open(my $LOG2, '>>', $logfile2)) {
       print $LOG2 scalar(localtime),
-        " create_config login is empty, file=[$filename] save skipping script=$0\n";
+        " create_config login is empty, memberfile=[$memberfile_or_confpath] skipping script=$0\n";
       close $LOG2;
     }
     return;
   }
 
-  umask(002);
-  open(CONF, ">$filename") or $self->error("$filename : $!");
-  
-  # create the config file
-  print CONF qq|# configuration file for $self->{login}
+  # Save sessionkey and sessioncookie to SQLite DB
+  eval {
+    my $memfile = $memberfile_or_confpath;
+    # Support both old-style path (users/login.conf) and memberfile path (users/members)
+    if ($memfile =~ m|^(.+)/[^/]+\.conf$|) {
+      $memfile = "$1/members";
+    } elsif ($memfile !~ /members$/) {
+      $memfile = "users/members";
+    }
+    my $mdbh = _members_dbh($memfile);
+    $mdbh->do(
+      qq|UPDATE members SET sessionkey = ?, sessioncookie = ? WHERE login = ?|,
+      undef, $self->{sessionkey}, $self->{sessioncookie}, $self->{login}
+    );
+    $mdbh->disconnect;
+  };
 
-\%myconfig = (
-|;
-
-  foreach $key (sort @config) {
-    $self->{$key} =~ s/\\/\\\\/g;
-    $self->{$key} =~ s/'/\\'/g;
-    print CONF qq|  $key => '$self->{$key}',\n|;
-  }
-
-   
-  print CONF qq|);\n\n|;
-
-  close CONF;
-  
-  foreach $key (sort @config) {
-    $self->{$key} =~ s/\\\\/\\/g;
-    $self->{$key} =~ s/\\'/'/g;
-  }
 
   $self->{password} = $password;
   
@@ -1022,7 +1034,6 @@ sub save_member {
     );
   } else {
     my @fields = &config_vars;
-    @fields = grep !/^session/, @fields;
 
     # Atomic upsert — no race condition between SELECT and INSERT/UPDATE
     my @cols = ('login', @fields);
@@ -1040,10 +1051,10 @@ sub save_member {
 
   $mdbh->disconnect;
 
-  # create conf file
   if (! $self->{'root login'}) {
     $self->{password} = $password;
-    $self->create_config("$userspath/$self->{login}.conf");
+    # Generate new session and save to DB
+    $self->create_config($memberfile);
 
     $self->{dbpasswd} = unpack 'u', $self->{dbpasswd};
     
@@ -1137,12 +1148,37 @@ sub config_vars {
   my @conf = qw(acs company countrycode dateformat
              dbconnect dbdriver dbhost dbname dboptions dbpasswd
 	     dbport dbuser email fax menuwidth name numberformat password
-	     outputformat printer role sessionkey sid signature
+	     outputformat printer role sessionkey sessioncookie sid signature
 	     stylesheet tel templates timeout vclimit
 	     department department_id warehouse warehouse_id);
 
   @conf;
 
+}
+
+
+sub load_myconfig {
+  my ($memfile, $login) = @_;
+
+  my %config = ();
+  return %config unless $login;
+
+  my $dbh = _members_dbh($memfile);
+
+  my $sth = $dbh->prepare(qq|SELECT * FROM members WHERE login = ?|);
+  $sth->execute($login);
+
+  if (my $row = $sth->fetchrow_hashref) {
+    for my $key (keys %$row) {
+      next if $key eq 'id';
+      $config{$key} = $row->{$key} // '';
+    }
+  }
+
+  $sth->finish;
+  $dbh->disconnect;
+
+  return %config;
 }
 
 
