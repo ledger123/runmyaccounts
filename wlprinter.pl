@@ -1,4 +1,4 @@
-﻿#!/usr/bin/perl
+#!/usr/bin/perl
 #
 ######################################################################
 # SQL-Ledger ERP
@@ -145,19 +145,10 @@ if ($form->{action}) {
 sub check_password {
 
   if ($ip_whitelist) {
-        # Get the real client IP; also check X-Forwarded-For for proxy setups
-        my $remote    = $ENV{REMOTE_ADDR} // '';
-        my $forwarded = (split /\s*,\s*/, ($ENV{HTTP_X_FORWARDED_FOR} // ''))[0] // '';
-        print STDERR " HOST IP: $remote" . ($forwarded ? " (forwarded: $forwarded)" : "");
-        for my $ip_entry (split /\s*,\s*/, $ip_whitelist) {
-                $ip_entry =~ s/^\s+|\s+$//g;
-                next unless length $ip_entry;
-                # Try exact literal match first, then regex match
-                if (   $remote eq $ip_entry
-                    || ($forwarded && $forwarded eq $ip_entry)
-                    || eval { $remote    =~ /\A$ip_entry\z/ }
-                    || eval { $forwarded && $forwarded =~ /\A$ip_entry\z/ })
-                {
+        print STDERR " HOST IP: $ENV{REMOTE_ADDR}";
+        for my $ip (split /,/, $ip_whitelist) {
+                # print STDERR " listed IP: $ip";
+                if ( $ENV{REMOTE_ADDR} =~ /$ip/ ) {
                         # ip is whitelisted
                         return;
                 }
