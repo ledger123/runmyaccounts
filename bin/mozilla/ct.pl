@@ -747,7 +747,7 @@ sub list_names {
   }
 
   push @columns, (
-	     iban, bic, remittancevoucher,
+	     iban, bic, remittancevoucher, reminderstop,
 	     startdate, enddate,
 	     invnumber, invamount, invtax, invtotal,
 	     ordnumber, ordamount, ordtax, ordtotal,
@@ -979,6 +979,7 @@ sub list_names {
   $column_header{iban} = qq|<th class=listheading>|.$locale->text('IBAN').qq|</th>|;
   $column_header{bic} = qq|<th class=listheading>|.$locale->text('BIC').qq|</th>|;
   $column_header{remittancevoucher} = qq|<th class=listheading>|.$locale->text('RV').qq|</th>|;
+  $column_header{reminderstop} = qq|<th class=listheading>|.$locale->text('RS').qq|</th>|;
   $column_header{startdate} = qq|<th><a class=listheading href=$href&sort=startdate>|.$locale->text('Startdate').qq|</a></th>|;
   $column_header{enddate} = qq|<th><a class=listheading href=$href&sort=enddate>|.$locale->text('Enddate').qq|</a></th>|;
   
@@ -1999,9 +2000,10 @@ sub form_header {
 	      </tr>
 |;
 
-  } 
+  }
 
   $form->{remittancevoucher} = ($form->{remittancevoucher}) ? "checked" : "";
+  $form->{reminderstop} = ($form->{reminderstop}) ? "checked" : "";
 
   $form->header(0, 0, $locale);
 
@@ -2170,6 +2172,10 @@ sub form_header {
 	      <tr>
           <th align=left>|.$locale->text('Remittance Voucher').qq|</th>
 		      <td><input name=remittancevoucher class=checkbox type=checkbox value=1 $form->{remittancevoucher}></td>
+	      </tr>
+	      <tr>
+          <th align=left>|.$locale->text('Reminder Stop').qq|</th>
+		    <td><input name=reminderstop class=checkbox type=checkbox value=1 $form->{reminderstop}></td>
 	      </tr>
 	    </table>
 	  </td>
