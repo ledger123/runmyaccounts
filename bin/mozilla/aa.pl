@@ -2334,9 +2334,51 @@ sub transactions {
         }
 
         if ( $form->{l_curr} ) {
-            for (qw(netamount amount paid)) { $ref->{"fx_$_"} = $ref->{$_} / $ref->{exchangerate} }
+            # Check if transaction is fully paid in both currencies
+            # Use old method in case of partial or not paid invoice and new method only for fully paid
+            my $amount_rounded = $form->round_amount($ref->{amount}, $form->{precision});
+            my $paid_rounded = $form->round_amount($ref->{paid}, $form->{precision});
+            my $fxamount_rounded = $form->round_amount(abs($ref->{fxamount}), $form->{precision});
+            my $fxpaid_rounded = $form->round_amount($ref->{fxpaid}, $form->{precision});
 
-            for (qw(netamount amount paid)) { $column_data{"fx_$_"} = "<td align=right>" . $form->format_amount( \%myconfig, $ref->{"fx_$_"}, $form->{precision}, "&nbsp;" ) . "</td>" }
+            my $is_fully_paid = ($amount_rounded == $paid_rounded) && 
+                                ($fxamount_rounded == $fxpaid_rounded) &&
+                                ($ref->{fxamount} != 0) && 
+                                ($ref->{fxpaid} != 0);
+
+            if (1) {
+                # Use database values
+                $ref->{fx_amount} = $ref->{fxamount};
+                $ref->{fx_paid} = $ref->{fxpaid};
+                $ref->{fx_netamount} = $ref->{fxamount} - $ref->{fxpaid};
+            } else {
+                # Calculate the old way
+                for (qw(netamount amount paid)) { 
+                    $ref->{"fx_$_"} = $ref->{$_} / $ref->{exchangerate} 
+                }
+            }
+
+            # Now compare calculated fx_amount with stored fxamount and use stored if difference <= 0.01
+            if ($ref->{fxamount} && $ref->{curr} ne $form->{defaultcurrency}) {
+                my $difference = abs($ref->{fxamount} - $ref->{fx_amount});
+
+                if ($difference > 0 && $difference <= 0.01) {
+                    $ref->{fx_amount} = $ref->{fxamount};
+                }
+            }
+
+            # Compare calculated fx_paid with stored fxpaid and use stored if difference <= 0.01
+            if ($ref->{fxpaid} && $ref->{curr} ne $form->{defaultcurrency}) {
+                my $difference = abs($ref->{fxpaid} - $ref->{fx_paid});
+
+                if ($difference > 0 && $difference <= 0.01) {
+                    $ref->{fx_paid} = $ref->{fxpaid};
+                }
+            }
+
+            for (qw(netamount amount paid)) { 
+                $column_data{"fx_$_"} = "<td align=right>" . $form->format_amount( \%myconfig, $ref->{"fx_$_"}, $form->{precision}, "&nbsp;" ) . "</td>" 
+            }
 
             $column_data{fx_tax} = "<td align=right>" . $form->format_amount( \%myconfig, $ref->{fx_amount} - $ref->{fx_netamount}, $form->{precision}, "&nbsp;" ) . "</td>";
             $column_data{fx_due} = "<td align=right>" . $form->format_amount( \%myconfig, $ref->{fx_amount} - $ref->{fx_paid},      $form->{precision}, "&nbsp;" ) . "</td>";
@@ -2348,7 +2390,6 @@ sub transactions {
             $totalfxnetamount += $ref->{fx_netamount};
             $totalfxamount    += $ref->{fx_amount};
             $totalfxpaid      += $ref->{fx_paid};
-
         }
 
         $column_data{runningnumber} = "<td align=left>$i</td>";
@@ -2656,7 +2697,30 @@ sub transactions_to_csv {
         }
 
         if ( $form->{l_curr} ) {
-            for (qw(netamount amount paid)) { $ref->{"fx_$_"} = $ref->{$_} / $ref->{exchangerate} }
+
+            # Check if transaction is fully paid in both currencies
+            # Use old method in case of partial or not paid invoice and new method only for fully paid
+            my $amount_rounded = $form->round_amount($ref->{amount}, $form->{precision});
+            my $paid_rounded = $form->round_amount($ref->{paid}, $form->{precision});
+            my $fxamount_rounded = $form->round_amount(abs($ref->{fxamount}), $form->{precision});
+            my $fxpaid_rounded = $form->round_amount($ref->{fxpaid}, $form->{precision});
+
+            my $is_fully_paid = ($amount_rounded == $paid_rounded) && 
+                                ($fxamount_rounded == $fxpaid_rounded) &&
+                                ($ref->{fxamount} != 0) && 
+                                ($ref->{fxpaid} != 0);
+
+            if ($is_fully_paid) {
+                # Use database values
+                $ref->{fx_amount} = $ref->{fxamount};
+                $ref->{fx_paid} = $ref->{fxpaid};
+                $ref->{fx_netamount} = $ref->{netamount} / $ref->{exchangerate};
+            } else {
+                # Calculate the old way
+                for (qw(netamount amount paid)) { 
+                    $ref->{"fx_$_"} = $ref->{$_} / $ref->{exchangerate} 
+                }
+            }
 
             for (qw(netamount amount paid)) { $column_data{"fx_$_"} = $form->format_amount( \%myconfig, $ref->{"fx_$_"}, $form->{precision}, " " ) }
 

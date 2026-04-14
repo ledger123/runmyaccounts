@@ -953,7 +953,7 @@ sub post_payment {
 		  WHERE id = |.$form->dbclean($form->{"id_$i"}).qq||;
       $dbh->do($query) || $form->dberror($query);
 
-      my ($amount,$paid,$fxamount,$fxpaid) = $dbh->selectrow_array(qq|SELECT amount, paid, fxamount, fxpaid FROM ar WHERE id = $form->{"id_$i"}|);
+      my ($amount,$paid,$fxamount,$fxpaid) = $dbh->selectrow_array(qq|SELECT amount, paid, fxamount, fxpaid FROM $form->{arap} WHERE id = $form->{"id_$i"}|);
 
       if (($fxamount eq $fxpaid) and ($amount ne $paid) and ($form->{exchangerate} ne 1) ){
         $correction = $form->round_amount($amount - $paid, $form->{precision});
@@ -995,7 +995,81 @@ sub post_payment {
 		  $dbh->do($query) || $form->dberror($query);
         }
       }
-      
+
+        # ROUNDING FIX
+        my ($arap) = $dbh->selectrow_array("SELECT id FROM chart WHERE link = 'AP' LIMIT 1");
+        my ($ap_credit) = $dbh->selectrow_array(qq|
+            SELECT COALESCE(SUM(amount), 0)
+            FROM acc_trans
+            WHERE trans_id = $form->{"id_$i"}
+            AND chart_id = $arap
+            AND amount > 0
+        |);
+        my ($ap_debit) = $dbh->selectrow_array(qq|
+            SELECT COALESCE(SUM(amount), 0)
+            FROM acc_trans
+            WHERE trans_id = $form->{"id_$i"}
+            AND chart_id = $arap
+            AND amount < 0
+        |);
+        my $ap_mismatch = $form->round_amount($ap_credit + $ap_debit, $form->{precision});
+
+        if ($ap_mismatch != 0) {
+          my $increase = $form->round_amount(-$ap_mismatch, $form->{precision});
+          $query = qq|
+              UPDATE acc_trans
+              SET    amount = amount + $increase
+              WHERE  trans_id  = $form->{"id_$i"}
+              AND    chart_id  = $arap
+              AND    amount    > 0
+              AND    entry_id  = (
+                  SELECT entry_id
+                  FROM   acc_trans
+                  WHERE  trans_id = $form->{"id_$i"}
+                  AND    chart_id = $arap
+                  AND    amount   > 0
+                  LIMIT  1
+              )
+          |;
+          $dbh->do($query) || $form->dberror($query);
+        }
+
+      # ROUNDING FIX FOR EACH DATE OF A TRANSACTION
+      my $date_sth = $dbh->prepare(qq|SELECT transdate, SUM(amount) FROM acc_trans WHERE trans_id = ? GROUP BY transdate HAVING SUM(amount) <> 0|);
+      $date_sth->execute($form->{"id_$i"}) || $form->dberror;
+
+      while (my ($corr_date, $date_imbalance) = $date_sth->fetchrow_array) {
+          my $correction2 = (-1)*$date_imbalance;
+
+          my ($existing_gl_entry_id) = $dbh->selectrow_array(qq|
+              SELECT entry_id
+              FROM   acc_trans
+              WHERE  trans_id = $form->{"id_$i"}
+              AND    chart_id IN ($defaults{fxgain_accno_id}, $defaults{fxloss_accno_id})
+              AND    transdate = |.$dbh->quote($corr_date).qq|
+              LIMIT  1
+          |);
+
+          if ($existing_gl_entry_id) {
+              $query = qq|
+                  UPDATE acc_trans
+                  SET    amount = amount + $correction2
+                  WHERE  entry_id = $existing_gl_entry_id
+              |;
+              $dbh->do($query) || $form->dberror($query);
+          } else {
+              $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
+                          transdate, fx_transaction, approved, vr_id)
+                          VALUES ($form->{"id_$i"}, $defaults{fxloss_accno_id},
+                          $correction2, |.$dbh->quote($corr_date).qq|, '1', '$approved', $voucherid)|;
+              $dbh->do($query) || $form->dberror($query);
+          }
+      }
+      $date_sth->finish;
+
+      $query = qq|UPDATE acc_trans SET amount = ROUND(amount::numeric, 5) WHERE trans_id = $form->{"id_$i"}|;
+      $dbh->do($query) || $form->dberror($query);
+
       %audittrail = ( tablename  => $form->{arap},
                       reference  => $form->{source},
 		      formname   => $form->{formname},

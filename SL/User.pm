@@ -17,42 +17,115 @@
 
 package User;
 
+use DBI;
 use Scalar::Util qw(reftype);
+
+my $SQLITE_INIT_DONE = {};  # track which db files we've initialized
+
+
+sub _members_dbh {
+  my ($memfile) = @_;
+
+  # memfile is the path to the old members file e.g. "users/members"
+  # SQLite db will be at same location with .db extension: "users/members.db"
+  my $dbfile = "${memfile}.db";
+
+  my $need_init = !-f $dbfile;
+
+  # Clean up stale journal files if DB does not exist
+  if ($need_init) {
+    unlink "${dbfile}-wal"     if -f "${dbfile}-wal";
+    unlink "${dbfile}-shm"     if -f "${dbfile}-shm";
+    unlink "${dbfile}-journal" if -f "${dbfile}-journal";
+  }
+
+  my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+    RaiseError => 0,
+    PrintError => 0,
+    AutoCommit => 1,
+    sqlite_unicode => 1,
+  }) or die "Cannot open members database $dbfile: $DBI::errstr\n";
+
+  # Use DELETE journal mode to avoid WAL file permission issues in CGI
+  $dbh->do("PRAGMA journal_mode=DELETE");
+  $dbh->do("PRAGMA foreign_keys=ON");
+  # Wait up to 5 seconds if another process is writing to the database
+  $dbh->do("PRAGMA busy_timeout=5000");
+
+  if ($need_init || !$SQLITE_INIT_DONE->{$dbfile}) {
+    _init_members_db($dbh);
+    $SQLITE_INIT_DONE->{$dbfile} = 1;
+  }
+
+
+  return $dbh;
+}
+
+
+sub _init_members_db {
+  my ($dbh) = @_;
+
+  my @fields = &config_vars;
+  my $cols = join(",\n      ", map { "$_ TEXT DEFAULT ''" } @fields);
+
+  $dbh->do(qq|
+    CREATE TABLE IF NOT EXISTS members (
+      id    INTEGER PRIMARY KEY AUTOINCREMENT,
+      login TEXT    NOT NULL UNIQUE,
+      $cols
+    )
+  |);
+
+  # Add any missing columns to an existing table (e.g. sessioncookie)
+  my %existing_cols;
+  my $sth = $dbh->prepare("PRAGMA table_info(members)");
+  $sth->execute;
+  while (my $row = $sth->fetchrow_hashref) {
+    $existing_cols{ lc $row->{name} } = 1;
+  }
+  $sth->finish;
+
+  for my $col (@fields) {
+    unless ($existing_cols{ lc $col }) {
+      $dbh->do(qq|ALTER TABLE members ADD COLUMN $col TEXT DEFAULT ''|);
+    }
+  }
+
+  return 1;
+}
+
+
+
 
 sub new {
   my ($type, $memfile, $login, $ignorelock) = @_;
   my $self = {};
 
   if ($login ne "") {
-    if (!$ignorelock){
-    &error("", "$memfile locked!") if (-f "${memfile}.LCK");
+    my $dbh = _members_dbh($memfile);
+
+    my $query = qq|SELECT * FROM members WHERE login = ?|;
+    my $sth = $dbh->prepare($query);
+
+    if (!$sth) {
+      warn "User::new - prepare failed for login '$login': " . ($dbh->errstr // 'unknown error') . "\n";
+      $dbh->disconnect;
+      bless $self, $type;
+      return $self;
     }
-    
-    open(MEMBER, "$memfile") or &error("", "$memfile : $!");
-    
-    while (<MEMBER>) {
-      if (/^\[$login\]/) {
-	while (<MEMBER>) {
-	  last if /^\[/;
-	  next if /^(#|\s)/;
-	  
-	  # remove comments
-	  s/^\s*#.*//g;
 
-	  # remove any trailing whitespace
-	  s/^\s*(.*?)\s*$/$1/;
+    $sth->execute($login);
 
-	  ($key, $value) = split /=/, $_, 2;
-	  
-	  $self->{$key} = $value;
-	}
-	
-	$self->{login} = $login;
-
-	last;
+    if (my $row = $sth->fetchrow_hashref) {
+      for my $key (keys %$row) {
+        next if $key eq 'login';
+        $self->{$key} = $row->{$key};
       }
+      $self->{login} = $login;
     }
-    close MEMBER;
+
+    $sth->finish;
+    $dbh->disconnect;
   }
   
   bless $self, $type;
@@ -105,11 +178,15 @@ sub login {
     }
 
     $self->{password} = $form->{password};
-    $self->create_config("$userspath/$self->{login}.conf");
+    $self->create_config("$userspath/members");
 
     $self->{password} = $form->{password};
-      
-    do "$userspath/$self->{login}.conf";
+
+    # Load config from SQLite DB instead of .conf file
+    my $memfile = $userspath;
+    $memfile =~ s|/+$||;
+    $memfile .= "/members";
+    my %myconfig = User::load_myconfig($memfile, $self->{login});
     $myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
   
     # check if database is down
@@ -519,19 +596,15 @@ sub dbsources_unused {
   my @dbexcl = ();
   my @dbsources = ();
   
-  $form->error("$memfile locked!") if (-f "${memfile}.LCK");
-  
-  # open members file
-  open(FH, "$memfile") or $form->error("$memfile : $!");
-
-  while (<FH>) {
-    if (/^dbname=/) {
-      my ($null,$item) = split /=/;
-      push @dbexcl, $item;
-    }
+  # Read all dbname values from SQLite members database
+  my $mdbh = _members_dbh($memfile);
+  my $sth = $mdbh->prepare(qq|SELECT DISTINCT dbname FROM members WHERE dbname != ''|);
+  $sth->execute;
+  while (my ($item) = $sth->fetchrow_array) {
+    push @dbexcl, $item;
   }
-
-  close FH;
+  $sth->finish;
+  $mdbh->disconnect;
 
   $form->{only_acc_db} = 1;
   my @db = &dbsources("", $form);
@@ -830,9 +903,9 @@ sub script_version {
 
 
 sub create_config {
-  my ($self, $filename) = @_;
+  my ($self, $memberfile_or_confpath) = @_;
 
-  # DEBUG: log every attempt to create/update a user config file
+  # DEBUG: log every attempt to create/update a user session
   my $logfile = 'spool/users_config_debug.log';
   if (open(my $LOG, '>>', $logfile)) {
     my $non_empty_keys = 0;
@@ -847,7 +920,7 @@ sub create_config {
     }
 
     print $LOG scalar(localtime),
-      " create_config BEGIN login=[$self->{login}] file=[$filename] keys=$non_empty_keys ref=$ref reftype=$rtype script=$0\n";
+      " create_config BEGIN login=[$self->{login}] memberfile=[$memberfile_or_confpath] keys=$non_empty_keys ref=$ref reftype=$rtype script=$0\n";
     close $LOG;
   }
 
@@ -886,36 +959,29 @@ sub create_config {
     my $logfile2 = 'spool/users_config_debug.log';
     if (open(my $LOG2, '>>', $logfile2)) {
       print $LOG2 scalar(localtime),
-        " create_config login is empty, file=[$filename] save skipping script=$0\n";
+        " create_config login is empty, memberfile=[$memberfile_or_confpath] skipping script=$0\n";
       close $LOG2;
     }
     return;
   }
 
-  umask(002);
-  open(CONF, ">$filename") or $self->error("$filename : $!");
-  
-  # create the config file
-  print CONF qq|# configuration file for $self->{login}
+  # Save sessionkey and sessioncookie to SQLite DB
+  eval {
+    my $memfile = $memberfile_or_confpath;
+    # Support both old-style path (users/login.conf) and memberfile path (users/members)
+    if ($memfile =~ m|^(.+)/[^/]+\.conf$|) {
+      $memfile = "$1/members";
+    } elsif ($memfile !~ /members$/) {
+      $memfile = "users/members";
+    }
+    my $mdbh = _members_dbh($memfile);
+    $mdbh->do(
+      qq|UPDATE members SET sessionkey = ?, sessioncookie = ? WHERE login = ?|,
+      undef, $self->{sessionkey}, $self->{sessioncookie}, $self->{login}
+    );
+    $mdbh->disconnect;
+  };
 
-\%myconfig = (
-|;
-
-  foreach $key (sort @config) {
-    $self->{$key} =~ s/\\/\\\\/g;
-    $self->{$key} =~ s/'/\\'/g;
-    print CONF qq|  $key => '$self->{$key}',\n|;
-  }
-
-   
-  print CONF qq|);\n\n|;
-
-  close CONF;
-  
-  foreach $key (sort @config) {
-    $self->{$key} =~ s/\\\\/\\/g;
-    $self->{$key} =~ s/\\'/'/g;
-  }
 
   $self->{password} = $password;
   
@@ -927,15 +993,6 @@ sub save_member {
 
   # format dbconnect and dboptions string
   &dbconnect_vars($self, $self->{dbname});
-  
-  $self->error("$memberfile locked!") if (-f "${memberfile}.LCK");
-  open(FH, ">${memberfile}.LCK") or $self->error("${memberfile}.LCK : $!");
-  close(FH);
-  
-  if (! open(CONF, "+<$memberfile")) {
-    unlink "${memberfile}.LCK";
-    $self->error("$memberfile : $!");
-  }
   
   $self->{department_id} = '';
   if ($self->{department}){
@@ -952,30 +1009,9 @@ sub save_member {
      $dbh->disconnect;
   }
 
-  @config = <CONF>;
-  
-  seek(CONF, 0, 0);
-  truncate(CONF, 0);
-  
-  while ($line = shift @config) {
-    last if ($line =~ /^\[$self->{login}\]/);
-    print CONF $line;
-  }
+  # Save to SQLite members database
+  my $mdbh = _members_dbh($memberfile);
 
-  # remove everything up to next login or EOF
-  while ($line = shift @config) {
-    last if ($line =~ /^\[/);
-  }
-
-  # this one is either the next login or EOF
-  print CONF $line;
-
-  while ($line = shift @config) {
-    print CONF $line;
-  }
-
-  print CONF qq|[$self->{login}]\n|;
-  
   if ($self->{packpw}) {
     $self->{dbpasswd} = pack 'u', $self->{dbpasswd};
     chop $self->{dbpasswd};
@@ -986,26 +1022,39 @@ sub save_member {
     $self->{password} = crypt $self->{password}, substr($self->{login}, 0, 2) if $self->{password};
   }
 
-  if ($self->{'root login'}) {
-    @config = qw(password);
-  } else {
-    @config = &config_vars;
-    @config = grep !/^session/, @config;
-  }
- 
   # replace \r\n with \n
   $self->{signature} =~ s/\r?\n/\\n/g;
 
-  for (sort @config) { print CONF qq|$_=$self->{$_}\n| }
+  if ($self->{'root login'}) {
+    # Root login only stores password — atomic upsert
+    $mdbh->do(
+      qq|INSERT INTO members (login, password) VALUES (?, ?)
+         ON CONFLICT(login) DO UPDATE SET password = excluded.password|,
+      undef, 'root login', $self->{password}
+    );
+  } else {
+    my @fields = &config_vars;
 
-  print CONF "\n";
-  close CONF;
-  unlink "${memberfile}.LCK";
+    # Atomic upsert — no race condition between SELECT and INSERT/UPDATE
+    my @cols = ('login', @fields);
+    my $cols_str = join(', ', @cols);
+    my $ph_str   = join(', ', map { '?' } @cols);
+    my $update_str = join(', ', map { "$_ = excluded.$_" } @fields);
+    my @vals = ($self->{login}, map { $self->{$_} // '' } @fields);
 
-  # create conf file
+    $mdbh->do(
+      qq|INSERT INTO members ($cols_str) VALUES ($ph_str)
+         ON CONFLICT(login) DO UPDATE SET $update_str|,
+      undef, @vals
+    );
+  }
+
+  $mdbh->disconnect;
+
   if (! $self->{'root login'}) {
     $self->{password} = $password;
-    $self->create_config("$userspath/$self->{login}.conf");
+    # Generate new session and save to DB
+    $self->create_config($memberfile);
 
     $self->{dbpasswd} = unpack 'u', $self->{dbpasswd};
     
@@ -1067,17 +1116,69 @@ sub delete_login {
 }
 
 
+sub delete_member {
+  my ($self, $memberfile) = @_;
+
+  my $dbh = _members_dbh($memberfile);
+  $dbh->do(qq|DELETE FROM members WHERE login = ?|, undef, $self->{login});
+  $dbh->disconnect;
+}
+
+
+sub get_all_logins {
+  my ($class, $memfile) = @_;
+
+  my $dbh = _members_dbh($memfile);
+  my $sth = $dbh->prepare(qq|SELECT login FROM members WHERE login != 'root login' ORDER BY login|);
+  $sth->execute;
+
+  my @logins;
+  while (my ($login) = $sth->fetchrow_array) {
+    push @logins, $login;
+  }
+  $sth->finish;
+  $dbh->disconnect;
+
+  return @logins;
+}
+
+
 sub config_vars {
 
   my @conf = qw(acs company countrycode dateformat
              dbconnect dbdriver dbhost dbname dboptions dbpasswd
 	     dbport dbuser email fax menuwidth name numberformat password
-	     outputformat printer role sessionkey sid signature
+	     outputformat printer role sessionkey sessioncookie sid signature
 	     stylesheet tel templates timeout vclimit
 	     department department_id warehouse warehouse_id);
 
   @conf;
 
+}
+
+
+sub load_myconfig {
+  my ($memfile, $login) = @_;
+
+  my %config = ();
+  return %config unless $login;
+
+  my $dbh = _members_dbh($memfile);
+
+  my $sth = $dbh->prepare(qq|SELECT * FROM members WHERE login = ?|);
+  $sth->execute($login);
+
+  if (my $row = $sth->fetchrow_hashref) {
+    for my $key (keys %$row) {
+      next if $key eq 'id';
+      $config{$key} = $row->{$key} // '';
+    }
+  }
+
+  $sth->finish;
+  $dbh->disconnect;
+
+  return %config;
 }
 
 

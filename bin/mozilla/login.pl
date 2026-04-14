@@ -130,7 +130,7 @@ $sf
 </table>
   
   <div class="service_portal_warning" align=center>Achtung! Diese Seite wurde durch <a href="https://service.runmyaccounts.com">https://service.runmyaccounts.com</a> abgelöst!</div>
-  
+
 </body>
 </html>
 |;
@@ -230,26 +230,23 @@ sub login {
 
 
   if (! $form->{beenthere}) {
-    open(FH, "$memberfile") or $form->error("$memberfile : $!");
-    @a = <FH>;
-    close(FH);
-    
-    foreach $item (@a) {
+    my $dbfile = "${memberfile}.db";
+    my $mdbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", {
+      RaiseError => 0,
+      PrintError => 0,
+      AutoCommit => 1,
+      sqlite_unicode => 1,
+    }) or $form->error("$dbfile : $DBI::errstr");
 
-      if ($item =~ /^\[(.*?)\]/) {
-	$login = $1;
-	$found = 1;
-      }
-
-      if ($item =~ /^company=/) {
-	if ($login =~ /^$form->{login}(@|$)/ && $found) {
-	  ($null, $name) = split /=/, $item, 2;
-	  $login{$login} = $name;
-	  $found = 0;
-	}
-
+    my $sth = $mdbh->prepare(qq|SELECT login, company FROM members WHERE login LIKE ?|);
+    $sth->execute("$form->{login}\%");
+    while (my ($l, $c) = $sth->fetchrow_array) {
+      if ($l =~ /^$form->{login}(@|$)/) {
+        $login{$l} = $c;
       }
     }
+    $sth->finish;
+    $mdbh->disconnect;
 
     if (keys %login > 1) {
       &selectdataset(\%login);
@@ -334,7 +331,7 @@ sub login {
 
 sub logout {
 
-  require "$userspath/$form->{login}.conf";
+  %myconfig = User::load_myconfig($memberfile, $form->{login});
   $myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
 
   $form->{callback} = "$form->{script}?path=$form->{path}&login=$form->{login}&endsession=1";
@@ -343,5 +340,4 @@ sub logout {
   $form->redirect;
 
 }
-
 
