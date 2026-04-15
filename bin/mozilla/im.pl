@@ -2794,9 +2794,9 @@ sub im_transactions {
   $form->error($locale->text('Import File missing!')) if ! $form->{data};
 
   if ($form->{vc} eq 'customer'){
-    @column_index = qw(ndx invnumber invoicedescription customernumber name transdate account account_description amount description notes source memo);
+    @column_index = qw(ndx invnumber invoicedescription customernumber name transdate duedate account account_description amount description notes source memo);
   } else {
-    @column_index = qw(ndx invnumber invoicedescription vendornumber name transdate account account_description amount description notes source memo);
+    @column_index = qw(ndx invnumber invoicedescription vendornumber name transdate duedate account account_description amount description notes source memo);
   }
   @flds = @column_index;
   push @flds, qw(vendor_id customer_id employee employee_id);
@@ -2820,6 +2820,7 @@ sub im_transactions {
   $column_data{"$form->{vc}number"} = $locale->text('Number');
   $column_data{name} = $locale->text('Name');
   $column_data{transdate} = $locale->text('Invoice Date');
+  $column_data{duedate} = $locale->text('Due Date');
   $column_data{account} = $locale->text('Account');
   $column_data{amount} = $locale->text('Amount');
 
@@ -2948,7 +2949,7 @@ sub import_transactions {
       }
       $linenum += 1;
       $newform->{transdate} = $form->{"transdate_$i"};
-      $newform->{duedate} = $form->{"transdate_$i"};
+      $newform->{duedate} = $form->{"duedate_$i"} ? $form->{"duedate_$i"} : $form->{"transdate_$i"};
       $newform->{notes} = $form->{"notes_$i"};
 
       $newform->{"amount_$linenum"} = $form->{"amount_$i"};
