@@ -2346,7 +2346,7 @@ sub transactions {
                                 ($ref->{fxamount} != 0) && 
                                 ($ref->{fxpaid} != 0);
 
-            if (1) {
+            if ($is_fully_paid) {
                 # Use database values
                 $ref->{fx_amount} = $ref->{fxamount};
                 $ref->{fx_paid} = $ref->{fxpaid};
