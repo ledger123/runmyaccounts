@@ -623,7 +623,7 @@ sub form_header {
     if ( $form->{vc} eq 'vendor' ) {
         $dcn = qq|
               <tr>
-	        <th align=right nowrap>| . $locale->text('DCN') . qq|</th>
+	        <th align=left nowrap>| . $locale->text('DCN') . qq|</th>
 		<td><input name=dcn size=60 value="| . $form->quote( $form->{dcn} ) . qq|"></td>
 	      </tr>
 |;
@@ -631,7 +631,7 @@ sub form_header {
     else {
         $dcn = qq|
               <tr valign=top>
-	        <th align=right nowrap>| . $locale->text('DCN') . qq|</th>
+	        <th align=left nowrap>| . $locale->text('DCN') . qq|</th>
 		<td>$form->{dcn}</td>
 	      </tr>
 | . $form->hide_form('dcn');
