@@ -3398,7 +3398,7 @@ sub do_print_reminder {
 	);
 
 	@a =
-	  qw(id invnumber name nameqr address1 address1qr address2 city cityqr state stateqr zipcode zipcodeqr country contact typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn
+	  qw(id invnumber name nameqr address1 address1qr address2 city cityqr state stateqr zipcode zipcodeqr country contact contacttitle typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn customeremail
 	  qribanqr companyqr companyaddress1qr companyzipqr companycityqr invnumberqr invdateqr businessnumberqr strdbkginfqr strdbkginfline1qr strdbkginfline2qr invdescriptionqr2 swicotaxbaseqr swicotaxqr);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";

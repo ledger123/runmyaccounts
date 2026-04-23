@@ -1610,7 +1610,7 @@ if($form->{payed}){
       (SELECT $buysell FROM exchangerate e
        WHERE a.curr = e.curr
        AND e.transdate = a.transdate) AS exchangerate,
-    ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
+    ct.firstname, ct.lastname, ct.salutation, ct.contacttitle, ct.typeofcontact,
     s.*
     FROM |.$form->dbclean($form->{arap}).qq| a
     JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
@@ -1783,7 +1783,7 @@ sub reminder {
 		(SELECT exchangerate FROM exchangerate e
 		 WHERE a.curr = e.curr
 		 AND e.transdate = a.transdate) AS exchangerate,
-	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
+	      ct.firstname, ct.lastname, ct.salutation, ct.contacttitle, ct.typeofcontact,
 	      current_date - a.duedate duedays,
 	      s.*,
           bank.name bankname, bank.iban, bank.bic bankbic,
@@ -1864,6 +1864,8 @@ sub reminder {
 		$form->{cityqr} = substr($ref->{city},0,35);
 		$form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
 		
+		$form->{customeremail} = $ref->{email};
+
 		$form->{businessnumberqr} = "";
 		my @nums = $form->{businessnumber} =~ /(\d+)/g;
 		for (@nums) { $form->{businessnumberqr} .= $_ };
@@ -1947,6 +1949,7 @@ sub reminder {
 		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+		$ref->{customeremail} = $form->{customeremail};
 
 	
 	    ($whole, $decimal) = split /\./, $ref->{due};
