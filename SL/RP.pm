@@ -1817,7 +1817,7 @@ sub reminder {
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
 		$ref->{language_code} = $item->{language_code};
-	    $form->{terms} = $ref->{terms};
+	    $form->{terms} = $form->datediff($myconfig, $ref->{transdate}, $ref->{duedate});
 	
 
 		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
