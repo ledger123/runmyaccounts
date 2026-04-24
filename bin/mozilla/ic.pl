@@ -426,7 +426,8 @@ sub form_header {
 		<td><select name=IC_expense>$select{IC_expense}</select></td>
 	      </tr>
 |;
-  
+
+
     if ($tax) {
       $linkaccounts .= qq|
 	      <tr>
@@ -459,6 +460,23 @@ sub form_header {
     
   }
 
+  $form->all_projects( \%myconfig, undef, $form->{transdate} );
+  $form->{selectprojectnumber} = "";
+  if ( @{ $form->{all_project} } ) {
+     $form->{selectprojectnumber} = "\n";
+     for ( @{ $form->{all_project} } ) { $form->{selectprojectnumber} .= qq|$_->{projectnumber}--$_->{id}\n| }
+     $form->{selectprojectnumber} = $form->escape( $form->{selectprojectnumber}, 1 );
+  }
+  if ( $form->{selectprojectnumber} ) {
+        ($projectnumber, $null) = split /--/, $form->{projectnumber};
+        $projectnumber = "$projectnumber--$form->{project_id}";
+        $project = qq|
+        <tr>
+	    <th align="right">| . $locale->text('Project') . qq|</th>
+        <td><select name=projectnumber>|.$form->select_option( $form->{selectprojectnumber}, "$projectnumber", 1 ) . qq|</select></td>
+        </tr>
+|;
+  }
 
   if ($form->{item} eq "assembly") {
 
@@ -663,6 +681,7 @@ sub form_header {
                 <th class="listheading" align="center" colspan=2>|.$locale->text('Link Accounts').qq|</th>
               </tr>
               $linkaccounts
+              $project
               <tr>
                 <th align="left">|.$locale->text('Notes').qq|</th>
               </tr>
