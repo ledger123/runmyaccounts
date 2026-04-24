@@ -330,7 +330,7 @@ sub post_transaction {
     ( $null, $paymentmethod_id ) = split /--/, $form->{"paymentmethod_$form->{paidaccounts}"};
     $paymentmethod_id *= 1;
 
-    if ( $form->{vc} eq 'customer' ) {
+    if ( !$form->{dcn} && $form->{vc} eq 'customer' ) {
 
         # dcn
         ( $form->{integer_amount}, $form->{decimal} ) = split /\./, $fxinvamount;
@@ -381,7 +381,7 @@ sub post_transaction {
 	      discountterms = | . $form->dbclean( $form->{discountterms} ) . qq|,
 	      onhold = | . $dbh->quote( $form->{onhold} ) . qq|,
 	      exchangerate = | . $form->dbclean( $form->{exchangerate} ) . qq|
-	      | . ( ( $form->{dcn} == '' ) ? '' : qq|,dcn = | . $dbh->quote( $form->{dcn} ) . qq|| ) . qq|,
+	      | . ( ( $form->{dcn} eq '' ) ? '' : qq|,dcn = | . $dbh->quote( $form->{dcn} ) . qq|| ) . qq|,
 	      bank_id = (SELECT id FROM chart WHERE accno = '$paymentaccno'),
 	      paymentmethod_id = | . $form->dbclean($paymentmethod_id) . qq|
 	      WHERE id = $form->{id}|;
