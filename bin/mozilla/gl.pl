@@ -1604,6 +1604,19 @@ sub transactions_to_csv {
         $ref->{reference} ||= "";
         $column_data{reference} = "$ref->{reference}";
 
+        if ($form->{l_exchangerate}){
+           if ($ref->{payment_id}){
+              my $exchangerate = $form->{dbs}->query("
+                  SELECT exchangerate
+                  FROM payment
+                  WHERE trans_id = ?
+                  AND id = ?",
+                  $ref->{id}, $ref->{payment_id}
+              )->list;
+              $ref->{exchangerate} = $exchangerate if $exchangerate;
+           }
+        }
+
         for (qw(department projectnumber name vcnumber address exchangerate curr ts)) { $column_data{$_} = "$ref->{$_}" }
 
         for (qw(lineitem description source memo notes intnotes)) {
