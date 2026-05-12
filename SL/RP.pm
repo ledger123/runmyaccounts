@@ -1610,7 +1610,7 @@ if($form->{payed}){
       (SELECT $buysell FROM exchangerate e
        WHERE a.curr = e.curr
        AND e.transdate = a.transdate) AS exchangerate,
-    ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
+    ct.firstname, ct.lastname, ct.salutation, ct.contacttitle, ct.typeofcontact,
     s.*
     FROM |.$form->dbclean($form->{arap}).qq| a
     JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
@@ -1783,7 +1783,7 @@ sub reminder {
 		(SELECT exchangerate FROM exchangerate e
 		 WHERE a.curr = e.curr
 		 AND e.transdate = a.transdate) AS exchangerate,
-	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
+	      ct.firstname, ct.lastname, ct.salutation, ct.contacttitle, ct.typeofcontact,
 	      current_date - a.duedate duedays,
 	      s.*,
           bank.name bankname, bank.iban, bank.bic bankbic,
@@ -1817,7 +1817,7 @@ sub reminder {
 		$ref->{module} = 'ps' if $ref->{till};
 		$ref->{exchangerate} ||= 1;
 		$ref->{language_code} = $item->{language_code};
-	    $form->{terms} = $ref->{terms};
+	    $form->{terms} = $form->datediff($myconfig, $ref->{transdate}, $ref->{duedate});
 	
 
 		# conversion to QR variables ("%" needs to be removed from all variables since it breaks the print, See #112443)
@@ -1829,12 +1829,11 @@ sub reminder {
 		$form->{invnumber} = $form->string_replace($form->{invnumber}, "\Q\\\E", ""); # QR Standard requires "\" to be escaped. We just remove it ("/" is rarely used) ("\Q\\\E" is the escaped regex for "\") (See #112446)
 		$form->{invnumberqr} = $form->{invnumber};
 		
-		# QR-Codes needs to be the same as in Debitoren-Modul (as it works in Debitoren-Modul). This variable is not filled in Debitoren-Modul, thats why commented out here.
-		#$form->{invdescription} = $ref->{invdescription};
-		#$form->{invdescriptionqr} = $form->format_line($myconfig, $form->{invdescription});
-		#$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
-		#$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55); # abbrevate with ... because of QR Standard (See #112445)
-		#$form->{invdescriptionqr2} = $form->{invdescriptionqr};
+		$form->{invdescription} = $ref->{invdescription};
+		$form->{invdescriptionqr} = $form->format_line($myconfig, $ref->{invdescriptionqr});
+		$form->{invdescriptionqr} = $form->string_replace($form->{invdescriptionqr}, "%", "");
+		$form->{invdescriptionqr} = $form->string_abbreviate($form->{invdescriptionqr}, 55);
+		$form->{invdescriptionqr2} = $form->{invdescriptionqr};
 		
 		$form->{qriban} = $ref->{qriban};
 		$form->{qribanqr} = $form->{qriban};
@@ -1865,37 +1864,54 @@ sub reminder {
 		$form->{cityqr} = substr($ref->{city},0,35);
 		$form->{cityqr} = $form->string_replace($form->{cityqr}, "%", "");
 		
+		$form->{customeremail} = $ref->{email};
+
+		$form->{businessnumberqr} = "";
 		my @nums = $form->{businessnumber} =~ /(\d+)/g;
 		for (@nums) { $form->{businessnumberqr} .= $_ };
 		
-		$form->{swicotaxbaseqr}  = $form->{swicotaxbase};
-		$form->{swicotaxbaseqr} = $form->string_replace($form->{swicotaxbaseqr}, "%", "");
-		
-		$form->{swicotaxqr}  = $form->{swicotax};
-		$form->{swicotaxqr} = $form->string_replace($form->{swicotaxqr}, "%", "");
-		
-		@taxaccounts = split (/ /, $form->{taxaccounts}); 
-		
-		for (@taxaccounts) {
-			if ($form->{"${_}_rate"}) {
-			    #$rate = $form->parse_amount($myconfig, $form->{"${_}_rate"});
-			    $rate = $form->{"${_}_rate"};
-			    $taxbase = $form->parse_amount($myconfig, $form->{"${_}_taxbase"});
-			    $taxbase *= 1;
-			    $tax = $form->round_amount(($rate * $taxbase)/100,2);
-			    $rate *= 100;
-			    if ($taxbase){
-			      $form->{swicotaxbaseqr} .= qq|$rate:$taxbase;|;
-			    }
+		$form->{swicotaxbaseqr} = "";
+		$form->{swicotaxqr} = "";
+
+		# Load tax data from the posted invoice's acc_trans entries
+		# Uses same tax rate lookup pattern as RP.pm line 2258
+		my $transdate = $dbh->quote($ref->{transdate});
+		my $taxquery = qq|
+			SELECT ROUND((tax_rate * 100)::NUMERIC, 1) AS rate_pct,
+			       ROUND(ABS(SUM(amount) / NULLIF(tax_rate, 0))::NUMERIC, $form->{precision}) AS taxbase
+			FROM (
+			    SELECT ac.amount,
+			           (SELECT tx.rate FROM tax tx
+			            WHERE tx.chart_id = c.id
+			            AND (tx.validto > $transdate OR tx.validto IS NULL)
+			            ORDER BY tx.validto LIMIT 1) AS tax_rate
+			    FROM acc_trans ac
+			    JOIN chart c ON (c.id = ac.chart_id)
+			    WHERE ac.trans_id = $ref->{id}
+			    AND c.link LIKE '%_tax%'
+			) sub
+			WHERE tax_rate IS NOT NULL AND tax_rate != 0
+			GROUP BY tax_rate
+			HAVING ABS(SUM(amount)) > 0.001
+			ORDER BY tax_rate|;
+		my $taxsth = $dbh->prepare($taxquery);
+		$taxsth->execute || $form->dberror($taxquery);
+		while (my $taxref = $taxsth->fetchrow_hashref(NAME_lc)) {
+			my $rate_pct = $taxref->{rate_pct} * 1;
+			my $taxbase = $taxref->{taxbase} * 1;
+			if ($taxbase) {
+				$form->{swicotaxbaseqr} .= qq|$rate_pct:$taxbase;|;
 			}
 		}
-	
+		$taxsth->finish;
 		chop $form->{swicotaxbaseqr};
 		
 		$form->{invdate} = $ref->{transdate};
 		$form->{invdateqr}  = substr($form->datetonum($myconfig, $form->{invdate}),2);
 		$form->{invdateqr} = $form->string_replace($form->{invdateqr}, "%", "");
 		
+		$form->{ponumber} = $ref->{ponumber};
+		$form->{ordnumber} = $ref->{ordnumber};
 		$form->{strdbkginf} = $form->format_line($myconfig, $ref->{strdbkginf});
 		$form->{strdbkginf}  = substr($form->{strdbkginf}, 0, 85); # abbrevate to maximum length allowed by the QR Standard.
 		$form->{strdbkginf} = $form->string_replace($form->{strdbkginf}, "%", "");
@@ -1933,6 +1949,7 @@ sub reminder {
 		$ref->{strdbkginfqr} = $form->{strdbkginfqr};
 		$ref->{strdbkginfline1qr} = $form->{strdbkginfline1qr};
 		$ref->{strdbkginfline2qr} = $form->{strdbkginfline2qr};
+		$ref->{customeremail} = $form->{customeremail};
 
 	
 	    ($whole, $decimal) = split /\./, $ref->{due};
