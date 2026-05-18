@@ -1901,6 +1901,25 @@ sub post_yearend {
               VALUES ($form->{id}, '$form->{transdate}')|;
   $dbh->do($query) || $form->dberror($query);
 
+  # get the yearend id for the row we just inserted
+  $query = qq|SELECT id FROM yearend WHERE trans_id = $form->{id}|;
+  my ($yearend_id) = $dbh->selectrow_array($query);
+  # update the current financial year to CLOSED and link it to this yearend
+  $query = qq|UPDATE financial_year
+              SET status = 'CLOSED',
+                  yearend_id = $yearend_id,
+                  end_date = '$form->{transdate}'
+              WHERE status = 'CURRENT_FINANCIAL_YEAR'
+              AND start_date <= '$form->{transdate}'|;
+  $dbh->do($query) || $form->dberror($query);
+  # insert a new CURRENT_FINANCIAL_YEAR row for the next period
+  $query = qq|INSERT INTO financial_year (start_date, end_date, status)
+              SELECT '$form->{transdate}'::date + 1,
+                     ('$form->{transdate}'::date + interval '12 month'),
+                     'CURRENT_FINANCIAL_YEAR'
+              WHERE EXISTS (SELECT 1 FROM financial_year WHERE yearend_id = $yearend_id)|;
+  $dbh->do($query) || $form->dberror($query);
+
   my %audittrail = ( tablename	=> 'gl',
                      reference	=> $form->{reference},
 	  	     formname	=> 'yearend',
