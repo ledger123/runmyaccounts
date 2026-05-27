@@ -2045,14 +2045,21 @@ sub income_statement_by_department {
     exit;
    }
 
+   my $p_params = '';
+     for my $key (sort keys %$form) {
+       if ($key =~ /^p_/ && $form->{$key}) {
+         $p_params .= "     '&$key=$form->{$key}' +\n";
+       }
+     }
+
   $form->header(0, 0, $locale);
   print qq|
     <body class="bill main2">
     <button onclick="window.parent.postMessage({name: 'ledgerEvent', params: {
     event: 'urlToPdf',
      url: window.location.href +
-     '&datefrom=$form->{datefrom}' +
-     '&dateto=$form->{dateto}' +
+     '&fromdate=$form->{fromdate}' +
+     '&todate=$form->{todate}' +
      '&month=$form->{month}' +
      '&year=$form->{year}' +
      '&interval=$form->{interval}' +
@@ -2061,7 +2068,8 @@ sub income_statement_by_department {
      '&path=$form->{path}' +
      '&nextsub=$form->{nextsub}' +
      '&login=$form->{login}' +
-     '&pivotby=$form->{pivotby}'
+     '&pivotby=$form->{pivotby}' +
+     $p_params     ''
       }}, '*');"
     class="noprint nkp" style="background-color: white; cursor: pointer; position: fixed; top: 5px; right: 5px; height: 30px; width: 30px; margin: 0; padding: 0; outline: none; border: none; -webkit-appearance: none;">
   <img style="max-width: 100%" src="https://my.runmyaccounts.com/assets/img/file-icons/icons8-pdf-96.png">
