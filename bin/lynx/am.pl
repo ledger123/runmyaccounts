@@ -2942,7 +2942,7 @@ sub generate_yearend {
       $form->error($locale->text('Yearend posting failed!'));
     }
   } else {
-    $form->error('Nothing to do!');
+    $form->error('Could not close the period because there are no bookings.');
   }
   
 }
