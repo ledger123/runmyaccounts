@@ -57,11 +57,16 @@ sub update_db {
 
 update_db(
     q{
-ALTER TABLE blink_import_process_log ADD COLUMN correlation_id VARCHAR(255);
+ALTER TABLE xabschluss
+    ALTER COLUMN "xml" DROP NOT NULL,
+    ADD COLUMN "data" jsonb,
+    ADD COLUMN "status" TEXT DEFAULT 'NEW';
 },
 
     q{
-ALTER TABLE blink_export_process_log ADD COLUMN correlation_id VARCHAR(255);
+ALTER TABLE xabschluss_history
+    ALTER COLUMN "xml" DROP NOT NULL,
+    ADD COLUMN "data" jsonb;
 },
 
     q{
