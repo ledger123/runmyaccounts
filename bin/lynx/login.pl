@@ -334,7 +334,7 @@ sub login {
 
 sub logout {
 
-  require "$userspath/$form->{login}.conf";
+  %myconfig = User::load_myconfig($memberfile, $form->{login});
   $myconfig{dbpasswd} = unpack 'u', $myconfig{dbpasswd};
 
   $form->{callback} = "$form->{script}?path=$form->{path}&login=$form->{login}&endsession=1";
