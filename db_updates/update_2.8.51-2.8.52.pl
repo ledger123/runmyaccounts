@@ -70,7 +70,7 @@ ALTER TABLE xabschluss_history
 },
 
     q{
-UPDATE defaults SET fldvalue = '2.8.51' WHERE fldname = 'version';
+UPDATE defaults SET fldvalue = '2.8.52' WHERE fldname = 'version';
 },
 );
 
