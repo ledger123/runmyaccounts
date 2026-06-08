@@ -1581,6 +1581,8 @@ sub print_form {
   } else {
     if ($form->{vc} eq 'customer') {
       IS->invoice_details(\%myconfig, \%$form);
+      # Generate ZUGFeRD XML before format_string escapes the field values
+      $form->{zugferd_xml} = ZUGFeRD->new->generate_xml($form);
     } else {
       IR->invoice_details(\%myconfig, \%$form);
     }
@@ -1806,6 +1808,19 @@ sub print_form {
 
   $form->{fileid} = $form->{"${inv}number"};
   $form->{fileid} =~ s/(\s|\W)+//g;
+
+  # Write the pre-generated ZUGFeRD XML to a file in the temp directory so
+  # that pdflatex can embed it.  We do this here because fileid is now known
+  # and the XML was generated before format_string had a chance to escape
+  # the field values with LaTeX-specific sequences.
+    if ($form->{zugferd_xml} && $form->{format} =~ /(postscript|pdf)/) {
+      my $zugferd_file = "$form->{fileid}_facturx.xml";
+      if (open(my $zfh, ">", "$tmppath/$zugferd_file")) {
+        print $zfh $form->{zugferd_xml};
+        close($zfh);
+        $form->{zugferd_xmlfile} = $zugferd_file;
+      }
+    }
 
   $form->format_string(qw(email cc bcc));
 

@@ -8,6 +8,8 @@
 
 <%include definitions_packages.tex%>
 
+<%include content_zugferd.tex%>
+
 <%include content_language.tex%>
 
 <%include definitions_language.tex%>
@@ -28,9 +30,9 @@
 %\newcommand{\Addressblock}{pingenleft}
 
 %Tabellendefinitionen
-\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksbündig mit Breitenangabe
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % linksb?ndig mit Breitenangabe
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}p{#1}} % zentriert mit Breitenangabe
-\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsbündig mit Breitenangabe 
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}p{#1} }% rechtsb?ndig mit Breitenangabe 
 \newcolumntype{Z}{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}X}
 
 <%include definitions_settings.tex%>
@@ -80,7 +82,7 @@ Date: <%invdate%><%orddate%><%quodate%>\\
 <%include content_sum_articles_invoices.tex%>
 
 \parbox{\textwidth}{
-Fällig innerhalb von <%terms%> Tagen bis zum <%duedate%>. 
+F?llig innerhalb von <%terms%> Tagen bis zum <%duedate%>. 
 }
 
 \vspace{0.5cm}

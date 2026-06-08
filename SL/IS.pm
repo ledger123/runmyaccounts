@@ -300,7 +300,10 @@ sub invoice_details {
       # this is for the subtotals for grouping
       $subtotal += $linetotal;
 
-      push(@{ $form->{xml_linetotal} }, $linetotal);
+      # XML value: always a numeric decimal string (0.00 instead of blank)
+      push(@{ $form->{xml_linetotal} }, sprintf('%.2f', $linetotal));
+
+      $linetotal = ($linetotal) ? $linetotal : " ";
       $form->{"linetotal_$i"} = $form->format_amount($myconfig, $linetotal, $form->{precision}, "0");
       push(@{ $form->{linetotal} }, $form->{"linetotal_$i"});
       
@@ -400,7 +403,7 @@ sub invoice_details {
 	    for (qw(taxrates runningnumber number sku serialnumber ordernumber customerponumber bin qty ship unit deliverydate projectnumber sellprice listprice netprice discount discountrate itemnotes package netweight grossweight volume countryorigin hscode barcode xml_deliverydate xml_qty xml_sellprice)) { push(@{ $form->{$_} }, "") }
 
 	    push(@{ $form->{description} }, $form->{groupsubtotaldescription});
-	    push(@{ $form->{xml_linetotal} }, $subtotal);
+	    push(@{ $form->{xml_linetotal} }, sprintf('%.2f', $subtotal));
 	    push(@{ $form->{linetotal} }, $form->format_amount($myconfig, $subtotal, $form->{precision}));
 	    push(@{ $form->{lineitems} }, { amount => 0, tax => 0 });
 	  }
@@ -436,7 +439,7 @@ sub invoice_details {
 
       $taxrate += $form->{"${_}_rate"};
       
-      push(@{ $form->{xml_taxrate} }, $form->{"${_}_rate"} * 100);
+      push(@{ $form->{xml_taxrate} }, sprintf('%.2f', $form->{"${_}_rate"} * 100));
       push(@{ $form->{taxrate} }, $form->format_amount($myconfig, $form->{"${_}_rate"} * 100, $form->{precision}, '0.00'));
       push(@{ $form->{taxnumber} }, $form->{"${_}_taxnumber"});
     #}
@@ -535,9 +538,9 @@ sub invoice_details {
       # need formatting here
       push(@{ $form->{xml_taxbaseinclusive} }, $form->{"${_}_taxbaseinclusive"});
       push(@{ $form->{taxbaseinclusive} }, $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision}, '0.00'));
-      push(@{ $form->{xml_taxbase} }, $taxbase{$_});
+      push(@{ $form->{xml_taxbase} }, sprintf('%.2f', $taxbase{$_}));
       push(@{ $form->{taxbase} }, $form->format_amount($myconfig, $taxbase{$_}, $form->{precision}, '0.00'));
-      push(@{ $form->{xml_tax} }, $taxaccounts{$_});
+      push(@{ $form->{xml_tax} }, sprintf('%.2f', $taxaccounts{$_}));
       push(@{ $form->{tax} }, $form->format_amount($myconfig, $taxaccounts{$_}, $form->{precision}, '0.00'));
 
       $form->{"${_}_taxbaseinclusive"} = $form->format_amount($myconfig, $form->{"${_}_taxbaseinclusive"}, $form->{precision}, '0.00');
@@ -585,7 +588,7 @@ sub invoice_details {
     $form->{cd_invtotal} = 0;
   }
 
-  $form->{xml_totaltax} = $tax;
+  $form->{xml_totaltax} = sprintf('%.2f', $tax);
   $form->{totaltax} = $form->format_amount($myconfig, $tax, $form->{precision}, "");
 
   # Remove incorrect 0 taxes from $form and acc_trans
@@ -651,7 +654,8 @@ sub invoice_details {
   }
 
   for (qw(cd_amount paid)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}) }
-  for (qw(invtotal subtotal total)) { $form->{"xml_$_"} = $form->{$_} }
+  for (qw(invtotal subtotal total)) { $form->{"xml_$_"} = sprintf('%.2f', $form->{$_}) }
+  $form->{zugferd_typecode} = ($form->{formname} eq 'credit_invoice') ? 381 : 380;
   for (qw(cd_subtotal cd_invtotal invtotal subtotal total totalparts totalservices)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}, "0") }
   for (qw(totalqty totalship totalnetweight totalgrossweight)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}) }
 

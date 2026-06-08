@@ -14,6 +14,7 @@
 
 use SL::IS;
 use SL::PE;
+use SL::ZUGFeRD;
 
 require "$form->{path}/arap.pl";
 require "$form->{path}/io.pl";
