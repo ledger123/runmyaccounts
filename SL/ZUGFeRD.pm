@@ -217,16 +217,11 @@ sub _line_items {
 sub _trade_agreement {
     my ($form) = @_;
 
-    my $buyer_line1 = _esc(
-        join(' ', grep { defined $_ && /\S/ }
-            $form->{firstname}, $form->{lastname})
-    );
-
     my $seller_line2 = _esc($form->{companyaddress2} // '');
-    my $buyer_line2  = _esc($form->{address1}        // '');
-    my $buyer_line3  = _esc($form->{address2}        // '');
-
+        my $buyer_line1  = _esc($form->{address1}        // '');
+        my $buyer_line2  = _esc($form->{address2}        // '');
     return
+
         qq|    <ram:ApplicableHeaderTradeAgreement>\n| .
         qq|      <ram:SellerTradeParty>\n| .
         qq|        <ram:Name>| . _esc($form->{company}) . qq|</ram:Name>\n| .

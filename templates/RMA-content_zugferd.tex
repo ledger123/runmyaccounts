@@ -81,8 +81,14 @@
 % which is included later), so our catalog entry is written after pdfx's.
 % In pdfTeX, for duplicate catalog keys the last occurrence takes effect.
 \AtBeginDocument{%
+% PDF/A-3B requires that the document-catalog /Metadata stream is not
+  % compressed (must be readable without decompression).  Temporarily
+  % set pdfobjcompresslevel to 0 so that \pdfobj stream writes raw bytes
+  % and pdflatex sets the /Length key to the correct uncompressed size.
+  \pdfobjcompresslevel=0
   \immediate\pdfobj stream attr{/Type /Metadata /Subtype /XML}%
     file{\jobname-fxmeta.xmp}%
+  \pdfobjcompresslevel=2
   \pdfcatalog{/Metadata \the\pdflastobj\space 0 R}%
 }
 \embedfile[filespec={factur-x.xml},afrelationship={/Alternative},desc={Rechnungsdaten im ZUGFeRD XML Format},filesystem=URL,stringmethod=escape,mimetype=text/xml,ucfilespec={factur-x.xml}]{<%zugferd_xmlfile%>}
