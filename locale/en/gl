@@ -67,6 +67,23 @@ $self{subs} = {
   'yes'                         => 'yes',
   'purchase_transaction'        => 'ap_transaction',
   'sales_transaction'           => 'ar_transaction',
+  'eingangsbuchung'             => 'ap_transaction',
+  'ausgangsbuchung'             => 'ar_transaction',
+  'weiter'                      => 'continue',
+  'gutschriftrechnung'          => 'credit_invoice_',
+  'lastschriftrechnung'         => 'debit_invoice_',
+  'löschen'                     => 'delete',
+  'zeitplan_löschen'            => 'delete_schedule',
+  'hauptbuchbuchung'            => 'gl_transaction',
+  'neue_nummer'                 => 'new_number',
+  'buchen'                      => 'post',
+  'als_neu_buchen'              => 'post_as_new',
+  'ausgangsrechnung_'           => 'sales_invoice_',
+  'zeitplan_speichern'          => 'save_schedule',
+  'buchungstermine'             => 'schedule',
+  'erneuern'                    => 'update',
+  'einkaufsrechnung_'           => 'vendor_invoice_',
+  'ja'                          => 'yes',
 };
 
 1;
