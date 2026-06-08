@@ -1815,7 +1815,7 @@ sub print_form {
   # the field values with LaTeX-specific sequences.
     if ($form->{zugferd_xml} && $form->{format} =~ /(postscript|pdf)/) {
       my $zugferd_file = "$form->{fileid}_facturx.xml";
-      if (open(my $zfh, ">", "$tmppath/$zugferd_file")) {
+      if (open(my $zfh, ">:raw", "$tmppath/$zugferd_file")) {
         print $zfh $form->{zugferd_xml};
         close($zfh);
         $form->{zugferd_xmlfile} = $zugferd_file;

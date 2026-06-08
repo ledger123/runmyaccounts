@@ -87,6 +87,8 @@ sub _vat_id {
     $s =~ s/\s+MWST\b.*//i;   # strip " MWST" suffix and anything that follows
     $s =~ s/[^A-Za-z0-9]//g;  # remove dots, dashes, spaces
     $s =~ s/^CHE(?=[0-9])/CH/i; # Swiss alpha-3 "CHE" ? alpha-2 "CH"
+    # BR-CO-09: if no 2-letter ISO 3166-1 alpha-2 prefix is present, prepend "CH"
+    $s = 'CH' . $s unless $s =~ /^[A-Za-z]{2}/;
     return $s;                  # result is alphanumeric; no XML escaping needed
 }
 
@@ -216,11 +218,12 @@ sub _trade_agreement {
     my ($form) = @_;
 
     my $buyer_line1 = _esc(
-        join(' ', grep { defined $_ && $_ ne '' }
+        join(' ', grep { defined $_ && /\S/ }
             $form->{firstname}, $form->{lastname})
     );
 
     my $seller_line2 = _esc($form->{companyaddress2} // '');
+    my $buyer_line2  = _esc($form->{address1}        // '');
     my $buyer_line3  = _esc($form->{address2}        // '');
 
     return
@@ -243,7 +246,7 @@ sub _trade_agreement {
         qq|        <ram:PostalTradeAddress>\n| .
         qq|          <ram:PostcodeCode>| . _esc($form->{zipcode}) . qq|</ram:PostcodeCode>\n| .
         qq|          <ram:LineOne>$buyer_line1</ram:LineOne>\n| .
-        qq|          <ram:LineTwo>| . _esc($form->{address1}) . qq|</ram:LineTwo>\n| .
+        ($buyer_line2 =~ /\S/ ? qq|          <ram:LineTwo>$buyer_line2</ram:LineTwo>\n| : '') .
         qq|          <ram:LineThree>| . _esc($form->{address2}) . qq|</ram:LineThree>\n| .
         qq|          <ram:CityName>| . _esc($form->{city}) . qq|</ram:CityName>\n| .
         qq|          <ram:CountryID>CH</ram:CountryID>\n| .
