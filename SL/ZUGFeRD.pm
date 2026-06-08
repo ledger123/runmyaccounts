@@ -18,8 +18,8 @@
 package ZUGFeRD;
 
 use strict;
-
 use Encode qw(decode encode);
+
 # Package-level charset used by _esc() to re-encode form strings to UTF-8.
 # Set by generate_xml() from $form->{charset} before any XML is built.
 my $_charset = 'UTF-8';
@@ -64,7 +64,7 @@ sub _esc {
     my ($s) = @_;
     return '' unless defined $s;
     unless ($_charset =~ /utf-?8/i) {
-            $s = encode('UTF-8', decode($_charset, $s));
+        $s = encode('UTF-8', decode($_charset, $s));
     }
     $s =~ s/&/&amp;/g;
     $s =~ s/</&lt;/g;
@@ -128,10 +128,10 @@ sub _header {
         qq|      <udt:DateTimeString format="102">| . _esc($form->{xml_invdate}) . qq|</udt:DateTimeString>\n| .
         qq|    </ram:IssueDateTime>\n| .
         (defined $form->{invdescription} && $form->{invdescription} =~ /\S/
-                    ? qq|    <ram:IncludedNote>\n| .
-                      qq|      <ram:Content>| . _esc($form->{invdescription}) . qq|</ram:Content>\n| .
-                      qq|    </ram:IncludedNote>\n|
-                    : '') .
+            ? qq|    <ram:IncludedNote>\n| .
+              qq|      <ram:Content>| . _esc($form->{invdescription}) . qq|</ram:Content>\n| .
+              qq|    </ram:IncludedNote>\n|
+            : '') .
         qq|    <ram:IncludedNote>\n| .
         qq|      <ram:Content>| . _esc(join("\n",
             $form->{company},
@@ -218,10 +218,10 @@ sub _trade_agreement {
     my ($form) = @_;
 
     my $seller_line2 = _esc($form->{companyaddress2} // '');
-        my $buyer_line1  = _esc($form->{address1}        // '');
-        my $buyer_line2  = _esc($form->{address2}        // '');
-    return
+    my $buyer_line1  = _esc($form->{address1}        // '');
+    my $buyer_line2  = _esc($form->{address2}        // '');
 
+    return
         qq|    <ram:ApplicableHeaderTradeAgreement>\n| .
         qq|      <ram:SellerTradeParty>\n| .
         qq|        <ram:Name>| . _esc($form->{company}) . qq|</ram:Name>\n| .
@@ -233,16 +233,15 @@ sub _trade_agreement {
         qq|          <ram:CountryID>CH</ram:CountryID>\n| .
         qq|        </ram:PostalTradeAddress>\n| .
         qq|        <ram:SpecifiedTaxRegistration>\n| .
-        qq|          <ram:ID schemeID="VA">| . _esc($form->{businessnumber}) . qq|</ram:ID>\n| .
+        qq|          <ram:ID schemeID="VA">| . _vat_id($form->{businessnumber}) . qq|</ram:ID>\n| .
         qq|        </ram:SpecifiedTaxRegistration>\n| .
         qq|      </ram:SellerTradeParty>\n| .
         qq|      <ram:BuyerTradeParty>\n| .
         qq|        <ram:Name>| . _esc($form->{name}) . qq|</ram:Name>\n| .
         qq|        <ram:PostalTradeAddress>\n| .
         qq|          <ram:PostcodeCode>| . _esc($form->{zipcode}) . qq|</ram:PostcodeCode>\n| .
-        qq|          <ram:LineOne>$buyer_line1</ram:LineOne>\n| .
+        ($buyer_line1 =~ /\S/ ? qq|          <ram:LineOne>$buyer_line1</ram:LineOne>\n| : '') .
         ($buyer_line2 =~ /\S/ ? qq|          <ram:LineTwo>$buyer_line2</ram:LineTwo>\n| : '') .
-        qq|          <ram:LineThree>| . _esc($form->{address2}) . qq|</ram:LineThree>\n| .
         qq|          <ram:CityName>| . _esc($form->{city}) . qq|</ram:CityName>\n| .
         qq|          <ram:CountryID>CH</ram:CountryID>\n| .
         qq|        </ram:PostalTradeAddress>\n| .
@@ -294,13 +293,13 @@ sub _trade_settlement {
         qq|    <ram:ApplicableHeaderTradeSettlement>\n| .
         qq|      <ram:InvoiceCurrencyCode>$currency</ram:InvoiceCurrencyCode>\n| .
         ($iban =~ /\S/
-                    ? qq|      <ram:SpecifiedTradeSettlementPaymentMeans>\n| .
-                      qq|        <ram:TypeCode>30</ram:TypeCode>\n| .
-                      qq|        <ram:PayeePartyCreditorFinancialAccount>\n| .
-                      qq|          <ram:IBANID>$iban</ram:IBANID>\n| .
-                      qq|        </ram:PayeePartyCreditorFinancialAccount>\n| .
-                      qq|      </ram:SpecifiedTradeSettlementPaymentMeans>\n|
-                    : '') .
+            ? qq|      <ram:SpecifiedTradeSettlementPaymentMeans>\n| .
+              qq|        <ram:TypeCode>30</ram:TypeCode>\n| .
+              qq|        <ram:PayeePartyCreditorFinancialAccount>\n| .
+              qq|          <ram:IBANID>$iban</ram:IBANID>\n| .
+              qq|        </ram:PayeePartyCreditorFinancialAccount>\n| .
+              qq|      </ram:SpecifiedTradeSettlementPaymentMeans>\n|
+            : '') .
         $tax_blocks .
         qq|      <ram:SpecifiedTradePaymentTerms>\n| .
         qq|        <ram:DueDateDateTime>\n| .
