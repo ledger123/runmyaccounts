@@ -75,21 +75,33 @@
 </x:xmpmeta>
 <?xpacket end="w"?>
 \end{filecontents*}
+
 % Inject Factur-X XMP as an additional PDF metadata stream.
 % This hook runs after the pdfx package registers its own metadata (pdfx
 % registers at \usepackage time, we register here in content_zugferd.tex
 % which is included later), so our catalog entry is written after pdfx's.
 % In pdfTeX, for duplicate catalog keys the last occurrence takes effect.
 \AtBeginDocument{%
-% PDF/A-3B requires that the document-catalog /Metadata stream is not
-  % compressed (must be readable without decompression).  Temporarily
-  % set pdfobjcompresslevel to 0 so that \pdfobj stream writes raw bytes
-  % and pdflatex sets the /Length key to the correct uncompressed size.
+  % PDF/A-3B requires that the document-catalog /Metadata stream carries no
+  % FlateDecode filter and that every stream's /Length key matches the actual
+  % byte count in the file.  \pdfcompresslevel controls FlateDecode on
+  % individual streams; setting it to 0 disables compression so pdfLaTeX
+  % writes raw bytes and the /Length key is always exact.  This must remain
+  % 0 for the rest of the document so that the \embedfile object (written at
+  % \AtEndDocument time) is also stored uncompressed with a correct /Length.
+  \pdfcompresslevel=0
+  % \pdfobjcompresslevel=0 prevents the /Metadata stream from being packed
+  % into a compressed object stream, keeping it directly accessible.
   \pdfobjcompresslevel=0
   \immediate\pdfobj stream attr{/Type /Metadata /Subtype /XML}%
     file{\jobname-fxmeta.xmp}%
+  % Restore object-stream compression for the rest of the document so that
+  % other PDF objects benefit from PDF 1.5 object-stream packing.
   \pdfobjcompresslevel=2
   \pdfcatalog{/Metadata \the\pdflastobj\space 0 R}%
 }
+
 \embedfile[filespec={factur-x.xml},afrelationship={/Alternative},desc={Rechnungsdaten im ZUGFeRD XML Format},filesystem=URL,stringmethod=escape,mimetype=text/xml,ucfilespec={factur-x.xml}]{<%zugferd_xmlfile%>}
+
+
 <%resetcarriedforward%>
