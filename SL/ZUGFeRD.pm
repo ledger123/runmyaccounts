@@ -19,6 +19,11 @@ package ZUGFeRD;
 
 use strict;
 
+use Encode qw(decode encode);
+# Package-level charset used by _esc() to re-encode form strings to UTF-8.
+# Set by generate_xml() from $form->{charset} before any XML is built.
+my $_charset = 'UTF-8';
+
 sub new {
     my ($type) = @_;
     return bless {}, $type;
@@ -32,6 +37,9 @@ sub new {
 # based on $form->{formname}.
 sub generate_xml {
     my ($self, $form) = @_;
+
+    # Capture the form's charset so _esc() can re-encode strings to UTF-8.
+    $_charset = $form->{charset} // 'UTF-8';
 
     my $typecode = ($form->{formname} eq 'credit_invoice') ? 381 : 380;
 
@@ -50,9 +58,14 @@ sub generate_xml {
 # -----------------------------------------------------------------------
 
 # Escape a plain text value for safe inclusion in XML element content.
+# If the form's charset is not UTF-8, the value is decoded from that charset
+# and re-encoded as UTF-8 so that the XML declaration is honoured.
 sub _esc {
     my ($s) = @_;
     return '' unless defined $s;
+    unless ($_charset =~ /utf-?8/i) {
+            $s = encode('UTF-8', decode($_charset, $s));
+    }
     $s =~ s/&/&amp;/g;
     $s =~ s/</&lt;/g;
     $s =~ s/>/&gt;/g;
