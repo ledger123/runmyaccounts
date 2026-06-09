@@ -54,39 +54,6 @@
        >
         <pdfaExtension:schemas>
           <rdf:Bag>
-          <rdf:li rdf:parseType="Resource">
-<pdfaSchema:schema>ZUGFeRD PDFA Extension Schema</pdfaSchema:schema>
-<pdfaSchema:namespaceURI>urn:ferd:pdfa:CrossIndustryDocument:invoice:1p0#</pdfaSchema:namespaceURI>
-<pdfaSchema:prefix>zf</pdfaSchema:prefix>
-<pdfaSchema:property>
-<rdf:Seq>
-<rdf:li rdf:parseType="Resource">
-<pdfaProperty:name>DocumentFileName</pdfaProperty:name>
-<pdfaProperty:valueType>Text</pdfaProperty:valueType>
-<pdfaProperty:category>external</pdfaProperty:category>
-<pdfaProperty:description>name of the embedded XML invoice file</pdfaProperty:description>
-</rdf:li>
-<rdf:li rdf:parseType="Resource">
-<pdfaProperty:name>DocumentType</pdfaProperty:name>
-<pdfaProperty:valueType>Text</pdfaProperty:valueType>
-<pdfaProperty:category>external</pdfaProperty:category>
-<pdfaProperty:description>INVOICE</pdfaProperty:description>
-</rdf:li>
-<rdf:li rdf:parseType="Resource">
-<pdfaProperty:name>Version</pdfaProperty:name>
-<pdfaProperty:valueType>Text</pdfaProperty:valueType>
-<pdfaProperty:category>external</pdfaProperty:category>
-<pdfaProperty:description>The actual version of the ZUGFeRD XML schema</pdfaProperty:description>
-</rdf:li>
-<rdf:li rdf:parseType="Resource">
-<pdfaProperty:name>ConformanceLevel</pdfaProperty:name>
-<pdfaProperty:valueType>Text</pdfaProperty:valueType>
-<pdfaProperty:category>external</pdfaProperty:category>
-<pdfaProperty:description>The conformance level of the embedded ZUGFeRD data</pdfaProperty:description>
-</rdf:li>
-</rdf:Seq>
-</pdfaSchema:property>
-</rdf:li>
             <rdf:li rdf:parseType="Resource">
                <pdfaSchema:namespaceURI>http://ns.adobe.com/pdfx/1.3/</pdfaSchema:namespaceURI>
                <pdfaSchema:prefix>pdfx</pdfaSchema:prefix>
