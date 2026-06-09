@@ -4020,13 +4020,25 @@ sub parse_template {
 				my $repaired = 0;
 
 				if ($qpdf_bin) {
-					# --stream-data=preserve keeps existing stream compression;
-					# qpdf still rewrites every stream delimiter with correct
-					# EOL markers and recomputes every /Length value.
-					if ( system(qq{$qpdf_bin --stream-data=preserve '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
-						&& -f $fixed )
-					{
-						$repaired = 1;
+                    # qpdf < 8.0 does not rewrite stream EOL markers or
+					# recompute /Length values, so it cannot fix the
+					# PDF/A-3B validation errors we need to repair.
+					# Only use qpdf if it is version 8.0 or newer.
+					my $qpdf_ok = 0;
+					my $qpdf_ver = `$qpdf_bin --version 2>/dev/null`;
+					if ( $qpdf_ver =~ /qpdf version (\d+)\./ && $1 >= 8 ) {
+						$qpdf_ok = 1;
+					}
+
+					if ($qpdf_ok) {
+						# --stream-data=preserve keeps existing stream compression;
+						# qpdf still rewrites every stream delimiter with correct
+						# EOL markers and recomputes every /Length value.
+						if ( system(qq{$qpdf_bin --stream-data=preserve '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
+							&& -f $fixed )
+						{
+							$repaired = 1;
+						}
 					}
 				}
 
@@ -4056,17 +4068,11 @@ sub parse_template {
 				} else {
 					unlink $fixed if -f $fixed;
 					# Last resort: pure-Perl stream-delimiter repair.
-                    					# pdfTeX (some versions) writes "stream \n" (with a
-                    					# trailing space) instead of the required "stream\n".
-                    					# VeraPDF counts that space as the first byte of stream
-                    					# content, which causes TWO validation errors at once:
-                    					#   1. illegal whitespace after the 'stream' keyword
-                    					#   2. /Length mismatch (actual = declared + 1)
-                    					# Removing the rogue space fixes both errors in one pass.
-                    					# This Perl-native fix needs no external tool and is safe
-                    					# because binary compressed stream payloads never contain
-                    					# the ASCII sequence "stream<spaces><LF>" that we match.
-                    					my $n = _repair_pdf_stream_space( $self->{tmpfile} );
+                    # Fixes two pdfTeX bugs:
+					#   1. "stream \n" ? "stream\n" (rogue space after keyword)
+					#   2. Missing EOL before "endstream" keyword
+					# See _repair_pdf_stream_delimiters() for full details.
+					my $n = _repair_pdf_stream_delimiters( $self->{tmpfile} );
                     					if ($n) {
                     						$repaired = 1;
                     					} else {
@@ -7486,35 +7492,49 @@ sub date {
 
 }
 
-# _repair_pdf_stream_space($file)
+# _repair_pdf_stream_delimiters($file)
 #
-# Pure-Perl, no-external-tool repair for the pdfTeX "stream space" bug.
+# Pure-Perl, no-external-tool repair for pdfTeX stream-delimiter bugs.
 #
-# Some pdfTeX versions write:
-#   stream \n          (stream keyword, then a space, then LF)
-# instead of the PDF-spec-required:
-#   stream\n           (stream keyword immediately followed by LF or CRLF)
+# Fixes two classes of PDF/A-3B validation errors that some pdfTeX versions
+# produce:
 #
-# VeraPDF counts that rogue space as the first byte of stream content, which
-# simultaneously triggers two validation errors:
-#   1. Illegal whitespace between 'stream' keyword and EOL.
-#   2. /Length mismatch (declared length = data_size, actual = data_size + 1).
+# 1. Rogue whitespace after the 'stream' keyword:
+#    Some pdfTeX versions write "stream \n" (keyword + space + LF) instead
+#    of the required "stream\n" (keyword immediately followed by LF or CRLF).
+#    VeraPDF counts that space as the first byte of stream content, which
+#    simultaneously triggers:
+#      a. Illegal whitespace between 'stream' keyword and EOL.
+#      b. /Length mismatch (declared = data_size, actual = data_size + 1).
+#    Removing the rogue space(s) fixes both errors in one pass.
 #
-# Removing the space(s) fixes both errors in one regex pass.
-# The substitution is safe: binary compressed stream payloads never contain
-# the ASCII sequence  stream<SPACE><LF>  that the pattern matches.
+# 2. Missing EOL before the 'endstream' keyword:
+#    The PDF spec requires an EOL marker (CR, LF, or CRLF) immediately
+#    before the 'endstream' keyword.  Some pdfTeX versions omit this marker.
+#    Adding a LF fixes the validation error without changing the /Length value
+#    (the pre-endstream EOL is a required separator, not stream content).
+#
+# Both substitutions are safe for binary compressed streams because the
+# ASCII sequences matched never appear inside a valid compressed payload.
 #
 # Returns the number of fixes applied (0 = nothing changed / file not writable).
-sub _repair_pdf_stream_space {
+sub _repair_pdf_stream_delimiters {
     my ($file) = @_;
 
     open( my $fh, '<:raw', $file ) or return 0;
     my $pdf = do { local $/; <$fh> };
     close $fh;
 
-    # Remove one or more spaces/tabs that pdfTeX inserts between the
+    my $n = 0;
+
+    # Fix 1: Remove one or more spaces/tabs that pdfTeX inserts between the
     # 'stream' keyword and the mandatory EOL (CRLF or LF).
-    my $n = ( $pdf =~ s/\bstream[ \t]+(\r?\n)/stream$1/g );
+    $n += ( $pdf =~ s/\bstream[ \t]+(\r?\n)/stream$1/g );
+
+    # Fix 2: Ensure there is an EOL marker immediately before 'endstream'.
+    # Match any non-EOL byte directly before the keyword and insert LF.
+    $n += ( $pdf =~ s/([^\r\n])endstream/$1\nendstream/g );
+
     return 0 unless $n;
 
     open( my $out, '>:raw', $file ) or return 0;
@@ -7522,5 +7542,6 @@ sub _repair_pdf_stream_space {
     close $out;
     return $n;
 }
+
 1;
 
