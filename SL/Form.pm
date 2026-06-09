@@ -3940,7 +3940,7 @@ sub parse_template {
 
 	close(OUT);
 
-	# Convert the tex file to postscript
+    # Convert the tex file to postscript
 	if ( $self->{format} =~ /(postscript|pdf)/ ) {
 
 		use Cwd;
@@ -3996,24 +3996,65 @@ sub parse_template {
 			$self->error( $self->cleanup ) if !( -f $self->{tmpfile} );
 			$self->{tmpfile} =~ s/tex$/pdf/;
 
-            # ZUGFeRD / Factur-X PDFs must be PDF/A-3B-valid.  Some pdfTeX
-			# versions write an incorrect /Length key for embedded streams
-			# (fonts, images, metadata, attached XML).  qpdf --stream-data=preserve
-			# re-reads every stream, counts the actual bytes, and rewrites the
-			# PDF with correct /Length values ? without changing anything else.
-			# We only run this for ZUGFeRD invoices and only when qpdf is installed.
+			# ZUGFeRD / Factur-X PDFs must be PDF/A-3B-valid.  Some pdfTeX
+			# versions write incorrect stream delimiters (extra spaces around
+			# the 'stream'/'endstream' keywords) and wrong /Length values for
+			# embedded streams (fonts, images, metadata, attached XML).
+			# We post-process with qpdf or mutool (from mupdf-tools), both of
+			# which completely rewrite the PDF structure with correct EOL
+			# delimiters and exact /Length values while preserving all embedded
+			# file attachments.  qpdf is tried first; mutool is the fallback.
 			if ( $self->{zugferd_xml} ) {
+				# Locate qpdf: check common system paths then every directory
+				# in PATH so the binary is found regardless of install prefix.
 				my $qpdf_bin;
-				for my $candidate (qw(/usr/bin/qpdf /usr/local/bin/qpdf)) {
+				my @qpdf_candidates = (
+					qw(/usr/bin/qpdf /usr/local/bin/qpdf),
+					map { "$_/qpdf" } split( /:/, $ENV{PATH} // '' ),
+				);
+				for my $candidate (@qpdf_candidates) {
 					if ( -x $candidate ) { $qpdf_bin = $candidate; last; }
 				}
+
+				( my $fixed = $self->{tmpfile} ) =~ s/\.pdf$/.pdfa3b.pdf/;
+				my $repaired = 0;
+
 				if ($qpdf_bin) {
-					( my $fixed = $self->{tmpfile} ) =~ s/\.pdf$/.qpdf.pdf/;
+					# --stream-data=preserve keeps existing stream compression;
+					# qpdf still rewrites every stream delimiter with correct
+					# EOL markers and recomputes every /Length value.
 					if ( system(qq{$qpdf_bin --stream-data=preserve '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
 						&& -f $fixed )
 					{
-						rename( $fixed, $self->{tmpfile} );
+						$repaired = 1;
 					}
+				}
+
+				if ( !$repaired ) {
+					# Fallback: mutool clean (mupdf-tools) rewrites the PDF
+					# structure, fixing stream delimiters and /Length values
+					# while preserving all embedded file attachments.
+					my $mutool_bin;
+					my @mutool_candidates = (
+						qw(/usr/bin/mutool /usr/local/bin/mutool),
+						map { "$_/mutool" } split( /:/, $ENV{PATH} // '' ),
+					);
+					for my $candidate (@mutool_candidates) {
+						if ( -x $candidate ) { $mutool_bin = $candidate; last; }
+					}
+					if ($mutool_bin) {
+						if ( system(qq{$mutool_bin clean '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
+							&& -f $fixed )
+						{
+							$repaired = 1;
+						}
+					}
+				}
+
+				if ($repaired) {
+					rename( $fixed, $self->{tmpfile} );
+				} else {
+					unlink $fixed if -f $fixed;
 				}
 			}
 		}
