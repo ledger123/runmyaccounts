@@ -7359,6 +7359,56 @@ sub save_lastused {
     }
 }
 
+# _repair_pdf_stream_delimiters($file)
+#
+# Pure-Perl, no-external-tool repair for pdfTeX stream-delimiter bugs.
+#
+# Fixes two classes of PDF/A-3B validation errors that some pdfTeX versions
+# produce:
+#
+# 1. Rogue whitespace after the 'stream' keyword:
+#    Some pdfTeX versions write "stream \n" (keyword + space + LF) instead
+#    of the required "stream\n" (keyword immediately followed by LF or CRLF).
+#    VeraPDF counts that space as the first byte of stream content, which
+#    simultaneously triggers:
+#      a. Illegal whitespace between 'stream' keyword and EOL.
+#      b. /Length mismatch (declared = data_size, actual = data_size + 1).
+#    Removing the rogue space(s) fixes both errors in one pass.
+#
+# 2. Missing EOL before the 'endstream' keyword:
+#    The PDF spec requires an EOL marker (CR, LF, or CRLF) immediately
+#    before the 'endstream' keyword.  Some pdfTeX versions omit this marker.
+#    Adding a LF fixes the validation error without changing the /Length value
+#    (the pre-endstream EOL is a required separator, not stream content).
+#
+# Both substitutions are safe for binary compressed streams because the
+# ASCII sequences matched never appear inside a valid compressed payload.
+#
+# Returns the number of fixes applied (0 = nothing changed / file not writable).
+sub _repair_pdf_stream_delimiters {
+    my ($file) = @_;
+
+    open( my $fh, '<:raw', $file ) or return 0;
+    my $pdf = do { local $/; <$fh> };
+    close $fh;
+
+    my $n = 0;
+
+    # Fix 1: Remove one or more spaces/tabs that pdfTeX inserts between the
+    # 'stream' keyword and the mandatory EOL (CRLF or LF).
+    $n += ( $pdf =~ s/\bstream[ \t]+(\r?\n)/stream$1/g );
+
+    # Fix 2: Ensure there is an EOL marker immediately before 'endstream'.
+    # Match any non-EOL byte directly before the keyword and insert LF.
+    $n += ( $pdf =~ s/([^\r\n])endstream/$1\nendstream/g );
+
+    return 0 unless $n;
+
+    open( my $out, '>:raw', $file ) or return 0;
+    print $out $pdf;
+    close $out;
+    return $n;
+}
 
 package Locale;
 
@@ -7490,56 +7540,6 @@ sub date {
 
 	$longdate;
 
-}
-# _repair_pdf_stream_delimiters($file)
-#
-# Pure-Perl, no-external-tool repair for pdfTeX stream-delimiter bugs.
-#
-# Fixes two classes of PDF/A-3B validation errors that some pdfTeX versions
-# produce:
-#
-# 1. Rogue whitespace after the 'stream' keyword:
-#    Some pdfTeX versions write "stream \n" (keyword + space + LF) instead
-#    of the required "stream\n" (keyword immediately followed by LF or CRLF).
-#    VeraPDF counts that space as the first byte of stream content, which
-#    simultaneously triggers:
-#      a. Illegal whitespace between 'stream' keyword and EOL.
-#      b. /Length mismatch (declared = data_size, actual = data_size + 1).
-#    Removing the rogue space(s) fixes both errors in one pass.
-#
-# 2. Missing EOL before the 'endstream' keyword:
-#    The PDF spec requires an EOL marker (CR, LF, or CRLF) immediately
-#    before the 'endstream' keyword.  Some pdfTeX versions omit this marker.
-#    Adding a LF fixes the validation error without changing the /Length value
-#    (the pre-endstream EOL is a required separator, not stream content).
-#
-# Both substitutions are safe for binary compressed streams because the
-# ASCII sequences matched never appear inside a valid compressed payload.
-#
-# Returns the number of fixes applied (0 = nothing changed / file not writable).
-sub _repair_pdf_stream_delimiters {
-    my ($file) = @_;
-
-    open( my $fh, '<:raw', $file ) or return 0;
-    my $pdf = do { local $/; <$fh> };
-    close $fh;
-
-    my $n = 0;
-
-    # Fix 1: Remove one or more spaces/tabs that pdfTeX inserts between the
-    # 'stream' keyword and the mandatory EOL (CRLF or LF).
-    $n += ( $pdf =~ s/\bstream[ \t]+(\r?\n)/stream$1/g );
-
-    # Fix 2: Ensure there is an EOL marker immediately before 'endstream'.
-    # Match any non-EOL byte directly before the keyword and insert LF.
-    $n += ( $pdf =~ s/([^\r\n])endstream/$1\nendstream/g );
-
-    return 0 unless $n;
-
-    open( my $out, '>:raw', $file ) or return 0;
-    print $out $pdf;
-    close $out;
-    return $n;
 }
 
 1;
