@@ -4055,6 +4055,31 @@ sub parse_template {
 					rename( $fixed, $self->{tmpfile} );
 				} else {
 					unlink $fixed if -f $fixed;
+					# Last resort: pure-Perl stream-delimiter repair.
+                    					# pdfTeX (some versions) writes "stream \n" (with a
+                    					# trailing space) instead of the required "stream\n".
+                    					# VeraPDF counts that space as the first byte of stream
+                    					# content, which causes TWO validation errors at once:
+                    					#   1. illegal whitespace after the 'stream' keyword
+                    					#   2. /Length mismatch (actual = declared + 1)
+                    					# Removing the rogue space fixes both errors in one pass.
+                    					# This Perl-native fix needs no external tool and is safe
+                    					# because binary compressed stream payloads never contain
+                    					# the ASCII sequence "stream<spaces><LF>" that we match.
+                    					my $n = _repair_pdf_stream_space( $self->{tmpfile} );
+                    					if ($n) {
+                    						$repaired = 1;
+                    					} else {
+                    						# Nothing worked: write a warning so the admin knows
+                    						# which package to install.
+                    						if ( open( my $efh, '>>', $self->{errfile} ) ) {
+                    							print $efh
+                    "WARNING: ZUGFeRD PDF stream-delimiter repair skipped.\n" .
+                    "Install qpdf (apt install qpdf) or mupdf-tools (apt install mupdf-tools)\n" .
+                    "to produce a PDF/A-3B-valid e-invoice PDF.\n";
+                    							close $efh;
+                    						}
+                    					}
 				}
 			}
 		}
@@ -7461,5 +7486,41 @@ sub date {
 
 }
 
+# _repair_pdf_stream_space($file)
+#
+# Pure-Perl, no-external-tool repair for the pdfTeX "stream space" bug.
+#
+# Some pdfTeX versions write:
+#   stream \n          (stream keyword, then a space, then LF)
+# instead of the PDF-spec-required:
+#   stream\n           (stream keyword immediately followed by LF or CRLF)
+#
+# VeraPDF counts that rogue space as the first byte of stream content, which
+# simultaneously triggers two validation errors:
+#   1. Illegal whitespace between 'stream' keyword and EOL.
+#   2. /Length mismatch (declared length = data_size, actual = data_size + 1).
+#
+# Removing the space(s) fixes both errors in one regex pass.
+# The substitution is safe: binary compressed stream payloads never contain
+# the ASCII sequence  stream<SPACE><LF>  that the pattern matches.
+#
+# Returns the number of fixes applied (0 = nothing changed / file not writable).
+sub _repair_pdf_stream_space {
+    my ($file) = @_;
+
+    open( my $fh, '<:raw', $file ) or return 0;
+    my $pdf = do { local $/; <$fh> };
+    close $fh;
+
+    # Remove one or more spaces/tabs that pdfTeX inserts between the
+    # 'stream' keyword and the mandatory EOL (CRLF or LF).
+    my $n = ( $pdf =~ s/\bstream[ \t]+(\r?\n)/stream$1/g );
+    return 0 unless $n;
+
+    open( my $out, '>:raw', $file ) or return 0;
+    print $out $pdf;
+    close $out;
+    return $n;
+}
 1;
 
