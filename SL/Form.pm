@@ -7491,7 +7491,6 @@ sub date {
 	$longdate;
 
 }
-
 # _repair_pdf_stream_delimiters($file)
 #
 # Pure-Perl, no-external-tool repair for pdfTeX stream-delimiter bugs.
@@ -7544,4 +7543,3 @@ sub _repair_pdf_stream_delimiters {
 }
 
 1;
-
