@@ -4092,15 +4092,17 @@ sub parse_template {
     					{
     						# Re-attach the ZUGFeRD XML that Ghostscript stripped.
     						my $reattached = 0;
-    						if (    $self->{zugferd_xmlfile}
-    							&& -f $self->{zugferd_xmlfile}
-    							&& $qpdf_bin && $qpdf_ok )
-    						{
-if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=application/xml --relationship=Data -- '$fixed' 2>/dev/null}) == 0    							{
-    								$reattached = 1;
-    								$repaired   = 1;
-    							}
-    						}
+                            						if (    $self->{zugferd_xmlfile}
+                            							&& -f $self->{zugferd_xmlfile}
+                            							&& $qpdf_bin && $qpdf_ok )
+                            						{
+                            							if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=application/xml --relationship=Data -- '$fixed' 2>/dev/null}) == 0
+                            								&& -f $fixed )
+                            							{
+                            								$reattached = 1;
+                            								$repaired   = 1;
+                            							}
+                            						}
     						unless ($reattached) {
     							# Could not re-attach (no qpdf, or XML path unknown).
     							# Use the GS output as-is and log a warning.
