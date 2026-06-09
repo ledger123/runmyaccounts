@@ -4077,81 +4077,81 @@ sub parse_template {
     					}
     				}
 
-    				# --- Attempt 3: Ghostscript (last resort for ZUGFeRD) ---
-    				# Ghostscript renders and rewrites the entire PDF from scratch,
-    				# guaranteeing correct /Length values and EOL markers.
-    				# WARNING: Ghostscript strips the embedded factur-x.xml and the
-    				# /AF catalog entry.  We re-attach the XML with qpdf afterwards,
-    				# but the Factur-X XMP extension metadata may no longer be
-    				# present, which can cause validators to reject the file.
-    				# Only used when both qpdf and mutool are unavailable.
-    				if ( !$repaired && $gs_bin ) {
-    					( my $gs_out = $self->{tmpfile} ) =~ s/\.pdf$/.gs_clean.pdf/;
-    					if ( system(qq{$gs_bin -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.7 -sOutputFile='$gs_out' '$self->{tmpfile}' 2>/dev/null}) == 0
-    						&& -f $gs_out )
-    					{
-    						# Re-attach the ZUGFeRD XML that Ghostscript stripped.
-    						my $reattached = 0;
-                            						if (    $self->{zugferd_xmlfile}
-                            							&& -f $self->{zugferd_xmlfile}
-                            							&& $qpdf_bin && $qpdf_ok )
-                            						{
-                            							if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=application/xml --relationship=Data -- '$fixed' 2>/dev/null}) == 0
-                            								&& -f $fixed )
-                            							{
-                            								$reattached = 1;
-                            								$repaired   = 1;
-                            							}
-                            						}
-    						unless ($reattached) {
-    							# Could not re-attach (no qpdf, or XML path unknown).
-    							# Use the GS output as-is and log a warning.
-    							rename( $gs_out, $fixed );
-    							$repaired = 1;
-    							if ( $self->{zugferd_xmlfile} ) {
-    								if ( open( my $efh, '>>', $self->{errfile} ) ) {
-    									print $efh
-    "WARNING: ZUGFeRD XML could not be re-attached after Ghostscript PDF repair.\n" .
-    "Install qpdf >= 8.0 (apt install qpdf) to preserve the ZUGFeRD XML in the PDF.\n";
-    									close $efh;
-    								}
-    							}
-    						}
-    					}
-    					unlink $gs_out if -f $gs_out;
-    				}
+                # --- Attempt 3: Ghostscript (last resort for ZUGFeRD) ---
+				# Ghostscript renders and rewrites the entire PDF from scratch,
+				# guaranteeing correct /Length values and EOL markers.
+				# WARNING: Ghostscript strips the embedded factur-x.xml and the
+				# /AF catalog entry.  We re-attach the XML with qpdf afterwards,
+				# but the Factur-X XMP extension metadata may no longer be
+				# present, which can cause validators to reject the file.
+				# Only used when both qpdf and mutool are unavailable.
+				if ( !$repaired && $gs_bin ) {
+					( my $gs_out = $self->{tmpfile} ) =~ s/\.pdf$/.gs_clean.pdf/;
+					if ( system(qq{$gs_bin -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.7 -sOutputFile='$gs_out' '$self->{tmpfile}' 2>/dev/null}) == 0
+						&& -f $gs_out )
+					{
+						# Re-attach the ZUGFeRD XML that Ghostscript stripped.
+						my $reattached = 0;
+						if (    $self->{zugferd_xmlfile}
+							&& -f $self->{zugferd_xmlfile}
+							&& $qpdf_bin && $qpdf_ok )
+						{
+							if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=application/xml --relationship=Data -- '$fixed' 2>/dev/null}) == 0
+								&& -f $fixed )
+							{
+								$reattached = 1;
+								$repaired   = 1;
+							}
+						}
+						unless ($reattached) {
+							# Could not re-attach (no qpdf, or XML path unknown).
+							# Use the GS output as-is and log a warning.
+							rename( $gs_out, $fixed );
+							$repaired = 1;
+							if ( $self->{zugferd_xmlfile} ) {
+								if ( open( my $efh, '>>', $self->{errfile} ) ) {
+									print $efh
+"WARNING: ZUGFeRD XML could not be re-attached after Ghostscript PDF repair.\n" .
+"Install qpdf >= 8.0 (apt install qpdf) to preserve the ZUGFeRD XML in the PDF.\n";
+									close $efh;
+								}
+							}
+						}
+					}
+					unlink $gs_out if -f $gs_out;
+				}
 
-    				if ($repaired) {
-    					rename( $fixed, $self->{tmpfile} );
-    				} else {
-    					unlink $fixed if -f $fixed;
+				if ($repaired) {
+					rename( $fixed, $self->{tmpfile} );
+				} else {
+					unlink $fixed if -f $fixed;
 
-    					# Last resort: pure-Perl stream-delimiter repair.
-    					# Fixes two pdfTeX bugs:
-    					#   1. "stream \n" ? "stream\n" (rogue space after keyword)
-    					#   2. Missing EOL before "endstream" keyword
-    					# Does NOT fix /Length mismatches.
-    					# See _repair_pdf_stream_delimiters() for full details.
-    					my $n = _repair_pdf_stream_delimiters( $self->{tmpfile} );
-    					if ($n) {
-    						$repaired = 1;
-    					} else {
-    						# Nothing worked: write a warning so the admin knows
-    						# which packages to install.
-    						if ( open( my $efh, '>>', $self->{errfile} ) ) {
-    							print $efh
-    "WARNING: ZUGFeRD PDF repair skipped.\n" .
-    "Install qpdf >= 8.0 (apt install qpdf) for stream-delimiter repair that\n" .
-    "preserves the embedded ZUGFeRD XML and Factur-X XMP metadata,\n" .
-    "or mupdf-tools (apt install mupdf-tools) as an alternative.\n";
-    							close $efh;
-    						}
-    					}
-    				}
-    			}
-    		}
+					# Last resort: pure-Perl stream-delimiter repair.
+					# Fixes two pdfTeX bugs:
+					#   1. "stream \n" ? "stream\n" (rogue space after keyword)
+					#   2. Missing EOL before "endstream" keyword
+					# Does NOT fix /Length mismatches.
+					# See _repair_pdf_stream_delimiters() for full details.
+					my $n = _repair_pdf_stream_delimiters( $self->{tmpfile} );
+					if ($n) {
+						$repaired = 1;
+					} else {
+						# Nothing worked: write a warning so the admin knows
+						# which packages to install.
+						if ( open( my $efh, '>>', $self->{errfile} ) ) {
+							print $efh
+"WARNING: ZUGFeRD PDF repair skipped.\n" .
+"Install qpdf >= 8.0 (apt install qpdf) for stream-delimiter repair that\n" .
+"preserves the embedded ZUGFeRD XML and Factur-X XMP metadata,\n" .
+"or mupdf-tools (apt install mupdf-tools) as an alternative.\n";
+							close $efh;
+						}
+					}
+				}
+			}
+		}
 
-    	}
+	}
 
 	if ( $self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email' ) {
 
