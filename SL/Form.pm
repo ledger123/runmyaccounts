@@ -3941,208 +3941,217 @@ sub parse_template {
 	close(OUT);
 
     # Convert the tex file to postscript
-	if ( $self->{format} =~ /(postscript|pdf)/ ) {
+    	if ( $self->{format} =~ /(postscript|pdf)/ ) {
 
-		use Cwd;
-		$self->{cwd}    = cwd();
-		$self->{tmpdir} = "$self->{cwd}/$tmppath";
+    		use Cwd;
+    		$self->{cwd}    = cwd();
+    		$self->{tmpdir} = "$self->{cwd}/$tmppath";
 
-		unless ( chdir("$tmppath") ) {
-			$err = $!;
-			$self->cleanup;
-			$self->error("chdir : $err");
-		}
+    		unless ( chdir("$tmppath") ) {
+    			$err = $!;
+    			$self->cleanup;
+    			$self->error("chdir : $err");
+    		}
 
-		$self->{tmpfile} =~ s/$tmppath\///g;
+    		$self->{tmpfile} =~ s/$tmppath\///g;
 
-        if ($utf8templates){
-           system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
-           system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} -o $self->{tmpfile}");
-        }
+            if ($utf8templates){
+               system("mv $self->{tmpfile} LATIN-$self->{tmpfile}");
+               system("iconv -f ISO-8859-1 -t UTF8 LATIN-$self->{tmpfile} -o $self->{tmpfile}");
+            }
 
-		$self->{errfile} = $self->{tmpfile};
-		$self->{errfile} =~ s/tex$/err/;
+    		$self->{errfile} = $self->{tmpfile};
+    		$self->{errfile} =~ s/tex$/err/;
 
-		my $r = 1;
-		if ( $self->{format} eq 'postscript' ) {
+    		my $r = 1;
+    		if ( $self->{format} eq 'postscript' ) {
 
-			system(
-"latex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
-			);
-			while ( $self->rerun_latex ) {
-				system(
-"latex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
-				);
-				last if ++$r > 4;
-			}
-			$self->{tmpfile} =~ s/tex$/dvi/;
-			$self->error( $self->cleanup ) if !( -f $self->{tmpfile} );
+    			system(
+    "latex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
+    			);
+    			while ( $self->rerun_latex ) {
+    				system(
+    "latex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
+    				);
+    				last if ++$r > 4;
+    			}
+    			$self->{tmpfile} =~ s/tex$/dvi/;
+    			$self->error( $self->cleanup ) if !( -f $self->{tmpfile} );
 
-			system("dvips $self->{tmpfile} -o -q");
-			$self->error( $self->cleanup . "dvips : $!" ) if ($?);
-			$self->{tmpfile} =~ s/dvi$/ps/;
-		}
-		if ( $self->{format} eq 'pdf' ) {
-			system(
-"pdflatex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
-			);
-			while ( $self->rerun_latex ) {
-				system(
-"pdflatex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
-				);
-				last if ++$r > 4;
-			}
+    			system("dvips $self->{tmpfile} -o -q");
+    			$self->error( $self->cleanup . "dvips : $!" ) if ($?);
+    			$self->{tmpfile} =~ s/dvi$/ps/;
+    		}
+    		if ( $self->{format} eq 'pdf' ) {
+    			system(
+    "pdflatex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
+    			);
+    			while ( $self->rerun_latex ) {
+    				system(
+    "pdflatex --interaction=nonstopmode $self->{tmpfile} > $self->{errfile}"
+    				);
+    				last if ++$r > 4;
+    			}
 
-			$self->error( $self->cleanup ) if !( -f $self->{tmpfile} );
-			$self->{tmpfile} =~ s/tex$/pdf/;
+    			$self->error( $self->cleanup ) if !( -f $self->{tmpfile} );
+    			$self->{tmpfile} =~ s/tex$/pdf/;
 
-# ZUGFeRD / Factur-X PDFs must be PDF/A-3B-valid.  Some pdfTeX
-			# versions write incorrect stream delimiters (extra spaces around
-			# the 'stream'/'endstream' keywords) and wrong /Length values for
-			# embedded streams (fonts, images, metadata, attached XML).
-			#
-			# Repair chain (first success wins):
-			#   1. Ghostscript  ? rewrites the PDF completely from scratch,
-			#      producing a new file with correct /Length and EOL markers
-			#      for every stream.  Because Ghostscript strips embedded-file
-			#      attachments, the ZUGFeRD XML is re-attached afterwards with
-			#      qpdf --add-attachment.
-			#   2. qpdf >= 8.0  ? rewrites stream delimiters and /Length values
-			#      while preserving all embedded file attachments.
-			#   3. mutool clean ? similar to qpdf; preserves attachments.
-			#   4. Pure-Perl    ? fixes EOL delimiters only (no /Length repair).
-			if ( $self->{zugferd_xml} ) {
-				# Locate repair tools: check common paths then every PATH dir.
-				my ( $gs_bin, $qpdf_bin, $mutool_bin );
-				for my $spec (
-					[ \$gs_bin,     [qw(/usr/bin/gs     /usr/local/bin/gs)],     'gs'     ],
-					[ \$qpdf_bin,   [qw(/usr/bin/qpdf   /usr/local/bin/qpdf)],   'qpdf'   ],
-					[ \$mutool_bin, [qw(/usr/bin/mutool /usr/local/bin/mutool)], 'mutool' ],
-				) {
-					my ( $ref, $defaults, $name ) = @$spec;
-					for my $path (
-						@$defaults,
-						map { "$_/$name" } split( /:/, $ENV{PATH} // '' ),
-					) {
-						if ( -x $path ) { $$ref = $path; last; }
-					}
-				}
+    			# ZUGFeRD / Factur-X PDFs must be PDF/A-3B-valid.  Some pdfTeX
+    			# versions write incorrect stream delimiters (extra spaces around
+    			# the 'stream'/'endstream' keywords) and wrong /Length values for
+    			# embedded streams (fonts, images, metadata, attached XML).
+    			#
+    			# content_zugferd.tex sets \pdfcompresslevel=0, so all streams
+    			# are written uncompressed and pdfTeX /Length values are exact.
+    			# The only remaining issues are EOL-delimiter bugs, which qpdf
+    			# and mutool fix while preserving embedded-file attachments and
+    			# XMP metadata intact.
+    			#
+    			# Repair chain (first success wins):
+    			#   1. qpdf >= 8.0  ? rewrites stream delimiters and /Length
+    			#      values while preserving all embedded file attachments and
+    			#      the Factur-X XMP metadata.  Preferred for ZUGFeRD PDFs.
+    			#   2. mutool clean ? similar to qpdf; preserves attachments and
+    			#      XMP metadata.
+    			#   3. Ghostscript  ? rewrites the PDF completely from scratch,
+    			#      producing a new file with correct /Length and EOL markers.
+    			#      WARNING: Ghostscript strips the embedded factur-x.xml and
+    			#      may also strip the Factur-X XMP metadata extension, making
+    			#      the output non-compliant.  Only used when qpdf and mutool
+    			#      are both unavailable.  When qpdf is available, the XML is
+    			#      re-attached afterwards; the XMP metadata loss cannot be
+    			#      recovered automatically.
+    			#   4. Pure-Perl    ? fixes EOL delimiters only (no /Length repair).
+    			if ( $self->{zugferd_xml} ) {
+    				# Locate repair tools: check common paths then every PATH dir.
+    				my ( $gs_bin, $qpdf_bin, $mutool_bin );
+    				for my $spec (
+    					[ \$gs_bin,     [qw(/usr/bin/gs     /usr/local/bin/gs)],     'gs'     ],
+    					[ \$qpdf_bin,   [qw(/usr/bin/qpdf   /usr/local/bin/qpdf)],   'qpdf'   ],
+    					[ \$mutool_bin, [qw(/usr/bin/mutool /usr/local/bin/mutool)], 'mutool' ],
+    				) {
+    					my ( $ref, $defaults, $name ) = @$spec;
+    					for my $path (
+    						@$defaults,
+    						map { "$_/$name" } split( /:/, $ENV{PATH} // '' ),
+    					) {
+    						if ( -x $path ) { $$ref = $path; last; }
+    					}
+    				}
 
-				# Check qpdf version once (needed for both GS re-attachment
-				# and the standalone qpdf fallback).
-				my $qpdf_ok = 0;
-				if ($qpdf_bin) {
-					my $qpdf_ver = `$qpdf_bin --version 2>/dev/null`;
-					if ( $qpdf_ver =~ /qpdf version (\d+)\./ && $1 >= 8 ) {
-						$qpdf_ok = 1;
-					}
-				}
+    				# Check qpdf version once.
+    				my $qpdf_ok = 0;
+    				if ($qpdf_bin) {
+    					my $qpdf_ver = `$qpdf_bin --version 2>/dev/null`;
+    					if ( $qpdf_ver =~ /qpdf version (\d+)\./ && $1 >= 8 ) {
+    						$qpdf_ok = 1;
+    					}
+    				}
 
-				( my $fixed = $self->{tmpfile} ) =~ s/\.pdf$/.pdfa3b.pdf/;
-				my $repaired = 0;
+    				( my $fixed = $self->{tmpfile} ) =~ s/\.pdf$/.pdfa3b.pdf/;
+    				my $repaired = 0;
 
-				# --- Attempt 1: Ghostscript ---
-				# Ghostscript renders and rewrites the entire PDF from scratch,
-				# which guarantees correct /Length values and EOL markers for
-				# every stream ? including compressed and embedded-file streams
-				# that qpdf/mutool may leave untouched.
-				# Downside: Ghostscript does not copy /EmbeddedFiles catalog
-				# entries to the new PDF.  We therefore re-attach the ZUGFeRD
-				# XML using qpdf --add-attachment after the GS step.
-				if ($gs_bin) {
-					( my $gs_out = $self->{tmpfile} ) =~ s/\.pdf$/.gs_clean.pdf/;
-					if ( system(qq{$gs_bin -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.7 -sOutputFile='$gs_out' '$self->{tmpfile}' 2>/dev/null}) == 0
-						&& -f $gs_out )
-					{
-						# Re-attach the ZUGFeRD XML that Ghostscript stripped.
-						my $reattached = 0;
-						if (    $self->{zugferd_xmlfile}
-							&& -f $self->{zugferd_xmlfile}
-							&& $qpdf_bin && $qpdf_ok )
-						{
-							if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=text/xml -- '$fixed' 2>/dev/null}) == 0
-								&& -f $fixed )
-							{
-								$reattached = 1;
-								$repaired   = 1;
-							}
-						}
-						unless ($reattached) {
-							# Could not re-attach (no qpdf, or XML path unknown).
-							# Use the GS output as-is and log a warning.
-							rename( $gs_out, $fixed );
-							$repaired = 1;
-							if ( $self->{zugferd_xmlfile} ) {
-								if ( open( my $efh, '>>', $self->{errfile} ) ) {
-									print $efh
-"WARNING: ZUGFeRD XML could not be re-attached after Ghostscript PDF repair.\n" .
-"Install qpdf >= 8.0 (apt install qpdf) to preserve the ZUGFeRD XML in the PDF.\n";
-									close $efh;
-								}
-							}
-						}
-					}
-					unlink $gs_out if -f $gs_out;
-				}
+    				# --- Attempt 1: qpdf ---
+    				# qpdf rewrites stream delimiters and /Length values while
+    				# preserving embedded file attachments (including factur-x.xml
+    				# with its AFRelationship) and the Factur-X XMP metadata.
+    				# Requires qpdf >= 8.0.
+    				if ( $qpdf_bin && $qpdf_ok ) {
+    					# --stream-data=preserve keeps existing stream compression.
+    					if ( system(qq{$qpdf_bin --stream-data=preserve '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
+    						&& -f $fixed )
+    					{
+    						$repaired = 1;
+    					}
+    				}
 
-				# --- Attempt 2: qpdf ---
-				# qpdf rewrites stream delimiters and /Length values while
-				# preserving embedded file attachments.  It does not
-				# re-interpret stream content, so it may miss /Length errors
-				# caused by pdfTeX compression bugs; use Ghostscript if
-				# possible.  Requires qpdf >= 8.0.
-				if ( !$repaired && $qpdf_bin && $qpdf_ok ) {
-					# --stream-data=preserve keeps existing stream compression.
-					if ( system(qq{$qpdf_bin --stream-data=preserve '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
-						&& -f $fixed )
-					{
-						$repaired = 1;
-					}
-				}
+    				# --- Attempt 2: mutool clean ---
+    				# mutool clean rewrites the PDF structure, fixing stream
+    				# delimiters and /Length values while preserving attachments
+    				# and XMP metadata.
+    				if ( !$repaired && $mutool_bin ) {
+    					if ( system(qq{$mutool_bin clean '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
+    						&& -f $fixed )
+    					{
+    						$repaired = 1;
+    					}
+    				}
 
-				# --- Attempt 3: mutool clean ---
-				# mutool clean rewrites the PDF structure, fixing stream
-				# delimiters and /Length values while preserving attachments.
-				if ( !$repaired && $mutool_bin ) {
-					if ( system(qq{$mutool_bin clean '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
-						&& -f $fixed )
-					{
-						$repaired = 1;
-					}
-				}
+    				# --- Attempt 3: Ghostscript (last resort for ZUGFeRD) ---
+    				# Ghostscript renders and rewrites the entire PDF from scratch,
+    				# guaranteeing correct /Length values and EOL markers.
+    				# WARNING: Ghostscript strips the embedded factur-x.xml and the
+    				# /AF catalog entry.  We re-attach the XML with qpdf afterwards,
+    				# but the Factur-X XMP extension metadata may no longer be
+    				# present, which can cause validators to reject the file.
+    				# Only used when both qpdf and mutool are unavailable.
+    				if ( !$repaired && $gs_bin ) {
+    					( my $gs_out = $self->{tmpfile} ) =~ s/\.pdf$/.gs_clean.pdf/;
+    					if ( system(qq{$gs_bin -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.7 -sOutputFile='$gs_out' '$self->{tmpfile}' 2>/dev/null}) == 0
+    						&& -f $gs_out )
+    					{
+    						# Re-attach the ZUGFeRD XML that Ghostscript stripped.
+    						my $reattached = 0;
+    						if (    $self->{zugferd_xmlfile}
+    							&& -f $self->{zugferd_xmlfile}
+    							&& $qpdf_bin && $qpdf_ok )
+    						{
+    							if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=text/xml -- '$fixed' 2>/dev/null}) == 0
+    								&& -f $fixed )
+    							{
+    								$reattached = 1;
+    								$repaired   = 1;
+    							}
+    						}
+    						unless ($reattached) {
+    							# Could not re-attach (no qpdf, or XML path unknown).
+    							# Use the GS output as-is and log a warning.
+    							rename( $gs_out, $fixed );
+    							$repaired = 1;
+    							if ( $self->{zugferd_xmlfile} ) {
+    								if ( open( my $efh, '>>', $self->{errfile} ) ) {
+    									print $efh
+    "WARNING: ZUGFeRD XML could not be re-attached after Ghostscript PDF repair.\n" .
+    "Install qpdf >= 8.0 (apt install qpdf) to preserve the ZUGFeRD XML in the PDF.\n";
+    									close $efh;
+    								}
+    							}
+    						}
+    					}
+    					unlink $gs_out if -f $gs_out;
+    				}
 
-				if ($repaired) {
-					rename( $fixed, $self->{tmpfile} );
-				} else {
-					unlink $fixed if -f $fixed;
+    				if ($repaired) {
+    					rename( $fixed, $self->{tmpfile} );
+    				} else {
+    					unlink $fixed if -f $fixed;
 
-					# Last resort: pure-Perl stream-delimiter repair.
-					# Fixes two pdfTeX bugs:
-					#   1. "stream \n" ? "stream\n" (rogue space after keyword)
-					#   2. Missing EOL before "endstream" keyword
-					# Does NOT fix /Length mismatches.
-					# See _repair_pdf_stream_delimiters() for full details.
-					my $n = _repair_pdf_stream_delimiters( $self->{tmpfile} );
-					if ($n) {
-						$repaired = 1;
-					} else {
-						# Nothing worked: write a warning so the admin knows
-						# which packages to install.
-						if ( open( my $efh, '>>', $self->{errfile} ) ) {
-							print $efh
-"WARNING: ZUGFeRD PDF repair skipped.\n" .
-"Install ghostscript (apt install ghostscript) for full /Length + EOL repair,\n" .
-"or qpdf >= 8.0 (apt install qpdf) / mupdf-tools (apt install mupdf-tools)\n" .
-"to produce a PDF/A-3B-valid e-invoice PDF.\n";
-							close $efh;
-						}
-					}
-				}
-			}
-		}
+    					# Last resort: pure-Perl stream-delimiter repair.
+    					# Fixes two pdfTeX bugs:
+    					#   1. "stream \n" ? "stream\n" (rogue space after keyword)
+    					#   2. Missing EOL before "endstream" keyword
+    					# Does NOT fix /Length mismatches.
+    					# See _repair_pdf_stream_delimiters() for full details.
+    					my $n = _repair_pdf_stream_delimiters( $self->{tmpfile} );
+    					if ($n) {
+    						$repaired = 1;
+    					} else {
+    						# Nothing worked: write a warning so the admin knows
+    						# which packages to install.
+    						if ( open( my $efh, '>>', $self->{errfile} ) ) {
+    							print $efh
+    "WARNING: ZUGFeRD PDF repair skipped.\n" .
+    "Install qpdf >= 8.0 (apt install qpdf) for stream-delimiter repair that\n" .
+    "preserves the embedded ZUGFeRD XML and Factur-X XMP metadata,\n" .
+    "or mupdf-tools (apt install mupdf-tools) as an alternative.\n";
+    							close $efh;
+    						}
+    					}
+    				}
+    			}
+    		}
 
-	}
-
+    	}
 
 	if ( $self->{format} =~ /(postscript|pdf)/ || $self->{media} eq 'email' ) {
 
