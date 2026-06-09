@@ -4096,8 +4096,7 @@ sub parse_template {
     							&& -f $self->{zugferd_xmlfile}
     							&& $qpdf_bin && $qpdf_ok )
     						{
-if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=text/xml --relationship=Alternative -- '$fixed' 2>/dev/null}) == 0    								&& -f $fixed )
-    							{
+if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=application/xml --relationship=Data -- '$fixed' 2>/dev/null}) == 0    							{
     								$reattached = 1;
     								$repaired   = 1;
     							}
