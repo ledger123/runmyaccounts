@@ -3995,6 +3995,27 @@ sub parse_template {
 
 			$self->error( $self->cleanup ) if !( -f $self->{tmpfile} );
 			$self->{tmpfile} =~ s/tex$/pdf/;
+
+            # ZUGFeRD / Factur-X PDFs must be PDF/A-3B-valid.  Some pdfTeX
+			# versions write an incorrect /Length key for embedded streams
+			# (fonts, images, metadata, attached XML).  qpdf --stream-data=preserve
+			# re-reads every stream, counts the actual bytes, and rewrites the
+			# PDF with correct /Length values ? without changing anything else.
+			# We only run this for ZUGFeRD invoices and only when qpdf is installed.
+			if ( $self->{zugferd_xml} ) {
+				my $qpdf_bin;
+				for my $candidate (qw(/usr/bin/qpdf /usr/local/bin/qpdf)) {
+					if ( -x $candidate ) { $qpdf_bin = $candidate; last; }
+				}
+				if ($qpdf_bin) {
+					( my $fixed = $self->{tmpfile} ) =~ s/\.pdf$/.qpdf.pdf/;
+					if ( system(qq{$qpdf_bin --stream-data=preserve '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
+						&& -f $fixed )
+					{
+						rename( $fixed, $self->{tmpfile} );
+					}
+				}
+			}
 		}
 
 	}
