@@ -76,22 +76,28 @@
 <?xpacket end="w"?>
 \end{filecontents*}
 
+% PDF/A-3B conformance requires that every stream's /Length key matches the
+% actual byte count in the file.  In some pdfTeX versions, file-based streams
+% written via \pdfobj stream file{...} receive a /Length derived from the
+% uncompressed file size while the stream content is FlateDecode-compressed,
+% causing a /Length mismatch that fails VeraPDF validation.
+%
+% \pdfcompresslevel=0 disables FlateDecode compression for ALL stream objects
+% so that pdfLaTeX always writes raw (uncompressed) bytes and the /Length key
+% is guaranteed to be exact.  This is set at preamble level so that it is
+% already in effect when the pdfx package writes its own /Metadata stream
+% inside its \AtBeginDocument hook (which runs before ours).
+\pdfcompresslevel=0
+
 % Inject Factur-X XMP as an additional PDF metadata stream.
 % This hook runs after the pdfx package registers its own metadata (pdfx
 % registers at \usepackage time, we register here in content_zugferd.tex
 % which is included later), so our catalog entry is written after pdfx's.
 % In pdfTeX, for duplicate catalog keys the last occurrence takes effect.
 \AtBeginDocument{%
-  % PDF/A-3B requires that the document-catalog /Metadata stream carries no
-  % FlateDecode filter and that every stream's /Length key matches the actual
-  % byte count in the file.  \pdfcompresslevel controls FlateDecode on
-  % individual streams; setting it to 0 disables compression so pdfLaTeX
-  % writes raw bytes and the /Length key is always exact.  This must remain
-  % 0 for the rest of the document so that the \embedfile object (written at
-  % \AtEndDocument time) is also stored uncompressed with a correct /Length.
-  \pdfcompresslevel=0
   % \pdfobjcompresslevel=0 prevents the /Metadata stream from being packed
-  % into a compressed object stream, keeping it directly accessible.
+  % into a compressed object stream (PDF 1.5 object streams), keeping it
+  % directly accessible as required by PDF/A-3B.
   \pdfobjcompresslevel=0
   \immediate\pdfobj stream attr{/Type /Metadata /Subtype /XML}%
     file{\jobname-fxmeta.xmp}%
@@ -101,7 +107,12 @@
   \pdfcatalog{/Metadata \the\pdflastobj\space 0 R}%
 }
 
-\embedfile[filespec={factur-x.xml},afrelationship={/Alternative},desc={Rechnungsdaten im ZUGFeRD XML Format},filesystem=URL,stringmethod=escape,mimetype=text/xml,ucfilespec={factur-x.xml}]{<%zugferd_xmlfile%>}
+% Factur-X 1.0 / ZUGFeRD 2.x EN 16931 profile requires:
+%   - the embedded XML file to be named exactly "factur-x.xml"
+%   - MIME type "application/xml" (NOT "text/xml" -- Factur-X spec § 6.2.2
+%     and Mustangproject/portinvoice validators reject "text/xml")
+%   - AFRelationship "/Alternative" for the EN 16931 / COMFORT profile
+\embedfile[filespec={factur-x.xml},afrelationship={/Alternative},desc={Rechnungsdaten im ZUGFeRD XML Format},filesystem=URL,stringmethod=escape,mimetype=application/xml,ucfilespec={factur-x.xml}]{<%zugferd_xmlfile%>}
 
 
 <%resetcarriedforward%>

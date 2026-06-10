@@ -4109,7 +4109,7 @@ sub parse_template {
                             								'--key=factur-x.xml',
                             								'--filename=factur-x.xml',
                             								'--mimetype=application/xml',
-                            								'--relationship=Data',
+                            								'--relationship=Alternative',
                             								'--', $fixed) == 0
 								&& -f $fixed )
 							{
