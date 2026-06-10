@@ -1473,6 +1473,8 @@ sub post_invoice {
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
 
+  $fxamount_total = $invamount if $form->{exchangerate} eq '1';
+
   # save AP record
   $query = qq|UPDATE ap set
               invnumber = |.$dbh->quote($form->{invnumber}).qq|,
