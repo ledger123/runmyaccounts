@@ -4039,12 +4039,16 @@ sub parse_template {
     					}
     				}
 
-    				# Check qpdf version once.
-    				my $qpdf_ok = 0;
+                    # Cache the qpdf version check across invocations -- otherwise
+    				# every invoice render forks qpdf just to read its version.
+    				our %_qpdf_ok_cache;
     				if ($qpdf_bin) {
-    					my $qpdf_ver = `$qpdf_bin --version 2>/dev/null`;
-    					if ( $qpdf_ver =~ /qpdf version (\d+)\./ && $1 >= 8 ) {
-    						$qpdf_ok = 1;
+                        if ( exists $_qpdf_ok_cache{$qpdf_bin} ) {
+    						$qpdf_ok = $_qpdf_ok_cache{$qpdf_bin};
+    					} else {
+    						my $qpdf_ver = `$qpdf_bin --version 2>/dev/null`;
+    						$qpdf_ok = ( $qpdf_ver =~ /qpdf version (\d+)\./ && $1 >= 8 ) ? 1 : 0;
+    						$_qpdf_ok_cache{$qpdf_bin} = $qpdf_ok;
     					}
     				}
 
@@ -4058,7 +4062,9 @@ sub parse_template {
     				# Requires qpdf >= 8.0.
     				if ( $qpdf_bin && $qpdf_ok ) {
     					# --stream-data=preserve keeps existing stream compression.
-    					if ( system(qq{$qpdf_bin --stream-data=preserve '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
+                        # List-form system() avoids shell quoting issues with paths
+    					# containing single quotes or whitespace.
+    					if ( system($qpdf_bin, '--stream-data=preserve', $self->{tmpfile}, $fixed) == 0
     						&& -f $fixed )
     					{
     						$repaired = 1;
@@ -4070,7 +4076,7 @@ sub parse_template {
     				# delimiters and /Length values while preserving attachments
     				# and XMP metadata.
     				if ( !$repaired && $mutool_bin ) {
-    					if ( system(qq{$mutool_bin clean '$self->{tmpfile}' '$fixed' 2>/dev/null}) == 0
+    					if ( system($mutool_bin, 'clean', $self->{tmpfile}, $fixed) == 0
     						&& -f $fixed )
     					{
     						$repaired = 1;
@@ -4087,7 +4093,9 @@ sub parse_template {
 				# Only used when both qpdf and mutool are unavailable.
 				if ( !$repaired && $gs_bin ) {
 					( my $gs_out = $self->{tmpfile} ) =~ s/\.pdf$/.gs_clean.pdf/;
-					if ( system(qq{$gs_bin -dBATCH -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -dCompatibilityLevel=1.7 -sOutputFile='$gs_out' '$self->{tmpfile}' 2>/dev/null}) == 0
+					if ( system($gs_bin, '-dBATCH', '-dNOPAUSE', '-dQUIET',
+                    						'-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.7',
+                    						"-sOutputFile=$gs_out", $self->{tmpfile}) == 0
 						&& -f $gs_out )
 					{
 						# Re-attach the ZUGFeRD XML that Ghostscript stripped.
@@ -4096,7 +4104,13 @@ sub parse_template {
 							&& -f $self->{zugferd_xmlfile}
 							&& $qpdf_bin && $qpdf_ok )
 						{
-							if ( system(qq{$qpdf_bin '$gs_out' --add-attachment '$self->{zugferd_xmlfile}' --key=factur-x.xml --filename=factur-x.xml --mimetype=application/xml --relationship=Data -- '$fixed' 2>/dev/null}) == 0
+							if ( system($qpdf_bin, $gs_out,
+                            								'--add-attachment', $self->{zugferd_xmlfile},
+                            								'--key=factur-x.xml',
+                            								'--filename=factur-x.xml',
+                            								'--mimetype=application/xml',
+                            								'--relationship=Data',
+                            								'--', $fixed) == 0
 								&& -f $fixed )
 							{
 								$reattached = 1;
@@ -4725,6 +4739,14 @@ sub cleanup {
 			open( FH, "$self->{errfile}" );
 			@err = <FH>;
 			close(FH);
+		}
+
+        # Remove the temporary ZUGFeRD/Factur-X XML file, if any.  cleanup()
+		# below globs by tmpfile prefix and won't catch the XML, which is
+		# named after $form->{fileid} (the invoice number) rather than the
+		# tmpfile prefix.
+		if ( $self->{zugferd_xmlfile} && -f $self->{zugferd_xmlfile} ) {
+			unlink( $self->{zugferd_xmlfile} );
 		}
 
 		if ( $self->{tmpfile} ) {

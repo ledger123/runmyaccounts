@@ -1819,6 +1819,15 @@ sub print_form {
         print $zfh $form->{zugferd_xml};
         close($zfh);
         $form->{zugferd_xmlfile} = $zugferd_file;
+      } else {
+              # XML file could not be written -- disable ZUGFeRD embedding for
+              # this run so that \embedfile{} in the LaTeX template does not
+              # silently reference an empty/missing path and abort the build.
+              delete $form->{zugferd_xml};
+              delete $form->{zugferd_xmlfile};
+              if (open(my $efh, '>>', $form->{errfile})) {
+                print $efh "WARNING: could not write ZUGFeRD XML to $tmppath/$zugferd_file: $!\n";
+                close($efh);
       }
     }
 

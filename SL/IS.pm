@@ -655,7 +655,6 @@ sub invoice_details {
 
   for (qw(cd_amount paid)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}) }
   for (qw(invtotal subtotal total)) { $form->{"xml_$_"} = sprintf('%.2f', $form->{$_}) }
-  $form->{zugferd_typecode} = ($form->{formname} eq 'credit_invoice') ? 381 : 380;
   for (qw(cd_subtotal cd_invtotal invtotal subtotal total totalparts totalservices)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}, $form->{precision}, "0") }
   for (qw(totalqty totalship totalnetweight totalgrossweight)) { $form->{$_} = $form->format_amount($myconfig, $form->{$_}) }
 
