@@ -1820,14 +1820,15 @@ sub print_form {
         close($zfh);
         $form->{zugferd_xmlfile} = $zugferd_file;
       } else {
-              # XML file could not be written -- disable ZUGFeRD embedding for
-              # this run so that \embedfile{} in the LaTeX template does not
-              # silently reference an empty/missing path and abort the build.
-              delete $form->{zugferd_xml};
-              delete $form->{zugferd_xmlfile};
-              if (open(my $efh, '>>', $form->{errfile})) {
-                print $efh "WARNING: could not write ZUGFeRD XML to $tmppath/$zugferd_file: $!\n";
-                close($efh);
+        # XML file could not be written -- disable ZUGFeRD embedding for
+        # this run so that \embedfile{} in the LaTeX template does not
+        # silently reference an empty/missing path and abort the build.
+        delete $form->{zugferd_xml};
+        delete $form->{zugferd_xmlfile};
+        if (open(my $efh, '>>', $form->{errfile})) {
+          print $efh "WARNING: could not write ZUGFeRD XML to $tmppath/$zugferd_file: $!\n";
+          close($efh);
+        }
       }
     }
 
@@ -1851,15 +1852,15 @@ sub print_form {
     for (1 .. $old_form->{paidaccounts}) {
       delete $old_form->{"paid_$_"};
     }
-    
+
     # restore and display form
     for (keys %$old_form) { $form->{$_} = $old_form->{$_} }
     delete $form->{pre};
-    
+
     for (1 .. $form->{paidaccounts}) {
       $form->{"paid_$_"} = $form->parse_amount(\%myconfig, $form->{"paid_$_"});
     }
- 
+
     $form->{rowcount}--;
 
     if ( $emailed == 1 ) {
@@ -1887,7 +1888,7 @@ sub ship_to {
   AA->ship_to(\%myconfig, \%$form);
 
   for (keys %temp) { $form->{$_} = $temp{$_} }
-  
+
   $vcname = $locale->text('Name');
 
   $form->{rowcount}--;
@@ -1903,7 +1904,7 @@ sub ship_to {
 	     phone => { i => 9, label => $locale->text('Phone') },
 	       fax => { i => 10, label => $locale->text('Fax') },
 	     email => { i => 11, label => $locale->text('E-mail') } );
-  
+
   $form->header(0, 0, $locale);
 
   print qq|
@@ -2027,12 +2028,12 @@ sub ship_to {
     $form->{flds} .= "$_ ";
   }
   chop $form->{flds};
-  
+
   $form->{title} = $title;
 
   $form->{nextsub} = "shipto_selected";
-  
-  
+
+
   $form->hide_form;
 
   print qq|
@@ -2068,4 +2069,3 @@ sub shipto_selected {
 sub save_report {
   $form->save_form('report');
 }
-
