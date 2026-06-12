@@ -69,9 +69,12 @@ except ImportError:  # pragma: no cover
     etree = None  # type: ignore
 
 try:
-    from facturx import generate_from_file
-except ImportError:  # pragma: no cover
-    generate_from_file = None  # type: ignore
+    from facturx import generate_from_file          # factur-x >= 4.0
+except ImportError:
+    try:
+        from facturx import generate_facturx_from_file as generate_from_file  # factur-x 3.x
+    except ImportError:  # pragma: no cover
+        generate_from_file = None  # type: ignore
 
 
 # ---------------------------------------------------------------------------
