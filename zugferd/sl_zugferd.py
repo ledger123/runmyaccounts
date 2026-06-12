@@ -716,7 +716,11 @@ def _resolve_icc(gs: str, cfg_icc: Optional[str]) -> Tuple[str, Optional[str]]:
 
     The caller must ``os.unlink(tmpfile_to_delete)`` when it is not ``None``.
     """
-    if cfg_icc:
+    # A config value is only useful when it refers to a real filesystem path.
+    # "%rom%?" is a Ghostscript virtual ROM path that is unavailable on most
+    # distribution builds (e.g. Debian/Ubuntu gs 9.25), so we treat it as
+    # unset and fall through to the auto-detection logic below.
+    if cfg_icc and not cfg_icc.startswith("%"):
         return cfg_icc, None
 
     # 1. Ask GS to resolve its own ICC resource path via findlibfile.
