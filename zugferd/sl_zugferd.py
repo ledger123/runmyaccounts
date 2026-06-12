@@ -983,7 +983,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         log.info("step 2/2: embedding Factur-X XML into PDF")
         embed_xml(pdfa_tmp, xml, inv,
                   profile=cfg.get("profile", "en16931"))
-        shutil.move(pdfa_tmp, args.pdf_out)
+        shutil.copyfile(pdfa_tmp, args.pdf_out)
+        os.unlink(pdfa_tmp)
         log.info("ZUGFeRD PDF written to: %s", args.pdf_out)
     except Exception as exc:
         log.error("conversion failed: %s", exc, exc_info=True)
