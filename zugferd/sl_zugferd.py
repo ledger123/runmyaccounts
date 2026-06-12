@@ -685,6 +685,68 @@ def build_xml(inv: Dict[str, Any], seller: Dict[str, Any],
 # PDF/A-3 conversion + embedding
 # ---------------------------------------------------------------------------
 
+def _find_icc_profile(gs: str) -> str:
+    """Return a usable sRGB ICC profile path for the installed Ghostscript.
+
+    Ghostscript exposes ``%rom%icc/default_rgb.icc`` as a virtual ROM path,
+    but distribution builds (e.g. Debian/Ubuntu gs 9.25) may omit the ROM
+    file-system, causing ``Error: /undefinedfilename in --file--`` at
+    run-time.  We therefore:
+
+    1. Ask Ghostscript itself via ``findlibfile`` for the resolved path of
+       ``icc/default_rgb.icc``; this works for both ROM and on-disk installs.
+    2. Fall back to well-known on-disk locations for several distros.
+    3. Return the ROM virtual path as a last resort (original behaviour).
+    """
+    # Ask GS to resolve its own ICC resource path via findlibfile.
+    # The PostScript snippet prints the found absolute path to stdout.
+    try:
+        res = subprocess.run(
+            [gs, "-dNODISPLAY", "-dBATCH", "-dNOPAUSE", "-q",
+             "-c",
+             "(icc/default_rgb.icc) findlibfile"
+             " { exch pop = } { pop } ifelse quit"],
+            capture_output=True, text=True, timeout=10,
+        )
+        path = res.stdout.strip()
+        if path and os.path.isfile(path):
+            log.debug("_find_icc_profile: GS resolved -> %s", path)
+            return path
+    except Exception as exc:
+        log.debug("_find_icc_profile: findlibfile probe failed: %s", exc)
+
+    # Scan well-known on-disk locations (Debian/Ubuntu, RHEL, macOS Homebrew).
+    import glob as _glob
+    candidates: List[str] = []
+    for pattern in [
+        "/usr/share/ghostscript/*/icc/default_rgb.icc",
+        "/usr/share/ghostscript/*/iccprofiles/default_rgb.icc",
+        "/usr/local/share/ghostscript/*/icc/default_rgb.icc",
+        "/opt/homebrew/share/ghostscript/*/icc/default_rgb.icc",
+    ]:
+        candidates.extend(_glob.glob(pattern))
+    for path in [
+        "/usr/share/color/icc/colord/sRGB.icc",
+        "/usr/share/color/icc/sRGB.icc",
+    ]:
+        candidates.append(path)
+
+    for path in candidates:
+        if os.path.isfile(path):
+            log.debug("_find_icc_profile: found on disk -> %s", path)
+            return path
+
+    # Last resort ? works when GS is compiled with the ROM file-system.
+    log.debug("_find_icc_profile: falling back to %%rom%% virtual path")
+    return "%rom%icc/default_rgb.icc"
+
+
+def _ps_escape(path: str) -> str:
+    """Escape a file-system path for use inside a PostScript string ``(...)``."""
+    # In a PS string literal only '(', ')' and '\' must be escaped.
+    return path.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
 def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
     """Convert *pdf_in* to PDF/A-3b via Ghostscript.
 
@@ -694,9 +756,9 @@ def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
     be PDF/A.
     """
     gs = cfg.get("ghostscript") or "gs"
-    # %rom%icc/default_rgb.icc is Ghostscript's built-in sRGB profile,
-    # available on every GS installation without any system ICC package.
-    icc = cfg.get("icc_profile") or "%rom%icc/default_rgb.icc"
+    # Resolve a real ICC profile path; %rom% virtual paths fail on GS builds
+    # that were compiled without the ROM file-system (e.g. Debian gs 9.25).
+    icc = cfg.get("icc_profile") or _find_icc_profile(gs)
 
     if not shutil.which(gs):
         raise RuntimeError(f"Ghostscript '{gs}' not found in PATH")
@@ -710,7 +772,7 @@ def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
         "  /DOCINFO pdfmark\n"
         "[ /_objdef {icc_PDFA} /type /stream /OBJ pdfmark\n"
         "[ {icc_PDFA} <</N 3>> /PUT pdfmark\n"
-        f"[ {{icc_PDFA}} ({icc}) (r) file /PUT pdfmark\n"
+        f"[ {{icc_PDFA}} ({_ps_escape(icc)}) (r) file /PUT pdfmark\n"
         "[ /_objdef {OutputIntent_PDFA} /type /dict /OBJ pdfmark\n"
         "[ {OutputIntent_PDFA} <<\n"
         "    /Type /OutputIntent /S /GTS_PDFA1\n"
