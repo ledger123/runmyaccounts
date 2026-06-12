@@ -694,7 +694,9 @@ def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
     be PDF/A.
     """
     gs = cfg.get("ghostscript") or "gs"
-    icc = cfg.get("icc_profile") or "/usr/share/color/icc/sRGB.icc"
+    # %rom%icc/default_rgb.icc is Ghostscript's built-in sRGB profile,
+    # available on every GS installation without any system ICC package.
+    icc = cfg.get("icc_profile") or "%rom%icc/default_rgb.icc"
 
     if not shutil.which(gs):
         raise RuntimeError(f"Ghostscript '{gs}' not found in PATH")
@@ -727,7 +729,7 @@ def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
         cmd = [
             gs,
             "-dPDFA=3",
-            "-dBATCH", "-dNOPAUSE", "-dQUIET",
+            "-dBATCH", "-dNOPAUSE",
             "-sColorConversionStrategy=UseDeviceIndependentColor",
             "-sDEVICE=pdfwrite",
             "-dPDFACompatibilityPolicy=1",
@@ -737,8 +739,9 @@ def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
         ]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0 or not os.path.exists(pdf_out):
+            output = "\n".join(filter(None, [res.stdout, res.stderr]))
             raise RuntimeError(
-                f"Ghostscript PDF/A-3 conversion failed:\n{res.stderr}")
+                f"Ghostscript PDF/A-3 conversion failed:\n{output}")
         log.info("ensure_pdfa3: Ghostscript succeeded, output: %s", pdf_out)
     finally:
         try:
