@@ -44,6 +44,7 @@ import argparse
 import datetime as _dt
 import decimal
 import json
+import logging
 import os
 import re
 import shutil
@@ -52,6 +53,8 @@ import sys
 import tempfile
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
+
+log = logging.getLogger("sl_zugferd")
 
 try:
     import psycopg2
@@ -669,8 +672,13 @@ def build_xml(inv: Dict[str, Any], seller: Dict[str, Any],
     _e(summ, "ram:TotalPrepaidAmount",   _fmt_amount(inv["paid_total"]))
     _e(summ, "ram:DuePayableAmount",     _fmt_amount(inv["due_total"]))
 
-    return etree.tostring(root, pretty_print=True, xml_declaration=True,
-                          encoding="UTF-8", standalone=False)
+    xml_bytes = etree.tostring(root, pretty_print=True, xml_declaration=True,
+                               encoding="UTF-8", standalone=False)
+    # Strip UTF-8 BOM if lxml added one ? it causes SAXParseException
+    # "Content is not allowed in prolog" in XML validators.
+    if xml_bytes.startswith(b"\xef\xbb\xbf"):
+        xml_bytes = xml_bytes[3:]
+    return xml_bytes
 
 
 # ---------------------------------------------------------------------------
@@ -690,7 +698,8 @@ def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
 
     if not shutil.which(gs):
         raise RuntimeError(f"Ghostscript '{gs}' not found in PATH")
-
+    log.info("ensure_pdfa3: converting %s -> %s (gs=%s, icc=%s)",
+             pdf_in, pdf_out, gs, icc)
     # Minimal PDFA_def.ps stream telling Ghostscript what output intent
     # to use.  Written to a temp file because the path to the ICC
     # profile must be substituted in.
@@ -730,6 +739,7 @@ def ensure_pdfa3(pdf_in: str, pdf_out: str, cfg: Dict[str, Any]) -> None:
         if res.returncode != 0 or not os.path.exists(pdf_out):
             raise RuntimeError(
                 f"Ghostscript PDF/A-3 conversion failed:\n{res.stderr}")
+        log.info("ensure_pdfa3: Ghostscript succeeded, output: %s", pdf_out)
     finally:
         try:
             os.unlink(pdfa_def)
@@ -743,6 +753,8 @@ def embed_xml(pdf_path: str, xml_bytes: bytes, inv: Dict[str, Any],
     if generate_from_file is None:
         raise RuntimeError(
             "factur-x library missing (pip install factur-x)")
+    log.info("embed_xml: embedding %d bytes of XML into %s (profile=%s)",
+             len(xml_bytes), pdf_path, profile)
 
     pdf_meta = {
         "author":   "SQL-Ledger",
@@ -760,6 +772,7 @@ def embed_xml(pdf_path: str, xml_bytes: bytes, inv: Dict[str, Any],
         pdf_metadata=pdf_meta,
         output_pdf_file=pdf_path,  # overwrite in place
     )
+    log.info("embed_xml: done")
 
 
 # ---------------------------------------------------------------------------
@@ -783,6 +796,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                          "for debugging / validation runs")
     ap.add_argument("--keep-xml",
                     help="Also write the raw XML to this path")
+    ap.add_argument("--log-level", default="INFO",
+                    choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+                    help="Logging verbosity (default: INFO)")
     # DB connection overrides (highest priority).  Normally SL/Form.pm
     # sets PG* env vars instead, so these are only useful on the CLI.
     ap.add_argument("--db-host",     help="PostgreSQL host (overrides PGHOST / config)")
@@ -792,33 +808,60 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--db-password", help="PostgreSQL password (overrides PGPASSWORD / config)")
     args = ap.parse_args(argv)
 
+    logging.basicConfig(
+        stream=sys.stderr,
+        level=getattr(logging, args.log_level),
+        format="%(asctime)s [sl_zugferd] %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    log.info("sl_zugferd started: invoice_id=%s pdf_in=%s pdf_out=%s",
+             args.invoice_id, args.pdf_in, args.pdf_out)
+
+    log.debug("loading config: %s", args.config or "(none)")
     cfg = load_config(args.config)
+    log.info("config loaded: profile=%s ghostscript=%s",
+             cfg.get("profile"), cfg.get("ghostscript"))
 
     if psycopg2 is None:
+        log.error("psycopg2 is required (pip install psycopg2-binary)")
         print("psycopg2 is required (pip install psycopg2-binary)",
               file=sys.stderr)
         return 2
 
+    log.info("connecting to database")
     conn = psycopg2.connect(**resolve_db_params(args, cfg))
     try:
+        log.info("fetching invoice id=%s", args.invoice_id)
         inv = fetch_invoice(conn, args.invoice_id)
+        log.info("invoice fetched: number=%s date=%s gross=%s currency=%s",
+                 inv["number"], inv["issue_date"], inv["gross_total"],
+                 inv["currency"])
+        log.info("fetching seller data")
         db_seller = fetch_seller(conn, args.invoice_id)
+        log.info("seller fetched: name=%s", db_seller.get("name"))
     finally:
         conn.close()
+        log.debug("database connection closed")
 
     seller = _merge_seller(db_seller, cfg.get("seller") or {})
+    log.info("building ZUGFeRD XML (profile=%s)", cfg.get("profile", "en16931"))
     xml = build_xml(inv, seller, profile=cfg.get("profile", "en16931"))
+    log.info("XML built: %d bytes", len(xml))
 
     if args.keep_xml:
         with open(args.keep_xml, "wb") as fh:
             fh.write(xml)
+        log.info("XML also written to: %s", args.keep_xml)
 
     if args.xml_only:
         with open(args.pdf_out, "wb") as fh:
             fh.write(xml)
+        log.info("xml-only mode: XML written to %s", args.pdf_out)
         return 0
 
     if not os.path.exists(args.pdf_in):
+        log.error("input PDF not found: %s", args.pdf_in)
         print(f"Input PDF not found: {args.pdf_in}", file=sys.stderr)
         return 3
 
@@ -826,11 +869,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     # in Ghostscript / factur-x leaves the original PDF untouched.
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tf:
         pdfa_tmp = tf.name
+    log.debug("temporary PDF/A working file: %s", pdfa_tmp)
     try:
+        log.info("step 1/2: converting PDF to PDF/A-3 via Ghostscript")
         ensure_pdfa3(args.pdf_in, pdfa_tmp, cfg)
+        log.info("step 2/2: embedding Factur-X XML into PDF")
         embed_xml(pdfa_tmp, xml, inv,
                   profile=cfg.get("profile", "en16931"))
         shutil.move(pdfa_tmp, args.pdf_out)
+        log.info("ZUGFeRD PDF written to: %s", args.pdf_out)
+    except Exception as exc:
+        log.error("conversion failed: %s", exc, exc_info=True)
+        raise
     finally:
         if os.path.exists(pdfa_tmp):
             try:
@@ -838,6 +888,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             except OSError:
                 pass
 
+    log.info("sl_zugferd finished successfully")
     return 0
 
 
