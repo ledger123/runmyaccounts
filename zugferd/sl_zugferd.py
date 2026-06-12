@@ -245,7 +245,6 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
                c.email           AS customer_email,
                c.taxnumber       AS customer_taxnumber,
                c.iban            AS customer_iban,
-               c.gifi_accno      AS customer_gifi,
                c.customernumber  AS customer_number
           FROM ar a
           JOIN customer c ON c.id = a.customer_id
