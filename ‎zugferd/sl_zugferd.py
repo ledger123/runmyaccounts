@@ -237,11 +237,11 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
                a.terms,
                c.id              AS customer_id,
                c.name            AS customer_name,
-               c.address1        AS customer_address1,
-               c.address2        AS customer_address2,
-               c.city            AS customer_city,
-               c.zipcode         AS customer_zip,
-               c.country         AS customer_country,
+               ad.address1       AS customer_address1,
+               ad.address2       AS customer_address2,
+               ad.city           AS customer_city,
+               ad.zipcode        AS customer_zip,
+               ad.country        AS customer_country,
                c.email           AS customer_email,
                c.taxnumber       AS customer_taxnumber,
                c.iban            AS customer_iban,
@@ -249,6 +249,7 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
                c.customernumber  AS customer_number
           FROM ar a
           JOIN customer c ON c.id = a.customer_id
+          LEFT JOIN address ad ON ad.trans_id = c.id
          WHERE a.id = %s
         """,
         (invoice_id,),
