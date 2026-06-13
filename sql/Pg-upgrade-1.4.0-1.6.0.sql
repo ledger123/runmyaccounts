@@ -19,6 +19,7 @@ alter table defaults rename column inventory_accno to inventory_accno_id;
 alter table defaults rename column income_accno to income_accno_id;
 alter table defaults rename column expense_accno to expense_accno_id;
 alter table defaults add column businessnumber text;
+alter table defaults add column taxnumber text;
 alter table defaults add column version varchar(8);
 update defaults set inventory_accno_id =
   (select id from chart where chart.accno = defaults.inventory_accno_id);

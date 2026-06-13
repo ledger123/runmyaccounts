@@ -2091,6 +2091,10 @@ sub defaults {
 	  <td><input name=businessnumber size=25 value="|.$form->quote($form->{businessnumber}).qq|"></td>
 	</tr>
 	<tr>
+	  <th align=right>|.$locale->text('Tax Number').qq|</th>
+	  <td><input name=taxnumber size=25 value="|.$form->quote($form->{taxnumber}).qq|"></td>
+	</tr>
+	<tr>
 	  <th align=right>|.$locale->text('Reporting Method').qq|</th>
 	  <td><input name=method class=checkbox type=checkbox value=cash $checked{cash}>&nbsp;|.$locale->text('Cash').qq|</td>
 	</tr>
