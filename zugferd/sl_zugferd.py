@@ -544,7 +544,7 @@ _UNECE_UNIT_MAP: Dict[str, str] = {
     "pcs":      "C62",  "pc":      "C62",  "ea":      "C62",
     "each":     "C62",  "piece":   "C62",  "pieces":  "C62",
     "stk":      "C62",  "Stk":     "C62",  "st":      "C62",
-    "St":       "C62",  "stück":   "C62",  "Stück":   "C62",
+    "St":       "C62",  "st\u00fcck": "C62",  "St\u00fcck": "C62",
     "einheit":  "C62",  "Einheit": "C62",
     "set":      "SET",  "Set":     "SET",
     "pair":     "PR",   "pr":      "PR",
