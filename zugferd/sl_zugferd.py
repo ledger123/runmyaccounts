@@ -305,7 +305,7 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
             "name":        (r["description"] or "").strip() or
                            (r["partnumber"] or ""),
             "qty":         qty,
-            "unit":        (r["unit"] or "C62").strip() or "C62",
+            "unit":        _to_unece_unit(r["unit"] or ""),
             "unit_price":  sellprice,
             "discount":    discount,
             "net_amount":  net,
@@ -520,6 +520,85 @@ def _fmt_qty(v: Decimal) -> str:
     return f"{v:.4f}"
 
 
+# Mapping from common SQL-Ledger / free-text unit strings to valid
+# UN/ECE Recommendation 20 (+ Rec 21 extension) unit codes.
+# Rule: if the raw DB value is already a valid Rec 20 code it is kept;
+# otherwise we look it up here; if still unknown we fall back to C62
+# (piece / no unit of measure applicable).
+_UNECE_UNIT_MAP: Dict[str, str] = {
+    # time
+    "h":        "HUR",  "hr":      "HUR",  "hrs":     "HUR",
+    "hour":     "HUR",  "hours":   "HUR",
+    "std":      "HUR",  "Std":     "HUR",  "stunde":  "HUR",
+    "min":      "MIN",  "minute":  "MIN",  "minutes": "MIN",
+    "s":        "SEC",  "sec":     "SEC",  "second":  "SEC",
+    "d":        "DAY",  "day":     "DAY",  "days":    "DAY",
+    "tag":      "DAY",  "Tag":     "DAY",
+    "wk":       "WEE",  "week":    "WEE",  "weeks":   "WEE",
+    "woche":    "WEE",  "Woche":   "WEE",
+    "mo":       "MON",  "month":   "MON",  "months":  "MON",
+    "monat":    "MON",  "Monat":   "MON",
+    "yr":       "ANN",  "year":    "ANN",  "years":   "ANN",
+    "jahr":     "ANN",  "Jahr":    "ANN",
+    # dimensionless / piece
+    "pcs":      "C62",  "pc":      "C62",  "ea":      "C62",
+    "each":     "C62",  "piece":   "C62",  "pieces":  "C62",
+    "stk":      "C62",  "Stk":     "C62",  "st":      "C62",
+    "St":       "C62",  "stück":   "C62",  "Stück":   "C62",
+    "einheit":  "C62",  "Einheit": "C62",
+    "set":      "SET",  "Set":     "SET",
+    "pair":     "PR",   "pr":      "PR",
+    # mass
+    "kg":       "KGM",  "kilo":    "KGM",
+    "g":        "GRM",  "gr":      "GRM",  "gram":    "GRM",
+    "t":        "TNE",  "to":      "TNE",  "tonne":   "TNE",
+    "tonne":    "TNE",  "Tonne":   "TNE",
+    "lb":       "LBR",  "lbs":     "LBR",
+    # volume
+    "l":        "LTR",  "L":       "LTR",  "ltr":     "LTR",
+    "litre":    "LTR",  "liter":   "LTR",
+    "ml":       "MLT",  "mL":      "MLT",
+    "m3":       "MTQ",  "cbm":     "MTQ",
+    # length / area
+    "m":        "MTR",  "meter":   "MTR",  "metre":   "MTR",
+    "km":       "KMT",
+    "cm":       "CMT",  "mm":      "MMT",
+    "m2":       "MTK",  "qm":      "MTK",
+    "cm2":      "CMK",
+    # packaging
+    "pk":       "PK",   "pkg":     "PK",   "pack":    "PK",
+    "box":      "BX",   "bx":      "BX",
+    "pal":      "PF",   "palette": "PF",
+    # energy / power
+    "kw":       "KWT",  "kW":      "KWT",
+    "kwh":      "KWH",  "kWh":     "KWH",
+}
+
+# Set of codes that are valid UN/ECE Rec 20 unit codes as used in
+# Factur-X / ZUGFeRD.  Values in _UNECE_UNIT_MAP are already valid so
+# we use them to build this set automatically.
+_VALID_UNECE = set(_UNECE_UNIT_MAP.values())
+
+
+def _to_unece_unit(raw: str) -> str:
+    """Return a valid UN/ECE Rec 20 unit code for *raw*.
+
+    1. If *raw* is already a known Rec 20 code, return it as-is.
+    2. Try the explicit alias table (case-sensitive, then lower-cased).
+    3. Fall back to ``C62`` (piece / no unit of measure applicable).
+    """
+    s = (raw or "").strip()
+    if not s:
+        return "C62"
+    if s in _VALID_UNECE:
+        return s
+    if s in _UNECE_UNIT_MAP:
+        return _UNECE_UNIT_MAP[s]
+    if s.lower() in _UNECE_UNIT_MAP:
+        return _UNECE_UNIT_MAP[s.lower()]
+    return "C62"
+
+
 def _fmt_date(d: Any) -> str:
     if isinstance(d, _dt.date):
         return d.strftime("%Y%m%d")
@@ -589,7 +668,7 @@ def build_xml(inv: Dict[str, Any], seller: Dict[str, Any],
 
         deliv = _e(item, "ram:SpecifiedLineTradeDelivery")
         _e(deliv, "ram:BilledQuantity", _fmt_qty(ln["qty"]),
-           unitCode=ln["unit"][:3] if len(ln["unit"]) <= 3 else "C62")
+           unitCode=_to_unece_unit(ln["unit"]))
 
         settle = _e(item, "ram:SpecifiedLineTradeSettlement")
         tax = _e(settle, "ram:ApplicableTradeTax")
