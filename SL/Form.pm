@@ -3995,6 +3995,44 @@ sub parse_template {
 
 			$self->error( $self->cleanup ) if !( -f $self->{tmpfile} );
 			$self->{tmpfile} =~ s/tex$/pdf/;
+
+            # ----- ZUGFeRD / Factur-X post-processing -----------------
+			# Activated by setting   $zugferd = 1;   in sql-ledger.conf
+			# (optionally  $zugferd_script = "/path/to/sl-zugferd.pl";)
+			# Runs only for customer invoices (ar/is/IS) so we don't
+			# tag vendor PDFs or order confirmations.
+			if ( $main::zugferd && $self->{id}
+			     && ( $self->{module} eq 'ar' || $self->{type} eq 'invoice'
+			          || $self->{formname} =~ /invoice/i ) )
+			{
+				my $zf = $main::zugferd_script
+				    || "$self->{cwd}/zugferd/sl-zugferd.pl";
+				if ( -f $zf && -f $self->{tmpfile} ) {
+					my $out = $self->{tmpfile};
+					$out =~ s/\.pdf$/-zugferd.pdf/;
+					# Forward the *current* dataset's DB connection
+					# via libpq env vars so the post-processor reads
+					# the right client DB on multi-tenant installs.
+					# Password goes through the environment (not argv)
+					# so it doesn't show up in `ps`.
+					local %ENV = (
+					    %ENV,
+					    PGHOST     => $myconfig->{dbhost}   // '',
+					    PGPORT     => $myconfig->{dbport}   // '',
+					    PGDATABASE => $myconfig->{dbname}   // '',
+					    PGUSER     => $myconfig->{dbuser}   // '',
+					    PGPASSWORD => $myconfig->{dbpasswd} // '',
+					);
+					my $rc = system( 'perl', $zf, $self->{id},
+					                 $self->{tmpfile}, $out );
+					if ( $rc == 0 && -f $out ) {
+						rename( $out, $self->{tmpfile} );
+					}
+					# On failure we silently keep the plain PDF so the
+					# user still gets *some* invoice; the error went to
+					# stderr/the spool log already.
+				}
+			}
 		}
 
 	}
