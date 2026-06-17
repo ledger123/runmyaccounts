@@ -312,56 +312,30 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
             "tax_percent": rate_pct,
         })
 
-    # ----- tax breakdown from acc_trans -------------------------------
-    # SQL-Ledger writes one row per tax account into acc_trans; the
-    # account is flagged in chart as tax-link 'AR_tax'.
-    cur.execute(
-        """
-        SELECT c.accno,
-               c.description,
-               COALESCE(t.rate, 0)::numeric * 100      AS rate_pct,
-               SUM(ac.amount)::numeric                 AS tax_amount
-          FROM acc_trans ac
-          JOIN chart c ON c.id = ac.chart_id
-          LEFT JOIN tax t ON t.chart_id = c.id
-         WHERE ac.trans_id = %s
-           AND c.link LIKE '%%AR_tax%%'
-         GROUP BY c.accno, c.description, t.rate
-         ORDER BY c.accno
-        """,
-        (invoice_id,),
-    )
-    tax_rows = cur.fetchall() or []
-    # Group lines by tax rate to get the per-rate net base.
+    # ----- tax breakdown derived from line items ----------------------
+    # EN 16931 rules BR-CO-17 and BR-S-09 mandate:
+    #   BT-117 (CalculatedAmount) = round(BT-116 × BT-119 / 100, 2)
+    # We therefore always derive the tax amount arithmetically from the
+    # per-rate net base, never from acc_trans posted values (which use
+    # SQL-Ledger's per-line rounding and may differ by a few cents).
+    # EN 16931 rule BR-Z-01 also requires exactly one BG-23 entry per
+    # distinct VAT rate ? including 0 % ? so we iterate over all rates
+    # present in the line items.
     bases: Dict[Decimal, Decimal] = {}
     for ln in lines:
         bases.setdefault(ln["tax_percent"], Decimal("0.00"))
         bases[ln["tax_percent"]] += ln["net_amount"]
 
     tax_breakdown: List[Dict[str, Any]] = []
-    for tr in tax_rows:
-        rate = _d4(tr["rate_pct"])
-        # acc_trans stores tax amounts on the credit side (negative).
-        amount = abs(_d(tr["tax_amount"]))
-        base = bases.get(rate, Decimal("0.00"))
+    for rate in sorted(bases):
+        base = bases[rate]
+        amount = _d(base * rate / Decimal("100"))
         tax_breakdown.append({
-            "rate":   rate,
-            "base":   base,
-            "amount": amount,
-            "category": "S" if rate > 0 else "Z",  # S=standard, Z=zero
+            "rate":     rate,
+            "base":     base,
+            "amount":   amount,
+            "category": "S" if rate > 0 else "Z",
         })
-
-    # If acc_trans gave us nothing useful (e.g. tax inclusive prices),
-    # fall back to a synthetic breakdown computed from the line items.
-    if not tax_breakdown:
-        for rate, base in bases.items():
-            amount = _d(base * rate / Decimal("100"))
-            tax_breakdown.append({
-                "rate":   rate,
-                "base":   base,
-                "amount": amount,
-                "category": "S" if rate > 0 else "Z",
-            })
 
     cur.close()
 
@@ -369,7 +343,7 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
     net_total  = _d(sum((ln["net_amount"] for ln in lines), Decimal("0")))
     tax_total  = _d(sum((t["amount"]      for t in tax_breakdown),
                         Decimal("0")))
-    gross_total = _d(head["gross_amount"] or (net_total + tax_total))
+    gross_total = _d(net_total + tax_total)
     paid_total = _d(head["paid"] or 0)
 
     return {
