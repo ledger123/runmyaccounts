@@ -278,6 +278,7 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
                i.fxsellprice,
                p.partnumber,
                p.partnumber AS sku,
+               p.description AS part_description,
                COALESCE( (
                    SELECT SUM(t.rate)
                      FROM partstax pt
@@ -296,13 +297,19 @@ def fetch_invoice(conn, invoice_id: int) -> Dict[str, Any]:
     lines: List[Dict[str, Any]] = []
     for r in rows:
         qty       = _d4(r["qty"])
-        sellprice = _d4(r["sellprice"])
+        # fxsellprice is the price in the invoice's transaction currency (what
+        # IS.pm prints on the PDF and what the user entered).  sellprice is
+        # that value multiplied by the exchange rate into the company's home
+        # currency.  Always use fxsellprice so the XML matches the PDF;
+        # fall back to sellprice only for old rows where fxsellprice is NULL.
+        sellprice = _d4(r["fxsellprice"] if r.get("fxsellprice") else r["sellprice"])
         discount  = _d4(r["discount"] or 0)               # 0.00 .. 1.00
         net       = _d(qty * sellprice * (Decimal("1") - discount))
         rate_pct  = _d4(Decimal(str(r["taxrate"] or 0)) * 100)
         lines.append({
             "sku":         r["partnumber"] or "",
             "name":        (r["description"] or "").strip() or
+                           (r["part_description"] or "").strip() or
                            (r["partnumber"] or ""),
             "qty":         qty,
             "unit":        _to_unece_unit(r["unit"] or ""),
