@@ -995,7 +995,12 @@ sub post_payment {
 		  $dbh->do($query) || $form->dberror($query);
         }
       }
-
+        # The rounding fixes below only correct exchange-rate rounding
+              # differences. For payments in the base currency (exchangerate = 1)
+              # there is nothing to correct, and running them would collapse the
+              # open balance of a partial payment and push the remainder onto the
+              # fxloss account.
+      if ($form->{exchangerate} ne 1) {
         # ROUNDING FIX
         my ($arap) = $dbh->selectrow_array("SELECT id FROM chart WHERE link = 'AP' LIMIT 1");
         my ($ap_credit) = $dbh->selectrow_array(qq|
@@ -1066,6 +1071,7 @@ sub post_payment {
           }
       }
       $date_sth->finish;
+      }
 
       $query = qq|UPDATE acc_trans SET amount = ROUND(amount::numeric, 5) WHERE trans_id = $form->{"id_$i"}|;
       $dbh->do($query) || $form->dberror($query);
