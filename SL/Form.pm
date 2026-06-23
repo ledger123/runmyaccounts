@@ -3997,11 +3997,26 @@ sub parse_template {
 			$self->{tmpfile} =~ s/tex$/pdf/;
 
             # ----- ZUGFeRD / Factur-X post-processing -----------------
-			# Activated by setting   $zugferd = 1;   in sql-ledger.conf
+			# Activated by setting   $zugferd_clients = "all";   in sql-ledger.conf
+			# to embed ZUGFeRD XML in every customer invoice, or
+			#   $zugferd_clients = "client1,client2,client3";
+			# to restrict processing to specific dataset logins.
 			# (optionally  $zugferd_script = "/path/to/sl-zugferd.pl";)
 			# Runs only for customer invoices (ar/is/IS) so we don't
 			# tag vendor PDFs or order confirmations.
-			if ( $main::zugferd && $self->{id}
+            my $_zf_clients = $main::zugferd_clients // '';
+			my $_zf_active  = 0;
+			if ( $_zf_clients ) {
+				my $_zf_dbname = $myconfig->{dbname} // '';
+				if ( lc($_zf_clients) eq 'all' ) {
+					$_zf_active = 1;
+				} else {
+					my %_zf_set = map { $_ => 1 }
+					    split /\s*,\s*/, $_zf_clients;
+					$_zf_active = 1 if $_zf_set{$_zf_dbname};
+				}
+			}
+			if ( $_zf_active && $self->{id}
 			     && ( $self->{module} eq 'ar' || $self->{type} eq 'invoice'
 			          || $self->{formname} =~ /invoice/i ) )
 			{
