@@ -1252,10 +1252,12 @@ sub import_sales_invoices {
 	$newform->{AR_paid_1} = $form->{paymentaccount};
 	$newform->{paidaccounts} = 2;
 	 } elsif ($form->{paymentaccount}) {
-    	# Invoice stays open, but store the selected account as the
-    	# customer's default payment account so it is preselected when
-    	# the open invoice is paid later.
-    	$newform->{payment_accno} = $form->{paymentaccount};
+    	# Invoice stays open with no payment, but store the account
+        	# selected in the dropdown as the invoice's payment account
+        	# (ar.bank_id) so it is preselected when the open invoice is
+        	# paid later. No paid amount is set, so no payment is recorded.
+        	$newform->{AR_paid_1} = $form->{paymentaccount};
+        	$newform->{paidaccounts} = 1;
       }
 
       # post invoice

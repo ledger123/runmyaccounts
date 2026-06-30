@@ -306,19 +306,6 @@ sub import_sales_invoice {
 
   # post invoice
   my $rc = IS->post_invoice($myconfig, $form, $dbh);
-  # If a default payment account was selected during import (without
-    # marking the invoice as paid), store it as the customer's default
-    # payment account so it is preselected when the open invoice is paid.
-    if ($rc && $form->{payment_accno} && $form->{customer_id}) {
-      my ($payment_accno) = split /--/, $form->{payment_accno};
-      my $uquery = qq|UPDATE customer
-                      SET payment_accno_id = (SELECT id FROM chart WHERE accno = ?)
-                      WHERE id = ?|;
-      my $usth = $dbh->prepare($uquery);
-      $usth->execute($payment_accno, $form->{customer_id}) || $form->dberror($uquery);
-      $usth->finish;
-      $dbh->commit;
-    }
 
   $dbh->disconnect;
 
