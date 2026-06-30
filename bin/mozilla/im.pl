@@ -1251,6 +1251,11 @@ sub import_sales_invoices {
 	$newform->{datepaid_1} = $newform->{transdate};
 	$newform->{AR_paid_1} = $form->{paymentaccount};
 	$newform->{paidaccounts} = 2;
+	 } elsif ($form->{paymentaccount}) {
+    	# Invoice stays open, but store the selected account as the
+    	# customer's default payment account so it is preselected when
+    	# the open invoice is paid later.
+    	$newform->{payment_accno} = $form->{paymentaccount};
       }
 
       # post invoice
