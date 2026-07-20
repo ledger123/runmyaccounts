@@ -209,7 +209,7 @@ sub prepare_order {
 
   if ($form->{id}) {
     
-    for (qw(ordnumber quonumber shippingpoint shipvia waybill notes intnotes shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact)) { $form->{$_} = $form->quote($form->{$_}) }
+    for (qw(ordnumber quonumber shippingpoint shipvia waybill notes intnotes shiptoname shiptoaddress1 shiptostreetname shiptobuildingnumber shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact)) { $form->{$_} = $form->quote($form->{$_}) }
     
     foreach $ref (@{ $form->{form_details} } ) {
       for (keys %$ref) { $form->{"${_}_$i"} = $ref->{$_} }
@@ -633,7 +633,7 @@ sub form_header {
   </tr>
 |;
 
-  $form->hide_form(qw(shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact shiptophone shiptofax shiptoemail message email subject cc bcc taxaccounts aa_id));
+  $form->hide_form(qw(shiptoname shiptoaddress1 shiptostreetname shiptobuildingnumber shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptocontact shiptophone shiptofax shiptoemail message email subject cc bcc taxaccounts aa_id));
 
   foreach $accno (split / /, $form->{taxaccounts}) { $form->hide_form(map { "${accno}_$_" } qw(rate description taxnumber)) }
 
@@ -2507,7 +2507,7 @@ sub display_ship_receive {
 |;
 
   $form->hide_form(qw(ordnumber transdate ponumber));
-  $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
+  $form->hide_form(map { "shipto$_" } qw(name address1 streetname buildingnumber address2 city state zipcode country contact phone fax email));
   $form->hide_form(qw(message email subject cc bcc));
 
   @column_index = qw(partnumber);
@@ -2991,5 +2991,4 @@ sub vendor_selected {
   &po_orderitems;
   
 }
-
 

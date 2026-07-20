@@ -3274,17 +3274,17 @@ sub do_print_reminder {
 	);
 
 	@a =
-	  qw(id invnumber name nameqr address1 address1qr address2 city cityqr state stateqr zipcode zipcodeqr country contact contacttitle typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn customeremail
+	  qw(id invnumber name nameqr address1 address1qr streetname buildingnumber address2 city cityqr state stateqr zipcode zipcodeqr country contact contacttitle typeofcontact salutation firstname lastname dcn iban rvc membernumber qriban strdbkginf invdescriptionqr dcn customeremail
 	  qribanqr companyqr companyaddress1qr companyzipqr companycityqr invnumberqr invdateqr businessnumberqr strdbkginfqr strdbkginfline1qr strdbkginfline2qr invdescriptionqr2 swicotaxbaseqr swicotaxqr);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";
 	push @a, 'email' if !$form->{media} eq 'email';
 	push @a,
 	  map { "shipto$_" }
-	  qw(name address1 address2 city state zipcode country contact phone fax email);
+	  qw(name address1 streetname buildingnumber address2 city state zipcode country contact phone fax email);
 	push @a,
 	  map { "bank$_" }
-	  qw(name address1 address2 city state zipcode country bic);
+	  qw(name address1 streetname buildingnumber address2 city state zipcode country bic);
 
 	my $dbh = $form->dbconnect( \%myconfig );
 
@@ -3296,9 +3296,9 @@ sub do_print_reminder {
 		if ( $form->{"ndx_$ref->{id}"} ) {
 
 			# default shipto to main address if shipto address is empty.
-			if ( !$ref->{shiptoaddress1} ) {
+			if ( !$ref->{shiptoaddress1} && !$ref->{shiptostreetname} ) {
 				for (
-					qw(name address1 address2 city state zipcode country contact phone fax email)
+					qw(name address1 streetname buildingnumber address2 city state zipcode country contact phone fax email)
 				  )
 				{
 					$ref->{"shipto$_"} = $ref->{$_};
@@ -3431,13 +3431,13 @@ sub do_print_statement {
 	);
 
 	@a =
-	  qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname);
+	  qw(name address1 streetname buildingnumber address2 city state zipcode country contact typeofcontact salutation firstname lastname);
 	push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax",
 	  "$form->{vc}taxnumber";
 	push @a, 'email' if !$form->{media} eq 'email';
 	push @a,
 	  map { "shipto$_" }
-	  qw(name address1 address2 city state zipcode country contact phone fax email);
+	  qw(name address1 streetname buildingnumber address2 city state zipcode country contact phone fax email);
 
 	$i = 0;
 	while ( @{ $form->{AG} } ) {
@@ -4539,4 +4539,3 @@ sub print_report {
 	$form->debug;
 
 }
-

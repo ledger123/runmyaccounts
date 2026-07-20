@@ -2046,6 +2046,14 @@ sub form_header {
 		<td><input name=address2 size=32 maxlength=64 value="|.$form->quote($form->{address2}).qq|"></td>
 	      </tr>
 	      <tr>
+		<th align=right nowrap>|.$locale->text('Street').qq|</th>
+		<td><input name=streetname size=32 maxlength=70 value="|.$form->quote($form->{streetname}).qq|"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+		<td><input name=buildingnumber size=10 maxlength=16 value="|.$form->quote($form->{buildingnumber}).qq|"></td>
+	      </tr>
+	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
 		<td><input name=city size=32 maxlength=32 value="|.$form->quote($form->{city}).qq|"></td>
 	      </tr>
@@ -2194,6 +2202,14 @@ sub form_header {
 		<td><input name=bankaddress2 size=32 maxlength=32 value="|.$form->quote($form->{bankaddress2}).qq|"></td>
 	      </tr>
 	      <tr>
+		<th align=right nowrap>|.$locale->text('Street').qq|</th>
+		<td><input name=bankstreetname size=32 maxlength=70 value="|.$form->quote($form->{bankstreetname}).qq|"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+		<td><input name=bankbuildingnumber size=10 maxlength=16 value="|.$form->quote($form->{bankbuildingnumber}).qq|"></td>
+	      </tr>
+	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
 		<td><input name=bankcity size=32 maxlength=32 value="|.$form->quote($form->{bankcity}).qq|"></td>
 	      </tr>
@@ -2231,7 +2247,7 @@ sub form_header {
 
   $form->hide_form(map { "tax_${_}_description" } (split / /, $form->{taxaccounts})) if $form->{taxaccounts};
   $form->hide_form(map { "select$_" } qw(currency arap discount payment payment_clearing_accno payment_discount_accno business dispatch pricegroup language employee paymentmethod department));
-  $form->hide_form(map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email));
+  $form->hide_form(map { "shipto$_" } qw(name address1 address2 streetname buildingnumber city state zipcode country contact phone fax email));
 
 }
 
@@ -2436,6 +2452,16 @@ sub shipping_address {
 	</tr>
 	<tr>
 	  <td></td>
+	  <th align=right nowrap>|.$locale->text('Street').qq|</th>
+	  <td><input name=shiptostreetname size=32 maxlength=70 value="|.$form->quote($form->{shiptostreetname}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+	  <td><input name=shiptobuildingnumber size=10 maxlength=16 value="|.$form->quote($form->{shiptobuildingnumber}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
 	  <th align=right nowrap>$shipto{city}{label}</th>
 	  <td><input name=shiptocity size=32 maxlength=32 value="|.$form->quote($form->{shiptocity}).qq|"></td>
 	</tr>
@@ -2517,7 +2543,7 @@ sub shipping_address {
 </table>
 |;
 
-  for (qw(name address1 address2 city state zipcode country contact phone fax email)) {
+  for (qw(name address1 address2 streetname buildingnumber city state zipcode country contact phone fax email)) {
     delete $form->{"shipto$_"};
     $form->{flds} .= "$_ ";
   }
