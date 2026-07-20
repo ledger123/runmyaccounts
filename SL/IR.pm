@@ -1851,6 +1851,9 @@ sub retrieve_invoice {
 
     $ref = $sth->fetchrow_hashref(NAME_lc);
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
+    # alias DB column names to lowercase-no-underscore form keys
+    $form->{shiptostreetname}     = delete $form->{shiptostreet_name};
+    $form->{shiptobuildingnumber} = delete $form->{shiptobuilding_number};
     $sth->finish;
     
     # retrieve individual items

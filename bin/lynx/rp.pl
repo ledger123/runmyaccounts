@@ -2353,10 +2353,10 @@ sub do_print_reminder {
   # setup variables for the form
   $form->format_string(qw(company address businessnumber username useremail tel fax));
   
-  @a = qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname);
+  @a = qw(name address1 streetname buildingnumber address2 city state zipcode country contact typeofcontact salutation firstname lastname);
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
-  push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
+  push @a, map { "shipto$_" } qw(name address1 streetname buildingnumber address2 city state zipcode country contact phone fax email);
 
   while (@{ $form->{AG} }) {
 
@@ -2415,10 +2415,10 @@ sub print_form {
     $form->{IN} =~ s/html$/tex/;
   }
 
-  @a = qw(name address1 address2 city state zipcode country contact typeofcontact salutation firstname lastname);
+  @a = qw(name address1 streetname buildingnumber address2 city state zipcode country contact typeofcontact salutation firstname lastname);
   push @a, "$form->{vc}number", "$form->{vc}phone", "$form->{vc}fax", "$form->{vc}taxnumber";
   push @a, 'email' if ! $form->{media} eq 'email';
-  push @a, map { "shipto$_" } qw(name address1 address2 city state zipcode country contact phone fax email);
+  push @a, map { "shipto$_" } qw(name address1 streetname buildingnumber address2 city state zipcode country contact phone fax email);
 
   $i = 0;
   while (@{ $form->{AG} }) {
@@ -3125,5 +3125,4 @@ sub print_report {
   $form->debug;
 
 }
-
 
