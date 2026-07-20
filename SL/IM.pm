@@ -1517,13 +1517,18 @@ sub vc {
   my $contact = $dbh->prepare($query);
  
   $query = qq|
-	SELECT id AS addressid, address1, address2, city, state, zipcode, country
+	SELECT id AS addressid, address1, address2, street_name AS streetname,
+               building_number AS buildingnumber, city, state, zipcode, country
 	FROM address WHERE trans_id = ?
   |;
   my $address = $dbh->prepare($query);
 
   $query = qq|
-	SELECT shiptoname, shiptoaddress1, shiptoaddress2, shiptocity, shiptostate, shiptozipcode, shiptocountry, shiptophone, shiptofax, shiptoemail
+	SELECT shiptoname, shiptoaddress1, shiptoaddress2,
+               shiptostreet_name AS shiptostreetname,
+               shiptobuilding_number AS shiptobuildingnumber,
+               shiptocity, shiptostate, shiptozipcode, shiptocountry,
+               shiptophone, shiptofax, shiptoemail
 	FROM shipto WHERE trans_id = ?
   |;
   my $shipto = $dbh->prepare($query);
@@ -1535,7 +1540,10 @@ sub vc {
   my $bank = $dbh->prepare($query);
 
   $query = qq|
-	SELECT address1 AS bankaddress1, address2 AS bankaddress2, city AS bankcity, state AS bankstate, zipcode AS bankzipcode, country AS bankcountry
+	SELECT address1 AS bankaddress1, address2 AS bankaddress2,
+               street_name AS bankstreetname,
+               building_number AS bankbuildingnumber,
+               city AS bankcity, state AS bankstate, zipcode AS bankzipcode, country AS bankcountry
 	FROM address WHERE trans_id = ?
   |;
   my $bankaddress = $dbh->prepare($query);
@@ -2183,5 +2191,4 @@ sub import_generic {
 }
 
 1;
-
 

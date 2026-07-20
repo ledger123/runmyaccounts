@@ -2547,9 +2547,9 @@ sub im_vc {
 
   @column_index = qw(ndx);
   push @column_index, "$form->{db}number";
-  push @column_index, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
+  push @column_index, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 streetname buildingnumber address2 city state zipcode country);
   @flds = @column_index;
-  push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
+  push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptostreetname shiptobuildingnumber shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankstreetname bankbuildingnumber bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
   unshift @column_index, "runningnumber";
 
   $form->{callback} = "$form->{script}?action=import";
@@ -2571,6 +2571,8 @@ sub im_vc {
   $column_data{email} = $locale->text('Email');
   $column_data{notes} = $locale->text('notes');
   $column_data{address1} = $locale->text('Address1');
+  $column_data{streetname} = $locale->text('Street');
+  $column_data{buildingnumber} = $locale->text('Building Number');
   $column_data{address2} = $locale->text('Address2');
   $column_data{city} = $locale->text('City');
   $column_data{state} = $locale->text('State');
@@ -2672,8 +2674,8 @@ sub import_vc {
       $m++;
       
       push @flds, "$form->{db}number";
-      push @flds, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 address2 city state zipcode country);
-      push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
+      push @flds, qw(id name salutation firstname lastname contacttitle phone fax email notes address1 streetname buildingnumber address2 city state zipcode country);
+      push @flds, qw(cc bcc business_id taxnumber sic_code discount creditlimit employee_id language_code pricegroup_id curr cashdiscount threshold paymentmethod_id remittancevoucher contactid typeofcontact saluation occupation terms startdate mobile gender addressid shiptoname shiptoaddress1 shiptostreetname shiptobuildingnumber shiptoaddress2 shiptocity shiptostate shiptozipcode shiptocountry shiptophone shiptofax shiptoemail bankname iban bic bankaddress1 bankstreetname bankbuildingnumber bankaddress2 bankcity bankstate bankzipcode bankcountry dcn rvc membernumber);
 
       for (keys %$newform) { delete $newform->{$_} };
 
@@ -3564,4 +3566,3 @@ sub export_datev {
 }
 
 # EOF
-

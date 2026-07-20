@@ -1915,6 +1915,16 @@ sub ship_to {
 	</tr>
 	<tr>
 	  <td></td>
+	  <th align=right nowrap>|.$locale->text('Street').qq|</th>
+	  <td><input name=shiptostreetname size=35 maxlength=70 value="|.$form->quote($form->{shiptostreetname}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
+	  <th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+	  <td><input name=shiptobuildingnumber size=10 maxlength=16 value="|.$form->quote($form->{shiptobuildingnumber}).qq|"></td>
+	</tr>
+	<tr>
+	  <td></td>
 	  <th align=right nowrap>$shipto{city}{label}</th>
 	  <td><input name=shiptocity size=35 maxlength=32 value="|.$form->quote($form->{shiptocity}).qq|"></td>
 	</tr>

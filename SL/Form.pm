@@ -92,8 +92,8 @@ sub new {
 
 	$self->{menubar} = 1 if $self->{path} =~ /lynx/i;
 
-	$self->{version}   = "2.8.50";
-	$self->{dbversion} = "2.8.50";
+	$self->{version}   = "2.8.51";
+	$self->{dbversion} = "2.8.51";
     $self->{dateoffset} = 3652;
 
 	bless $self, $type;
@@ -5100,7 +5100,7 @@ sub add_shipto {
 
 	my $shipto;
 	foreach my $item (
-		qw(name address1 address2 city state zipcode country contact phone fax email)
+		qw(name address1 streetname buildingnumber address2 city state zipcode country contact phone fax email)
 	  )
 	{
 		if ( $self->{"shipto$item"} ne "" ) {
@@ -5109,13 +5109,25 @@ sub add_shipto {
 	}
 
 	if ($shipto) {
+		my ( $shipto_street, $shipto_building ) =
+		  $self->resolve_address_parts(
+		    $self->{shiptostreetname},
+		    $self->{shiptobuildingnumber},
+		    $self->{shiptoaddress1},
+		  );
+                my $shipto_address1 =
+                  $self->compose_addressline( $shipto_street, $shipto_building );
 		my $query = qq|INSERT INTO shipto (trans_id, shiptoname, shiptoaddress1,
-                   shiptoaddress2, shiptocity, shiptostate,
+                   shiptoaddress2,
+                   shiptostreet_name, shiptobuilding_number,
+                   shiptocity, shiptostate,
 		   shiptozipcode, shiptocountry, shiptocontact,
 		   shiptophone, shiptofax, shiptoemail) VALUES ($id, |
 		  . $dbh->quote( $self->{shiptoname} ) . qq|, |
-		  . $dbh->quote( $self->{shiptoaddress1} ) . qq|, |
+		  . $dbh->quote($shipto_address1) . qq|, |
 		  . $dbh->quote( $self->{shiptoaddress2} ) . qq|, |
+		  . $dbh->quote( $shipto_street ) . qq|, |
+		  . $dbh->quote( $shipto_building ) . qq|, |
 		  . $dbh->quote( $self->{shiptocity} ) . qq|, |
 		  . $dbh->quote( $self->{shiptostate} ) . qq|, |
 		  . $dbh->quote( $self->{shiptozipcode} ) . qq|, |
@@ -7267,6 +7279,62 @@ sub save_lastused {
 }
 
 
+# Split a legacy free-form address line into ($streetName, $buildingNumber)
+# per the locked heuristic shared with sibling repos
+# (~/.copilot/shared/address-split-pain001.md §8): scan tokens from the end;
+# the last whitespace-separated token that starts with a digit is the
+# building number, and the remaining tokens (in original order) are joined
+# back into the street name. If no token starts with a digit, the trimmed
+# line becomes the street name and the building number is undef. Empty or
+# undef input returns ( undef, undef ).
+sub split_addressline {
+	my ( $self, $line ) = @_;
+
+	return ( undef, undef ) unless defined $line;
+
+	my $trimmed = $line;
+	$trimmed =~ s/^\s+//;
+	$trimmed =~ s/\s+$//;
+	$trimmed =~ s/\s+/ /g;
+	return ( undef, undef ) if $trimmed eq '';
+
+	my @tokens = split / /, $trimmed;
+	for ( my $i = $#tokens ; $i >= 0 ; $i-- ) {
+		next unless $tokens[$i] =~ /^\d/;
+		my $building = $tokens[$i];
+		my @rest     = ( @tokens[ 0 .. $i - 1 ], @tokens[ $i + 1 .. $#tokens ] );
+		my $street   = join( ' ', @rest );
+		$street = undef if $street eq '';
+		return ( $street, $building );
+	}
+
+	return ( $trimmed, undef );
+}
+
+# Resolve the structured ($streetName, $buildingNumber) pair for save
+# paths where structured fields are now the source of truth.
+sub resolve_address_parts {
+	my ( $self, $form_street, $form_building ) = @_;
+
+	my $has_form_street   = defined $form_street   && $form_street   ne '';
+	my $has_form_building = defined $form_building && $form_building ne '';
+
+	return (
+		$has_form_street   ? $form_street   : undef,
+		$has_form_building ? $form_building : undef,
+	);
+}
+
+sub compose_addressline {
+	my ( $self, $street, $building ) = @_;
+
+	my @parts = grep { defined $_ && $_ ne '' } ( $street, $building );
+	return undef unless @parts;
+
+	return join( ' ', @parts );
+}
+
+
 package Locale;
 
 sub new {
@@ -7400,4 +7468,3 @@ sub date {
 }
 
 1;
-

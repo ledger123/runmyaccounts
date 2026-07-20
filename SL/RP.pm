@@ -1599,7 +1599,8 @@ if($form->{payed}){
 
     $query .= qq|$union
     SELECT c.id AS vc_id, c.$form->{vc}number, c.name,
-    ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
+    ad.address1, ad.address2, ad.street_name AS streetname,
+    ad.building_number AS buildingnumber, ad.city, ad.state, ad.zipcode, ad.country,
     c.contact, c.email,
     c.phone as $form->{vc}phone, c.fax as $form->{vc}fax,
     c.$form->{vc}number, c.taxnumber as $form->{vc}taxnumber,
@@ -1611,7 +1612,9 @@ if($form->{payed}){
        WHERE a.curr = e.curr
        AND e.transdate = a.transdate) AS exchangerate,
     ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
-    s.*
+    s.*,
+    s.shiptostreet_name AS shiptostreetname,
+    s.shiptobuilding_number AS shiptobuildingnumber
     FROM |.$form->dbclean($form->{arap}).qq| a
     JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
     JOIN address ad ON (ad.trans_id = c.id)
@@ -1684,16 +1687,18 @@ sub reminder {
   my $item;
   my $curr;
 
-  my @a = qw(company companyemail companywebsite address address1 address2 city state zip country businessnumber tel fax precision);
+  my @a = qw(company companyemail companywebsite address address1 street_name building_number address2 city state zip country businessnumber tel fax precision);
   my %defaults = $form->get_defaults($dbh, \@a);
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
-  $form->{companyaddress1} = $defaults{address1};
+  my $company_address1 = join ' ', grep { defined $_ && $_ ne '' } ($defaults{street_name}, $defaults{building_number});
+  $form->{companyaddress1} = $company_address1 || $defaults{address1};
   $form->{companyaddress2} = $defaults{address2};
   $form->{companycity} = $defaults{city};
   $form->{companystate} = $defaults{state};
   $form->{companyzip} = $defaults{zip};
   $form->{companycountry} = $defaults{country};
+  $form->{address1} = $form->{companyaddress1} if $form->{companyaddress1};
 
   $form->{currencies} = $form->get_currencies($dbh, $myconfig);
 
@@ -1772,7 +1777,8 @@ sub reminder {
 
   $exclude_credits = 'AND a.amount > 0' if $form->{exclude_credits};
   $query = qq|SELECT c.id AS vc_id, c.$form->{vc}number, c.name, c.terms,
-              ad.address1, ad.address2, ad.city, ad.state, ad.zipcode, ad.country,
+              ad.address1, ad.address2, ad.street_name AS streetname,
+              ad.building_number AS buildingnumber, ad.city, ad.state, ad.zipcode, ad.country,
 	      c.contact, c.email,
 	      c.phone as $form->{vc}phone, c.fax as $form->{vc}fax,
 	      c.$form->{vc}number, c.taxnumber as $form->{vc}taxnumber,
@@ -1786,10 +1792,14 @@ sub reminder {
 	      ct.firstname, ct.lastname, ct.salutation, ct.typeofcontact,
 	      current_date - a.duedate duedays,
 	      s.*,
+              s.shiptostreet_name AS shiptostreetname,
+              s.shiptobuilding_number AS shiptobuildingnumber,
           bank.name bankname, bank.iban, bank.bic bankbic,
           bank.dcn, bank.rvc, bank.membernumber,
           bank.qriban, bank.strdbkginf, bank.invdescriptionqr,
-          ad2.address1 bankaddress1, ad2.address2 bankaddress2, ad2.city bankcity,
+          ad2.address1 bankaddress1, ad2.address2 bankaddress2,
+          ad2.street_name bankstreetname, ad2.building_number bankbuildingnumber,
+          ad2.city bankcity,
           ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
 	      FROM ar a
 	      JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
@@ -1844,7 +1854,8 @@ sub reminder {
 		$form->{companyqr} = substr($form->{company},0,70);
 		$form->{companyqr} = $form->string_replace($form->{companyqr}, "%", "");
 		
-		$form->{companyaddress1qr} = substr($form->{address1},0,70);
+                my $company_address_line = $form->{companyaddress1} || $form->{address1};
+		$form->{companyaddress1qr} = substr($company_address_line,0,70);
 		$form->{companyaddress1qr} = $form->string_replace($form->{companyaddress1qr}, "%", "");
 		
 		$form->{companyzipqr} = substr($form->{zip},0,16);
@@ -1856,7 +1867,9 @@ sub reminder {
 		$form->{nameqr} = substr($ref->{name},0,70);
 		$form->{nameqr} = $form->string_replace($form->{nameqr}, "%", "");
 		
-		$form->{address1qr} = substr($ref->{address1},0,70);
+                my $address1_qr = join ' ', grep { defined $_ && $_ ne '' } ($ref->{streetname}, $ref->{buildingnumber});
+                $address1_qr ||= $ref->{address1};
+		$form->{address1qr} = substr($address1_qr,0,70);
 		$form->{address1qr} = $form->string_replace($form->{address1qr}, "%", "");
 		
 		$form->{zipcodeqr}  = substr($ref->{zipcode},0,16);
@@ -2666,5 +2679,3 @@ sub payments {
 
 
 1;
-
-

@@ -387,7 +387,10 @@ sub get_warehouse {
 
   $form->{id} *= 1;
 
-  my $query = qq|SELECT w.description, a.address1, a.address2, a.city,
+  my $query = qq|SELECT w.description, a.address1, a.address2,
+                 a.street_name AS streetname,
+                 a.building_number AS buildingnumber,
+                 a.city,
                  a.state, a.zipcode, a.country
                  FROM warehouse w
 		 JOIN address a ON (a.trans_id = w.id)
@@ -450,9 +453,14 @@ sub save_warehouse {
 	      WHERE id = $form->{id}|;
   $dbh->do($query) || $form->dberror($query);
 
+  my ($wh_street, $wh_building) = $form->resolve_address_parts(
+    $form->{streetname}, $form->{buildingnumber}, $form->{address1});
+  my $wh_address1 = $form->compose_addressline($wh_street, $wh_building);
   $query = qq|UPDATE address SET
-              address1 = |.$dbh->quote($form->{address1}).qq|,
+              address1 = |.$dbh->quote($wh_address1).qq|,
               address2 = |.$dbh->quote($form->{address2}).qq|,
+              street_name = |.$dbh->quote($wh_street).qq|,
+              building_number = |.$dbh->quote($wh_building).qq|,
               city = |.$dbh->quote($form->{city}).qq|,
               state = |.$dbh->quote($form->{state}).qq|,
               zipcode = |.$dbh->quote($form->{zipcode}).qq|,
@@ -1923,7 +1931,7 @@ sub company_defaults {
   # connect to database
   my $dbh = $form->dbconnect($myconfig);
 
-  my %defaults = $form->get_defaults($dbh, \@{['company','address']});
+  my %defaults = $form->get_defaults($dbh, \@{['company', 'address', 'street_name', 'building_number']});
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   $dbh->disconnect;
@@ -1984,7 +1992,10 @@ sub get_bank {
   $query = qq|SELECT c.accno, c.description,
               bk.name, bk.iban, bk.bic, bk.membernumber, bk.dcn, bk.rvc,
               bk.qriban, bk.strdbkginf, bk.invdescriptionqr,
-	      ad.address1, ad.address2, ad.city,
+	      ad.address1, ad.address2,
+	      ad.street_name AS streetname,
+	      ad.building_number AS buildingnumber,
+	      ad.city,
               ad.state, ad.zipcode, ad.country,
 	      l.description AS translation
 	      FROM chart c
@@ -2064,9 +2075,14 @@ sub save_bank {
       $dbh->do($query) || $form->dberror($query);
     }
 
+    my ($bk_street, $bk_building) = $form->resolve_address_parts(
+      $form->{streetname}, $form->{buildingnumber}, $form->{address1});
+    my $bk_address1 = $form->compose_addressline($bk_street, $bk_building);
     $query = qq|UPDATE address SET
-		address1 = |.$dbh->quote($form->{address1}).qq|,
+		address1 = |.$dbh->quote($bk_address1).qq|,
 		address2 = |.$dbh->quote($form->{address2}).qq|,
+		street_name = |.$dbh->quote($bk_street).qq|,
+		building_number = |.$dbh->quote($bk_building).qq|,
 		city = |.$dbh->quote($form->{city}).qq|,
 		state = |.$dbh->quote($form->{state}).qq|,
 		zipcode = |.$dbh->quote($form->{zipcode}).qq|,
@@ -2380,4 +2396,3 @@ sub move {
 
 
 1;
-

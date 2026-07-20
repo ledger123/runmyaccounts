@@ -30,7 +30,9 @@ sub create_links {
 
   if ($form->{id} *= 1) {
     $query = qq/SELECT ct.*,
-                ad.id AS addressid, ad.address1, ad.address2, ad.city,
+                ad.id AS addressid, ad.address1, ad.address2,
+                ad.street_name AS streetname,
+                ad.building_number AS buildingnumber, ad.city,
 		ad.state, ad.zipcode, ad.country,
         ad.post_office,
         ad.is_migrated,
@@ -43,6 +45,8 @@ sub create_links {
 		bk.name AS bankname,
 		ad1.address1 AS bankaddress1,
 		ad1.address2 AS bankaddress2,
+		ad1.street_name AS bankstreetname,
+		ad1.building_number AS bankbuildingnumber,
 		ad1.city AS bankcity,
 		ad1.state AS bankstate,
 		ad1.zipcode AS bankzipcode,
@@ -66,6 +70,11 @@ sub create_links {
   
     $ref = $sth->fetchrow_hashref(NAME_lc);
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
+    # alias DB column names to the lowercase-no-underscore form keys
+    # used by the templates (mirrors the existing address1/bankaddress1/
+    # shiptoaddress1 convention)
+    $form->{shiptostreetname}     = delete $form->{shiptostreet_name};
+    $form->{shiptobuildingnumber} = delete $form->{shiptobuilding_number};
     $sth->finish;
     
     $query = qq|SELECT * FROM contact
@@ -488,14 +497,20 @@ sub save {
   }
   
   $form->{bankis_migrated} = ($form->{bankis_migrated}) ? '1' : '0';
-  for (qw(address1 address2 city state zipcode country)) {
+  for (qw(address1 streetname buildingnumber address2 city state zipcode country)) {
     if ($form->{"bank$_"}) {
+      my ($bank_street, $bank_building) = $form->resolve_address_parts(
+        $form->{bankstreetname}, $form->{bankbuildingnumber}, $form->{bankaddress1});
+      my $bank_address1 = $form->compose_addressline($bank_street, $bank_building);
       if ($bank_address_id) {
 	    $query = qq|INSERT INTO address (id, trans_id, address1, address2,
+		    street_name, building_number,
 		    city, state, zipcode, country, post_office, is_migrated) VALUES (
 		    $bank_address_id, $bank_address_id,
-		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
+		    |.$dbh->quote(defined $bank_address1 ? uc $bank_address1 : undef).qq|,
 		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
+		    |.$dbh->quote(defined $bank_street ? uc $bank_street : undef).qq|,
+		    |.$dbh->quote($bank_building).qq|,
 		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
 		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
@@ -517,10 +532,13 @@ sub save {
 	($bank_address_id) = $dbh->selectrow_array($query);
 
 	$query = qq|INSERT INTO address (id, trans_id, address1, address2,
+		    street_name, building_number,
 		    city, state, zipcode, country, post_office, is_migrated) VALUES (
 		    $bank_address_id, $bank_address_id,
-		    |.$dbh->quote(uc $form->{bankaddress1}).qq|,
+		    |.$dbh->quote(defined $bank_address1 ? uc $bank_address1 : undef).qq|,
 		    |.$dbh->quote(uc $form->{bankaddress2}).qq|,
+		    |.$dbh->quote(defined $bank_street ? uc $bank_street : undef).qq|,
+		    |.$dbh->quote($bank_building).qq|,
 		    |.$dbh->quote(uc $form->{bankcity}).qq|,
 		    |.$dbh->quote(uc $form->{bankstate}).qq|,
 		    |.$dbh->quote(uc $form->{bankzipcode}).qq|,
@@ -653,11 +671,17 @@ sub save {
   #  }
   #}
 
+  my ($cv_street, $cv_building) = $form->resolve_address_parts(
+    $form->{streetname}, $form->{buildingnumber}, $form->{address1});
+  my $cv_address1 = $form->compose_addressline($cv_street, $cv_building);
   $query = qq|INSERT INTO address ($id trans_id, address1, address2,
+              street_name, building_number,
               city, state, zipcode, country, post_office, is_migrated) VALUES ($var
 	      $form->{id},
-	      |.$dbh->quote($form->{address1}).qq|,
+	      |.$dbh->quote($cv_address1).qq|,
 	      |.$dbh->quote($form->{address2}).qq|,
+	      |.$dbh->quote($cv_street).qq|,
+	      |.$dbh->quote($cv_building).qq|,
 	      |.$dbh->quote($form->{city}).qq|,
 	      |.$dbh->quote($form->{state}).qq|,
 	      |.$dbh->quote($form->{zipcode}).qq|,
@@ -1511,4 +1535,3 @@ sub ship_to {
 }
 
 1;
-
