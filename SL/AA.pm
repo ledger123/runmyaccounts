@@ -235,13 +235,14 @@ sub post_transaction {
     }
 
     my $vth;
+    my $old_amount;
 
     # check if id really exists
     if ( $form->{id} *= 1 ) {
-        $query = qq|SELECT id
+        $query = qq|SELECT id, amount
                 FROM $table
  	        WHERE id = $form->{id}|;
-        ( $form->{id} ) = $dbh->selectrow_array($query);
+        ( $form->{id}, $old_amount ) = $dbh->selectrow_array($query);
 
         &reverse_vouchers( $dbh, $form );
 
@@ -291,6 +292,11 @@ sub post_transaction {
                 $dbh->do($query) || $form->dberror($query);
             }
         }
+    }
+
+    my $paidml = $arapml;
+    if ( $arapml == -1 && defined($old_amount) && $old_amount != 0 && $invamount != 0 && ( ( $old_amount < 0 ) == ( $invamount < 0 ) ) ) {
+        $arapml = 1;
     }
 
     if ( !$form->{id} ) {
@@ -363,11 +369,11 @@ sub post_transaction {
 	      taxincluded = '$form->{taxincluded}',
 	      amount = $invamount * $arapml,
 	      duedate = '| . $form->dbclean( $form->{duedate} ) . qq|',
-	      paid = $paid * $arapml,
+	      paid = $paid * $paidml,
 	      datepaid = $datepaid,
 	      netamount = $invnetamount * $arapml,
 	      fxamount = $fxinvamount * $arapml,
-	      fxpaid = $fxpaid,
+	      fxpaid = $fxpaid * $paidml,
           linetax = '$linetax',
 	      terms = | . $form->dbclean( $form->{terms} ) . qq|,
 	      curr = | . $dbh->quote( $form->{currency} ) . qq|,
@@ -506,7 +512,7 @@ sub post_transaction {
                     $dbh->do($query) || $form->dberror($query);
 
                     # update batch
-                    $form->update_balance( $dbh, 'br', 'amount', qq|id = $form->{voucher}{payment}{$voucherid}{br_id}|, $paid{amount}{$i} * $arapml );
+                    $form->update_balance( $dbh, 'br', 'amount', qq|id = $form->{voucher}{payment}{$voucherid}{br_id}|, $paid{amount}{$i} * $paidml );
                 }
             }
 
@@ -520,7 +526,7 @@ sub post_transaction {
 		    VALUES ($form->{id},
 		           (SELECT id FROM chart
 			    WHERE accno = '$accno'),
-		    $paid{amount}{$i} * $ml * $arapml, '$form->{"datepaid_$i"}',
+		    $paid{amount}{$i} * $ml * $paidml, '$form->{"datepaid_$i"}',
 		    '$approved', $voucherid)|;
                 $dbh->do($query) || $form->dberror($query);
 
@@ -547,7 +553,7 @@ sub post_transaction {
 		    VALUES ($form->{id},
 			   (SELECT id FROM chart
 			    WHERE accno = '$accno'),
-		    $amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', |
+		    $amount * -1 * $ml * $paidml, '$form->{"datepaid_$i"}', |
                   . $dbh->quote( $form->{"source_$i"} ) . qq|, | . $dbh->quote( $form->{"memo_$i"} ) . qq|,
 		    $cleared, '$approved', $voucherid, $paymentid)|;
                 $dbh->do($query) || $form->dberror($query);
@@ -572,11 +578,11 @@ sub post_transaction {
                     );
 
                     if ($amount) {
-                        my $accno_id = ( ( $amount * $ml * $arapml ) > 0 ) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
+                        my $accno_id = ( ( $amount * $ml * $paidml ) > 0 ) ? $defaults{fxgain_accno_id} : $defaults{fxloss_accno_id};
                         $query = qq|INSERT INTO acc_trans (trans_id, chart_id, amount,
 			transdate, fx_transaction, cleared, approved, vr_id)
 			VALUES ($form->{id}, $accno_id,
-			$amount * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
+			$amount * $ml * $paidml, '$form->{"datepaid_$i"}', '1',
 			$cleared, '$approved', $voucherid)|;
                         $dbh->do($query) || $form->dberror($query);
                     }
@@ -588,7 +594,7 @@ sub post_transaction {
 		      VALUES ($form->{id},
 			     (SELECT id FROM chart
 			      WHERE accno = '$accno'),
-		      $amount * -1 * $ml * $arapml, '$form->{"datepaid_$i"}', '1',
+		      $amount * -1 * $ml * $paidml, '$form->{"datepaid_$i"}', '1',
 		      $cleared, |
                       . $dbh->quote( $form->{"source_$i"} ) . qq|, '$approved',
 		      $voucherid)|;
@@ -620,7 +626,7 @@ sub post_transaction {
 		    VALUES ($form->{id},
 			   (SELECT id FROM chart
 			    WHERE accno = '$ref->{accno}'),
-		    $ref->{amount} * $ml * $arapml, '$ref->{transdate}',
+		    $ref->{amount} * $ml * $paidml, '$ref->{transdate}',
 		    '$ref->{fx_transaction}', '$approved', $voucherid,
 		    $paymentid)|;
                 $dbh->do($query) || $form->dberror($query);
