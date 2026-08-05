@@ -1805,11 +1805,22 @@ sub post_invoice {
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
-  $fxamount_total =
-  $form->{currency} eq $form->{defaultcurrency}
-    ? $invamount
-    : $form->round_amount($invamount / $form->{exchangerate}, $form->{precision});
-
+  # Calculate fxamount_total from actual line items instead of reverse calculation
+  if ($form->{currency} eq $form->{defaultcurrency}) {
+    $fxamount_total = $invamount;
+  } else {
+    # Sum up the actual fx amounts stored in the invoice table
+    $query = qq|SELECT SUM(fxsellprice * qty * (1 - discount)) 
+                  FROM invoice 
+                  WHERE trans_id = $form->{id}|;
+    ($fxamount_total) = $dbh->selectrow_array($query);
+    $fxamount_total = $form->round_amount($fxamount_total, $form->{precision});
+      
+    # Add foreign currency tax if not included
+    if (!$form->{taxincluded}) {
+        $fxamount_total += $form->round_amount($fxtax_total, $form->{precision});
+    }
+  }
 
   $fxamount_total *= 1;
   $fxpaid_total *= 1;
@@ -2425,6 +2436,9 @@ sub retrieve_invoice {
 
     $ref = $sth->fetchrow_hashref(NAME_lc);
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
+    # alias DB column names to lowercase-no-underscore form keys
+    $form->{shiptostreetname}     = delete $form->{shiptostreet_name};
+    $form->{shiptobuildingnumber} = delete $form->{shiptobuilding_number};
     $sth->finish;
 
     # retrieve individual items

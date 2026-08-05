@@ -1,0 +1,6 @@
+invnumber,transdate,duedate,vendornumber,curr,invoicedescription,partnumber,description,qty,unit,sellprice,employeenumber,AP,department,warehouse ,projectnumber
+A100,10/12/2008,10/30/2008,CP004,GBP,Invoice description comes here,B001,,10,,102,E-001,1100,HAPDWAPE,LONDON,
+A100,10/12/2008,10/30/2008,CP004,GBP,Invoice description comes here,F003,,6,,69,E-001,1100,HAPDWAPE,LONDON,
+A101,10/12/2008,10/31/2008,HB006,GBP,Test description,F003,,2,,32,E-002,1100,SERVICES,PAPIS,
+A102,10/13/2008,11/1/2008,SA003,GBP,Sale of goods,T007,,6,,12,E-003,1100,SERVICES,LONDON,
+A103,10/14/2008,11/2/2008,SA003,GBP,Sale,K001,,12,,32,E-004,1100,HAPDWAPE,PAPIS,

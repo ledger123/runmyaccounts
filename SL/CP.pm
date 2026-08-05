@@ -198,7 +198,8 @@ sub get_openvc {
 
   # build selection list
   $query = qq|SELECT vc.*,
-              ad.address1, ad.address2, ad.city, ad.state, ad.zipcode,
+              ad.address1, ad.address2, ad.street_name AS streetname,
+              ad.building_number AS buildingnumber, ad.city, ad.state, ad.zipcode,
 	      ad.country, a.amount, a.paid,
  	      a.exchangerate,
 	      l.description AS translation
@@ -1167,4 +1168,3 @@ sub invoice_ids {
 
 
 1;
-
