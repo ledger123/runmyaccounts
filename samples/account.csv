@@ -1,0 +1,7 @@
+id;accno;description;charttype;category;link;gifi_accno;contra;allow_gl;symbol_link
+;10000;FLÜSSIGE MITTEL;H;A;;100;false;true;
+;100000;Kasse;A;A;AR_paid:AP_paid;100;false;true;kassa
+;22010;MWST 8,0%;A;L;AR_tax:IC_taxpart:IC_taxservice;220;false;true;
+;22150;Kreditkarte;A;L;;221;false;true;kreditkarten
+;36000;Nebenerlöse aus Lieferungen und Leistungen;A;I;AR_amount:IC_income;360;false;true;
+;42000;Einkauf Handelsware;A;E;AP_amount;420;false;true;
