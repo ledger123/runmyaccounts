@@ -6,9 +6,14 @@ $self{texts} = {
   'Customer'                    => 'Debtor',
   'Customer Number'             => 'Debtor Number',
   'Customer not on file!'       => 'Debtor not on file!',
+  'Next page'                   => 'Next page',
+  'Page'                        => 'Page',
+  'Previous page'               => 'Previous page',
   'Vendor'                      => 'Creditor',
   'Vendor Number'               => 'Creditor Number',
   'Vendor not on file!'         => 'Creditor not on file!',
+  'of'                          => 'of',
+  'records'                     => 'records',
 };
 
 $self{subs} = {
