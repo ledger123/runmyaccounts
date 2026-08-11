@@ -1251,6 +1251,9 @@ sub import_sales_invoices {
 	$newform->{datepaid_1} = $newform->{transdate};
 	$newform->{AR_paid_1} = $form->{paymentaccount};
 	$newform->{paidaccounts} = 2;
+	 } else {
+    	$newform->{AR_paid_1} = $form->{paymentaccount};
+    	$newform->{paidaccounts} = 1;
       }
 
       # post invoice
