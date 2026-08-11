@@ -64,19 +64,23 @@ sub new {
         my $username = $c->isa('Mojolicious::Controller')?
             $c->session('login_name') : $c;
         
-        our %myconfig;   # for normal users
-        our %rootconfig; # for admin
-        my $user_configfile = File::Spec->catfile(
+        # User config lives in the SQLite members database
+        # (users/members.db) rather than in users/*.conf files:
+        unshift @INC, $_self->val('x_project_root')
+            unless grep { $_ eq $_self->val('x_project_root') } @INC;
+        require SL::User;
+
+        my $memfile = File::Spec->catfile(
             $_self->val('x_project_root'),
             $_self->val('userspath'),
-            "$username.conf");
+            "members");
 
-        eval { require $user_configfile };
-        if ($@) { die "Cannot load user config for $username" }
+        my %userconfig = User::load_myconfig($memfile, $username);
+        if (!%userconfig) { die "Cannot load user config for $username" }
 
-        # Users have %myconfig, admin has %rootconfig.
-        # They are coming out of loaded users/*.conf file:
-        $_self->{userconfig} = %myconfig? \%myconfig : \%rootconfig;
+        my $is_root = $username eq 'root login';
+
+        $_self->{userconfig} = \%userconfig;
 
 
         # Add some additional useful fields.
@@ -85,7 +89,7 @@ sub new {
         $_self->{userconfig}{x_login_name} = $username;
 
 
-        if (%myconfig) {
+        if (!$is_root) {
             # Build dateformats for strptime.
             # One to match a four-digit year, and one for two-digit years:
             my @dfs = (
@@ -151,25 +155,9 @@ sub new {
 
         
         # Some root specials:
-        if (%rootconfig) {
+        if ($is_root) {
             # root needs no stylesheet, but this avoids warnings in the log:
             $_self->{userconfig}{stylesheet} = "root";
-
-            # get the password:
-            open(my $member_file_handle, "<", File::Spec->catfile(
-                $_self->{globalconfig}{userspath},
-                "members")) || die "Cannot read users/members";
-
-            while (<$member_file_handle>) {
-                last if /^\[root login\]/;
-            }
-
-            while (<$member_file_handle>) {
-                next unless /^password=(.*)/;
-                $_self->{userconfig}{password} = $1;
-                last;
-            }
-            close $member_file_handle;
         }
 
         
