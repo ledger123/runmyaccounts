@@ -63,9 +63,7 @@ sub new {
     if ($c) {
         my $username = $c->isa('Mojolicious::Controller')?
             $c->session('login_name') : $c;
-        
-        # User config lives in the SQLite members database
-        # (users/members.db) rather than in users/*.conf files:
+
         unshift @INC, $_self->val('x_project_root')
             unless grep { $_ eq $_self->val('x_project_root') } @INC;
         require SL::User;
