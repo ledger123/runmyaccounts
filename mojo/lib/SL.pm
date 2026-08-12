@@ -96,7 +96,7 @@ sub logged_in {
     while (my $line = <FILE>) {
         if ($line =~ /^\s*\$\s*ip_whitelist\s*=\s*"(.+?)"/) {
             print STDERR  $line;
-            @ip_whitelist = split /\s+/, $1;
+            @ip_whitelist = split /[\s,]+/, $1;
             last;
         }
     }
