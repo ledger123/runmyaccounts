@@ -1806,10 +1806,10 @@ sub print_form {
 
       $old_form->{format} = "postscript" if $myconfig{printer};
       $old_form->{media} = $myconfig{printer};
-    }
 
-    $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
-    $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
+      $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
+      $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
+    }
   }
 
   # if we got back here restore the previous form
