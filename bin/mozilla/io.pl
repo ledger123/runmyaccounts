@@ -1811,7 +1811,7 @@ sub print_form {
 
   $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey) if $form->{copies};
 
-  if ($form->{media} eq 'email') {
+  if ($form->{media} eq 'email' && $old_form) {
       $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
       $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
   }
