@@ -1412,7 +1412,7 @@ sub update {
     $j = 1;
     for $i ( 1 .. $form->{paidaccounts} ) {
         if ( $form->{"paid_$i"} ) {
-            for (qw(olddatepaid datepaid source memo cleared paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
+            for (("olddatepaid", "datepaid", "source", "memo", "cleared", "paymentmethod", "$form->{ARAP}_paid")) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
             for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) if !$form->{firsttime} }
 
             $totalpaid += $form->{"paid_$j"};
@@ -1424,11 +1424,11 @@ sub update {
             $form->{"olddatepaid_$j"} = $form->{"datepaid_$j"};
 
             if ( $j++ != $i ) {
-                for (qw(olddatepaid datepaid source memo paid exchangerate cleared)) { delete $form->{"${_}_$i"} }
+                for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared", "$form->{ARAP}_paid")) { delete $form->{"${_}_$i"} }
             }
         }
         else {
-            for (qw(olddatepaid datepaid source memo paid exchangerate cleared)) { delete $form->{"${_}_$i"} }
+            for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared", "$form->{ARAP}_paid")) { delete $form->{"${_}_$i"} }
         }
     }
 
@@ -2338,7 +2338,7 @@ sub transactions {
             # Use old method in case of partial or not paid invoice and new method only for fully paid
             my $amount_rounded = $form->round_amount($ref->{amount}, $form->{precision});
             my $paid_rounded = $form->round_amount($ref->{paid}, $form->{precision});
-            my $fxamount_rounded = $form->round_amount(abs($ref->{fxamount}), $form->{precision});
+            my $fxamount_rounded = $form->round_amount($ref->{fxamount}, $form->{precision});
             my $fxpaid_rounded = $form->round_amount($ref->{fxpaid}, $form->{precision});
 
             my $is_fully_paid = ($amount_rounded == $paid_rounded) && 
@@ -2702,7 +2702,7 @@ sub transactions_to_csv {
             # Use old method in case of partial or not paid invoice and new method only for fully paid
             my $amount_rounded = $form->round_amount($ref->{amount}, $form->{precision});
             my $paid_rounded = $form->round_amount($ref->{paid}, $form->{precision});
-            my $fxamount_rounded = $form->round_amount(abs($ref->{fxamount}), $form->{precision});
+            my $fxamount_rounded = $form->round_amount($ref->{fxamount}, $form->{precision});
             my $fxpaid_rounded = $form->round_amount($ref->{fxpaid}, $form->{precision});
 
             my $is_fully_paid = ($amount_rounded == $paid_rounded) && 

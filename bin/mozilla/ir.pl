@@ -1056,7 +1056,7 @@ sub update {
   $j = 1;
   for $i (1 .. $form->{paidaccounts}) {
     if ($form->{"paid_$i"}) {
-      for (qw(olddatepaid datepaid source memo cleared vr_id paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
+      for (qw(olddatepaid datepaid source memo cleared vr_id paymentmethod AP_paid)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
       for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
 
       if ($form->{"datepaid_$j"} ne $form->{"olddatepaid_$j"} || $form->{currency} ne $form->{oldcurrency}) {
@@ -1066,10 +1066,10 @@ sub update {
       $form->{"olddatepaid_$j"} = $form->{"datepaid_$j"};
       
       if ($j++ != $i) {
-	for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id paymentmethod)) { delete $form->{"${_}_$i"} }
+	for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id paymentmethod AP_paid)) { delete $form->{"${_}_$i"} }
       }
     } else {
-      for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id)) { delete $form->{"${_}_$i"} }
+      for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id AP_paid)) { delete $form->{"${_}_$i"} }
     }
   }
   

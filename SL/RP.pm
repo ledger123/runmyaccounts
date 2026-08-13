@@ -1726,6 +1726,29 @@ sub reminder {
   $form->{sort} = $form->dbclean($form->{sort});
   my $sortorder = ($form->{sort}) ? "vc.$form->{sort}" : "vc.name";
 
+  # paginate the customer/vendor list to avoid building huge pages that
+    # freeze the browser when there are many outstanding accounts
+    $form->{reminder_pagesize} = 100 unless $form->{reminder_pagesize} > 0;
+    $form->{reminder_pagesize} *= 1;
+    $form->{reminder_pagesize} = 500 if $form->{reminder_pagesize} > 500;
+    $form->{page} = 1 unless $form->{page} > 0;
+    $form->{page} *= 1;
+
+    $query = qq|SELECT COUNT(DISTINCT vc.id)
+                FROM $form->{vc} vc
+  	      JOIN ar a ON (a.$form->{vc}_id = vc.id)
+  	      WHERE $where
+                AND a.paid != a.amount|;
+    ($form->{reminder_totalcount}) = $dbh->selectrow_array($query);
+    $form->{reminder_totalcount} ||= 0;
+
+    $form->{reminder_totalpages} =
+      int(($form->{reminder_totalcount} + $form->{reminder_pagesize} - 1) / $form->{reminder_pagesize});
+    $form->{reminder_totalpages} = 1 if $form->{reminder_totalpages} < 1;
+    $form->{page} = $form->{reminder_totalpages} if $form->{page} > $form->{reminder_totalpages};
+
+    my $offset = ($form->{page} - 1) * $form->{reminder_pagesize};
+
   # select outstanding customers
   $query = qq|SELECT DISTINCT vc.id, vc.name, vc.$form->{vc}number,
               vc.language_code
@@ -1733,7 +1756,8 @@ sub reminder {
 	      JOIN ar a ON (a.$form->{vc}_id = vc.id)
 	      WHERE $where
               AND a.paid != a.amount
-              ORDER BY $sortorder|;
+              ORDER BY $sortorder
+              LIMIT $form->{reminder_pagesize} OFFSET $offset|;
   my $sth = $dbh->prepare($query);
   $sth->execute || $form->dberror;
 
