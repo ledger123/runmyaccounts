@@ -2505,6 +2505,51 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 		$form->{callback} .= "&duedateto=" . $form->{duedateto};
 	}
 
+	# paginate to avoid rendering huge result sets which can freeze the browser
+    	$form->{page} = 1 unless $form->{page} > 0;
+    	$form->{reminder_totalpages} ||= 1;
+    	$form->{callback} .= "&page=" . $form->{page};
+
+    	if ( $form->{reminder_totalpages} > 1 ) {
+    		my %navparams;
+    		for (qw(path login type format title media report)) {
+    			$navparams{$_} = $form->{$_};
+    		}
+    		$navparams{vc} = $form->{vc};
+    		$navparams{customer} = "$form->{customer}--$form->{customer_id}"
+    		  if $form->{customer};
+    		$navparams{"$form->{vc}number"} = $form->{"$form->{vc}number"}
+    		  if $form->{"$form->{vc}number"};
+    		for (qw(department duedateto overpaid exclude_credits sort namesbynumber)) {
+    			$navparams{$_} = $form->{$_} if $form->{$_};
+    		}
+
+    		my $navurl = qq|$form->{script}?action=generate_reminder|;
+    		for ( keys %navparams ) {
+    			$navurl .= "&$_=" . $form->escape( $navparams{$_}, 1 );
+    		}
+
+    		$option .= "\n<br>" if $option;
+    		$option .=
+    		    $locale->text('Page') . " $form->{page} "
+    		  . $locale->text('of') . " $form->{reminder_totalpages}"
+    		  . " (" . $form->{reminder_totalcount} . " "
+    		  . $locale->text('records') . ")";
+
+    		if ( $form->{page} > 1 ) {
+    			$option .=
+    			    qq| &nbsp;<a href="$navurl&page=|
+    			  . ( $form->{page} - 1 ) . qq|">|
+    			  . $locale->text('Previous page') . qq|</a>|;
+    		}
+    		if ( $form->{page} < $form->{reminder_totalpages} ) {
+    			$option .=
+    			    qq| &nbsp;<a href="$navurl&page=|
+    			  . ( $form->{page} + 1 ) . qq|">|
+    			  . $locale->text('Next page') . qq|</a>|;
+    		}
+    	}
+
 	$title = "$form->{title} / $form->{company}";
 
 	$form->header(0, 0, $locale);
@@ -2516,14 +2561,11 @@ qq|<th class=listheading width=1%><input name="allbox" type=checkbox class=check
 function CheckAll() {
 
   var frm = document.forms[0]
-  var el = frm.elements
-  var re = /ndx_/;
+  var boxes = frm.querySelectorAll('input[type="checkbox"][name^="ndx_"]')
 
-  for (i = 0; i < el.length; i++) {
-    if (el[i].type == 'checkbox' && re.test(el[i].name)) {
-      el[i].checked = frm.allbox.checked
+    for (i = 0; i < boxes.length; i++) {
+      boxes[i].checked = frm.allbox.checked
     }
-  }
 
 }
 // -->
@@ -2694,7 +2736,7 @@ qq|$ref->{module}.pl?path=$form->{path}&action=edit&id=$ref->{id}&login=$form->{
 	chop $form->{ids};
 
 	$form->hide_form(
-		qw(title initcallback callback vc department path login ids duedateto));
+		qw(title initcallback callback vc department path login ids duedateto page));
 	$form->hide_form( $form->{vc} );
 	$form->hide_form(qw(type report));
 
