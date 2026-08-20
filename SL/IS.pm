@@ -1805,10 +1805,14 @@ sub post_invoice {
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
+  if ($form->{taxincluded}) {
+    $fxamount_total -= $fxtax_total;
+  }
+
   $fxamount_total =
   $form->{currency} eq $form->{defaultcurrency}
     ? $invamount
-    : $form->round_amount($invamount / $form->{exchangerate}, $form->{precision});
+    : $form->round_amount($fxamount_total, $form->{precision});
 
 
   $fxamount_total *= 1;
