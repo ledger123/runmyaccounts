@@ -1808,7 +1808,7 @@ sub post_invoice {
   $fxamount_total =
   $form->{currency} eq $form->{defaultcurrency}
     ? $invamount
-    : $form->round_amount($invamount / $form->{exchangerate}, $form->{precision});
+    : $form->round_amount($fxamount_total, $form->{precision});
 
 
   $fxamount_total *= 1;
