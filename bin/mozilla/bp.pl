@@ -531,7 +531,9 @@ sub print {
   }
   
   $myform->info($locale->text('Total').": ".$form->format_amount(\%myconfig, $total, $myform->{precision})) if $total;
-  
+  my $count = $r - 1;
+  $myform->info("\n".$locale->text('E-mailed').": ${count}") if ($myform->{batch} eq 'email' && $count);
+
   for (keys %$form) { delete $form->{$_} }
   for (keys %$myform) { $form->{$_} = $myform->{$_} }
 
