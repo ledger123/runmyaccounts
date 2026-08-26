@@ -1412,7 +1412,7 @@ sub update {
     $j = 1;
     for $i ( 1 .. $form->{paidaccounts} ) {
         if ( $form->{"paid_$i"} ) {
-            for (qw(olddatepaid datepaid source memo cleared paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
+            for (("olddatepaid", "datepaid", "source", "memo", "cleared", "paymentmethod", "$form->{ARAP}_paid")) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
             for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount( \%myconfig, $form->{"${_}_$i"} ) if !$form->{firsttime} }
 
             $totalpaid += $form->{"paid_$j"};
@@ -1424,11 +1424,11 @@ sub update {
             $form->{"olddatepaid_$j"} = $form->{"datepaid_$j"};
 
             if ( $j++ != $i ) {
-                for (qw(olddatepaid datepaid source memo paid exchangerate cleared)) { delete $form->{"${_}_$i"} }
+                for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared", "$form->{ARAP}_paid")) { delete $form->{"${_}_$i"} }
             }
         }
         else {
-            for (qw(olddatepaid datepaid source memo paid exchangerate cleared)) { delete $form->{"${_}_$i"} }
+            for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared", "$form->{ARAP}_paid")) { delete $form->{"${_}_$i"} }
         }
     }
 

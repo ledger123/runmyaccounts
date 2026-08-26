@@ -200,7 +200,7 @@ $self{subs} = {
   'vc_search'                   => 'vc_search',
   'vcactivity_list'             => 'vcactivity_list',
   'vcactivity_search'           => 'vcactivity_search',
-  'weiter'                      => 'continue',
+  'continuer'                   => 'continue',
 };
 
 1;

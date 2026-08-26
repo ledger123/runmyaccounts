@@ -31,7 +31,7 @@ sub register {
         cookies => sub {
             my $self = shift;
 
-            my $cookie_raw = $self->req->headers->cookie;
+            my $cookie_raw = $self->req->headers->cookie // '';
 
             my %decode = ('\+'=>' ','\%3A\%3A'=>'::','\%26'=>'&','\%3D'=>'=',
                           '\%2C'=>',','\%3B'=>';','\%2B'=>'+','\%25'=>'%');
@@ -39,6 +39,8 @@ sub register {
             my %cookies = ();
             foreach (split(/; /, $cookie_raw)) {
                 my ($cookie, $value) = split(/=/);
+                $cookie //= '';
+                $value  //= '';
                 foreach my $ch ('\+','\%3A\%3A','\%26','\%3D','\%2C','\%3B','\%2B','\%25') {
                     $cookie =~ s/$ch/$decode{$ch}/g;
                     $value =~ s/$ch/$decode{$ch}/g;
