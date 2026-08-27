@@ -2574,7 +2574,7 @@ sub transactions_to_csv {
 
     $form->sort_order();
 
-    my @numbers = qw(netamount tax amount paid due debit credit fx_amount fx_paid fx_tax fx_netamount);
+    my @numbers = qw(netamount tax amount paid due debit credit fx_amount fx_paid fx_tax fx_netamount, customer_id vendor_id);
     my %is_number = map { $_ => 1 } @numbers;
 
     @columns = $form->sort_columns(
