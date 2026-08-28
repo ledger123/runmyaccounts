@@ -1211,7 +1211,7 @@ sub update {
 	for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared", "$form->{ARAP}_paid")) { delete $form->{"${_}_$i"} }
       }
     } else {
-      for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared", "$form->{ARAP}_paid")) { delete $form->{"${_}_$i"} }
+      for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared")) { delete $form->{"${_}_$i"} }
     }
   }
 

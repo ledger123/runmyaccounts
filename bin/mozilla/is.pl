@@ -1098,7 +1098,7 @@ sub update {
 	for (qw(olddatepaid datepaid source memo imported_transaction_id cleared paid exchangerate vr_id paymentmethod AR_paid)) { delete $form->{"${_}_$i"} }
       }
     } else {
-      for (qw(olddatepaid datepaid source memo imported_transaction_id cleared paid exchangerate vr_id AR_paid)) { delete $form->{"${_}_$i"} }
+      for (qw(olddatepaid datepaid source memo imported_transaction_id cleared paid exchangerate vr_id)) { delete $form->{"${_}_$i"} }
     }
   }
   
