@@ -1409,6 +1409,16 @@ sub update {
 
     $totalpaid = $form->{discount_paid};
 
+    # Capture the empty extra payment row's account/method BEFORE the loop below
+    # deletes $form->{ARAP}_paid_$paidaccounts; otherwise form_footer would render
+    # an empty dropdown, falling back to the first option and losing the user's
+    # choice. Guarded so the initial edit (firsttime) keeps payment_accno as set
+    # by create_links from the saved bank_id.
+    unless ($form->{firsttime}) {
+        $form->{payment_accno}  = $form->escape( $form->{"$form->{ARAP}_paid_$form->{paidaccounts}"}, 1 );
+        $form->{payment_method} = $form->escape( $form->{"paymentmethod_$form->{paidaccounts}"},      1 );
+    }
+
     $j = 1;
     for $i ( 1 .. $form->{paidaccounts} ) {
         if ( $form->{"paid_$i"} ) {
@@ -1431,9 +1441,6 @@ sub update {
             for (("olddatepaid", "datepaid", "source", "memo", "paid", "exchangerate", "cleared", "$form->{ARAP}_paid")) { delete $form->{"${_}_$i"} }
         }
     }
-
-    $form->{payment_accno}  = $form->escape( $form->{"$form->{ARAP}_paid_$form->{paidaccounts}"}, 1 );
-    $form->{payment_method} = $form->escape( $form->{"paymentmethod_$form->{paidaccounts}"},      1 );
 
     $form->{paidaccounts} = $j;
 
