@@ -623,7 +623,7 @@ sub post_payment {
   my $paymentamount = $form->parse_amount($myconfig, $form->{amount});
   
   # query to retrieve paid amount
-  $query = qq|SELECT amount, netamount, paid, transdate, taxincluded,
+  $query = qq|SELECT amount, netamount, paid, fxpaid, transdate, taxincluded,
               exchangerate
               FROM |.$form->dbclean($form->{arap}).qq|
               WHERE id = ?
@@ -927,7 +927,7 @@ sub post_payment {
 	}
       }
       
-      $fxpaid = $form->round_amount($form->{"paid_$i"}+$trans{$form->{"id_$i"}}{paid}/$trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
+      $fxpaid = $form->round_amount($form->{"paid_$i"}+$trans{$form->{"id_$i"}}{fxpaid}, $form->{precision});
 
       $form->{"paid_$i"} = $form->round_amount($form->{"paid_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
       $form->{"discount_$i"} = $form->round_amount($form->{"discount_$i"} * $trans{$form->{"id_$i"}}{exchangerate}, $form->{precision});
