@@ -526,7 +526,7 @@ sub print {
         next;
       }
 
-      
+
       &print_form($old_form);
       # ISNA_end
 
@@ -561,7 +561,7 @@ sub print {
       $myform->info(", ".$locale->text('Skipped').": 0\n");
     }
   }
-  
+
   for (keys %$form) { delete $form->{$_} }
   for (keys %$myform) { $form->{$_} = $myform->{$_} }
 
