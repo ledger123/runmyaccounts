@@ -443,6 +443,9 @@ sub print {
   $myconfig{vclimit} = 0;
   $r = 1;
   $total = 0;
+  my $emailed_count = 0;
+  my $skipped_count = 0;
+  my @skipped_docs = ();
 
   for my $i (1 .. $myform->{rowcount}) {
     
@@ -508,6 +511,21 @@ sub print {
 
       $myform->{description} = $form->{description};
 
+      if ($form->{media} eq 'email' && (!defined $form->{email} || $form->{email} !~ /\S/)) {
+        my $reference = $myform->{"reference_$i"} || '';
+        my $recipient = $form->{$form->{vc}} || '';
+        my $skip_info = $reference;
+        $skip_info .= qq| ($recipient)| if $recipient;
+        push @skipped_docs, $skip_info if $skip_info;
+        $skipped_count++;
+
+        $myform->info("${r}. ".$locale->text($msg{$myform->{batch}}).qq| ... $reference|);
+        $myform->info(qq|, $recipient|) if $recipient;
+        $myform->info(" ... ".$locale->text('E-mail address missing!')." (".$locale->text('skipped').")\n");
+        $r++;
+        next;
+      }
+
       
       &print_form($old_form);
       # ISNA_end
@@ -524,6 +542,7 @@ sub print {
         $myform->info(qq|, $form->{"${inv}total"}, $form->{"$form->{vc}number"}, $form->{"$form->{vc}"} $form->{city}|);
       }
       $myform->info(" ... ".$locale->text('ok')."\n");
+      $emailed_count++ if $form->{media} eq 'email';
 
       $r++;
       
@@ -531,6 +550,17 @@ sub print {
   }
   
   $myform->info($locale->text('Total').": ".$form->format_amount(\%myconfig, $total, $myform->{precision})) if $total;
+  if ($myform->{media} eq 'email') {
+    $myform->info("\n".$locale->text('E-mailed').": $emailed_count");
+    if ($skipped_count) {
+      $myform->info(", ".$locale->text('Skipped').": $skipped_count\n");
+      for my $doc (@skipped_docs) {
+        $myform->info(" - $doc\n");
+      }
+    } else {
+      $myform->info(", ".$locale->text('Skipped').": 0\n");
+    }
+  }
   
   for (keys %$form) { delete $form->{$_} }
   for (keys %$myform) { $form->{$_} = $myform->{$_} }
@@ -589,6 +619,9 @@ sub e_mail {
         my $mail = new Mailer;
         my $dbh = $form->dbconnect(\%myconfig);
         my $dbs = DBIx::Simple->connect($dbh);
+        my $emailed_count = 0;
+        my $skipped_count = 0;
+        my @skipped_docs = ();
         for my $i (1 .. $form->{rowcount}){
             if ($form->{"ndx_$i"}){
                 my $id = $form->{"id_$i"} *= 1;
@@ -611,6 +644,16 @@ sub e_mail {
                     WHERE ar.id = ?
                     ", $id
                 )->list;
+
+                if (!defined $form->{email} || $form->{email} !~ /\S/) {
+                    $skipped_count++;
+                    my $skip_info = $form->{invnumber} || $id;
+                    $skip_info .= qq| ($form->{name})| if $form->{name};
+                    push @skipped_docs, $skip_info;
+                    $form->info("$skip_info -- ".$locale->text('E-mail address missing!')." (".$locale->text('skipped').")\n");
+                    next;
+                }
+
                 $form->{format} = 'html';
 
                 my ($noreplyemail) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='noreplyemail'");
@@ -644,9 +687,18 @@ sub e_mail {
 
                 $form->info("$form->{name} -- $form->{invnumber} ");
                 $form->info($locale->text("Reminder emailed ...\n"));
+                $emailed_count++;
             }
         }
-        $form->info("Reminders emailed ...");
+        $form->info($locale->text('Reminders emailed').": $emailed_count");
+        if ($skipped_count) {
+            $form->info(", ".$locale->text('Skipped').": $skipped_count\n");
+            for my $doc (@skipped_docs) {
+                $form->info(" - $doc\n");
+            }
+        } else {
+            $form->info(", ".$locale->text('Skipped').": 0\n");
+        }
     } else {
         &print;
     }
@@ -1229,4 +1281,3 @@ sub deselect_all {
 
 
 sub continue { &{ $form->{nextsub} } };
-
