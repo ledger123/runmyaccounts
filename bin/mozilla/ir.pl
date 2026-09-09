@@ -1053,10 +1053,18 @@ sub update {
   $totalpaid = $form->{discount_paid};
   
 
+  # Capture the empty extra payment row's account/method BEFORE the loop below
+  # deletes AP_paid_$paidaccounts; otherwise form_footer would render an empty
+  # dropdown, falling back to the first option and losing the user's choice.
+  unless ($form->{firsttime}) {
+    $form->{payment_accno}  = $form->escape($form->{"AP_paid_$form->{paidaccounts}"}, 1);
+    $form->{payment_method} = $form->escape($form->{"paymentmethod_$form->{paidaccounts}"}, 1);
+  }
+
   $j = 1;
   for $i (1 .. $form->{paidaccounts}) {
     if ($form->{"paid_$i"}) {
-      for (qw(olddatepaid datepaid source memo cleared vr_id paymentmethod)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
+      for (qw(olddatepaid datepaid source memo cleared vr_id paymentmethod AP_paid)) { $form->{"${_}_$j"} = $form->{"${_}_$i"} }
       for (qw(paid exchangerate)) { $form->{"${_}_$j"} = $form->parse_amount(\%myconfig, $form->{"${_}_$i"}) }
 
       if ($form->{"datepaid_$j"} ne $form->{"olddatepaid_$j"} || $form->{currency} ne $form->{oldcurrency}) {
@@ -1066,15 +1074,12 @@ sub update {
       $form->{"olddatepaid_$j"} = $form->{"datepaid_$j"};
       
       if ($j++ != $i) {
-	for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id paymentmethod)) { delete $form->{"${_}_$i"} }
+	for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id paymentmethod AP_paid)) { delete $form->{"${_}_$i"} }
       }
     } else {
       for (qw(olddatepaid datepaid source memo cleared paid exchangerate vr_id)) { delete $form->{"${_}_$i"} }
     }
   }
-  
-  $form->{payment_accno} = $form->escape($form->{"AP_paid_$form->{paidaccounts}"},1);
-  $form->{payment_method} = $form->escape($form->{"paymentmethod_$form->{paidaccounts}"},1);
   
   $form->{paidaccounts} = $j;
   

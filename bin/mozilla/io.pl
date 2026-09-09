@@ -1702,53 +1702,8 @@ sub print_form {
 
     $form->{plainpaper} = 1;
     $form->{OUT} = "$sendmail";
-    # $form->{OUT} = "$sendmail -f $form->{useremail}"; # sind mails are with -t option of sendmail, -f does not make sence
-
-    if ($form->{emailed} !~ /$form->{formname}/) {
-      $form->{emailed} .= " $form->{formname}";
-      $form->{emailed} =~ s/^ //;
-
-      # save status
-      $form->update_status(\%myconfig);
-    }
-
-    $now = scalar localtime;
-    
-    # resolves problem when doing bulk sending (cc appears in all invoices) Nils 13.04.2012
-    $cc = "";
-    $bcc = "";
-    
-    $cc = $locale->text('Cc').qq|: $form->{cc}\n| if $form->{cc};
-    $bcc = $locale->text('Bcc').qq|: $form->{bcc}\n| if $form->{bcc};
-    
-    %audittrail = ( tablename	=> ($order) ? 'oe' : lc $ARAP,
-                    reference	=> $form->{"${inv}number"},
-		    formname	=> $form->{formname},
-		    action	=> 'emailed',
-		    id		=> $form->{id} );
-   
-    if ($old_form) {
-      $old_form->{intnotes} = qq|$old_form->{intnotes}\n\n| if $old_form->{intnotes};
-      $old_form->{intnotes} .= qq|[email]\n|
-      .$locale->text('Date').qq|: $now\n|
-      .$locale->text('Sent to').qq|: $form->{email}\n${cc}${bcc}|
-      .$locale->text('Subject').qq|: $form->{subject}\n|;
-
-      $old_form->{intnotes} .= qq|\n|.$locale->text('Message').qq|: |;
-      $old_form->{intnotes} .= ($form->{message}) ? $form->{message} : $locale->text('sent');
-
-      $old_form->{message} = $form->{message};
-      $old_form->{emailed} = $form->{emailed};
-
-      $old_form->{format} = "postscript" if $myconfig{printer};
-      $old_form->{media} = $myconfig{printer};
-
-      # $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
-    
-      # $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
-    }
-    
   }
+
   if ($form->{media} eq 'mark_as_sent') {
     # if ($form->{emailed} !~ /$form->{formname}/) {
       $form->{mark_as_sent} .= " $form->{formname}";
@@ -1811,9 +1766,50 @@ sub print_form {
 
   $form->parse_template(\%myconfig, $tmppath, $debuglatex, $noreply, $apikey) if $form->{copies};
 
+  # The document should be marked as sent only if its processing is successful (parse_template() didn't fail)
   if ($form->{media} eq 'email') {
+    if ($form->{emailed} !~ /$form->{formname}/) {
+      $form->{emailed} .= " $form->{formname}";
+      $form->{emailed} =~ s/^ //;
+
+      # save status
+      $form->update_status(\%myconfig);
+    }
+
+    $now = scalar localtime;
+
+    # resolves problem when doing bulk sending (cc appears in all invoices) Nils 13.04.2012
+    $cc = "";
+    $bcc = "";
+
+    $cc = $locale->text('Cc').qq|: $form->{cc}\n| if $form->{cc};
+    $bcc = $locale->text('Bcc').qq|: $form->{bcc}\n| if $form->{bcc};
+
+    %audittrail = ( tablename	=> ($order) ? 'oe' : lc $ARAP,
+                    reference	=> $form->{"${inv}number"},
+		    formname	=> $form->{formname},
+		    action	=> 'emailed',
+		    id		=> $form->{id} );
+
+    if ($old_form) {
+      $old_form->{intnotes} = qq|$old_form->{intnotes}\n\n| if $old_form->{intnotes};
+      $old_form->{intnotes} .= qq|[email]\n|
+      .$locale->text('Date').qq|: $now\n|
+      .$locale->text('Sent to').qq|: $form->{email}\n${cc}${bcc}|
+      .$locale->text('Subject').qq|: $form->{subject}\n|;
+
+      $old_form->{intnotes} .= qq|\n|.$locale->text('Message').qq|: |;
+      $old_form->{intnotes} .= ($form->{message}) ? $form->{message} : $locale->text('sent');
+
+      $old_form->{message} = $form->{message};
+      $old_form->{emailed} = $form->{emailed};
+
+      $old_form->{format} = "postscript" if $myconfig{printer};
+      $old_form->{media} = $myconfig{printer};
+
       $old_form->save_intnotes(\%myconfig, ($order) ? 'oe' : lc $ARAP);
       $old_form->{audittrail} .= $form->audittrail("", \%myconfig, \%audittrail);
+    }
   }
 
   # if we got back here restore the previous form

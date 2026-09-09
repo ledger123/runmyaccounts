@@ -1805,22 +1805,15 @@ sub post_invoice {
 
   for (qw(oldinvtotal oldtotalpaid)) { $form->{$_} *= 1 }
 
-  # Calculate fxamount_total from actual line items instead of reverse calculation
-  if ($form->{currency} eq $form->{defaultcurrency}) {
-    $fxamount_total = $invamount;
-  } else {
-    # Sum up the actual fx amounts stored in the invoice table
-    $query = qq|SELECT SUM(fxsellprice * qty * (1 - discount)) 
-                  FROM invoice 
-                  WHERE trans_id = $form->{id}|;
-    ($fxamount_total) = $dbh->selectrow_array($query);
-    $fxamount_total = $form->round_amount($fxamount_total, $form->{precision});
-      
-    # Add foreign currency tax if not included
-    if (!$form->{taxincluded}) {
-        $fxamount_total += $form->round_amount($fxtax_total, $form->{precision});
-    }
+  if ($form->{taxincluded}) {
+    $fxamount_total -= $fxtax_total;
   }
+
+  $fxamount_total =
+  $form->{currency} eq $form->{defaultcurrency}
+    ? $invamount
+    : $form->round_amount($fxamount_total, $form->{precision});
+
 
   $fxamount_total *= 1;
   $fxpaid_total *= 1;

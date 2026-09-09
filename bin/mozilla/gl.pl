@@ -1775,7 +1775,7 @@ sub update {
 
     @a     = ();
     $count = 0;
-    @flds  = qw(accno debit credit taxamount projectnumber tax source memo cleared);
+    @flds  = qw(accno debit credit taxamount projectnumber tax source memo cleared fx_transaction);
 
     # per line tax
     for $i ( 1 .. $form->{rowcount} ) {
@@ -1955,9 +1955,8 @@ sub display_rows {
             }
 
             if ( $form->{fxadj} ) {
-                $checked = ( $form->{"fx_transaction_$i"} ) ? "1" : "";
-                $x = ($checked) ? "x" : "";
-                $fx_transaction = qq|<td><input type=hidden name="fx_transaction_$i" value="$checked">$x</td>|;
+                $checked = ( $form->{"fx_transaction_$i"} ) ? "checked" : "";
+                $fx_transaction = qq|<td><input name="fx_transaction_$i" class=checkbox type=checkbox value=1 $checked></td>|;
                 $fx_transaction2 = qq|<td>&nbsp;</td>|;
             }
         }
