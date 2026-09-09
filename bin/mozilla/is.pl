@@ -1081,7 +1081,15 @@ sub update {
   }
   
   $totalpaid = $form->{discount_paid};
-  
+
+  # Capture the empty extra payment row's account/method BEFORE the loop below
+  # deletes AR_paid_$paidaccounts; otherwise form_footer would render an empty
+  # dropdown, falling back to the first option and losing the user's choice.
+  unless ($form->{firsttime}) {
+    $form->{payment_accno}  = $form->escape($form->{"AR_paid_$form->{paidaccounts}"}, 1);
+    $form->{payment_method} = $form->escape($form->{"paymentmethod_$form->{paidaccounts}"}, 1);
+  }
+
   $j = 1;
   for $i (1 .. $form->{paidaccounts}) {
     if ($form->{"paid_$i"}) {
@@ -1102,9 +1110,6 @@ sub update {
     }
   }
   
-  $form->{payment_accno} = $form->escape($form->{"AR_paid_$form->{paidaccounts}"},1);
-  $form->{payment_method} = $form->escape($form->{"paymentmethod_$form->{paidaccounts}"},1);
-
   $form->{paidaccounts} = $j;
 
   $i = $form->{rowcount};
