@@ -760,6 +760,9 @@ sub retrieve {
 
     $ref = $sth->fetchrow_hashref(NAME_lc);
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
+    # alias DB column names to lowercase-no-underscore form keys
+    $form->{shiptostreetname}     = delete $form->{shiptostreet_name};
+    $form->{shiptobuildingnumber} = delete $form->{shiptobuilding_number};
     $sth->finish;
 
     # get printed, emailed and queued
@@ -2271,13 +2274,19 @@ sub generate_orders {
     $sth = $dbh->prepare($query);
     $sth->execute || $form->dberror($query);
     $ref = $sth->fetchrow_hashref(NAME_lc);
+    my $shipto_address1 = $form->compose_addressline(
+      $ref->{shiptostreet_name}, $ref->{shiptobuilding_number});
+    $shipto_address1 ||= $ref->{shiptoaddress1};
 
     $query = qq|INSERT INTO shipto (trans_id, shiptoname, shiptoaddress1,
-                shiptoaddress2, shiptocity, shiptostate, shiptozipcode,
-		shiptocountry, shiptocontact, shiptophone, shiptofax,
-		shiptoemail) VALUES ($id, '$ref->{shiptoname}',
-		'$ref->{shiptoaddress1}', '$ref->{shiptoaddress2}',
-		'$ref->{shiptocity}', '$ref->{shiptostate}',
+                shiptoaddress2,
+                shiptostreet_name, shiptobuilding_number,
+                shiptocity, shiptostate, shiptozipcode,
+                shiptocountry, shiptocontact, shiptophone, shiptofax,
+                shiptoemail) VALUES ($id, '$ref->{shiptoname}',
+                '$shipto_address1', '$ref->{shiptoaddress2}',
+                '$ref->{shiptostreet_name}', '$ref->{shiptobuilding_number}',
+                '$ref->{shiptocity}', '$ref->{shiptostate}',
 		'$ref->{shiptozipcode}', '$ref->{shiptocountry}',
 		'$ref->{shiptocontact}', '$ref->{shiptophone}',
 		'$ref->{shiptofax}', '$ref->{shiptoemail}')|;
@@ -2566,4 +2575,3 @@ sub consolidate_orders {
 
 
 1;
-

@@ -35,6 +35,9 @@ sub get_employee {
     $ref->{employeelogin} = $ref->{login};
     delete $ref->{login};
     for (keys %$ref) { $form->{$_} = $ref->{$_} }
+    # alias DB column names to lowercase-no-underscore form keys
+    $form->{streetname}     = delete $form->{street_name};
+    $form->{buildingnumber} = delete $form->{building_number};
 
     $sth->finish;
   
@@ -115,12 +118,17 @@ sub save_employee {
 
   $form->{employeenumber} = $form->update_defaults($myconfig, "employeenumber", $dbh) if ! $form->{employeenumber};
 
+  my ($emp_street, $emp_building) = $form->resolve_address_parts(
+    $form->{streetname}, $form->{buildingnumber}, $form->{address1});
+  my $emp_address1 = $form->compose_addressline($emp_street, $emp_building);
   # SQLI protection: all text/varchar columns need to be quoted
   $query = qq|UPDATE employee SET
               employeenumber = |.$dbh->quote($form->{employeenumber}).qq|,
 	      name = |.$dbh->quote($form->{name}).qq|,
-	      address1 = |.$dbh->quote($form->{address1}).qq|,
+	      address1 = |.$dbh->quote($emp_address1).qq|,
 	      address2 = |.$dbh->quote($form->{address2}).qq|,
+	      street_name = |.$dbh->quote($emp_street).qq|,
+	      building_number = |.$dbh->quote($emp_building).qq|,
 	      city = |.$dbh->quote($form->{city}).qq|,
 	      state = |.$dbh->quote($form->{state}).qq|,
 	      zipcode = |.$dbh->quote($form->{zipcode}).qq|,
@@ -239,4 +247,3 @@ sub employees {
 }
 
 1;
-
