@@ -2581,11 +2581,11 @@ sub transactions_to_csv {
 
     $form->sort_order();
 
-    my @numbers = qw(netamount tax amount paid due debit credit fx_amount fx_paid fx_tax fx_netamount);
+    my @numbers = qw(netamount tax amount paid due debit credit fx_amount fx_paid fx_tax fx_netamount, customer_id vendor_id);
     my %is_number = map { $_ => 1 } @numbers;
 
     @columns = $form->sort_columns(
-        qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department)
+        qw(transdate id invnumber ordnumber ponumber description name customernumber vendornumber customer_id vendor_id address netamount tax amount paid paymentmethod due curr datepaid duedate memo notes intnotes till employee manager warehouse shippingpoint shipvia waybill dcn paymentdiff department email)
     );
     pop @columns if $form->{department};
     unshift @columns, "runningnumber";
@@ -2630,6 +2630,8 @@ sub transactions_to_csv {
 
     $column_data{runningnumber} = " ";
     $column_data{id}            = $locale->text('ID');
+    $column_data{customer_id}   = $locale->text('Customer ID');
+    $column_data{vendor_id}     = $locale->text('Vendor ID');
     $column_data{transdate}     = $locale->text('Date');
     $column_data{duedate}       = $locale->text('Due Date');
     $column_data{invnumber}     = $locale->text('Invoice');
@@ -2638,6 +2640,7 @@ sub transactions_to_csv {
     $column_data{name}          = $name;
     $column_data{$namefld}      = $namenumber;
     $column_data{address}       = $locale->text('Address');
+    $column_data{email}         = $locale->text('Email');
     $column_data{netamount}     = $locale->text('Amount');
     $column_data{tax}           = $locale->text('Tax');
     $column_data{amount}        = $locale->text('Total');
@@ -2769,7 +2772,7 @@ sub transactions_to_csv {
         $column_data{invnumber} = &escape_csv( $ref->{invnumber} );
 
         for (qw(transdate datepaid duedate)) { $column_data{$_} = $ref->{$_} }
-        for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod)) {
+        for (qw(department ordnumber ponumber notes intnotes warehouse shippingpoint shipvia waybill employee manager till source memo description projectnumber address dcn paymentmethod customer_id vendor_id email)) {
             $column_data{$_} = &escape_csv( $ref->{$_} );
         }
         $column_data{$namefld} = &escape_csv( $ref->{$namefld} );
