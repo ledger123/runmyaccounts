@@ -333,7 +333,7 @@ sub get_spoolfiles {
 		  vc.id AS vc_id
 		  FROM $item a
 		  JOIN $arap{$form->{type}}{$item} vc ON (a.$arap{$form->{type}}{$item}_id = vc.id)
-		  JOIN address ad ON (ad.trans_id = vc.id)
+		  |.$form->address_join('ad', 'vc.id').qq|
 		  JOIN status s ON (s.trans_id = a.id)
 		  WHERE s.spoolfile IS NOT NULL
 		  AND s.formname LIKE '$wildcard$form->{type}'
@@ -403,7 +403,7 @@ sub get_spoolfiles {
                   vc.id AS vc_id
 		  FROM $item a
 		  JOIN $arap{$form->{type}}{$item} vc ON (a.$arap{$form->{type}}{$item}_id = vc.id)
-		  JOIN address ad ON (ad.trans_id = vc.id)
+		  |.$form->address_join('ad', 'vc.id').qq|
 		  WHERE $where|;
       }
 
