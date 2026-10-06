@@ -3478,6 +3478,25 @@ sub dbclean {
 	return $value;
 }
 
+# A customer/vendor may have more than one row in address, because imports and
+# older saves insert a new row instead of replacing the existing one. Joining
+# address directly on trans_id therefore multiplies report rows. This builds a
+# join picking exactly one address: the one with the most fields filled in,
+# falling back to the newest id when several are equally complete.
+sub address_join {
+	my ( $self, $alias, $trans_id ) = @_;
+
+	my $filled = join ' + ',
+	  map { "CASE WHEN COALESCE(adx.$_, '') <> '' THEN 1 ELSE 0 END" }
+	  qw(address1 address2 city state zipcode country);
+
+	return qq|LEFT JOIN address $alias ON ($alias.id = (SELECT adx.id
+		    FROM address adx
+		    WHERE adx.trans_id = $trans_id
+		    ORDER BY ($filled) DESC, adx.id DESC
+		    LIMIT 1))|;
+}
+
 sub format_amount {
 	my ( $self, $myconfig, $amount, $places, $dash ) = @_;
 

@@ -763,7 +763,7 @@ sub transactions {
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN customer ct ON (a.customer_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
+		 |.$form->address_join('ad', 'ct.id').qq|
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $arwhere $debit_credit_filtered_where
@@ -783,7 +783,7 @@ sub transactions {
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
+		 |.$form->address_join('ad', 'ct.id').qq|
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere $debit_credit_filtered_where
@@ -827,7 +827,7 @@ sub transactions {
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN customer ct ON (a.customer_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
+		 |.$form->address_join('ad', 'ct.id').qq|
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $arwhere
@@ -847,7 +847,7 @@ sub transactions {
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
+		 |.$form->address_join('ad', 'ct.id').qq|
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
@@ -890,7 +890,7 @@ sub transactions {
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN customer ct ON (a.customer_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
+		 |.$form->address_join('ad', 'ct.id').qq|
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $arwhere
@@ -910,7 +910,7 @@ sub transactions {
 		 $invoicejoin
 		 JOIN chart c ON (ac.chart_id = c.id)
 		 JOIN vendor ct ON (a.vendor_id = ct.id)
-		 JOIN address ad ON (ad.trans_id = ct.id)
+		 |.$form->address_join('ad', 'ct.id').qq|
 		 LEFT JOIN department d ON (d.id = a.department_id)
 		 LEFT JOIN project p ON (p.id = ac.project_id)
 		 WHERE $apwhere
