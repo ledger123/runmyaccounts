@@ -404,8 +404,19 @@ sub save {
                 WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
    
+    # A stale contactid must not be reused for the INSERT below, it would
+    # otherwise collide with a contact belonging to a different customer/vendor.
+    if ($form->{contactid}) {
+      $query = qq|SELECT id FROM contact
+                  WHERE id = $form->{contactid}
+                  AND trans_id = $form->{id}|;
+      $form->{contactid} = 0 if ! $dbh->selectrow_array($query);
+    }
+
+    # Delete by trans_id, not by contactid: a save used to delete only the one
+    # contact row and insert anyway, leaving older duplicate contacts behind.
     $query = qq|DELETE FROM contact
-                WHERE id = $form->{contactid}|;
+                WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
  
     $query = qq|SELECT address_id
