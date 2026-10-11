@@ -925,7 +925,7 @@ sub transactions {
 	       AND ac.approved = '1'|;
         $paid .= qq|
             AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
-        $paid .= qq|       
+        $paid .= qq|
 			AND (c.link LIKE '%${ARAP}_paid%'
 	            OR c.link LIKE '%${ARAP}_discount%'
 		    OR c.link = ''|;
@@ -969,7 +969,8 @@ sub transactions {
 		 a.ponumber, a.warehouse_id, w.description AS warehouse,
 		 a.description, a.dcn, pm.description AS paymentmethod,
 		 a.datepaid - a.duedate AS paymentdiff,
-		 ad.address1, ad.address2, ad.city, ad.zipcode, ad.country, vc.email
+		 ad.address1, ad.address2, ad.street_name AS streetname,
+		 ad.building_number AS buildingnumber, ad.city, ad.zipcode, ad.country, vc.email
 		 $acc_trans_flds
 	         FROM $table a
 	      JOIN $form->{vc} vc ON (a.$form->{vc}_id = vc.id)
@@ -1319,7 +1320,8 @@ sub get_name {
     my $query = qq|SELECT c.name AS $form->{vc}, c.$form->{vc}number,
                  c.discount, c.creditlimit, c.terms,
                  c.email, c.cc, c.bcc, c.taxincluded,
-		 ad.address1, ad.address2, ad.city, ad.state,
+		 ad.address1, ad.address2, ad.street_name AS streetname,
+		 ad.building_number AS buildingnumber, ad.city, ad.state,
 		 ad.zipcode, ad.country, c.curr AS currency, c.language_code,
 	         $duedate AS duedate, c.notes AS intnotes,
 		 b.discount AS tradediscount, b.description AS business,
@@ -1541,7 +1543,8 @@ sub company_details {
 
     # get rest for the customer/vendor
     $form->{"$form->{vc}_id"} *= 1;
-    my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2, ad.post_office,
+    my $query = qq|SELECT ct.$form->{vc}number, ct.name, ad.address1, ad.address2,
+                 ad.street_name AS streetname, ad.building_number AS buildingnumber, ad.post_office,
                  ad.city, ad.state, ad.zipcode, ad.country,
 	         ct.contact, ct.phone as $form->{vc}phone,
 		 ct.fax as $form->{vc}fax,
@@ -1581,7 +1584,8 @@ sub company_details {
     for (@a) { $form->{$_} = $defaults{$_} }
 
     if ( $form->{warehouse_id} *= 1 ) {
-        $query = qq|SELECT address1, address2, city, state, zipcode, country
+        $query = qq|SELECT address1, address2, street_name AS streetname, building_number AS buildingnumber,
+        city, state, zipcode, country
 		FROM address
 		WHERE trans_id = | . $form->dbclean( $form->{warehouse_id} ) . qq||;
         $sth = $dbh->prepare($query) || $form->dberror($query);
@@ -1628,6 +1632,8 @@ sub ship_to {
 
     my $query = qq|SELECT
                  s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+                 s.shiptostreet_name AS shiptostreetname,
+                 s.shiptobuilding_number AS shiptobuildingnumber,
 		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
@@ -1636,6 +1642,8 @@ sub ship_to {
 		 UNION
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+		 s.shiptostreet_name AS shiptostreetname,
+		 s.shiptobuilding_number AS shiptobuildingnumber,
 		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
@@ -1645,6 +1653,8 @@ sub ship_to {
 		 UNION
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+		 s.shiptostreet_name AS shiptostreetname,
+		 s.shiptobuilding_number AS shiptobuildingnumber,
 		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
@@ -1657,6 +1667,8 @@ sub ship_to {
                  EXCEPT
 		 SELECT
 		 s.shiptoname, s.shiptoaddress1, s.shiptoaddress2,
+		 s.shiptostreet_name AS shiptostreetname,
+		 s.shiptobuilding_number AS shiptobuildingnumber,
 		 s.shiptocity, s.shiptostate, s.shiptozipcode,
 		 s.shiptocountry, s.shiptocontact, s.shiptophone,
 		 s.shiptofax, s.shiptoemail
@@ -1678,4 +1690,3 @@ sub ship_to {
 }
 
 1;
-
