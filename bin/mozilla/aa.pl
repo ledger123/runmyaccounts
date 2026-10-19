@@ -2008,13 +2008,13 @@ sub transactions {
     AA->transactions( \%myconfig, \%$form );
 
     $href = "$form->{script}?action=transactions";
-    for (qw(direction oldsort till outstanding path login summary)) { $href .= qq|&$_=$form->{$_}| }
+    for (qw(direction oldsort till outstanding path login summary pagesize)) { $href .= qq|&$_=$form->{$_}| }
     $href .= "&title=" . $form->escape( $form->{title} );
 
     $form->sort_order();
 
     $callback = "$form->{script}?action=transactions";
-    for (qw(direction oldsort till outstanding path login summary)) { $callback .= qq|&$_=$form->{$_}| }
+    for (qw(direction oldsort till outstanding path login summary pagesize)) { $callback .= qq|&$_=$form->{$_}| }
     $callback .= "&title=" . $form->escape( $form->{title}, 1 );
 
     if ( $form->{ $form->{ARAP} } ) {
@@ -2281,6 +2281,34 @@ sub transactions {
 
     my $today = $form->today(\%myconfig);
 
+    # Pagination control: page-size selector. Build a control base URL that
+    # drops the baked-in pagesize (and never carries a page number), so
+    # changing the page size jumps back to the first page while preserving all
+    # filters, columns and the current column sort.
+    my $pagesize_cur = ( $form->{pagesize} =~ /^\d+$/ && $form->{pagesize} > 0 && $form->{pagesize} <= 100 ) ? $form->{pagesize} : 100;
+
+    my $ctrlbase = $href;
+    $ctrlbase =~ s/&pagesize=[^&]*//g;
+    $ctrlbase =~ s/&page=[^&]*//g;
+    $ctrlbase =~ s/&oldsort=[^&]*//g;
+    $ctrlbase .= "&sort=$form->{sort}" if $form->{sort};
+
+    my $pagesize_links = "";
+    foreach my $ps (qw(10 20 50 100)) {
+        my $link = "$ctrlbase&pagesize=$ps";
+        if ( $ps == $pagesize_cur ) {
+            $pagesize_links .= qq| <b>$ps</b>|;
+        }
+        else {
+            $pagesize_links .= qq| <a href="$link">$ps</a>|;
+        }
+    }
+
+    my $pagecontrols = qq|
+  <tr class="noprint">
+    <td>| . $locale->text('Results per page') . qq|:$pagesize_links</td>
+  </tr>|;
+
     print qq|
 <body>
 
@@ -2303,7 +2331,7 @@ sub transactions {
   <tr class="noprint" height="5"></tr>
   <tr class="noprint" >
     <td>$option</td>
-  </tr>
+  </tr>$pagecontrols
   <tr>
     <td>
       <table class="report-table" width=100%>
@@ -2522,6 +2550,31 @@ qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=l
         }
     }
 
+    my $nextpage = '';
+    {
+        # Navigation must preserve the current order. Dropping oldsort prevents
+        # sort_order() from toggling the direction when the next page loads.
+        my $navbase = $href;
+        $navbase =~ s/&oldsort=[^&]*//g;
+        $navbase =~ s/&page=[^&]*//g;
+        $navbase .= "&sort=$form->{sort}" if $form->{sort};
+
+        my $prevlink = '';
+        my $nextlink = '';
+        if ( $form->{prev_page} ) {
+            my $h = "$navbase&page=$form->{prev_page}";
+            $prevlink = qq|<a href="$h">&laquo; | . $locale->text('Previous Page') . qq|</a>|;
+        }
+        if ( $form->{next_page} ) {
+            my $h = "$navbase&page=$form->{next_page}";
+            $nextlink = qq|<a href="$h">| . $locale->text('Next Page') . qq| &raquo;</a>|;
+        }
+        if ( $prevlink || $nextlink ) {
+            my $sep = ( $prevlink && $nextlink ) ? ' &nbsp;&middot;&nbsp; ' : '';
+            $nextpage = qq|<div class="noprint" style="margin:1em 0;">$prevlink$sep$nextlink</div>|;
+        }
+    }
+
     print qq|
 	</tr>
       </table>
@@ -2531,6 +2584,8 @@ qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=l
     <td><hr size=3 noshade></td>
   </tr>
 </table>
+
+$nextpage
 
 <br>
 <form method=post action=$form->{script}>
