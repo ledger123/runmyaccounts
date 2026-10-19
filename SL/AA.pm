@@ -934,14 +934,18 @@ sub transactions {
         $form->{l_memo}  = "";
     }
 
-    my $taxfld = qq|SELECT sum(ac.amount)
-		  FROM acc_trans ac
-		  JOIN chart c ON (c.id = ac.chart_id)
-		  WHERE ac.trans_id = a.id
-		  AND ac.approved = '1'
-		  AND c.link LIKE '%_tax%'|;
-    $taxfld .= qq|
-               AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
+    # Per-transaction tax total, aggregated once and joined in (instead of a
+    # correlated subquery evaluated for every returned row).
+    my $taxsum_join = qq|
+	    LEFT JOIN (SELECT tac.trans_id, sum(tac.amount) AS taxamount
+			 FROM acc_trans tac
+			 JOIN chart tc ON (tc.id = tac.chart_id)
+			 WHERE tac.approved = '1'
+			 AND tc.link LIKE '%_tax%'|;
+    $taxsum_join .= qq|
+			 AND tac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
+    $taxsum_join .= qq|
+			 GROUP BY tac.trans_id) taxsum ON (taxsum.trans_id = a.id)|;
 
     if ( !$form->{summary} || $form->{l_memo} ) {
         $acc_trans_flds = qq|, c.accno, ac.source,
@@ -959,7 +963,7 @@ sub transactions {
     }
 
     my $query = qq|SELECT a.id, a.invnumber, a.ordnumber, a.transdate,
-                 a.duedate, ($taxfld) * $ml AS tax,
+                 a.duedate, COALESCE(taxsum.taxamount, 0) * $ml AS tax,
 		 a.amount, ($paid) AS paid, a.fxamount, a.fxpaid,
 		 a.invoice, a.datepaid, a.terms, a.notes, a.intnotes,
 		 a.shipvia, a.waybill, a.shippingpoint,
@@ -979,6 +983,7 @@ sub transactions {
 	      LEFT JOIN department d ON (a.department_id = d.id)
 	      LEFT JOIN warehouse w ON (a.warehouse_id = w.id)
 	      LEFT JOIN paymentmethod pm ON (pm.id = a.paymentmethod_id)
+	      $taxsum_join
 	      $acc_trans_join
 	      |;
 
@@ -1131,9 +1136,104 @@ sub transactions {
 				WHERE lower(description) LIKE '$var'))|;
     }
 
+    # Global column sorting with page-number pagination. The chosen column
+    # (from the column header links) drives the ORDER BY of the whole result
+    # set, so sorting always applies across ALL matching data, not just the
+    # current page. a.id is appended as a deterministic tie-breaker and keeps
+    # the rows of one transaction grouped together for the summary loop below.
+    #
+    # A cheap first query selects one page of transaction ids in the requested
+    # order using LIMIT/OFFSET, then the main query only materialises the heavy
+    # joins for that page. Disabled for CSV export, which returns every row.
+    my %sortexpr = (
+        id             => 'a.id',
+        invnumber      => 'a.invnumber',
+        ordnumber      => 'a.ordnumber',
+        transdate      => 'a.transdate',
+        duedate        => 'a.duedate',
+        paid           => 'a.paid',
+        datepaid       => 'a.datepaid',
+        shipvia        => 'a.shipvia',
+        waybill        => 'a.waybill',
+        shippingpoint  => 'a.shippingpoint',
+        employee       => 'e.name',
+        name           => 'vc.name',
+        customernumber => "vc.$form->{vc}number",
+        vendornumber   => "vc.$form->{vc}number",
+        manager        => 'm.name',
+        curr           => 'a.curr',
+        department     => 'd.description',
+        ponumber       => 'a.ponumber',
+        warehouse      => 'w.description',
+        description    => 'a.description',
+        dcn            => 'a.dcn',
+        paymentmethod  => 'pm.description',
+        paymentdiff    => '(a.datepaid - a.duedate)',
+        amount         => 'a.amount',
+        netamount      => 'a.amount',
+    );
+
+    my $sortcol = $form->{sort};
+    my $dir;
+    if ( $sortcol && $sortexpr{$sortcol} ) {
+        $dir = ( uc( $form->{direction} ) eq 'ASC' ) ? 'ASC' : 'DESC';
+    }
+    else {
+        # No column chosen yet: default to newest first.
+        $sortcol = 'transdate';
+        $dir     = 'DESC';
+    }
+    my $orderexpr = $sortexpr{$sortcol} || 'a.transdate';
+    my $orderby   = "$orderexpr $dir, a.id $dir";
+    $form->{sort}      = $sortcol;
+    $form->{direction} = $dir;
+
+    # The sort/tie-break joins must be present in both queries so the id page
+    # and the main query order identically.
+    my $sort_join = qq|
+	      LEFT JOIN employee m ON (e.managerid = m.id)
+	      LEFT JOIN department d ON (a.department_id = d.id)
+	      LEFT JOIN warehouse w ON (a.warehouse_id = w.id)
+	      LEFT JOIN paymentmethod pm ON (pm.id = a.paymentmethod_id)|;
+
+    if ( $form->{l_csv} ne 'Y' ) {
+        my $pagesize = $form->{pagesize};
+        $pagesize = 100 unless ( defined $pagesize && $pagesize =~ /^\d+$/ && $pagesize > 0 );
+        $pagesize = 100 if $pagesize > 100;
+
+        my $page = ( $form->{page} =~ /^\d+$/ && $form->{page} > 0 ) ? $form->{page} : 1;
+        my $offset = ( $page - 1 ) * $pagesize;
+
+        my $idquery = qq|SELECT DISTINCT a.id, $orderexpr AS sortkey
+	         FROM $table a
+	      JOIN $form->{vc} vc ON (a.$form->{vc}_id = vc.id)
+	      LEFT JOIN employee e ON (a.employee_id = e.id)
+	      $sort_join
+	      $acc_trans_join
+	      WHERE $where
+	      ORDER BY sortkey $dir, a.id $dir
+	      LIMIT $pagesize OFFSET $offset|;
+
+        my $idsth = $dbh->prepare($idquery);
+        $idsth->execute || $form->dberror($idquery);
+
+        my @pageids;
+        while ( my $idref = $idsth->fetchrow_hashref(NAME_lc) ) {
+            push @pageids, $idref->{id};
+        }
+        $idsth->finish;
+
+        # A full page means there may be more rows after this one.
+        $form->{current_page} = $page;
+        $form->{prev_page}    = $page - 1 if $page > 1;
+        $form->{next_page}    = $page + 1 if scalar(@pageids) >= $pagesize;
+
+        $where .= @pageids ? " AND a.id IN (" . join( ',', @pageids ) . ")" : " AND a.id = 0";
+    }
+
     $query .= "
              WHERE $where
-             ORDER by $sortorder";
+             ORDER by $orderby";
     $form->{query} = $query;
 
     my $sth = $dbh->prepare($query);
