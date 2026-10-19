@@ -1201,7 +1201,23 @@ sub transactions {
         $pagesize = 100 unless ( defined $pagesize && $pagesize =~ /^\d+$/ && $pagesize > 0 );
         $pagesize = 100 if $pagesize > 100;
 
+        # Total number of matching transactions, so the UI can offer a jump to
+        # the last page. Counts distinct transaction ids to stay correct even
+        # when acc_trans multiplies rows.
+        my $countquery = qq|SELECT count(DISTINCT a.id)
+	         FROM $table a
+	      JOIN $form->{vc} vc ON (a.$form->{vc}_id = vc.id)
+	      LEFT JOIN employee e ON (a.employee_id = e.id)
+	      $sort_join
+	      $acc_trans_join
+	      WHERE $where|;
+        my ($total_rows) = $dbh->selectrow_array($countquery);
+        $total_rows ||= 0;
+        my $last_page = int( ( $total_rows + $pagesize - 1 ) / $pagesize );
+        $last_page = 1 if $last_page < 1;
+
         my $page = ( $form->{page} =~ /^\d+$/ && $form->{page} > 0 ) ? $form->{page} : 1;
+        $page = $last_page if $page > $last_page;
         my $offset = ( $page - 1 ) * $pagesize;
 
         my $idquery = qq|SELECT DISTINCT a.id, $orderexpr AS sortkey
@@ -1224,9 +1240,11 @@ sub transactions {
         $idsth->finish;
 
         # A full page means there may be more rows after this one.
+        $form->{total_rows}   = $total_rows;
+        $form->{last_page}    = $last_page;
         $form->{current_page} = $page;
         $form->{prev_page}    = $page - 1 if $page > 1;
-        $form->{next_page}    = $page + 1 if scalar(@pageids) >= $pagesize;
+        $form->{next_page}    = $page + 1 if $page < $last_page;
 
         $where .= @pageids ? " AND a.id IN (" . join( ',', @pageids ) . ")" : " AND a.id = 0";
     }

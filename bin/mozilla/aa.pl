@@ -2559,19 +2559,30 @@ qq|<td align=left><a href=ca.pl?path=$form->{path}&login=$form->{login}&action=l
         $navbase =~ s/&page=[^&]*//g;
         $navbase .= "&sort=$form->{sort}" if $form->{sort};
 
-        my $prevlink = '';
-        my $nextlink = '';
+        my $firstlink = '';
+        my $prevlink  = '';
+        my $nextlink  = '';
+        my $lastlink  = '';
         if ( $form->{prev_page} ) {
+            my $f = "$navbase&page=1";
+            $firstlink = qq|<a href="$f">&laquo;&laquo; | . $locale->text('First Page') . qq|</a>|;
             my $h = "$navbase&page=$form->{prev_page}";
             $prevlink = qq|<a href="$h">&laquo; | . $locale->text('Previous Page') . qq|</a>|;
         }
         if ( $form->{next_page} ) {
             my $h = "$navbase&page=$form->{next_page}";
             $nextlink = qq|<a href="$h">| . $locale->text('Next Page') . qq| &raquo;</a>|;
+            my $l = "$navbase&page=$form->{last_page}";
+            $lastlink = qq|<a href="$l">| . $locale->text('Last Page') . qq| &raquo;&raquo;</a>|;
         }
-        if ( $prevlink || $nextlink ) {
-            my $sep = ( $prevlink && $nextlink ) ? ' &nbsp;&middot;&nbsp; ' : '';
-            $nextpage = qq|<div class="noprint" style="margin:1em 0;">$prevlink$sep$nextlink</div>|;
+        my @parts = grep { $_ ne '' } ( $firstlink, $prevlink, $nextlink, $lastlink );
+        if (@parts) {
+            my $pageinfo = '';
+            if ( $form->{last_page} ) {
+                $pageinfo = qq| &nbsp;&nbsp; <span>| . $locale->text('Page') . qq| $form->{current_page} / $form->{last_page}</span>|;
+            }
+            my $links = join( ' &nbsp;&middot;&nbsp; ', @parts );
+            $nextpage = qq|<div class="noprint" style="margin:1em 0;">$links$pageinfo</div>|;
         }
     }
 
