@@ -71,10 +71,6 @@ CREATE INDEX IF NOT EXISTS ap_transdate_id_key ON ap (transdate, id);
     q{
 CREATE INDEX IF NOT EXISTS address_trans_id_key ON address (trans_id);
 },
-
-    q{
-UPDATE defaults SET fldvalue = '2.8.53' WHERE fldname = 'version';
-},
 );
 
 $dbh->disconnect();
