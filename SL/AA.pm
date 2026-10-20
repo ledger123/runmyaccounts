@@ -900,6 +900,7 @@ sub transactions {
     my $table = 'ar';
     my $acc_trans_join;
     my $acc_trans_flds;
+    my $paidagg_join = '';
 
     my %defaults = $form->get_defaults( $dbh, \@{ [ 'precision', 'company' ] } );
     for ( keys %defaults ) { $form->{$_} = $defaults{$_} }
@@ -915,21 +916,30 @@ sub transactions {
     ( $form->{transdatefrom}, $form->{transdateto} ) = $form->from_to( $form->{year}, $form->{month}, $form->{interval} ) if $form->{year} && $form->{month};
 
     if ( $form->{outstanding} ) {
+        # Aggregate the paid/discount postings once per transaction (same
+        # pattern as the taxsum join below). This lets the open-items filter
+        # run inside the paginated SQL (count + id page + main query) instead
+        # of being applied in Perl after the page was already cut, which made
+        # fully-paid rows count towards the page/total and then get dropped,
+        # leaving short pages and an inflated page count.
+        $paidagg_join = qq|
+	    LEFT JOIN (SELECT pac.trans_id, SUM(pac.amount) AS paidsum
+			 FROM acc_trans pac
+			 JOIN chart pc ON (pc.id = pac.chart_id)
+			 WHERE pac.approved = '1'|;
+        $paidagg_join .= qq|
+			 AND pac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
+        $paidagg_join .= qq|
+			 AND (pc.link LIKE '%${ARAP}_paid%'
+			 OR pc.link LIKE '%${ARAP}_discount%'
+			 OR pc.link = '')
+			 GROUP BY pac.trans_id) paidsum ON (paidsum.trans_id = a.id)|;
+
         $paid = qq|CASE WHEN ROUND(a.fxamount::numeric, $form->{precision}) = ROUND(a.fxpaid::numeric, $form->{precision}) AND a.fxpaid != 0 AND a.paid != 0 |;
         $paid .= qq|
             AND a.datepaid <= '$form->{transdateto}'| if $form->{transdateto};
-        $paid .= qq|THEN a.amount ELSE (SELECT SUM(ac.amount) * -1 * $ml
-               FROM acc_trans ac
-	       JOIN chart c ON (c.id = ac.chart_id)
-	       WHERE ac.trans_id = a.id
-	       AND ac.approved = '1'|;
-        $paid .= qq|
-            AND ac.transdate <= '$form->{transdateto}'| if $form->{transdateto};
-        $paid .= qq|       
-			AND (c.link LIKE '%${ARAP}_paid%'
-	            OR c.link LIKE '%${ARAP}_discount%'
-		    OR c.link = ''|;
-        $paid .= qq|)) END|;
+        $paid .= qq|THEN a.amount ELSE paidsum.paidsum * -1 * $ml END|;
+
         $form->{summary} = 1;
         $form->{l_memo}  = "";
     }
@@ -984,6 +994,7 @@ sub transactions {
 	      LEFT JOIN warehouse w ON (a.warehouse_id = w.id)
 	      LEFT JOIN paymentmethod pm ON (pm.id = a.paymentmethod_id)
 	      $taxsum_join
+	      $paidagg_join
 	      $acc_trans_join
 	      |;
 
@@ -1136,6 +1147,14 @@ sub transactions {
 				WHERE lower(description) LIKE '$var'))|;
     }
 
+    # Open-items (outstanding) filter must be part of the SQL so the row count,
+    # the id page query and the main query all agree. Otherwise fully-paid
+    # transactions are counted and paginated, then dropped in Perl, producing
+    # short pages and an inflated page count.
+    if ( $form->{outstanding} ) {
+        $where .= qq| AND ROUND(a.amount::numeric, $form->{precision}) <> ROUND(COALESCE(($paid), 0)::numeric, $form->{precision})|;
+    }
+
     # Global column sorting with page-number pagination. The chosen column
     # (from the column header links) drives the ORDER BY of the whole result
     # set, so sorting always applies across ALL matching data, not just the
@@ -1209,6 +1228,7 @@ sub transactions {
 	      JOIN $form->{vc} vc ON (a.$form->{vc}_id = vc.id)
 	      LEFT JOIN employee e ON (a.employee_id = e.id)
 	      $sort_join
+	      $paidagg_join
 	      $acc_trans_join
 	      WHERE $where|;
         my ($total_rows) = $dbh->selectrow_array($countquery);
@@ -1225,6 +1245,7 @@ sub transactions {
 	      JOIN $form->{vc} vc ON (a.$form->{vc}_id = vc.id)
 	      LEFT JOIN employee e ON (a.employee_id = e.id)
 	      $sort_join
+	      $paidagg_join
 	      $acc_trans_join
 	      WHERE $where
 	      ORDER BY sortkey $dir, a.id $dir
@@ -1276,9 +1297,8 @@ sub transactions {
 
         $ref->{netamount} = $ref->{amount} - $ref->{tax};
 
-        if ( $form->{outstanding} ) {
-            next if $form->round_amount( $ref->{amount}, $form->{precision} ) == $form->round_amount( $ref->{paid}, $form->{precision} );
-        }
+        # The open-items filter is now applied in SQL (see $where above), so
+        # the page is already full of outstanding transactions here.
 
         for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
 
