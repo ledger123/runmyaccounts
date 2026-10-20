@@ -730,7 +730,112 @@ sub transactions {
   
   my @sf = qw(id transdate reference accno);
   my $sortorder = $form->sort_order(\@sf, \%ordinal);
-  
+
+  # Pagination by transaction (not by acc_trans line). The General Ledger
+  # report lists one row per acc_trans line and later re-queries every line of
+  # each shown transaction to compute the contra account, so a page must hold
+  # whole transactions. We select one page of distinct (type, trans_id) pairs
+  # in the requested order, then restrict the heavy main query (and the contra
+  # pass) to those ids. Disabled for CSV export, for the single-account view
+  # (which needs the running balance over the whole set) and for the Include
+  # Log view (which can surface transactions absent from the current tables).
+  # sort_order above has already toggled $form->{direction} to the direction
+  # used by the display ORDER BY, so the page selection stays in sync.
+  my $paginate = ( $form->{l_csv} ne 'Y' )
+    && !$form->{accno}
+    && !$form->{gifi_accno}
+    && !$form->{include_log};
+
+  if ($paginate) {
+    my $pagesize = $form->{pagesize};
+    $pagesize = 100 unless ( defined $pagesize && $pagesize =~ /^\d+$/ && $pagesize > 0 );
+    $pagesize = 100 if $pagesize > 100;
+
+    my $dir = ( uc( $form->{direction} ) eq 'DESC' ) ? 'DESC' : 'ASC';
+
+    # Per-transaction sort key taken from the header tables: gl/ar/ap already
+    # carry transdate and reference, so the page/count queries can skip the
+    # heavy acc_trans/chart joins in the common case. Only an accno sort needs
+    # chart. MIN() collapses the (possible) acc_trans fan-out to one value per
+    # transaction.
+    my %glkey = ( id => 'g.id', transdate => 'g.transdate', reference => 'g.reference', accno => 'c.accno' );
+    my %aakey = ( id => 'a.id', transdate => 'a.transdate', reference => 'a.invnumber', accno => 'c.accno' );
+    my $sortcol = $form->{sort};
+    $sortcol = 'transdate' unless $glkey{$sortcol};
+
+    # Join only the tables a branch actually needs. department (d) and project
+    # (p) are never referenced by the WHERE clauses, and the filtered-amounts
+    # clause ($debit_credit_filtered_where) is a no-op while paginating (accno
+    # disables pagination, so the "filtered" table stays empty), so neither is
+    # included here. chart (c) is needed for an accno sort or an accno-range
+    # filter; acc_trans (ac) whenever chart, a lineitem/source/memo/project/fx
+    # filter, or the invoice join references it; customer/vendor (ct) only for
+    # a name/number filter. \b avoids matching the "ac." / "ct." aliases.
+    my $build_from = sub {
+        my ( $base, $idcol, $where, $ctjoin ) = @_;
+        my $need_c  = ( $sortcol eq 'accno' ) || ( $where =~ /\bc\./ );
+        my $need_ac = $need_c || ( $where =~ /\bac\./ ) || ( $where =~ /\bi\./ );
+        my $from = $base;
+        $from .= qq|
+		 JOIN acc_trans ac ON ($idcol = ac.trans_id)$invoicejoin| if $need_ac;
+        $from .= qq|
+		 JOIN chart c ON (ac.chart_id = c.id)| if $need_c;
+        $from .= qq|
+		 $ctjoin| if $ctjoin && ( $where =~ /\bct\./ );
+        $from .= qq|
+		 WHERE $where|;
+        return $from;
+    };
+
+    my $gl_from = $build_from->( 'FROM gl g', 'g.id', $glwhere, '' );
+    my $ar_from = $build_from->( 'FROM ar a', 'a.id', $arwhere, 'JOIN customer ct ON (a.customer_id = ct.id)' );
+    my $ap_from = $build_from->( 'FROM ap a', 'a.id', $apwhere, 'JOIN vendor ct ON (a.vendor_id = ct.id)' );
+
+    my $pageunion = qq|
+	SELECT 'gl' AS type, g.id AS id, MIN($glkey{$sortcol}) AS sortkey $gl_from GROUP BY g.id
+	UNION ALL
+	SELECT 'ar' AS type, a.id AS id, MIN($aakey{$sortcol}) AS sortkey $ar_from GROUP BY a.id
+	UNION ALL
+	SELECT 'ap' AS type, a.id AS id, MIN($aakey{$sortcol}) AS sortkey $ap_from GROUP BY a.id|;
+
+    my ($total_rows) = $dbh->selectrow_array(qq|SELECT count(*) FROM ($pageunion) pages|);
+    $total_rows ||= 0;
+    my $last_page = int( ( $total_rows + $pagesize - 1 ) / $pagesize );
+    $last_page = 1 if $last_page < 1;
+
+    my $page = ( $form->{page} =~ /^\d+$/ && $form->{page} > 0 ) ? $form->{page} : 1;
+    $page = $last_page if $page > $last_page;
+    my $offset = ( $page - 1 ) * $pagesize;
+
+    my $idquery = qq|SELECT type, id
+	FROM ($pageunion) pages
+	ORDER BY sortkey $dir, id $dir
+	LIMIT $pagesize OFFSET $offset|;
+    my $idsth = $dbh->prepare($idquery);
+    $idsth->execute || $form->dberror($idquery);
+
+    my ( @gl_ids, @ar_ids, @ap_ids );
+    while ( my $r = $idsth->fetchrow_hashref(NAME_lc) ) {
+      push @gl_ids, $r->{id} if $r->{type} eq 'gl';
+      push @ar_ids, $r->{id} if $r->{type} eq 'ar';
+      push @ap_ids, $r->{id} if $r->{type} eq 'ap';
+    }
+    $idsth->finish;
+
+    # Restrict every branch (including the re-run contra pass) to this page's
+    # transactions. An empty set for a branch must match no rows.
+    $glwhere .= @gl_ids ? " AND g.id IN (" . join( ',', @gl_ids ) . ")" : " AND g.id = 0";
+    $arwhere .= @ar_ids ? " AND a.id IN (" . join( ',', @ar_ids ) . ")" : " AND a.id = 0";
+    $apwhere .= @ap_ids ? " AND a.id IN (" . join( ',', @ap_ids ) . ")" : " AND a.id = 0";
+
+    $form->{pagesize}     = $pagesize;
+    $form->{total_rows}   = $total_rows;
+    $form->{last_page}    = $last_page;
+    $form->{current_page} = $page;
+    $form->{prev_page}    = $page - 1 if $page > 1;
+    $form->{next_page}    = $page + 1 if $page < $last_page;
+  }
+
   my $query = qq|SELECT g.id, 'gl' AS type, $false AS invoice, g.reference,
                  g.description, ac.transdate, ac.source,
 		 ac.amount, c.accno, c.gifi_accno, g.notes, c.link,

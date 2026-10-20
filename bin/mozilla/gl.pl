@@ -580,6 +580,16 @@ sub transactions {
     $form->{sort} ||= "transdate";
     $form->{reportcode} = 'gl';
 
+    # Pagination is active for the general listing only. The single-account
+    # view needs the running balance over the whole set, and Include Log can
+    # surface transactions absent from the current tables, so both opt out
+    # (mirrors the guard in GL->transactions). CSV export exits earlier below.
+    my $paginate = !$form->{accno} && !$form->{gifi_accno} && !$form->{include_log};
+    if ($paginate) {
+        $form->{pagesize} = 100
+          unless ( $form->{pagesize} =~ /^\d+$/ && $form->{pagesize} > 0 && $form->{pagesize} <= 100 );
+    }
+
     if ( $form->{flds} eq "" ) {
         $form->{flds} = "id="
           . $locale->text('ID')
@@ -629,12 +639,14 @@ sub transactions {
     $href = "$form->{script}?action=transactions";
     for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts)) { $href .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $href .= "&$_=" . $form->escape( $form->{$_} ) }
+    $href .= "&pagesize=$form->{pagesize}" if $paginate;
 
     $form->sort_order();
 
     $callback = "$form->{script}?action=transactions";
     for (qw(direction oldsort path login month year interval reportlogin fx_transaction include_log l_ts filter_amounts)) { $callback .= "&$_=$form->{$_}" }
     for (qw(report flds))                                                  { $callback .= "&$_=" . $form->escape( $form->{$_} ) }
+    $callback .= "&pagesize=$form->{pagesize}" if $paginate;
 
     %acctype = (
         'A' => $locale->text('Asset'),
@@ -920,6 +932,56 @@ sub transactions {
 
     my $today = $form->today(\%myconfig);
 
+    # Build pagination controls (page-size selector + First/Prev/Next/Last nav)
+    # using the same conventions as the AR/AP report (bin/mozilla/aa.pl). Must
+    # be captured before $href is mutated by the column-move logic below.
+    my $pagecontrols = "";
+    my $nextpage     = "";
+    if ($paginate) {
+        my $pagesize_cur = $form->{pagesize};
+
+        my $ctrlbase = $href;
+        $ctrlbase =~ s/&pagesize=[^&]*//g;
+        $ctrlbase =~ s/&page=[^&]*//g;
+        $ctrlbase =~ s/&oldsort=[^&]*//g;
+        $ctrlbase .= "&sort=$form->{sort}" if $form->{sort};
+
+        my $pagesize_links = "";
+        foreach my $ps (qw(10 20 50 100)) {
+            if ( $ps == $pagesize_cur ) {
+                $pagesize_links .= qq| <b>$ps</b>|;
+            }
+            else {
+                $pagesize_links .= qq| <a href="$ctrlbase&pagesize=$ps">$ps</a>|;
+            }
+        }
+        $pagecontrols = qq|
+  <tr class="noprint">
+    <td>| . $locale->text('Transactions per page') . qq|:$pagesize_links</td>
+  </tr>|;
+
+        my $navbase = $href;
+        $navbase =~ s/&oldsort=[^&]*//g;
+        $navbase =~ s/&page=[^&]*//g;
+        $navbase .= "&sort=$form->{sort}" if $form->{sort};
+
+        my ( $firstlink, $prevlink, $nextlink, $lastlink ) = ( "", "", "", "" );
+        if ( $form->{prev_page} ) {
+            $firstlink = qq|<a href="$navbase&page=1">&laquo;&laquo; | . $locale->text('First Page') . qq|</a>|;
+            $prevlink  = qq|<a href="$navbase&page=$form->{prev_page}">&laquo; | . $locale->text('Previous Page') . qq|</a>|;
+        }
+        if ( $form->{next_page} ) {
+            $nextlink = qq|<a href="$navbase&page=$form->{next_page}">| . $locale->text('Next Page') . qq| &raquo;</a>|;
+            $lastlink = qq|<a href="$navbase&page=$form->{last_page}">| . $locale->text('Last Page') . qq| &raquo;&raquo;</a>|;
+        }
+        my @parts = grep { $_ ne "" } ( $firstlink, $prevlink, $nextlink, $lastlink );
+        if (@parts) {
+            my $links = join( " &nbsp;&middot;&nbsp; ", @parts );
+            my $pageinfo = qq| &nbsp;&nbsp; <span>| . $locale->text('Page') . qq| $form->{current_page} / $form->{last_page} ($form->{total_rows} | . $locale->text('Transactions') . qq|)</span>|;
+            $nextpage = qq|<div class="noprint" style="margin:1em 0;">$links$pageinfo</div>|;
+        }
+    }
+
     print qq|
 <body>
 
@@ -942,7 +1004,7 @@ sub transactions {
   <tr class="noprint" height="5"></tr>
   <tr class="noprint">
     <td>$option</td>
-  </tr>
+  </tr>$pagecontrols
   <tr>
     <td>
       <table class="report-table" width=100%>
@@ -1199,6 +1261,8 @@ sub transactions {
     <td><hr size=3 noshade></td>
   </tr>
 </table>
+
+$nextpage
 
 <br>
 
