@@ -112,6 +112,7 @@ $self{texts} = {
   'Newest first'                => 'Neue zuerst',
   'Oldest first'                => 'Alte zuerst',
   'Results per page'            => 'Ergebnisse pro Seite',
+  'Display All'                  => 'Alle anzeigen',
   'Sort order'                  => 'Sortierung',
   'Nov'                         => 'Nov',
   'November'                    => 'November',

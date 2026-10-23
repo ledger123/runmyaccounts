@@ -120,6 +120,7 @@ $self{texts} = {
   'Previous Page'               => 'Vorherige Seite',
   'Page'                        => 'Seite',
   'Results per page'            => 'Ergebnisse pro Seite',
+  'Display All'                  => 'Alle anzeigen',
   'Nothing to print!'           => 'Es konnte nichts gedruckt werden!',
   'Nov'                         => 'Nov',
   'November'                    => 'November',
