@@ -1215,7 +1215,10 @@ sub transactions {
 	      LEFT JOIN warehouse w ON (a.warehouse_id = w.id)
 	      LEFT JOIN paymentmethod pm ON (pm.id = a.paymentmethod_id)|;
 
-    if ( $form->{l_csv} ne 'Y' ) {
+    # "Display All" (pagesize=all) disables paging: skip the LIMIT/OFFSET block
+    # entirely so the main query returns every matching transaction and no
+    # page navigation is produced.
+    if ( $form->{l_csv} ne 'Y' && ( $form->{pagesize} || '' ) ne 'all' ) {
         my $pagesize = $form->{pagesize};
         $pagesize = 100 unless ( defined $pagesize && $pagesize =~ /^\d+$/ && $pagesize > 0 );
         $pagesize = 100 if $pagesize > 100;
