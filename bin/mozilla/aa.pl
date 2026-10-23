@@ -2285,6 +2285,7 @@ sub transactions {
     # drops the baked-in pagesize (and never carries a page number), so
     # changing the page size jumps back to the first page while preserving all
     # filters, columns and the current column sort.
+    my $pagesize_all = ( ( $form->{pagesize} || '' ) eq 'all' );
     my $pagesize_cur = ( $form->{pagesize} =~ /^\d+$/ && $form->{pagesize} > 0 && $form->{pagesize} <= 100 ) ? $form->{pagesize} : 100;
 
     my $ctrlbase = $href;
@@ -2296,12 +2297,19 @@ sub transactions {
     my $pagesize_links = "";
     foreach my $ps (qw(10 20 50 100)) {
         my $link = "$ctrlbase&pagesize=$ps";
-        if ( $ps == $pagesize_cur ) {
+        if ( !$pagesize_all && $ps == $pagesize_cur ) {
             $pagesize_links .= qq| <b>$ps</b>|;
         }
         else {
             $pagesize_links .= qq| <a href="$link">$ps</a>|;
         }
+    }
+    # "Display All" lists every matching transaction on a single page.
+    if ($pagesize_all) {
+        $pagesize_links .= qq| <b>| . $locale->text('Display All') . qq|</b>|;
+    }
+    else {
+        $pagesize_links .= qq| <a href="$ctrlbase&pagesize=all">| . $locale->text('Display All') . qq|</a>|;
     }
 
     my $pagecontrols = qq|
