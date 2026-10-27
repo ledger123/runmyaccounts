@@ -25,7 +25,7 @@ sub create_index_concurrently {
 
     my ($tbl) = $dbh_db->selectrow_array( "SELECT to_regclass(?)", undef, $table_name );
     if ( !defined $tbl ) {
-        print "[SKIP] Database: $db | brak tabeli $table_name\n";
+        print "[SKIP] Database: $db | table not found $table_name\n";
         return;
     }
 
@@ -36,15 +36,15 @@ sub create_index_concurrently {
     if ($invalid) {
         my $rv = $dbh_db->do("DROP INDEX CONCURRENTLY IF EXISTS $index_name");
         if ( !defined $rv ) {
-            warn "[ERROR] Database: $db | DROP nieprawidłowego indeksu $index_name nie powiódł się: $DBI::errstr\n";
+            warn "[ERROR] Database: $db | DROP invalid $index_name failed: $DBI::errstr\n";
             return;
         }
-        print "[INFO] Database: $db | usunięto nieprawidłowy indeks $index_name\n";
+        print "[INFO] Database: $db | invalid index deleted $index_name\n";
     }
 
     my ($exists) = $dbh_db->selectrow_array( "SELECT to_regclass(?)", undef, $index_name );
     if ( defined $exists ) {
-        print "[SKIP] Database: $db | indeks $index_name już istnieje\n";
+        print "[SKIP] Database: $db | index $index_name already exists\n";
         return;
     }
 
@@ -52,10 +52,10 @@ sub create_index_concurrently {
         "CREATE INDEX CONCURRENTLY IF NOT EXISTS $index_name ON $table_name (transdate, trans_id)"
     );
     if ( !defined $rv ) {
-        warn "[ERROR] Database: $db | CREATE INDEX CONCURRENTLY nie powiódł się: $DBI::errstr\n";
+        warn "[ERROR] Database: $db | CREATE INDEX CONCURRENTLY failed: $DBI::errstr\n";
     }
     else {
-        print "[OK] Database: $db | indeks $index_name utworzony\n";
+        print "[OK] Database: $db | index $index_name created\n";
     }
 }
 
