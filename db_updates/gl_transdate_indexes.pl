@@ -14,57 +14,70 @@ my $dsn      = "DBI:$driver:dbname=$database;host=$dbHost";
 my $userid   = "sql-ledger";
 my $password = "";
 
-my $dbh = DBI->connect( $dsn, $userid, $password, { RaiseError => 1 } )
+my $index_name = 'acc_trans_transdate_trans_id_idx';
+my $table_name = 'acc_trans';
+
+my $dbh = DBI->connect( $dsn, $userid, $password, { RaiseError => 1, PrintError => 0, AutoCommit => 1 } )
   or die $DBI::errstr;
 
-sub update_db {
-    my @queries = @_;
+sub create_index_concurrently {
+    my ($db, $dbh_db) = @_;
 
-    my $dbs = $dbh->selectcol_arrayref(
-        "SELECT datname FROM pg_database WHERE datistemplate = false;"
+    my ($tbl) = $dbh_db->selectrow_array( "SELECT to_regclass(?)", undef, $table_name );
+    if ( !defined $tbl ) {
+        print "[SKIP] Database: $db | table not found $table_name\n";
+        return;
+    }
+
+    my ($invalid) = $dbh_db->selectrow_array(
+        "SELECT 1 FROM pg_index WHERE indexrelid = to_regclass(?) AND NOT indisvalid",
+        undef, $index_name
     );
-
-    for my $db (@$dbs) {
-        my $database_dsn = "DBI:$driver:dbname=$db;host=$dbHost";
-        my $dbh = DBI->connect(
-            $database_dsn,
-            $userid,
-            $password,
-            { RaiseError => 0, PrintError => 0 }
-        );
-
-        if ( !$dbh ) {
-            warn "[ERROR] Failed to connect to database '$db'. Error: $DBI::errstr\n";
-            next;
+    if ($invalid) {
+        my $rv = $dbh_db->do("DROP INDEX CONCURRENTLY IF EXISTS $index_name");
+        if ( !defined $rv ) {
+            warn "[ERROR] Database: $db | DROP invalid $index_name failed: $DBI::errstr\n";
+            return;
         }
+        print "[INFO] Database: $db | invalid index deleted $index_name\n";
+    }
 
-        for my $query (@queries) {
-            my $rv = $dbh->do($query);
+    my ($exists) = $dbh_db->selectrow_array( "SELECT to_regclass(?)", undef, $index_name );
+    if ( defined $exists ) {
+        print "[SKIP] Database: $db | index $index_name already exists\n";
+        return;
+    }
 
-            if ( !defined $rv ) {
-                warn "[ERROR] Database: $db | Query failed: $DBI::errstr\n";
-            } else {
-                my ($t1, $t2) = $query =~ /(ALTER TABLE\s+(\w+))|(UPDATE\s+(\w+))/i;
-                my $table = $2 || $4 || 'unknown';
-
-                print "[OK] Database: $db | Table: $table updated\n";
-            }
-        }
-
-        $dbh->disconnect();
+    my $rv = $dbh_db->do(
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS $index_name ON $table_name (transdate, trans_id)"
+    );
+    if ( !defined $rv ) {
+        warn "[ERROR] Database: $db | CREATE INDEX CONCURRENTLY failed: $DBI::errstr\n";
+    }
+    else {
+        print "[OK] Database: $db | index $index_name created\n";
     }
 }
 
-# Covering index supporting the General Ledger transactions report
-# (SL/GL.pm transactions) when a date filter is active. The date filter adds
-# "ac.transdate >= ... / <= ..." to the WHERE clause, which forces the
-# otherwise header-only page/count queries to join acc_trans and GROUP BY the
-# transaction id. The composite (transdate, trans_id) lets Postgres satisfy
-# that filter+group with an index-only scan instead of scanning acc_trans.
-update_db(
-    q{
-CREATE INDEX IF NOT EXISTS acc_trans_transdate_trans_id_key ON acc_trans (transdate, trans_id);
-},
+my $dbs = $dbh->selectcol_arrayref(
+    "SELECT datname FROM pg_database WHERE datistemplate = false AND datallowconn = true ORDER BY datname"
 );
+
+for my $db (@$dbs) {
+    my $dbh_db = DBI->connect(
+        "DBI:$driver:dbname=$db;host=$dbHost",
+        $userid,
+        $password,
+        { RaiseError => 0, PrintError => 0, AutoCommit => 1 }
+    );
+
+    if ( !$dbh_db ) {
+        warn "[ERROR] Failed to connect to database '$db'. Error: $DBI::errstr\n";
+        next;
+    }
+
+    create_index_concurrently( $db, $dbh_db );
+    $dbh_db->disconnect();
+}
 
 $dbh->disconnect();
