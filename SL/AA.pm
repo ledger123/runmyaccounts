@@ -1721,6 +1721,15 @@ sub company_details {
     my %defaults = $form->get_defaults( $dbh, \@a );
     for (@a) { $form->{$_} = $defaults{$_} }
 
+    # company address for templates / QR invoice (mirror SL/IS.pm invoice_details)
+    my %companydefaults = $form->get_defaults( $dbh, \@{ [qw(address1 address2 city state zip country)] } );
+    $form->{companyaddress1} = $companydefaults{address1};
+    $form->{companyaddress2} = $companydefaults{address2};
+    $form->{companycity}     = $companydefaults{city};
+    $form->{companystate}    = $companydefaults{state};
+    $form->{companyzip}      = $companydefaults{zip};
+    $form->{companycountry}  = $companydefaults{country};
+
     if ( $form->{warehouse_id} *= 1 ) {
         $query = qq|SELECT address1, address2, city, state, zipcode, country
 		FROM address
@@ -1748,11 +1757,58 @@ sub company_details {
         for ( keys %$ref ) { $form->{"bank$_"} = $ref->{$_} }
         $sth->finish;
 
-        for (qw(iban bic membernumber rvc dcn)) { $form->{$_} = $form->{"bank$_"} }
+        for (qw(iban bic membernumber rvc dcn qriban strdbkginf invdescriptionqr)) { $form->{$_} = $form->{"bank$_"} }
+
+            ( $form->{customeremail} ) = $dbh->selectrow_array(
+            qq|SELECT email FROM customer WHERE id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) );
     }
 
-    $dbh->disconnect if $disconnect;
+    # QR-code variables for the Swiss QR invoice (mirror SL/IS.pm invoice_details)
+    $form->{qribanqr} = $form->{qriban};
+    $form->{qribanqr} =~ s/\s//g;
+    $form->{qribanqr} = $form->string_replace( $form->{qribanqr}, "%", "" );
 
+    $form->{companyqr} = substr( $form->{company}, 0, 70 );
+    $form->{companyqr} = $form->string_replace( $form->{companyqr}, "%", "" );
+
+    $form->{companyaddress1qr} = substr( $form->{companyaddress1}, 0, 70 );
+    $form->{companyaddress1qr} = $form->string_replace( $form->{companyaddress1qr}, "%", "" );
+
+    $form->{companyzipqr} = substr( $form->{companyzip}, 0, 16 );
+    $form->{companyzipqr} = $form->string_replace( $form->{companyzipqr}, "%", "" );
+
+    $form->{companycityqr} = substr( $form->{companycity}, 0, 35 );
+    $form->{companycityqr} = $form->string_replace( $form->{companycityqr}, "%", "" );
+
+    $form->{nameqr} = substr( $form->{name}, 0, 70 );
+    $form->{nameqr} = $form->string_replace( $form->{nameqr}, "%", "" );
+
+    $form->{address1qr} = substr( $form->{address1}, 0, 70 );
+    $form->{address1qr} = $form->string_replace( $form->{address1qr}, "%", "" );
+
+    $form->{zipcodeqr} = substr( $form->{zipcode}, 0, 16 );
+    $form->{zipcodeqr} = $form->string_replace( $form->{zipcodeqr}, "%", "" );
+
+    $form->{cityqr} = substr( $form->{city}, 0, 35 );
+    $form->{cityqr} = $form->string_replace( $form->{cityqr}, "%", "" );
+
+    my @nums = $form->{businessnumber} =~ /(\d+)/g;
+    $form->{businessnumberqr} = "";
+    for (@nums) { $form->{businessnumberqr} .= $_ }
+
+    $form->{invdescriptionqr} = $form->format_line( $myconfig, $form->{invdescriptionqr} );
+    $form->{invdescriptionqr} = $form->string_replace( $form->{invdescriptionqr}, "%", "" );
+    $form->{invdescriptionqr} = $form->string_abbreviate( $form->{invdescriptionqr}, 55 );
+    $form->{invdescriptionqr2} = $form->{invdescriptionqr};
+
+    $form->{strdbkginf} = $form->format_line( $myconfig, $form->{strdbkginf} );
+    $form->{strdbkginf} = substr( $form->{strdbkginf}, 0, 85 );
+    $form->{strdbkginf} = $form->string_replace( $form->{strdbkginf}, "%", "" );
+    $form->{strdbkginfqr} = $form->{strdbkginf};
+    $form->{strdbkginfline1qr} = substr( $form->{strdbkginfqr}, 0, 50 );
+    $form->{strdbkginfline2qr} = substr( $form->{strdbkginfqr}, 50, 85 );
+
+    $dbh->disconnect if $disconnect;
 }
 
 sub ship_to {
