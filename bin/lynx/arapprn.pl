@@ -104,7 +104,7 @@ sub print_check {
   for (qw(datepaid source memo)) { $form->{$_} = $form->{"${_}_$i"} }
 
   AA->company_details(\%myconfig, \%$form);
-  @a = qw(name address1 address2 city state zipcode country);
+  @a = qw(name address1 streetname buildingnumber address2 city state zipcode country);
   push @a, qw(firstname lastname salutation contacttitle occupation mobile);
  
   foreach $item (qw(invnumber ordnumber)) {
@@ -239,7 +239,7 @@ sub print_transaction {
  
   AA->company_details(\%myconfig, \%$form);
 
-  @a = qw(name address1 address2 city state zipcode country);
+  @a = qw(name address1 streetname buildingnumber address2 city state zipcode country);
 
   $form->{invdescription} = $form->{description};
   $form->{description} = ();
@@ -638,5 +638,4 @@ sub print_and_post {
   &print;
 
 }
-
 
