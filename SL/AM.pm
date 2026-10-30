@@ -1471,8 +1471,10 @@ sub save_defaults {
     $sth->finish;
   }
 
-  # optional
-  for (split / /, $form->{optional}) {
+  # Both interfaces submit the structured company address.
+  my %optional = map { $_ => 1 } split / /, $form->{optional};
+  $optional{$_} = 1 for qw(street_name building_number);
+  for (sort keys %optional) {
     $delsth->execute($_) || $form->dberror;
     if ($form->{$_}) {
       $sth->execute($_, $form->{$_}) || $form->dberror;
@@ -2415,3 +2417,4 @@ sub move {
 
 
 1;
+

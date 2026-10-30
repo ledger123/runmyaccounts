@@ -2283,13 +2283,15 @@ sub generate_orders {
                 shiptostreet_name, shiptobuilding_number,
                 shiptocity, shiptostate, shiptozipcode,
                 shiptocountry, shiptocontact, shiptophone, shiptofax,
-                shiptoemail) VALUES ($id, '$ref->{shiptoname}',
-                '$shipto_address1', '$ref->{shiptoaddress2}',
-                '$ref->{shiptostreet_name}', '$ref->{shiptobuilding_number}',
-                '$ref->{shiptocity}', '$ref->{shiptostate}',
-		'$ref->{shiptozipcode}', '$ref->{shiptocountry}',
-		'$ref->{shiptocontact}', '$ref->{shiptophone}',
-		'$ref->{shiptofax}', '$ref->{shiptoemail}')|;
+                shiptoemail) VALUES ($id, |
+                . join(', ', map { $dbh->quote($_) } (
+                  $ref->{shiptoname}, $shipto_address1, $ref->{shiptoaddress2},
+                  $ref->{shiptostreet_name}, $ref->{shiptobuilding_number},
+                  $ref->{shiptocity}, $ref->{shiptostate},
+                  $ref->{shiptozipcode}, $ref->{shiptocountry},
+                  $ref->{shiptocontact}, $ref->{shiptophone},
+                  $ref->{shiptofax}, $ref->{shiptoemail}
+                )) . qq|)|;
     $dbh->do($query) || $form->dberror($query);
     $sth->finish;  
    
@@ -2575,3 +2577,4 @@ sub consolidate_orders {
 
 
 1;
+

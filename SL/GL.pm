@@ -1064,7 +1064,9 @@ sub transactions {
       $ref->{debit} = 0;
     }
 
-    for my $part (grep { defined $_ && $_ ne '' } ($ref->{streetname}, $ref->{buildingnumber}, $ref->{address1}, $ref->{address2}, $ref->{city}, $ref->{zipcode}, $ref->{country})) {
+    my $address1 = $form->compose_addressline($ref->{streetname}, $ref->{buildingnumber});
+    $address1 = $ref->{address1} unless defined $address1;
+    for my $part (grep { defined $_ && $_ ne '' } ($address1, $ref->{address2}, $ref->{city}, $ref->{zipcode}, $ref->{country})) {
       $ref->{address} .= "$part ";
     }
 
@@ -1420,3 +1422,4 @@ sub transaction {
 
 
 1;
+

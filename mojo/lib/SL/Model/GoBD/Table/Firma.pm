@@ -40,7 +40,8 @@ SELECT * FROM
       ),
       ''
     ),
-    (SELECT fldvalue FROM defaults WHERE fldname = 'address1' LIMIT 1)
+    (SELECT NULLIF(fldvalue, '') FROM defaults WHERE fldname = 'address1' LIMIT 1),
+    split_part((SELECT fldvalue FROM defaults WHERE fldname = 'address' LIMIT 1), E'\\n', 1)
   )
   UNION ALL
   SELECT NULL

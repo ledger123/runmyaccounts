@@ -1342,6 +1342,16 @@ sub vc {
 	 }
 	 $bankaddress->finish;
       }
+      for my $prefix ('', 'bank', 'shipto') {
+        my $mapping = $form->{$form->{type}};
+        next unless exists $mapping->{"${prefix}address1"};
+        next if exists $mapping->{"${prefix}streetname"}
+             || exists $mapping->{"${prefix}buildingnumber"};
+        my ($street, $building) = $form->split_addressline(
+          $form->{"${prefix}address1_$i"});
+        $form->{"${prefix}streetname_$i"} = $street;
+        $form->{"${prefix}buildingnumber_$i"} = $building;
+      }
     }
     $form->{rowcount} = $i;
   }
@@ -1917,4 +1927,5 @@ sub import_generic {
 }
 
 1;
+
 
