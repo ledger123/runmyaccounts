@@ -2078,6 +2078,14 @@ sub defaults {
 	  <th align=right>|.$locale->text('Address').qq|</th>
 	  <td><textarea name=address rows=3 cols=35>$form->{address}</textarea></td>
 	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('Street').qq|</th>
+	  <td><input name=street_name size=35 maxlength=70 value="|.$form->quote($form->{street_name}).qq|"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('Building No.').qq|</th>
+	  <td><input name=building_number size=16 maxlength=16 value="|.$form->quote($form->{building_number}).qq|"></td>
+	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Phone').qq|</th>
 	  <td><input name=tel size=14 value="$form->{tel}"></td>
@@ -2778,6 +2786,14 @@ sub warehouse_header {
   <tr>
     <th></th>
     <td><input name=address2 size=35 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+  </tr>
+  <tr>
+    <th align=right nowrap>|.$locale->text('Street').qq|</th>
+    <td><input name=streetname size=35 maxlength=70 value="|.$form->quote($form->{streetname}).qq|"></td>
+  </tr>
+  <tr>
+    <th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+    <td><input name=buildingnumber size=10 maxlength=16 value="|.$form->quote($form->{buildingnumber}).qq|"></td>
   </tr>
   <tr>
     <th align=right nowrap>|.$locale->text('City').qq|</th>
@@ -3904,6 +3920,14 @@ sub bank_header {
 	<tr>
 	  <th></th>
 	  <td><input name=address2 size=32 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Street').qq|</th>
+	  <td><input name=streetname size=32 maxlength=70 value="|.$form->quote($form->{streetname}).qq|"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+	  <td><input name=buildingnumber size=10 maxlength=16 value="|.$form->quote($form->{buildingnumber}).qq|"></td>
 	</tr>
 	<tr>
 	  <th align=right nowrap>|.$locale->text('City').qq|</th>
