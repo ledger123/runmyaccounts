@@ -1617,7 +1617,7 @@ if($form->{payed}){
     s.shiptobuilding_number AS shiptobuildingnumber
     FROM |.$form->dbclean($form->{arap}).qq| a
     JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
-    JOIN address ad ON (ad.trans_id = c.id)
+    |.$form->address_join('ad', 'c.id').qq|
     LEFT JOIN contact ct ON (ct.trans_id = c.id)
     LEFT JOIN shipto s ON (a.id = s.trans_id)
     WHERE $where
@@ -1827,7 +1827,7 @@ sub reminder {
           ad2.state bankstate, ad2.zipcode bankzipcode, ad2.country bankcountry
 	      FROM ar a
 	      JOIN $form->{vc} c ON (a.$form->{vc}_id = c.id)
-	      JOIN address ad ON (ad.trans_id = c.id)
+	      |.$form->address_join('ad', 'c.id').qq|
 	      LEFT JOIN contact ct ON (ct.trans_id = c.id)
 	      LEFT JOIN shipto s ON (a.id = s.trans_id)
           LEFT JOIN bank ON (bank.id = a.bank_id)

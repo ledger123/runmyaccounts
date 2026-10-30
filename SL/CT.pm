@@ -55,7 +55,7 @@ sub create_links {
         ad1.is_migrated AS bankis_migrated,
 		ct.curr
                 FROM $form->{db} ct
-		LEFT JOIN address ad ON (ct.id = ad.trans_id)
+		/.$form->address_join('ad', 'ct.id').qq/
 		LEFT JOIN business b ON (ct.business_id = b.id)
 		LEFT JOIN dispatch d ON (ct.dispatch_id = d.id)
 		LEFT JOIN shipto s ON (ct.id = s.trans_id)
@@ -413,8 +413,19 @@ sub save {
                 WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
    
+    # A stale contactid must not be reused for the INSERT below, it would
+    # otherwise collide with a contact belonging to a different customer/vendor.
+    if ($form->{contactid}) {
+      $query = qq|SELECT id FROM contact
+                  WHERE id = $form->{contactid}
+                  AND trans_id = $form->{id}|;
+      $form->{contactid} = 0 if ! $dbh->selectrow_array($query);
+    }
+
+    # Delete by trans_id, not by contactid: a save used to delete only the one
+    # contact row and insert anyway, leaving older duplicate contacts behind.
     $query = qq|DELETE FROM contact
-                WHERE id = $form->{contactid}|;
+                WHERE trans_id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
  
     $query = qq|SELECT address_id
@@ -426,13 +437,28 @@ sub save {
                 WHERE id = $form->{id}|;
     $dbh->do($query) || $form->dberror($query);
    
+    # A stale addressid must not be reused for the INSERT below, it would
+    # otherwise claim a row belonging to a different customer/vendor.
+    if ($form->{addressid}) {
+      $query = qq|SELECT id FROM address
+                  WHERE id = $form->{addressid}
+                  AND trans_id = $form->{id}|;
+      $form->{addressid} = 0 if ! $dbh->selectrow_array($query);
+    }
+
+    # Delete by trans_id, not by addressid: a save with no addressid used to
+    # delete nothing and insert anyway, leaving a duplicate address behind.
+    # Bank addresses share the trans_id namespace and are removed separately.
     $query = qq|DELETE FROM address
-                WHERE id = $form->{addressid}|;
+                WHERE trans_id = $form->{id}
+                AND id NOT IN (SELECT address_id FROM bank
+                               WHERE address_id IS NOT NULL)|;
     $dbh->do($query) || $form->dberror($query);
     
     $bank_address_id *= 1;
     $query = qq|DELETE FROM address
-                WHERE trans_id = $bank_address_id|;
+                WHERE trans_id = $bank_address_id
+                AND id = $bank_address_id|;
     $dbh->do($query) || $form->dberror($query);
 		
     $query = qq|SELECT id FROM $form->{db}
@@ -865,7 +891,7 @@ sub search {
 		 ct.occupation, ct.mobile, ct.gender, ct.typeofcontact
                  FROM $form->{db} c
 	      JOIN contact ct ON (ct.trans_id = c.id)
-	      LEFT JOIN address ad ON (ad.trans_id = c.id)
+	      |.$form->address_join('ad', 'c.id').qq|
 	      LEFT JOIN business b ON (c.business_id = b.id)
 	      LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
 	      LEFT JOIN employee e ON (c.employee_id = e.id)
@@ -915,7 +941,7 @@ sub search {
 		  ct.occupation, ct.mobile, ct.gender, ct.typeofcontact
 		  FROM $form->{db} c
 	        JOIN contact ct ON (ct.trans_id = c.id)
-		JOIN address ad ON (ad.trans_id = c.id)
+		|.$form->address_join('ad', 'c.id').qq|
 		JOIN $ar a ON (a.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
 	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
@@ -954,7 +980,7 @@ sub search {
 		   ct.occupation, ct.mobile, ct.gender, ct.typeofcontact
 		   FROM $form->{db} c
 	        JOIN contact ct ON (ct.trans_id = c.id)
-		JOIN address ad ON (ad.trans_id = c.id)
+		|.$form->address_join('ad', 'c.id').qq|
 		JOIN $ar a ON (a.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
 	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
@@ -990,7 +1016,7 @@ sub search {
 		   ct.occupation, ct.mobile, ct.gender, ct.typeofcontact
 		  FROM $form->{db} c
 	        JOIN contact ct ON (ct.trans_id = c.id)
-		JOIN address ad ON (ad.trans_id = c.id)
+		|.$form->address_join('ad', 'c.id').qq|
 		JOIN oe o ON (o.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
 	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
@@ -1026,7 +1052,7 @@ sub search {
 		   ct.occupation, ct.mobile, ct.gender, ct.typeofcontact
 		  FROM $form->{db} c
 	        JOIN contact ct ON (ct.trans_id = c.id)
-		JOIN address ad ON (ad.trans_id = c.id)
+		|.$form->address_join('ad', 'c.id').qq|
 		JOIN oe o ON (o.$form->{db}_id = c.id)
 	        LEFT JOIN business b ON (c.business_id = b.id)
 	        LEFT JOIN dispatch d ON (c.dispatch_id = d.id)
@@ -1271,7 +1297,7 @@ sub get_history {
 		    WHERE a.curr = ex.curr
 		    AND a.transdate = ex.transdate) AS exchangerate
 	      FROM $form->{db} ct
-	      JOIN address ad ON (ad.trans_id = ct.id)
+	      |.$form->address_join('ad', 'ct.id').qq|
 	      JOIN $table a ON (a.$form->{db}_id = ct.id)
 	      $invjoin
 	      JOIN parts p ON (p.id = i.parts_id)
