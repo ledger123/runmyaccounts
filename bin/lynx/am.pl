@@ -2079,12 +2079,12 @@ sub defaults {
 	  <td><textarea name=address rows=3 cols=35>$form->{address}</textarea></td>
 	</tr>
 	<tr valign=top>
-	  <th align=right>&nbsp;</th>
-	  <td><input name=street_name size=35 maxlength=70 value="$form->{street_name}"></td>
+	  <th align=right>|.$locale->text('Street').qq|</th>
+	  <td><input name=street_name size=35 maxlength=70 value="|.$form->quote($form->{street_name}).qq|"></td>
 	</tr>
 	<tr valign=top>
-	  <th align=right>&nbsp;</th>
-	  <td><input name=building_number size=16 maxlength=16 value="$form->{building_number}"></td>
+	  <th align=right>|.$locale->text('Building No.').qq|</th>
+	  <td><input name=building_number size=16 maxlength=16 value="|.$form->quote($form->{building_number}).qq|"></td>
 	</tr>
 	<tr>
 	  <th align=right>|.$locale->text('Phone').qq|</th>
@@ -4611,4 +4611,5 @@ sub save_currency {
   $form->error($locale->text('Failed to save Currency!'));
 
 }
+
 

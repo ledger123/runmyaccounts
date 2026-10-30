@@ -1692,7 +1692,8 @@ sub reminder {
   for (keys %defaults) { $form->{$_} = $defaults{$_} }
 
   my $company_address1 = join ' ', grep { defined $_ && $_ ne '' } ($defaults{street_name}, $defaults{building_number});
-  $form->{companyaddress1} = $company_address1 || $defaults{address1};
+  $form->{companyaddress1} = $company_address1 || $defaults{address1}
+    || (split /\n/, $defaults{address})[0];
   $form->{companyaddress2} = $defaults{address2};
   $form->{companycity} = $defaults{city};
   $form->{companystate} = $defaults{state};
@@ -2720,3 +2721,5 @@ sub payments {
 
 
 1;
+
+

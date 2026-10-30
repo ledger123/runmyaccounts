@@ -39,11 +39,13 @@ sub invoice_details {
   $form->{xml_invdate} = $form->datetonum($myconfig, $form->{transdate});
   $form->{qr_invdate} = $form->format_date('yyyy-mm-dd', $form->{xml_invdate});
 
-  my %defaults = $form->get_defaults($dbh, \@{[qw(address1 address2 city state zip country)]});
+  my %defaults = $form->get_defaults($dbh, \@{[qw(address address1 street_name building_number address2 city state zip country)]});
 
   my ($utf8templates) = $dbh->selectrow_array("SELECT fldvalue FROM defaults WHERE fldname='utf8templates'");
 
-  $form->{companyaddress1} = $defaults{address1};
+  $form->{companyaddress1} = $form->compose_addressline(
+    $defaults{street_name}, $defaults{building_number})
+    || $defaults{address1} || (split /\n/, $defaults{address})[0];
   $form->{companyaddress2} = $defaults{address2};
   $form->{companycity} = $defaults{city};
   $form->{companystate} = $defaults{state};
