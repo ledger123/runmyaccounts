@@ -1690,7 +1690,7 @@ sub company_details {
 		 ct.iban, ct.bic, ct.startdate, ct.enddate,
 		 ct.threshold, pm.description AS paymentmethod
 	         FROM $form->{vc} ct
-		 JOIN address ad ON (ad.trans_id = ct.id)
+		 |.$form->address_join('ad', 'ct.id').qq|
 		 LEFT JOIN paymentmethod pm ON (pm.id = ct.paymentmethod_id)
 	         WHERE ct.id = | . $form->dbclean( $form->{"$form->{vc}_id"} ) . qq||;
     my $sth = $dbh->prepare($query);
