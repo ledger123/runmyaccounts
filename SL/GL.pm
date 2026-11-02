@@ -842,7 +842,7 @@ sub transactions {
 		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
-		 '' AS address1, '' AS address2, '' AS city,
+		 '' AS address1, '' AS address2, '' AS streetname, '' AS buildingnumber, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '' log, g.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -859,7 +859,7 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
-		 ad.address1, ad.address2, ad.city,
+		 ad.address1, ad.address2, ad.street_name AS streetname, ad.building_number AS buildingnumber, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -879,7 +879,7 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
-		 ad.address1, ad.address2, ad.city,
+		 ad.address1, ad.address2, ad.street_name AS streetname, ad.building_number AS buildingnumber, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '' log, a.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -906,7 +906,7 @@ sub transactions {
 		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
-		 '' AS address1, '' AS address2, '' AS city,
+		 '' AS address1, '' AS address2, '' AS streetname, '' AS buildingnumber, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -923,7 +923,7 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
-		 ad.address1, ad.address2, ad.city,
+		 ad.address1, ad.address2, ad.street_name AS streetname, ad.building_number AS buildingnumber, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -943,7 +943,7 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
-		 ad.address1, ad.address2, ad.city,
+		 ad.address1, ad.address2, ad.street_name AS streetname, ad.building_number AS buildingnumber, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -969,7 +969,7 @@ sub transactions {
 		 '' AS till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, '0' AS name_id, '' AS db,
 		 $gdescription AS lineitem, '' AS name, '' AS vcnumber,
-		 '' AS address1, '' AS address2, '' AS city,
+		 '' AS address1, '' AS address2, '' AS streetname, '' AS buildingnumber, '' AS city,
 		 '' AS zipcode, '' AS country, c.description AS accdescription,
 		 '' AS intnotes, g.curr, g.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -986,7 +986,7 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'customer' AS db,
 		 $lineitem AS lineitem, ct.name, ct.customernumber,
-		 ad.address1, ad.address2, ad.city,
+		 ad.address1, ad.address2, ad.street_name AS streetname, ad.building_number AS buildingnumber, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -1006,7 +1006,7 @@ sub transactions {
 		 a.till, ac.cleared, d.description AS department, p.projectnumber,
 		 ac.memo, ct.id AS name_id, 'vendor' AS db,
 		 $lineitem AS lineitem, ct.name, ct.vendornumber,
-		 ad.address1, ad.address2, ad.city,
+		 ad.address1, ad.address2, ad.street_name AS streetname, ad.building_number AS buildingnumber, ad.city,
 		 ad.zipcode, ad.country, c.description AS accdescription,
 		 a.intnotes, a.curr, a.exchangerate, '*' log, ac.ts, ac.entry_id, ac.fx_transaction,
          ac.tax, ac.taxamount, ac.id payment_id
@@ -1064,7 +1064,9 @@ sub transactions {
       $ref->{debit} = 0;
     }
 
-    for (qw(address1 address2 city zipcode country)) { $ref->{address} .= "$ref->{$_} " }
+    for my $part (grep { defined $_ && $_ ne '' } ($ref->{streetname}, $ref->{buildingnumber}, $ref->{address1}, $ref->{address2}, $ref->{city}, $ref->{zipcode}, $ref->{country})) {
+      $ref->{address} .= "$part ";
+    }
 
     push @{ $form->{GL} }, $ref;
     
@@ -1418,4 +1420,3 @@ sub transaction {
 
 
 1;
-

@@ -30,7 +30,18 @@ SELECT * FROM
   LIMIT 1
 ) AS company,
 (
-  SELECT fldvalue FROM defaults WHERE fldname = 'address1'
+  SELECT COALESCE(
+    NULLIF(
+      trim(
+        concat_ws(' ',
+          (SELECT fldvalue FROM defaults WHERE fldname = 'street_name' LIMIT 1),
+          (SELECT fldvalue FROM defaults WHERE fldname = 'building_number' LIMIT 1)
+        )
+      ),
+      ''
+    ),
+    (SELECT fldvalue FROM defaults WHERE fldname = 'address1' LIMIT 1)
+  )
   UNION ALL
   SELECT NULL
   LIMIT 1
