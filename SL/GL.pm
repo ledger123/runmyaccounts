@@ -744,7 +744,8 @@ sub transactions {
   my $paginate = ( $form->{l_csv} ne 'Y' )
     && !$form->{accno}
     && !$form->{gifi_accno}
-    && !$form->{include_log};
+    && !$form->{include_log}
+    && ( ( $form->{pagesize} || '' ) ne 'all' );
 
   if ($paginate) {
     my $pagesize = $form->{pagesize};

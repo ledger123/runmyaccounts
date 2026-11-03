@@ -587,7 +587,8 @@ sub transactions {
     my $paginate = !$form->{accno} && !$form->{gifi_accno} && !$form->{include_log};
     if ($paginate) {
         $form->{pagesize} = 100
-          unless ( $form->{pagesize} =~ /^\d+$/ && $form->{pagesize} > 0 && $form->{pagesize} <= 100 );
+           unless ( ( $form->{pagesize} || '' ) eq 'all'
+                      || ( $form->{pagesize} =~ /^\d+$/ && $form->{pagesize} > 0 && $form->{pagesize} <= 100 ) );
     }
 
     if ( $form->{flds} eq "" ) {
@@ -938,6 +939,7 @@ sub transactions {
     my $pagecontrols = "";
     my $nextpage     = "";
     if ($paginate) {
+        my $pagesize_all = ( ( $form->{pagesize} || '' ) eq 'all' );
         my $pagesize_cur = $form->{pagesize};
 
         my $ctrlbase = $href;
@@ -948,12 +950,19 @@ sub transactions {
 
         my $pagesize_links = "";
         foreach my $ps (qw(10 20 50 100)) {
-            if ( $ps == $pagesize_cur ) {
+            if ( !$pagesize_all && $ps == $pagesize_cur ) {
                 $pagesize_links .= qq| <b>$ps</b>|;
             }
             else {
                 $pagesize_links .= qq| <a href="$ctrlbase&pagesize=$ps">$ps</a>|;
             }
+        }
+        # "Display All" lists every matching transaction on a single page.
+        if ($pagesize_all) {
+            $pagesize_links .= qq| <b>| . $locale->text('Display All') . qq|</b>|;
+        }
+        else {
+                $pagesize_links .= qq| <a href="$ctrlbase&pagesize=all">| . $locale->text('Display All') . qq|</a>|;
         }
         $pagecontrols = qq|
   <tr class="noprint">
