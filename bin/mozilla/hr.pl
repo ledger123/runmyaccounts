@@ -520,6 +520,14 @@ sub employee_header {
 		<td><input name=address2 size=35 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
 	      </tr>
 	      <tr>
+		<th align=right nowrap>|.$locale->text('Street').qq|</th>
+		<td><input name=streetname size=35 maxlength=70 value="|.$form->quote($form->{streetname}).qq|"></td>
+	      </tr>
+	      <tr>
+		<th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+		<td><input name=buildingnumber size=10 maxlength=16 value="|.$form->quote($form->{buildingnumber}).qq|"></td>
+	      </tr>
+	      <tr>
 		<th align=right nowrap>|.$locale->text('City').qq|</th>
 		<td><input name=city size=35 maxlength=32 value="|.$form->quote($form->{city}).qq|"></td>
 	      </tr>

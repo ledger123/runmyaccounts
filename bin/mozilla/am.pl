@@ -2292,8 +2292,12 @@ sub defaults {
 	  <td><textarea name=address rows=3 cols=35>$form->{address}</textarea></td>
 	</tr>
 	<tr valign=top>
-	  <th align=right>&nbsp;</th>
-	  <td><input name=address1 size=35 value="$form->{address1}"></td>
+	  <th align=right>|.$locale->text('Street').qq|</th>
+	  <td><input name=street_name size=35 maxlength=70 value="|.$form->quote($form->{street_name}).qq|"></td>
+	</tr>
+	<tr valign=top>
+	  <th align=right>|.$locale->text('Building No.').qq|</th>
+	  <td><input name=building_number size=16 maxlength=16 value="|.$form->quote($form->{building_number}).qq|"></td>
 	</tr>
 	<tr valign=top>
 	  <th align=right>&nbsp;</th>
@@ -2493,7 +2497,7 @@ sub defaults {
 </table>
 |;
 
-  $form->{optional} = "companyemail companywebsite company address address1 address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail utf8templates showtaxper namesbynumber typeofcontact";
+  $form->{optional} = "companyemail companywebsite company address street_name building_number address2 city state zip country tel fax yearend weightunit businessnumber closedto revtrans audittrail method cdt linetax gldepartment noreplyemail utf8templates showtaxper namesbynumber typeofcontact";
 
   $form->hide_form(qw(optional closedto revtrans audittrail path login));
 
@@ -3090,6 +3094,14 @@ sub warehouse_header {
   <tr>
     <th></th>
     <td><input name=address2 size=35 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+  </tr>
+  <tr>
+    <th align=right nowrap>|.$locale->text('Street').qq|</th>
+    <td><input name=streetname size=35 maxlength=70 value="|.$form->quote($form->{streetname}).qq|"></td>
+  </tr>
+  <tr>
+    <th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+    <td><input name=buildingnumber size=10 maxlength=16 value="|.$form->quote($form->{buildingnumber}).qq|"></td>
   </tr>
   <tr>
     <th align=right nowrap>|.$locale->text('City').qq|</th>
@@ -4277,6 +4289,14 @@ sub bank_header {
 	<tr>
 	  <th></th>
 	  <td><input name=address2 size=32 maxlength=32 value="|.$form->quote($form->{address2}).qq|"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Street').qq|</th>
+	  <td><input name=streetname size=32 maxlength=70 value="|.$form->quote($form->{streetname}).qq|"></td>
+	</tr>
+	<tr>
+	  <th align=right nowrap>|.$locale->text('Building No.').qq|</th>
+	  <td><input name=buildingnumber size=10 maxlength=16 value="|.$form->quote($form->{buildingnumber}).qq|"></td>
 	</tr>
 	<tr>
 	  <th align=right nowrap>|.$locale->text('City').qq|</th>
